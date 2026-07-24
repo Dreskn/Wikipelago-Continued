@@ -1073,7 +1073,21 @@ class App:
         self.sessions = SessionManager()
 
     async def index(self, request: web.Request) -> web.StreamResponse:
-        return web.FileResponse(self.web_root / "index.html")
+        # Embed deploy identity in HTML so the badge does not depend on a separate
+        # /health fetch (Render free-tier cold starts often 404 that first request).
+        html = (self.web_root / "index.html").read_text(encoding="utf-8")
+        payload = json.dumps(build_info(), separators=(",", ":"))
+        injection = f'<script type="application/json" id="build-info">{payload}</script>\n'
+        if "</head>" in html:
+            html = html.replace("</head>", injection + "</head>", 1)
+        else:
+            html = injection + html
+        return web.Response(
+            text=html,
+            content_type="text/html",
+            charset="utf-8",
+            headers={"Cache-Control": "no-cache"},
+        )
 
     async def manifest(self, request: web.Request) -> web.StreamResponse:
         response = web.FileResponse(self.web_root / "manifest.webmanifest")

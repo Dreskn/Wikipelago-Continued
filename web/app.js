@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.24.2";
+const APP_VERSION = "2026.07.24.3";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -92,7 +92,7 @@ function saveConnection(server, slot) {
 }
 
 function formatBuildLabel(info) {
-  const branch = String(info?.branch || "local").trim() || "local";
+  const branch = String(info?.branch || "").trim() || "unknown";
   const commit = String(info?.commit || "").trim();
   const version = String(info?.version || "").trim();
   const parts = [branch];
@@ -104,25 +104,66 @@ function formatBuildLabel(info) {
   return parts.join(" · ");
 }
 
+function readEmbeddedBuildInfo() {
+  const node = document.getElementById("build-info");
+  if (!node?.textContent) return null;
+  try {
+    return JSON.parse(node.textContent);
+  } catch {
+    return null;
+  }
+}
+
+function applyBuildBadge(info) {
+  if (!el.buildBadge || !info) return;
+  const branch = String(info.branch || "").trim();
+  const staging = Boolean(info.staging) || (branch !== "" && !["main", "master"].includes(branch));
+  el.buildBadge.textContent = formatBuildLabel(info);
+  el.buildBadge.classList.toggle("staging", staging);
+  const hoverBits = [
+    info.service && `service: ${info.service}`,
+    info.commit_full && `commit: ${info.commit_full}`,
+    info.version && `client: ${info.version}`,
+    `web: ${APP_VERSION}`,
+  ].filter(Boolean);
+  el.buildBadge.title = hoverBits.join("\n") || "Deploy build";
+  if (staging && branch) {
+    document.title = `Wikipelago [${branch}]`;
+  }
+}
+
+async function fetchBuildInfoWithRetry() {
+  let lastError = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch("/health", { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const info = await response.json();
+      if (info?.branch) return info;
+      lastError = new Error("health response missing branch");
+    } catch (err) {
+      lastError = err;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+  }
+  throw lastError || new Error("build info unavailable");
+}
+
 async function loadBuildBadge() {
   if (!el.buildBadge) return;
+  const embedded = readEmbeddedBuildInfo();
+  if (embedded?.branch && embedded.branch !== "local") {
+    applyBuildBadge(embedded);
+    return;
+  }
   try {
-    const info = await fetch("/health").then((r) => r.json());
-    const staging = Boolean(info?.staging) || (info?.branch && !["main", "master"].includes(info.branch));
-    el.buildBadge.textContent = formatBuildLabel(info);
-    el.buildBadge.classList.toggle("staging", staging);
-    const hoverBits = [
-      info?.service && `service: ${info.service}`,
-      info?.commit_full && `commit: ${info.commit_full}`,
-      info?.version && `client: ${info.version}`,
-      `web: ${APP_VERSION}`,
-    ].filter(Boolean);
-    el.buildBadge.title = hoverBits.join("\n") || "Deploy build";
-    if (staging && info?.branch) {
-      document.title = `Wikipelago [${info.branch}]`;
-    }
+    applyBuildBadge(await fetchBuildInfoWithRetry());
   } catch (err) {
-    el.buildBadge.textContent = "local";
+    if (embedded) {
+      applyBuildBadge(embedded);
+      return;
+    }
+    el.buildBadge.textContent = "unknown";
     el.buildBadge.title = `Could not load build info (${err})`;
   }
 }
