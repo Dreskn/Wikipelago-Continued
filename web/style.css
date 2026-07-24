@@ -24,11 +24,12 @@ body {
 .topbar h1 { margin: 0; }
 .build-badge {
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  color: var(--muted);
+  color: #7f93a8;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  opacity: 0.85;
 }
 .build-badge.staging {
   padding: 3px 8px;
@@ -36,6 +37,8 @@ body {
   background: #3a2f14;
   color: #ffd789;
   border: 1px solid #6a5420;
+  font-weight: 700;
+  opacity: 1;
 }
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; }
 .badge.offline { background: #3a2026; color: #ffccd3; }

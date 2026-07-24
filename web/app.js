@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.24.3";
+const APP_VERSION = "2026.07.24.4";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -95,12 +95,16 @@ function formatBuildLabel(info) {
   const branch = String(info?.branch || "").trim() || "unknown";
   const commit = String(info?.commit || "").trim();
   const version = String(info?.version || "").trim();
+  const isMain = branch === "main" || branch === "master";
+
+  // Production: quiet version tag only. Staging: branch + commit (+ version).
+  if (isMain) {
+    return version || branch;
+  }
+
   const parts = [branch];
   if (commit) parts.push(commit);
-  // Version tag alone is ambiguous across branches; keep it secondary.
-  if (version && branch !== "main" && branch !== "master") {
-    return `${parts.join(" · ")} · ${version}`;
-  }
+  if (version) parts.push(version);
   return parts.join(" · ");
 }
 
