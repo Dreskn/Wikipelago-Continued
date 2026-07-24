@@ -19,6 +19,27 @@ from aiohttp import web
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
+# Client/release label for the hosted UI (independent of apworld tag until a release cut).
+CLIENT_VERSION = "0.3.0-Continued"
+
+
+def build_info() -> dict[str, Any]:
+    """Deploy identity for the UI. Render injects RENDER_GIT_* on hosted services."""
+    branch = (os.environ.get("RENDER_GIT_BRANCH") or "").strip() or "local"
+    commit_full = (os.environ.get("RENDER_GIT_COMMIT") or "").strip()
+    commit = commit_full[:7] if commit_full else ""
+    service = (os.environ.get("RENDER_SERVICE_NAME") or "").strip()
+    staging = branch not in ("main", "master")
+    return {
+        "ok": True,
+        "version": CLIENT_VERSION,
+        "branch": branch,
+        "commit": commit,
+        "commit_full": commit_full,
+        "service": service,
+        "staging": staging,
+    }
+
 DEFAULT_ITEMS = {
     "Knowledge Fragment": 1_870_001,
     "Back Button": 1_870_002,
@@ -1066,7 +1087,9 @@ class App:
         return response
 
     async def health(self, request: web.Request) -> web.StreamResponse:
-        return web.json_response({"ok": True, "sessions": len(self.sessions.sessions)})
+        info = build_info()
+        info["sessions"] = len(self.sessions.sessions)
+        return web.json_response(info)
 
     async def create_session(self, request: web.Request) -> web.StreamResponse:
         session = self.sessions.create()

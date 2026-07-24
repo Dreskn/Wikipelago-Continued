@@ -8,12 +8,15 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260724-1" />
+  <link rel="stylesheet" href="/static/style.css?v=20260724-2" />
 </head>
 <body>
   <div class="layout">
     <header class="topbar">
-      <h1>Wikipelago</h1>
+      <div class="topbar-brand">
+        <h1>Wikipelago</h1>
+        <div id="buildBadge" class="build-badge" title="Deploy build">…</div>
+      </div>
       <div id="connBadge" class="badge offline">Offline</div>
     </header>
 
@@ -72,6 +75,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260724-1"></script>
+  <script src="/static/app.js?v=20260724-2"></script>
 </body>
 </html>

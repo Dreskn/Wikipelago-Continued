@@ -19,8 +19,24 @@ body {
 }
 
 .layout { max-width: 1400px; margin: 0 auto; padding: 16px; }
-.topbar { display: flex; justify-content: space-between; align-items: center; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.topbar-brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .topbar h1 { margin: 0; }
+.build-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.build-badge.staging {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #3a2f14;
+  color: #ffd789;
+  border: 1px solid #6a5420;
+}
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; }
 .badge.offline { background: #3a2026; color: #ffccd3; }
 .badge.online { background: #163427; color: #a8ffd1; }

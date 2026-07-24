@@ -17,3 +17,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Local-only notes (not for the repo)
+docs/project-recap.md

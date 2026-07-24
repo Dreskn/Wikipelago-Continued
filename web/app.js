@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.24.1";
+const APP_VERSION = "2026.07.24.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -40,6 +40,7 @@ const state = {
 
 const el = {
   connBadge: document.getElementById("connBadge"),
+  buildBadge: document.getElementById("buildBadge"),
   articleTitle: document.getElementById("articleTitle"),
   articleBody: document.getElementById("articleBody"),
   searchOverlay: document.getElementById("searchOverlay"),
@@ -88,6 +89,42 @@ function saveConnection(server, slot) {
     server: String(server || "").trim(),
     slot: String(slot || "").trim(),
   }));
+}
+
+function formatBuildLabel(info) {
+  const branch = String(info?.branch || "local").trim() || "local";
+  const commit = String(info?.commit || "").trim();
+  const version = String(info?.version || "").trim();
+  const parts = [branch];
+  if (commit) parts.push(commit);
+  // Version tag alone is ambiguous across branches; keep it secondary.
+  if (version && branch !== "main" && branch !== "master") {
+    return `${parts.join(" · ")} · ${version}`;
+  }
+  return parts.join(" · ");
+}
+
+async function loadBuildBadge() {
+  if (!el.buildBadge) return;
+  try {
+    const info = await fetch("/health").then((r) => r.json());
+    const staging = Boolean(info?.staging) || (info?.branch && !["main", "master"].includes(info.branch));
+    el.buildBadge.textContent = formatBuildLabel(info);
+    el.buildBadge.classList.toggle("staging", staging);
+    const hoverBits = [
+      info?.service && `service: ${info.service}`,
+      info?.commit_full && `commit: ${info.commit_full}`,
+      info?.version && `client: ${info.version}`,
+      `web: ${APP_VERSION}`,
+    ].filter(Boolean);
+    el.buildBadge.title = hoverBits.join("\n") || "Deploy build";
+    if (staging && info?.branch) {
+      document.title = `Wikipelago [${info.branch}]`;
+    }
+  } catch (err) {
+    el.buildBadge.textContent = "local";
+    el.buildBadge.title = `Could not load build info (${err})`;
+  }
 }
 
 const savedConnection = loadSavedConnection();
@@ -967,6 +1004,7 @@ initDebugDisplayPanel();
 setInterval(pollStatus, 1500);
 
 (async () => {
+  await loadBuildBadge();
   await ensureSession();
   await pollStatus();
   if (isApConnected()) await restoreArticleView(true);
