@@ -7,7 +7,7 @@ from BaseClasses import Item, Location
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import set_rule
 
-from .Items import item_table
+from .Items import TRAP_ITEM_NAMES, item_table
 from .Locations import location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
@@ -374,6 +374,9 @@ class WikipelagoWorld(World):
 
     item_name_to_id = {name: data.code for name, data in item_table.items()}
     location_name_to_id = {name: data.code for name, data in location_table.items()}
+    item_name_groups = {
+        "Traps": set(TRAP_ITEM_NAMES),
+    }
 
     item_class = WikipelagoItem
     location_class = WikipelagoLocation
@@ -631,6 +634,7 @@ class WikipelagoWorld(World):
         search_letters_needed = 26 - len(self._search_starting_letters()) if self.options.searchsanity.value else 0
         scroll_upgrades_needed = SCROLL_SPEED_UPGRADES if self.options.scrollsanity.value else 0
         display_unlocks = self._display_unlock_items()
+        trap_count = int(self.options.trap_count.value)
 
         mandatory_items = (
             required_fragments
@@ -639,12 +643,13 @@ class WikipelagoWorld(World):
             + search_letters_needed
             + scroll_upgrades_needed
             + len(display_unlocks)
+            + trap_count
         )
         if mandatory_items > round_count:
             raise Exception(
                 "Wikipelago item math invalid: required progression items exceed round locations. "
                 f"mandatory={mandatory_items}, round_locations={round_count}. "
-                "Lower required_fragments, reduce sanity/display unlock load, or lower round access pressure "
+                "Lower required_fragments, trap_count, reduce sanity/display unlock load, or lower round access pressure "
                 "(increase start_rounds_unlocked / rounds_per_unlock)."
             )
 
@@ -665,12 +670,27 @@ class WikipelagoWorld(World):
             pool.append(self.create_item(unlock_name))
         for _ in range(round_access_count):
             pool.append(self.create_item("Round Access"))
+        for trap_name in self._trap_item_names(trap_count):
+            pool.append(self.create_item(trap_name))
         while len(pool) < round_count:
             pool.append(self.create_item("Footnote"))
 
         self.multiworld.itempool.extend(pool)
         grand_goal = self.multiworld.get_location("Grand Goal", self.player)
         grand_goal.place_locked_item(self.create_item("Victory"))
+
+    def _trap_item_names(self, trap_count: int) -> list[str]:
+        if trap_count <= 0:
+            return []
+        trap_type = int(self.options.trap_type.value)
+        if trap_type == 1:
+            return ["Foggy Links"] * trap_count
+        if trap_type == 2:
+            return ["Missing Links"] * trap_count
+        names: list[str] = []
+        for _ in range(trap_count):
+            names.append(self.random.choice(["Foggy Links", "Missing Links"]))
+        return names
 
     def set_rules(self) -> None:
         round_count = self.options.check_count.value
@@ -725,6 +745,12 @@ class WikipelagoWorld(World):
             "randomize_navboxes": bool(self.options.randomize_navboxes.value),
             "randomize_hatnotes": bool(self.options.randomize_hatnotes.value),
             "randomize_references": bool(self.options.randomize_references.value),
+            "deaths": bool(self.options.deaths.value),
+            "death_link": bool(self.options.death_link.value),
+            "link_bombs": bool(self.options.link_bombs.value),
+            "link_bomb_density": int(self.options.link_bomb_density.value),
+            "trap_type": int(self.options.trap_type.value),
+            "trap_link": bool(self.options.trap_link.value),
             "location_ids": {
                 "rounds": round_location_ids,
                 "grand_goal": self.location_name_to_id["Grand Goal"],

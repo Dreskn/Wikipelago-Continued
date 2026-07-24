@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.23.2";
+const APP_VERSION = "2026.07.24.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -29,6 +29,13 @@ const state = {
   restoringArticle: false,
   searchOpen: false,
   debugUnlocks: null,
+  roundVisitSet: new Set(),
+  roundVisitRound: 0,
+  trapQueue: [],
+  activeFoggy: false,
+  activeMissing: false,
+  bombTitles: new Set(),
+  handlingDeath: false,
 };
 
 const el = {
@@ -132,6 +139,148 @@ function requireApConnection() {
 
 function normalizeTitle(title) {
   return String(title || "").replace(/_/g, " ").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function deathsEnabled() {
+  return Boolean(state.status?.deaths);
+}
+
+function deathLinkEnabled() {
+  return Boolean(state.status?.death_link);
+}
+
+function linkBombsEnabled() {
+  return deathsEnabled() && Boolean(state.status?.link_bombs);
+}
+
+function resetRoundVisits(seedTitle = "") {
+  state.roundVisitSet = new Set();
+  if (seedTitle) state.roundVisitSet.add(normalizeTitle(seedTitle));
+}
+
+function syncRoundVisitTracking(status) {
+  const roundNum = Number(status?.round) || 0;
+  if (roundNum !== state.roundVisitRound) {
+    state.roundVisitRound = roundNum;
+    // Seed with this round's start only. currentTitle may still be the previous target.
+    resetRoundVisits(status?.current_start || "");
+  }
+}
+
+function titlesMatch(a, b) {
+  return normalizeTitle(a) === normalizeTitle(b);
+}
+
+async function fetchRandomWikiTitle() {
+  const url = "https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*";
+  const res = await fetch(url);
+  const data = await res.json();
+  const title = data?.query?.random?.[0]?.title;
+  if (!title) throw new Error("No random article");
+  return title;
+}
+
+async function notifyDeathLink(cause) {
+  if (!deathLinkEnabled() || !state.sessionId || !isApConnected()) return;
+  try {
+    await api(`/api/session/${state.sessionId}/death`, "POST", { cause: cause || "" });
+  } catch {
+    // Non-fatal: local death still applied.
+  }
+}
+
+async function applyDeathEffect(reasonText) {
+  if (state.handlingDeath) return;
+  state.handlingDeath = true;
+  try {
+    toast(reasonText || "Death! Jumping to a random article…", "warn", 7000);
+    const title = await fetchRandomWikiTitle();
+    resetRoundVisits(title);
+    state.bombTitles = new Set();
+    await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+  } catch {
+    toast("Death effect failed to load a random page", "warn");
+  } finally {
+    state.handlingDeath = false;
+  }
+}
+
+function queueTrap(trapName) {
+  if (trapName !== "Foggy Links" && trapName !== "Missing Links") return;
+  state.trapQueue.push(trapName);
+  toast(`Trap: ${trapName} (next page)`, "warn", 6500);
+}
+
+function consumeTrapQueueForPage(title, status) {
+  state.activeFoggy = false;
+  state.activeMissing = false;
+  if (!state.trapQueue.length) return;
+  const target = status?.current_target || "";
+  if (titlesMatch(title, target)) return;
+  const queued = state.trapQueue.splice(0, state.trapQueue.length);
+  state.activeFoggy = queued.includes("Foggy Links");
+  state.activeMissing = queued.includes("Missing Links");
+}
+
+function applyFoggyLinks(root) {
+  root.querySelectorAll("a[data-title]").forEach((a) => {
+    a.textContent = "[Link]";
+    a.title = "";
+  });
+}
+
+function applyMissingLinks(root) {
+  const links = [...root.querySelectorAll("a[data-title]")];
+  if (links.length <= 1) return;
+  const removeCount = Math.max(1, Math.min(links.length - 1, Math.floor(links.length * 0.3)));
+  for (let i = links.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [links[i], links[j]] = [links[j], links[i]];
+  }
+  for (let i = 0; i < removeCount; i += 1) {
+    const a = links[i];
+    const span = document.createElement("span");
+    span.textContent = a.textContent;
+    span.className = "missing-link";
+    a.replaceWith(span);
+  }
+}
+
+function armBombsOnPage(root, status) {
+  state.bombTitles = new Set();
+  if (!linkBombsEnabled()) return;
+  const target = status?.current_target || "";
+  const goal = status?.goal_article || "";
+  const eligible = [...root.querySelectorAll("a[data-title]")].filter((a) => {
+    const dest = a.dataset.title || "";
+    if (!dest) return false;
+    if (titlesMatch(dest, target) || titlesMatch(dest, goal)) return false;
+    return true;
+  });
+  if (!eligible.length) return;
+  const requested = Number(status?.link_bomb_count) || 1;
+  const capped = Math.min(requested, Math.floor(eligible.length / 2));
+  if (capped <= 0) return;
+  for (let i = eligible.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [eligible[i], eligible[j]] = [eligible[j], eligible[i]];
+  }
+  for (let i = 0; i < capped; i += 1) {
+    state.bombTitles.add(normalizeTitle(eligible[i].dataset.title));
+  }
+}
+
+async function processPendingEvents(events) {
+  if (!Array.isArray(events) || !events.length) return;
+  for (const event of events) {
+    if (!event || typeof event !== "object") continue;
+    if (event.type === "death") {
+      const who = event.source ? ` (${event.source})` : "";
+      await applyDeathEffect(`DeathLink${who}!`);
+    } else if (event.type === "trap") {
+      queueTrap(event.trap);
+    }
+  }
 }
 
 function ownedSearchLetters() {
@@ -316,6 +465,7 @@ function updateHUD(status) {
   const wasConnected = state.status?.connected_to_ap === true;
   state.status = status;
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
+  syncRoundVisitTracking(status);
   el.connBadge.textContent = status.connected_to_ap ? "Connected" : "Offline";
   el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
 
@@ -368,6 +518,9 @@ function updateHUD(status) {
     lastStickyError = "";
   }
   saveLocalProgress();
+  if (Array.isArray(status.pending_events) && status.pending_events.length) {
+    processPendingEvents(status.pending_events);
+  }
 }
 
 function isDisplayUnlocked(unlockedKey) {
@@ -595,6 +748,15 @@ async function openArticle(title, options = {}) {
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
     prepareArticleHtml(el.articleBody);
+    consumeTrapQueueForPage(title, state.status);
+    if (state.activeFoggy) applyFoggyLinks(el.articleBody);
+    if (state.activeMissing) applyMissingLinks(el.articleBody);
+    armBombsOnPage(el.articleBody, state.status);
+    if (countAsClick || !state.roundVisitSet.size) {
+      state.roundVisitSet.add(normalizeTitle(title));
+    } else if (!submitCheck) {
+      state.roundVisitSet.add(normalizeTitle(title));
+    }
     state.baseArticleHtml = el.articleBody.innerHTML;
     if (state.searchOpen && el.pageSearchInput.value) {
       const sanitized = sanitizeSearchInput(el.pageSearchInput.value);
@@ -632,6 +794,7 @@ async function openArticle(title, options = {}) {
       let msg = `Target hit: ${result.target}`;
       if (result.sent_text) msg += ` — ${result.sent_text}`;
       toast(msg, "ok", 7500);
+      // Next round starts from its start article — visit set refreshes on round change via HUD.
     }
     if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
     if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
@@ -655,11 +818,33 @@ async function restoreArticleView(force = false) {
   }
 }
 
-el.articleBody.addEventListener("click", (e) => {
+el.articleBody.addEventListener("click", async (e) => {
   const a = e.target.closest("a[data-title]");
   if (!a) return;
   e.preventDefault();
-  openArticle(a.dataset.title, { countAsClick: true });
+  const dest = a.dataset.title || "";
+  const destNorm = normalizeTitle(dest);
+  const target = state.status?.current_target || "";
+
+  // Bomb hit (only on forward wiki clicks).
+  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !titlesMatch(dest, target)) {
+    await notifyDeathLink(`${state.status?.slot_name || "Player"} hit a link bomb`);
+    await applyDeathEffect("Boom! Link bomb — random page.");
+    return;
+  }
+
+  // Loop-death: forward revisit of a page already visited this round.
+  if (
+    deathsEnabled()
+    && state.roundVisitSet.has(destNorm)
+    && !titlesMatch(dest, target)
+  ) {
+    await notifyDeathLink(`${state.status?.slot_name || "Player"} looped on Wikipedia`);
+    await applyDeathEffect("Loop death! Already visited this round.");
+    return;
+  }
+
+  openArticle(dest, { countAsClick: true });
 });
 
 el.articleBody.addEventListener("wheel", (e) => {

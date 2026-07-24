@@ -34,7 +34,12 @@ DEFAULT_ITEMS = {
     "Navbox Lens": 1_870_014,
     "Hatnote Lens": 1_870_015,
     "Reference Lens": 1_870_016,
+    "Foggy Links": 1_870_046,
+    "Missing Links": 1_870_047,
 }
+
+TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
+LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
 
 SESSION_TTL_SECONDS = 60 * 60 * 6
 # Transient AP drops: retry a few times, then stop and surface last_error.
@@ -94,6 +99,13 @@ class SessionState:
     randomize_navboxes: bool = False
     randomize_hatnotes: bool = False
     randomize_references: bool = False
+    deaths: bool = False
+    death_link: bool = False
+    link_bombs: bool = False
+    link_bomb_density: int = 0
+    trap_type: int = 0
+    trap_link: bool = False
+    pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=lambda: [{"start": "Wikipedia", "target": "Philosophy"}])
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
@@ -191,6 +203,14 @@ class SessionState:
             "randomize_navboxes": self.randomize_navboxes,
             "randomize_hatnotes": self.randomize_hatnotes,
             "randomize_references": self.randomize_references,
+            "deaths": self.deaths,
+            "death_link": self.death_link,
+            "link_bombs": self.link_bombs,
+            "link_bomb_density": self.link_bomb_density,
+            "link_bomb_count": LINK_BOMB_DENSITY_COUNTS.get(self.link_bomb_density, 1),
+            "trap_type": self.trap_type,
+            "trap_link": self.trap_link,
+            "pending_events": list(self.pending_events),
             "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
             "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
             "incipit_unlocked": (not self.randomize_incipit) or self.has_item("Lead Lens"),
@@ -238,6 +258,7 @@ class APConnection:
         self.state.goal_status_sent = False
         self.state.warmer_colder = None
         self.state.last_distance_estimate = None
+        self.state.pending_events.clear()
         self.state.slot = 0
         self.state.player_names.clear()
         self.state.slot_games.clear()
@@ -356,6 +377,7 @@ class APConnection:
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
+                await self._update_link_tags()
                 await self._canonicalize_active_targets()
                 await self._request_data_package()
             elif cmd == "ConnectionRefused":
@@ -365,10 +387,18 @@ class APConnection:
                 items = packet.get("items", [])
                 index = int(packet.get("index", 0))
                 start = max(self.items_seen - index, 0)
+                new_item_ids: list[int] = []
                 for item in items[start:]:
-                    self.state.received_items.append(int(item.get("item")))
+                    item_id = int(item.get("item"))
+                    self.state.received_items.append(item_id)
+                    new_item_ids.append(item_id)
                 self.items_seen = max(self.items_seen, index + len(items))
+                # index 0 is a full inventory sync (connect/reconnect) — do not re-fire traps.
+                if index != 0 and new_item_ids:
+                    await self._handle_new_items(new_item_ids)
                 await self.try_finish_boss()
+            elif cmd == "Bounced":
+                await self._handle_bounced(packet)
             elif cmd == "DataPackage":
                 self._apply_data_package(packet)
             elif cmd == "LocationInfo":
@@ -439,6 +469,12 @@ class APConnection:
         self.state.randomize_navboxes = bool(slot_data.get("randomize_navboxes", False))
         self.state.randomize_hatnotes = bool(slot_data.get("randomize_hatnotes", False))
         self.state.randomize_references = bool(slot_data.get("randomize_references", False))
+        self.state.deaths = bool(slot_data.get("deaths", False))
+        self.state.death_link = bool(slot_data.get("death_link", False))
+        self.state.link_bombs = bool(slot_data.get("link_bombs", False))
+        self.state.link_bomb_density = int(slot_data.get("link_bomb_density", 0))
+        self.state.trap_type = int(slot_data.get("trap_type", 0))
+        self.state.trap_link = bool(slot_data.get("trap_link", False))
 
         location_ids = slot_data.get("location_ids", {})
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
@@ -593,6 +629,109 @@ class APConnection:
         cleaned = server.replace("ws://", "").replace("wss://", "").replace("http://", "").replace("https://", "").strip("/")
         scheme = "wss" if cleaned.startswith("archipelago.gg") else "ws"
         return f"{scheme}://{cleaned}"
+
+    def _item_id_to_name(self, item_id: int) -> str | None:
+        for name, code in self.state.item_ids.items():
+            if int(code) == int(item_id):
+                return name
+        return None
+
+    def _trap_allowed(self, trap_name: str) -> bool:
+        if trap_name not in TRAP_ITEM_NAMES:
+            return False
+        if self.state.trap_type == 1:
+            return trap_name == "Foggy Links"
+        if self.state.trap_type == 2:
+            return trap_name == "Missing Links"
+        return True
+
+    def _queue_event(self, event: dict[str, Any]) -> None:
+        self.state.pending_events.append(event)
+
+    def take_pending_events(self) -> list[dict[str, Any]]:
+        events = list(self.state.pending_events)
+        self.state.pending_events.clear()
+        return events
+
+    async def _update_link_tags(self) -> None:
+        if self.ws is None:
+            return
+        tags = ["AP", "SlotData"]
+        if self.state.death_link:
+            tags.append("DeathLink")
+        if self.state.trap_link:
+            tags.append("TrapLink")
+        payload = [{"cmd": "ConnectUpdate", "tags": tags}]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
+
+    async def _handle_new_items(self, item_ids: list[int]) -> None:
+        for item_id in item_ids:
+            name = self._item_id_to_name(item_id)
+            if not name or name not in TRAP_ITEM_NAMES:
+                continue
+            if not self._trap_allowed(name):
+                continue
+            self._queue_event({"type": "trap", "trap": name, "source": "item"})
+            if self.state.trap_link:
+                await self.send_trap_link(name)
+
+    async def _handle_bounced(self, packet: dict[str, Any]) -> None:
+        tags = packet.get("tags") or []
+        data = packet.get("data") or {}
+        if not isinstance(data, dict):
+            return
+        source = str(data.get("source") or "").strip()
+        our_name = self.state.player_names.get(self.state.slot, self.slot_name)
+
+        if "DeathLink" in tags and self.state.death_link:
+            if source and our_name and source == our_name:
+                return
+            cause = str(data.get("cause") or "").strip()
+            self._queue_event({"type": "death", "source": source or "DeathLink", "cause": cause})
+            return
+
+        if "TrapLink" in tags and self.state.trap_link:
+            if source and our_name and source == our_name:
+                return
+            trap_name = str(data.get("trap_name") or "").strip()
+            if not self._trap_allowed(trap_name):
+                return
+            self._queue_event({"type": "trap", "trap": trap_name, "source": source or "TrapLink"})
+
+    async def send_death_link(self, cause: str = "") -> None:
+        if not self.state.death_link or self.ws is None:
+            return
+        source = self.state.player_names.get(self.state.slot, self.slot_name) or self.slot_name
+        payload = [{
+            "cmd": "Bounce",
+            "tags": ["DeathLink"],
+            "data": {
+                "time": time.time(),
+                "source": source,
+                "cause": cause or f"{source} died on Wikipedia",
+            },
+        }]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
+
+    async def send_trap_link(self, trap_name: str) -> None:
+        if not self.state.trap_link or self.ws is None:
+            return
+        if not self._trap_allowed(trap_name):
+            return
+        source = self.state.player_names.get(self.state.slot, self.slot_name) or self.slot_name
+        payload = [{
+            "cmd": "Bounce",
+            "tags": ["TrapLink"],
+            "data": {
+                "time": time.time(),
+                "source": source,
+                "trap_name": trap_name,
+            },
+        }]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
 
     async def send_location_checks(self, location_ids: list[int]) -> None:
         if not location_ids or self.ws is None:
@@ -955,7 +1094,22 @@ class App:
         session = self.sessions.get(sid)
         if not session:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
-        return web.json_response({"ok": True, "status": session.state.to_status()})
+        status = session.state.to_status()
+        events = session.conn.take_pending_events()
+        status["pending_events"] = events
+        return web.json_response({"ok": True, "status": status})
+
+    async def session_death(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        if not session.state.connected_to_ap:
+            return web.json_response({"ok": False, "error": "not connected"}, status=400)
+        data = await request.json()
+        cause = str(data.get("cause") or "").strip()
+        await session.conn.send_death_link(cause)
+        return web.json_response({"ok": True})
 
     async def session_check(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
@@ -1001,6 +1155,7 @@ class App:
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
+        app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)

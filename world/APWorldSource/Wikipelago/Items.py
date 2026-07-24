@@ -28,7 +28,11 @@ item_table: dict[str, WikipelagoItemData] = {
     "Navbox Lens": WikipelagoItemData(ITEM_OFFSET + 14, ItemClassification.useful),
     "Hatnote Lens": WikipelagoItemData(ITEM_OFFSET + 15, ItemClassification.useful),
     "Reference Lens": WikipelagoItemData(ITEM_OFFSET + 16, ItemClassification.useful),
+    "Foggy Links": WikipelagoItemData(ITEM_OFFSET + 46, ItemClassification.trap),
+    "Missing Links": WikipelagoItemData(ITEM_OFFSET + 47, ItemClassification.trap),
 }
 
 for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ", start=20):
     item_table[f"Search Letter {letter}"] = WikipelagoItemData(ITEM_OFFSET + index, ItemClassification.useful)
+
+TRAP_ITEM_NAMES: tuple[str, ...] = ("Foggy Links", "Missing Links")
