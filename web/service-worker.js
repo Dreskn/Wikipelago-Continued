@@ -1,10 +1,10 @@
-const CACHE_NAME = "wikipelago-shell-2026-07-24-1";
+const CACHE_NAME = "wikipelago-shell-2026-07-24-2";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/static/app.js?v=20260724-1",
-  "/static/style.css?v=20260724-1",
+  "/static/app.js?v=20260724-2",
+  "/static/style.css?v=20260724-2",
   "/icons/icon-192_placeholder.png",
   "/icons/icon-512_placeholder.png",
 ];
@@ -41,9 +41,34 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/") || url.pathname === "/health") return;
+  // Never cache API/health/SW itself — stale shell was hiding deploys.
+  if (
+    url.pathname.startsWith("/api/")
+    || url.pathname === "/health"
+    || url.pathname === "/service-worker.js"
+  ) {
+    return;
+  }
+
+  const isNavigate = request.mode === "navigate" || url.pathname === "/";
 
   event.respondWith((async () => {
+    // HTML shell: network-first so branch/version badge updates after deploy.
+    if (isNavigate) {
+      try {
+        const response = await fetch(request);
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put("/", response.clone());
+        }
+        return response;
+      } catch (error) {
+        const fallback = await caches.match("/");
+        if (fallback) return fallback;
+        throw error;
+      }
+    }
+
     const cached = await caches.match(request);
     if (cached) return cached;
 
@@ -55,10 +80,6 @@ self.addEventListener("fetch", (event) => {
       }
       return response;
     } catch (error) {
-      if (request.mode === "navigate") {
-        const fallback = await caches.match("/");
-        if (fallback) return fallback;
-      }
       throw error;
     }
   })());
