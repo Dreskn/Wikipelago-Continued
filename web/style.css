@@ -284,19 +284,50 @@ button {
   color: #6f8499;
   font-size: 0.75rem;
 }
-.helper-link {
+.helper-box {
   margin: 2px 4px 0;
   font-size: 0.78rem;
   color: #6f8499;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-.helper-link a {
+.helper-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #6f8499;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.helper-toggle:hover { color: var(--muted); }
+.helper-panel {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.helper-panel.hidden { display: none; }
+.helper-line { margin: 0; }
+.helper-line a {
   color: #8aa3bb;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.helper-link a:hover {
-  color: var(--muted);
+.helper-line a:hover { color: var(--muted); }
+.helper-debug-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 4px;
+  cursor: pointer;
+  color: #8aa3bb;
+}
+.helper-debug-label input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
 }
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }

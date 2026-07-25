@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260725-5" />
+  <link rel="stylesheet" href="/static/style.css?v=20260725-6" />
 </head>
 <body>
   <div class="layout">
@@ -80,14 +80,26 @@
           <p>Display Lenses: <span id="lensesItem">Native wiki</span></p>
         </div>
 
-        <p class="helper-link">
-          Are you stuck?
-          <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer">Wiki path solver</a>
-        </p>
+        <div class="helper-box">
+          <button type="button" id="stuckToggleBtn" class="helper-toggle">Are you really stuck?</button>
+          <div id="stuckPanel" class="helper-panel hidden">
+            <p class="helper-line">
+              Try the
+              <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer">Wiki path solver</a>
+            </p>
+            <p class="helper-line">
+              Still stuck?
+              <label class="helper-debug-label">
+                <input type="checkbox" id="enableDebugMenuChk" />
+                Enable debug menu
+              </label>
+            </p>
+          </div>
+        </div>
       </aside>
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260725-5"></script>
+  <script src="/static/app.js?v=20260725-6"></script>
 </body>
 </html>

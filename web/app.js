@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.5";
+const APP_VERSION = "2026.07.25.6";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -12,7 +12,8 @@ const DISPLAY_LOCKS = [
   { unlockedKey: "references_unlocked", lockClass: "lock-references", label: "References" },
 ];
 
-const DEBUG_DISPLAY = new URLSearchParams(window.location.search).has("debug");
+let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
+let debugPanelReady = false;
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
 const CONNECTION_STORAGE_KEY = "wikipelago_connection";
@@ -76,6 +77,9 @@ const el = {
   compassItem: document.getElementById("compassItem"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
+  stuckToggleBtn: document.getElementById("stuckToggleBtn"),
+  stuckPanel: document.getElementById("stuckPanel"),
+  enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
 };
 
 function loadSavedConnection() {
@@ -790,11 +794,40 @@ function renderLensStatus(status) {
   el.lensesItem.textContent = parts.length ? parts.join(" · ") : "Native wiki";
 }
 
+function setDebugQueryParam(enabled) {
+  const url = new URL(window.location.href);
+  if (enabled) url.searchParams.set("debug", "");
+  else url.searchParams.delete("debug");
+  // Keep hash (current article) while toggling debug mode.
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState(window.history.state, "", next);
+}
+
+function enableDebugDisplayMenu() {
+  debugDisplayEnabled = true;
+  setDebugQueryParam(true);
+  if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
+  initDebugDisplayPanel();
+}
+
+function disableDebugDisplayMenu() {
+  debugDisplayEnabled = false;
+  debugPanelReady = false;
+  state.debugUnlocks = null;
+  setDebugQueryParam(false);
+  document.getElementById("debugLensesCard")?.remove();
+  if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = false;
+  applyDisplayLocks();
+  if (state.status) renderLensStatus(state.status);
+}
+
 function initDebugDisplayPanel() {
-  if (!DEBUG_DISPLAY) return;
+  if (!debugDisplayEnabled || debugPanelReady) return;
+  debugPanelReady = true;
   state.debugUnlocks = Object.fromEntries(DISPLAY_LOCKS.map((lock) => [lock.unlockedKey, false]));
 
   const card = document.createElement("div");
+  card.id = "debugLensesCard";
   card.className = "card";
   card.innerHTML = "<h2>Debug Lenses</h2>";
   const list = document.createElement("div");
@@ -832,6 +865,32 @@ function initDebugDisplayPanel() {
   document.querySelector(".side-panel")?.appendChild(card);
   applyDisplayLocks();
   renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+}
+
+function bindStuckHelper() {
+  if (el.stuckToggleBtn && el.stuckPanel) {
+    el.stuckToggleBtn.addEventListener("click", () => {
+      const open = el.stuckPanel.classList.toggle("hidden") === false;
+      el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+    el.stuckToggleBtn.setAttribute("aria-expanded", "false");
+  }
+  if (el.enableDebugMenuChk) {
+    el.enableDebugMenuChk.addEventListener("change", () => {
+      if (el.enableDebugMenuChk.checked) {
+        enableDebugDisplayMenu();
+        toast("Debug menu enabled", "ok", 4000);
+      } else {
+        disableDebugDisplayMenu();
+        toast("Debug menu disabled", "warn", 3500);
+      }
+    });
+  }
+  if (debugDisplayEnabled) {
+    if (el.stuckPanel) el.stuckPanel.classList.remove("hidden");
+    if (el.stuckToggleBtn) el.stuckToggleBtn.setAttribute("aria-expanded", "true");
+    enableDebugDisplayMenu();
+  }
 }
 
 
@@ -1212,7 +1271,7 @@ if ("serviceWorker" in navigator) {
 }
 
 bindTargetTooltip();
-initDebugDisplayPanel();
+bindStuckHelper();
 setInterval(pollStatus, 1500);
 
 (async () => {
