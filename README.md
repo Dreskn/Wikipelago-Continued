@@ -9,7 +9,7 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 
 - **[Overview](docs/overview.md)** — how the game works (rounds, items, goal)
 - **[Setup guide](docs/setup.md)** — install the apworld, generate a seed, connect and play
-- **[Options](docs/options.md)** — YAML settings explained (length, sanities, lenses, categories)
+- **[Options](docs/options.md)** — YAML settings explained (length, sanities, lenses, categories, deaths, traps)
 - **[Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)** — download `Wikipelago.apworld` and the player YAML template
 
 ## Play
@@ -17,7 +17,7 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 Live web client: https://wikipelago-contd.onrender.com/
 
 Recommended Archipelago version: **0.6.7**  
-World version: **0.3.0-Continued**
+World version: **0.4.0-Continued**
 
 Looking for more info about Archipelago in general? See the [website](https://archipelago.gg/) or [GitHub](https://github.com/ArchipelagoMW/Archipelago).
 
