@@ -202,6 +202,56 @@ class GoalArticlePreset(Choice):
     default = 2
 
 
+class Deaths(Toggle):
+    """When enabled, revisiting a page already visited this round causes a death (random Wikipedia page)."""
+    display_name = "Deaths"
+    default = 0
+
+
+class DeathLink(Toggle):
+    """When enabled, join Archipelago DeathLink (send and receive)."""
+    display_name = "Death Link"
+    default = 0
+
+
+class LinkBombs(Toggle):
+    """When enabled (and Deaths is on), random links on each page may be bombs that cause a death."""
+    display_name = "Link Bombs"
+    default = 0
+
+
+class LinkBombDensity(Choice):
+    """How many bomb links to try to place per page (capped at half the eligible links). Requires Deaths and Link Bombs."""
+    display_name = "Link Bomb Density"
+    option_few = 0
+    option_more = 1
+    option_insane = 2
+    default = 0
+
+
+class TrapCount(Range):
+    """Number of trap items (Foggy Links / Missing Links) added to the pool before Footnote filler."""
+    display_name = "Trap Count"
+    range_start = 0
+    range_end = 793
+    default = 0
+
+
+class TrapType(Choice):
+    """Which trap items to generate and accept from Trap Link."""
+    display_name = "Trap Type"
+    option_both = 0
+    option_only_foggy_links = 1
+    option_only_missing_links = 2
+    default = 0
+
+
+class TrapLink(Toggle):
+    """When enabled, share traps with other Trap Link players (send and receive). Independent of Trap Count."""
+    display_name = "Trap Link"
+    default = 0
+
+
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
@@ -235,3 +285,10 @@ class WikipelagoOptions(PerGameCommonOptions):
     include_mythology_folklore: IncludeMythologyFolklore
     include_music: IncludeMusic
     goal_article_preset: GoalArticlePreset
+    deaths: Deaths
+    death_link: DeathLink
+    link_bombs: LinkBombs
+    link_bomb_density: LinkBombDensity
+    trap_count: TrapCount
+    trap_type: TrapType
+    trap_link: TrapLink

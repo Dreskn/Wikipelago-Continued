@@ -108,3 +108,28 @@ Wikipelago:
   include_art_literature: true
   include_mythology_folklore: true
   include_music: true
+
+  # --- Deaths / DeathLink / bombs (off by default = peaceful) ---
+
+  # Local loop-death: revisiting a page already visited this round jumps to a random article.
+  deaths: false
+
+  # Full Archipelago DeathLink (send and receive).
+  death_link: false
+
+  # Hidden bomb links on each page (requires deaths). Hitting one causes a death.
+  link_bombs: false
+
+  # Bomb density when link_bombs is on: few | more | insane
+  link_bomb_density: few
+
+  # --- Traps ---
+
+  # Number of Foggy Links / Missing Links trap items (mandatory pool load; can fail generation if too high).
+  trap_count: 0
+
+  # Which traps to generate / accept from Trap Link: both | only_foggy_links | only_missing_links
+  trap_type: both
+
+  # Share traps with other Trap Link players (independent of trap_count).
+  trap_link: false

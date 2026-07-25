@@ -21,6 +21,12 @@ After installing the apworld, you can generate a fresh template from the Archipe
 
 Rough pacing tip: if `start_rounds_unlocked` is high relative to `check_count`, the seed feels more open early; if low, you wait more on Round Access.
 
+### Target rerolls (client)
+
+While connected, you can **Reroll** the current round’s target up to **3 times per round** from the web client. Alternatives come from leftover articles in the same seed pool (same enabled categories). The Grand Goal round cannot be rerolled. Requires a seed generated with a current apworld that includes a `reroll_pool` (rebuild/reinstall if the button stays disabled).
+
+Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
+
 ---
 
 ## Grand Goal article
@@ -92,11 +98,39 @@ Turn categories off to shrink or theme the pool (for example movies + TV only). 
 
 ---
 
+## Deaths, DeathLink, and bombs (off by default)
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `deaths` | `false` | Forward-revisit a page already visited this round → death (random Wikipedia page). Peaceful when off. |
+| `death_link` | `false` | Full Archipelago DeathLink (send and receive). |
+| `link_bombs` | `false` | Hidden bomb links on each page (requires `deaths`). Hitting one causes a death. |
+| `link_bomb_density` | `few` | `few` (1) / `more` (5) / `insane` (20), capped at half the eligible links. Never bombs Target or Grand Goal links. |
+
+Death effect: jump to a random article. Round visit tracking is cleared as soon as the death fires (and again on the landing page) so deaths cannot chain into a soft-lock while the random page loads. Fragments and unlocks are kept.
+
+---
+
+## Traps
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `trap_count` | `0` | How many Foggy Links / Missing Links items to add (before Footnote filler). Counts toward mandatory item budget — generation fails if too many. |
+| `trap_type` | `both` | `both` / `only_foggy_links` / `only_missing_links`. |
+| `trap_link` | `false` | Share traps with other Trap Link players (independent of `trap_count`). |
+
+| Trap | Effect |
+| --- | --- |
+| **Foggy Links** | Next non-target page: link labels become `[Link]`. |
+| **Missing Links** | Next non-target page: about 30% of links removed (never all). |
+
+---
+
 ## Suggested starting points
 
-- **Casual / first multiworld:** defaults in the template (`check_count: 25`, fragments `5`, all sanities/lenses off, all categories on).
+- **Casual / first multiworld:** defaults (`deaths`/`death_link`/`traps` off).
 - **Shorter seed:** lower `check_count` and `required_fragments`.
-- **Harder / spice:** enable one sanity or one lens — not everything at once.
+- **Harder / spice:** enable one sanity or one lens — not everything at once. Add `deaths` or a small `trap_count` for chaos.
 
 For gameplay concepts (rounds, fragments, items), see the [Overview](overview.md).  
 For install and connect steps, see the [Setup guide](setup.md).

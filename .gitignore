@@ -17,3 +17,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Local-only notes / test configs (not for the repo)
+docs/project-recap.md
+yaml/Wikipelago_local_test.yaml

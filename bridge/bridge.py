@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import time
 import urllib.parse
 import urllib.request
@@ -18,6 +19,27 @@ from aiohttp import web
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
+
+# Client/release label for the hosted UI (independent of apworld tag until a release cut).
+CLIENT_VERSION = "0.4.0-DeadAndReborn"
+
+
+def build_info() -> dict[str, Any]:
+    """Deploy identity for the UI. Render injects RENDER_GIT_* on hosted services."""
+    branch = (os.environ.get("RENDER_GIT_BRANCH") or "").strip() or "local"
+    commit_full = (os.environ.get("RENDER_GIT_COMMIT") or "").strip()
+    commit = commit_full[:7] if commit_full else ""
+    service = (os.environ.get("RENDER_SERVICE_NAME") or "").strip()
+    staging = branch not in ("main", "master")
+    return {
+        "ok": True,
+        "version": CLIENT_VERSION,
+        "branch": branch,
+        "commit": commit,
+        "commit_full": commit_full,
+        "service": service,
+        "staging": staging,
+    }
 
 DEFAULT_ITEMS = {
     "Knowledge Fragment": 1_870_001,
@@ -34,7 +56,33 @@ DEFAULT_ITEMS = {
     "Navbox Lens": 1_870_014,
     "Hatnote Lens": 1_870_015,
     "Reference Lens": 1_870_016,
+    "Foggy Links": 1_870_046,
+    "Missing Links": 1_870_047,
 }
+
+TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
+LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
+TARGET_REROLLS_PER_ROUND = 3
+
+DEBUG_TOOL_ITEMS = ("Back Button", "Wiki Compass", "Ctrl+F Lens")
+DEBUG_LENS_ITEMS = (
+    "Table Lens",
+    "Picture Lens",
+    "Lead Lens",
+    "Infobox Lens",
+    "Contents Lens",
+    "Navbox Lens",
+    "Hatnote Lens",
+    "Reference Lens",
+)
+DEBUG_OPTION_BOOLS = (
+    "deaths",
+    "death_link",
+    "link_bombs",
+    "trap_link",
+    "searchsanity",
+    "scrollsanity",
+)
 
 SESSION_TTL_SECONDS = 60 * 60 * 6
 # Transient AP drops: retry a few times, then stop and surface last_error.
@@ -94,7 +142,18 @@ class SessionState:
     randomize_navboxes: bool = False
     randomize_hatnotes: bool = False
     randomize_references: bool = False
+    deaths: bool = False
+    death_link: bool = False
+    link_bombs: bool = False
+    link_bomb_density: int = 0
+    trap_count: int = 0
+    trap_type: int = 0
+    trap_link: bool = False
+    pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=lambda: [{"start": "Wikipedia", "target": "Philosophy"}])
+    reroll_pool: list[str] = field(default_factory=list)
+    target_rerolls_used: int = 0
+    target_rerolls_round: int = -1
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
     item_ids: dict[str, int] = field(default_factory=lambda: DEFAULT_ITEMS.copy())
@@ -158,7 +217,28 @@ class SessionState:
         unlock_items = self.round_access_count()
         return min(self.check_count, self.start_rounds_unlocked + (unlock_items * step))
 
+    def sync_target_reroll_counter(self) -> None:
+        if self.target_rerolls_round != self.round_index:
+            self.target_rerolls_round = self.round_index
+            self.target_rerolls_used = 0
+
+    def target_rerolls_remaining(self) -> int:
+        self.sync_target_reroll_counter()
+        return max(0, TARGET_REROLLS_PER_ROUND - self.target_rerolls_used)
+
+    def can_reroll_target(self) -> bool:
+        self.sync_target_reroll_counter()
+        if not self.connected_to_ap or self.boss_completed:
+            return False
+        # Final round target is the Grand Goal — do not reroll it.
+        if self.round_index >= max(0, self.check_count - 1):
+            return False
+        if self.target_rerolls_remaining() <= 0:
+            return False
+        return bool(self.reroll_pool)
+
     def to_status(self) -> dict[str, Any]:
+        self.sync_target_reroll_counter()
         return {
             "connected_to_ap": self.connected_to_ap,
             "ap_server": self.ap_server,
@@ -168,6 +248,10 @@ class SessionState:
             "goal_article": self.goal_article(),
             "round": min(self.round_index + 1, self.check_count),
             "check_count": self.check_count,
+            "target_rerolls_max": TARGET_REROLLS_PER_ROUND,
+            "target_rerolls_used": self.target_rerolls_used,
+            "target_rerolls_remaining": self.target_rerolls_remaining(),
+            "can_reroll_target": self.can_reroll_target(),
             "clicks_used": self.clicks_used,
             "fragments": self.fragments(),
             "required_fragments": self.required_fragments,
@@ -191,6 +275,15 @@ class SessionState:
             "randomize_navboxes": self.randomize_navboxes,
             "randomize_hatnotes": self.randomize_hatnotes,
             "randomize_references": self.randomize_references,
+            "deaths": self.deaths,
+            "death_link": self.death_link,
+            "link_bombs": self.link_bombs,
+            "link_bomb_density": self.link_bomb_density,
+            "link_bomb_count": LINK_BOMB_DENSITY_COUNTS.get(self.link_bomb_density, 1),
+            "trap_count": self.trap_count,
+            "trap_type": self.trap_type,
+            "trap_link": self.trap_link,
+            "pending_events": list(self.pending_events),
             "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
             "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
             "incipit_unlocked": (not self.randomize_incipit) or self.has_item("Lead Lens"),
@@ -238,6 +331,7 @@ class APConnection:
         self.state.goal_status_sent = False
         self.state.warmer_colder = None
         self.state.last_distance_estimate = None
+        self.state.pending_events.clear()
         self.state.slot = 0
         self.state.player_names.clear()
         self.state.slot_games.clear()
@@ -356,6 +450,7 @@ class APConnection:
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
+                await self._update_link_tags()
                 await self._canonicalize_active_targets()
                 await self._request_data_package()
             elif cmd == "ConnectionRefused":
@@ -365,10 +460,18 @@ class APConnection:
                 items = packet.get("items", [])
                 index = int(packet.get("index", 0))
                 start = max(self.items_seen - index, 0)
+                new_item_ids: list[int] = []
                 for item in items[start:]:
-                    self.state.received_items.append(int(item.get("item")))
+                    item_id = int(item.get("item"))
+                    self.state.received_items.append(item_id)
+                    new_item_ids.append(item_id)
                 self.items_seen = max(self.items_seen, index + len(items))
+                # index 0 is a full inventory sync (connect/reconnect) — do not re-fire traps.
+                if index != 0 and new_item_ids:
+                    await self._handle_new_items(new_item_ids)
                 await self.try_finish_boss()
+            elif cmd == "Bounced":
+                await self._handle_bounced(packet)
             elif cmd == "DataPackage":
                 self._apply_data_package(packet)
             elif cmd == "LocationInfo":
@@ -421,6 +524,14 @@ class APConnection:
             if normalized_pairs:
                 self.state.round_pairs = normalized_pairs
 
+        reroll_pool = slot_data.get("reroll_pool")
+        if isinstance(reroll_pool, list):
+            self.state.reroll_pool = [
+                self._canonicalize_known_title(str(title).strip())
+                for title in reroll_pool
+                if str(title).strip()
+            ]
+
         self.state.check_count = int(slot_data.get("check_count", len(self.state.round_pairs)))
         self.state.required_fragments = int(slot_data.get("required_fragments", self.state.required_fragments))
         self.state.start_rounds_unlocked = int(slot_data.get("start_rounds_unlocked", self.state.start_rounds_unlocked))
@@ -439,6 +550,13 @@ class APConnection:
         self.state.randomize_navboxes = bool(slot_data.get("randomize_navboxes", False))
         self.state.randomize_hatnotes = bool(slot_data.get("randomize_hatnotes", False))
         self.state.randomize_references = bool(slot_data.get("randomize_references", False))
+        self.state.deaths = bool(slot_data.get("deaths", False))
+        self.state.death_link = bool(slot_data.get("death_link", False))
+        self.state.link_bombs = bool(slot_data.get("link_bombs", False))
+        self.state.link_bomb_density = int(slot_data.get("link_bomb_density", 0))
+        self.state.trap_count = int(slot_data.get("trap_count", 0))
+        self.state.trap_type = int(slot_data.get("trap_type", 0))
+        self.state.trap_link = bool(slot_data.get("trap_link", False))
 
         location_ids = slot_data.get("location_ids", {})
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
@@ -593,6 +711,109 @@ class APConnection:
         cleaned = server.replace("ws://", "").replace("wss://", "").replace("http://", "").replace("https://", "").strip("/")
         scheme = "wss" if cleaned.startswith("archipelago.gg") else "ws"
         return f"{scheme}://{cleaned}"
+
+    def _item_id_to_name(self, item_id: int) -> str | None:
+        for name, code in self.state.item_ids.items():
+            if int(code) == int(item_id):
+                return name
+        return None
+
+    def _trap_allowed(self, trap_name: str) -> bool:
+        if trap_name not in TRAP_ITEM_NAMES:
+            return False
+        if self.state.trap_type == 1:
+            return trap_name == "Foggy Links"
+        if self.state.trap_type == 2:
+            return trap_name == "Missing Links"
+        return True
+
+    def _queue_event(self, event: dict[str, Any]) -> None:
+        self.state.pending_events.append(event)
+
+    def take_pending_events(self) -> list[dict[str, Any]]:
+        events = list(self.state.pending_events)
+        self.state.pending_events.clear()
+        return events
+
+    async def _update_link_tags(self) -> None:
+        if self.ws is None:
+            return
+        tags = ["AP", "SlotData"]
+        if self.state.death_link:
+            tags.append("DeathLink")
+        if self.state.trap_link:
+            tags.append("TrapLink")
+        payload = [{"cmd": "ConnectUpdate", "tags": tags}]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
+
+    async def _handle_new_items(self, item_ids: list[int]) -> None:
+        for item_id in item_ids:
+            name = self._item_id_to_name(item_id)
+            if not name or name not in TRAP_ITEM_NAMES:
+                continue
+            if not self._trap_allowed(name):
+                continue
+            self._queue_event({"type": "trap", "trap": name, "source": "item"})
+            if self.state.trap_link:
+                await self.send_trap_link(name)
+
+    async def _handle_bounced(self, packet: dict[str, Any]) -> None:
+        tags = packet.get("tags") or []
+        data = packet.get("data") or {}
+        if not isinstance(data, dict):
+            return
+        source = str(data.get("source") or "").strip()
+        our_name = self.state.player_names.get(self.state.slot, self.slot_name)
+
+        if "DeathLink" in tags and self.state.death_link:
+            if source and our_name and source == our_name:
+                return
+            cause = str(data.get("cause") or "").strip()
+            self._queue_event({"type": "death", "source": source or "DeathLink", "cause": cause})
+            return
+
+        if "TrapLink" in tags and self.state.trap_link:
+            if source and our_name and source == our_name:
+                return
+            trap_name = str(data.get("trap_name") or "").strip()
+            if not self._trap_allowed(trap_name):
+                return
+            self._queue_event({"type": "trap", "trap": trap_name, "source": source or "TrapLink"})
+
+    async def send_death_link(self, cause: str = "") -> None:
+        if not self.state.death_link or self.ws is None:
+            return
+        source = self.state.player_names.get(self.state.slot, self.slot_name) or self.slot_name
+        payload = [{
+            "cmd": "Bounce",
+            "tags": ["DeathLink"],
+            "data": {
+                "time": time.time(),
+                "source": source,
+                "cause": cause or f"{source} died on Wikipedia",
+            },
+        }]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
+
+    async def send_trap_link(self, trap_name: str) -> None:
+        if not self.state.trap_link or self.ws is None:
+            return
+        if not self._trap_allowed(trap_name):
+            return
+        source = self.state.player_names.get(self.state.slot, self.slot_name) or self.slot_name
+        payload = [{
+            "cmd": "Bounce",
+            "tags": ["TrapLink"],
+            "data": {
+                "time": time.time(),
+                "source": source,
+                "trap_name": trap_name,
+            },
+        }]
+        async with self.send_lock:
+            await self.ws.send(json.dumps(payload))
 
     async def send_location_checks(self, location_ids: list[int]) -> None:
         if not location_ids or self.ws is None:
@@ -838,6 +1059,7 @@ class APConnection:
                 scouted = await self.scout_locations([round_id])
                 await self.send_location_checks([round_id])
                 self.state.round_index += 1
+                self.state.sync_target_reroll_counter()
                 result["advanced"] = True
                 network_item = scouted.get(round_id)
                 if network_item:
@@ -850,6 +1072,89 @@ class APConnection:
         result["status"] = self.state.to_status()
         result["next_target"] = self.state.current_target()
         return result
+
+    async def reroll_target(self) -> dict[str, Any]:
+        self.state.last_seen = time.time()
+        self.state.sync_target_reroll_counter()
+
+        if not self.state.connected_to_ap:
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+        if self.state.boss_completed:
+            return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
+        if self.state.round_index >= max(0, self.state.check_count - 1):
+            return {
+                "ok": False,
+                "error": "cannot reroll the Grand Goal round",
+                "status": self.state.to_status(),
+            }
+        if self.state.target_rerolls_remaining() <= 0:
+            return {
+                "ok": False,
+                "error": f"no rerolls left this round ({TARGET_REROLLS_PER_ROUND} max)",
+                "status": self.state.to_status(),
+            }
+
+        def _norm(title: str) -> str:
+            return str(title or "").replace("_", " ").strip().casefold()
+
+        start = self.state.current_start()
+        old_target = self.state.current_target()
+        blocked = {_norm(start), _norm(old_target), _norm(self.state.goal_article())}
+        for pair in self.state.round_pairs:
+            blocked.add(_norm(pair.get("target", "")))
+
+        candidates = [title for title in self.state.reroll_pool if _norm(title) not in blocked]
+        if not candidates:
+            return {
+                "ok": False,
+                "error": "no alternate targets left in the seed pool",
+                "status": self.state.to_status(),
+            }
+
+        picked = random.choice(candidates)
+        new_target = await self._canonicalize_title(picked)
+        if _norm(new_target) in blocked or not new_target:
+            # Canonicalization collided with a blocked title; try a few more.
+            random.shuffle(candidates)
+            new_target = ""
+            for candidate in candidates[:12]:
+                resolved = await self._canonicalize_title(candidate)
+                if resolved and _norm(resolved) not in blocked:
+                    new_target = resolved
+                    picked = candidate
+                    break
+            if not new_target:
+                return {
+                    "ok": False,
+                    "error": "no usable alternate targets after title resolution",
+                    "status": self.state.to_status(),
+                }
+
+        self.state.round_pairs[self.state.round_index]["target"] = new_target
+        self.state.reroll_pool = [title for title in self.state.reroll_pool if _norm(title) != _norm(picked)]
+        # Return the discarded target to the pool for later rounds / rerolls.
+        if old_target and _norm(old_target) != _norm(self.state.goal_article()):
+            still_used = any(
+                _norm(pair.get("target", "")) == _norm(old_target)
+                for idx, pair in enumerate(self.state.round_pairs)
+                if idx != self.state.round_index
+            )
+            if not still_used and all(_norm(title) != _norm(old_target) for title in self.state.reroll_pool):
+                self.state.reroll_pool.append(old_target)
+
+        self.state.target_rerolls_used += 1
+        self.state.warmer_colder = None
+        self.state.last_distance_estimate = None
+
+        return {
+            "ok": True,
+            "rerolled": True,
+            "old_target": old_target,
+            "new_target": new_target,
+            "rerolls_used": self.state.target_rerolls_used,
+            "rerolls_remaining": self.state.target_rerolls_remaining(),
+            "status": self.state.to_status(),
+        }
 
     async def try_finish_boss(self) -> None:
         if self.state.boss_completed:
@@ -871,6 +1176,259 @@ class APConnection:
 
         self.state.boss_completed = True
         await self.send_goal_status()
+
+    def _debug_item_id(self, name: str) -> int | None:
+        if name in self.state.item_ids:
+            return int(self.state.item_ids[name])
+        item_id: int | None = None
+        if name in DEFAULT_ITEMS:
+            item_id = int(DEFAULT_ITEMS[name])
+        elif name.startswith("Search Letter ") and len(name) == len("Search Letter A"):
+            letter = name[-1].upper()
+            if "A" <= letter <= "Z":
+                item_id = 1_870_000 + 20 + (ord(letter) - ord("A"))
+        if item_id is None:
+            return None
+        # Keep has_item / counts consistent when slot_data omitted an id.
+        self.state.item_ids[name] = item_id
+        return item_id
+
+    async def _debug_grant_named(self, name: str, *, unique: bool = False, fire_trap: bool = True) -> bool:
+        item_id = self._debug_item_id(name)
+        if item_id is None:
+            return False
+        if unique and self.state.has_item(name):
+            return False
+        self.state.received_items.append(item_id)
+        if fire_trap and name in TRAP_ITEM_NAMES:
+            await self._handle_new_items([item_id])
+        return True
+
+    def _debug_set_item_count(self, name: str, count: int) -> None:
+        item_id = self._debug_item_id(name)
+        if item_id is None:
+            return
+        count = max(0, int(count))
+        self.state.received_items = [i for i in self.state.received_items if i != item_id]
+        self.state.received_items.extend([item_id] * count)
+
+    async def _debug_complete_round_at(self, round_index: int) -> dict[str, Any]:
+        if round_index < 0 or round_index >= len(self.state.location_round_ids):
+            return {"advanced": False, "error": "no round location for index"}
+        if self.state.boss_completed:
+            return {"advanced": False, "error": "seed already complete"}
+        round_id = self.state.location_round_ids[round_index]
+        if round_id in self.state.checked_locations:
+            if self.state.round_index <= round_index:
+                self.state.round_index = min(round_index + 1, self.state.check_count)
+                self.state.sync_target_reroll_counter()
+            return {"advanced": False, "already_checked": True}
+        scouted = await self.scout_locations([round_id])
+        await self.send_location_checks([round_id])
+        self.state.round_index = max(self.state.round_index, min(round_index + 1, self.state.check_count))
+        self.state.sync_target_reroll_counter()
+        result: dict[str, Any] = {"advanced": True, "round_completed": round_index + 1}
+        network_item = scouted.get(round_id)
+        if network_item:
+            sent_text = self._format_send_text(network_item)
+            if sent_text:
+                result["sent_text"] = sent_text
+        return result
+
+    async def debug_action(self, action: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Full AP/session debug mutators for playtesting. Unauthenticated for 0.4."""
+        data = data or {}
+        self.state.last_seen = time.time()
+        action = str(action or "").strip()
+
+        if not self.state.connected_to_ap:
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+
+        try:
+            if action == "complete_round":
+                idx = self.state.round_index
+                if idx >= self.state.check_count:
+                    return {"ok": False, "error": "no active round left", "status": self.state.to_status()}
+                result = await self._debug_complete_round_at(idx)
+                await self.try_finish_boss()
+                await self.ensure_goal_status_if_complete()
+                return {"ok": True, "action": action, **result, "status": self.state.to_status()}
+
+            if action == "set_round":
+                # 1-based round number to jump to (incomplete). Completes earlier rounds via AP.
+                target_round = max(1, min(int(data.get("round", 1)), self.state.check_count))
+                target_index = target_round - 1
+                sent_bits: list[str] = []
+                for idx in range(target_index):
+                    result = await self._debug_complete_round_at(idx)
+                    if result.get("sent_text"):
+                        sent_bits.append(str(result["sent_text"]))
+                self.state.round_index = min(target_index, self.state.check_count)
+                self.state.sync_target_reroll_counter()
+                self.state.warmer_colder = None
+                self.state.last_distance_estimate = None
+                await self.try_finish_boss()
+                out: dict[str, Any] = {
+                    "ok": True,
+                    "action": action,
+                    "round": self.state.round_index + 1,
+                    "status": self.state.to_status(),
+                }
+                if sent_bits:
+                    out["sent_text"] = sent_bits[-1]
+                return out
+
+            if action == "unlock_all_rounds":
+                step = max(1, self.state.rounds_per_unlock)
+                need = max(0, self.state.check_count - self.state.start_rounds_unlocked)
+                need_items = (need + step - 1) // step
+                while self.state.round_access_count() < need_items:
+                    await self._debug_grant_named("Round Access", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "round_access_count": self.state.round_access_count(),
+                    "unlocked_rounds": self.state.unlocked_rounds(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "grant_item":
+                name = str(data.get("item") or "").strip()
+                if not name:
+                    return {"ok": False, "error": "item is required", "status": self.state.to_status()}
+                unique = name not in ("Knowledge Fragment", "Round Access", "Progressive Scroll Speed", *TRAP_ITEM_NAMES)
+                granted = await self._debug_grant_named(name, unique=unique, fire_trap=True)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "item": name,
+                    "granted": granted,
+                    "status": self.state.to_status(),
+                }
+
+            if action == "grant_tools":
+                granted = [n for n in DEBUG_TOOL_ITEMS if await self._debug_grant_named(n, unique=True, fire_trap=False)]
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_lenses":
+                granted = [n for n in DEBUG_LENS_ITEMS if await self._debug_grant_named(n, unique=True, fire_trap=False)]
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_letters":
+                granted = []
+                for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                    name = f"Search Letter {letter}"
+                    if await self._debug_grant_named(name, unique=True, fire_trap=False):
+                        granted.append(letter)
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_scroll":
+                # Fill to configured upgrade cap.
+                target = max(1, int(self.state.scroll_speed_upgrades))
+                while self.state.item_count("Progressive Scroll Speed") < target:
+                    await self._debug_grant_named("Progressive Scroll Speed", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "scroll_speed_level": self.state.item_count("Progressive Scroll Speed"),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "set_fragments":
+                count = max(0, int(data.get("count", 0)))
+                self._debug_set_item_count("Knowledge Fragment", count)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "fragments": self.state.fragments(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "fill_fragments":
+                self._debug_set_item_count("Knowledge Fragment", self.state.required_fragments)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "fragments": self.state.fragments(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "set_target":
+                title = str(data.get("title") or "").strip()
+                if not title:
+                    return {"ok": False, "error": "title is required", "status": self.state.to_status()}
+                if self.state.round_index >= len(self.state.round_pairs):
+                    return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+                new_target = await self._canonicalize_title(title)
+                self.state.round_pairs[self.state.round_index]["target"] = new_target
+                self.state.warmer_colder = None
+                self.state.last_distance_estimate = None
+                return {
+                    "ok": True,
+                    "action": action,
+                    "new_target": new_target,
+                    "status": self.state.to_status(),
+                }
+
+            if action == "reset_rerolls":
+                self.state.target_rerolls_used = 0
+                self.state.target_rerolls_round = self.state.round_index
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "set_options":
+                changed: list[str] = []
+                for key in DEBUG_OPTION_BOOLS:
+                    if key in data:
+                        setattr(self.state, key, bool(data[key]))
+                        changed.append(key)
+                if "link_bomb_density" in data:
+                    self.state.link_bomb_density = max(0, min(2, int(data["link_bomb_density"])))
+                    changed.append("link_bomb_density")
+                if "death_link" in data or "trap_link" in data:
+                    await self._update_link_tags()
+                return {"ok": True, "action": action, "changed": changed, "status": self.state.to_status()}
+
+            if action == "queue_trap":
+                trap = str(data.get("trap") or "").strip()
+                if trap not in TRAP_ITEM_NAMES:
+                    return {"ok": False, "error": "trap must be Foggy Links or Missing Links", "status": self.state.to_status()}
+                # Inject as a received trap item so inventory + TrapLink stay consistent.
+                await self._debug_grant_named(trap, unique=False, fire_trap=True)
+                return {"ok": True, "action": action, "trap": trap, "status": self.state.to_status()}
+
+            if action == "send_death_link":
+                if not self.state.death_link:
+                    self.state.death_link = True
+                    await self._update_link_tags()
+                cause = str(data.get("cause") or "Debug DeathLink").strip()
+                await self.send_death_link(cause)
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "receive_death":
+                cause = str(data.get("cause") or "Debug death").strip()
+                self._queue_event({"type": "death", "source": "Debug", "cause": cause})
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "finish_boss":
+                self._debug_set_item_count("Knowledge Fragment", max(self.state.required_fragments, self.state.fragments()))
+                # Complete any remaining round locations, then grand goal.
+                remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
+                if remaining:
+                    await self.send_location_checks(remaining)
+                self.state.round_index = self.state.check_count
+                if self.state.location_grand_goal:
+                    await self.send_location_checks([self.state.location_grand_goal])
+                self.state.boss_completed = True
+                await self.send_goal_status()
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            return {"ok": False, "error": f"unknown action: {action}", "status": self.state.to_status()}
+        except Exception as exc:
+            LOG.exception("debug_action failed: %s", action)
+            return {"ok": False, "error": str(exc), "status": self.state.to_status()}
 
 
 @dataclass
@@ -913,7 +1471,21 @@ class App:
         self.sessions = SessionManager()
 
     async def index(self, request: web.Request) -> web.StreamResponse:
-        return web.FileResponse(self.web_root / "index.html")
+        # Embed deploy identity in HTML so the badge does not depend on a separate
+        # /health fetch (Render free-tier cold starts often 404 that first request).
+        html = (self.web_root / "index.html").read_text(encoding="utf-8")
+        payload = json.dumps(build_info(), separators=(",", ":"))
+        injection = f'<script type="application/json" id="build-info">{payload}</script>\n'
+        if "</head>" in html:
+            html = html.replace("</head>", injection + "</head>", 1)
+        else:
+            html = injection + html
+        return web.Response(
+            text=html,
+            content_type="text/html",
+            charset="utf-8",
+            headers={"Cache-Control": "no-cache"},
+        )
 
     async def manifest(self, request: web.Request) -> web.StreamResponse:
         response = web.FileResponse(self.web_root / "manifest.webmanifest")
@@ -927,7 +1499,9 @@ class App:
         return response
 
     async def health(self, request: web.Request) -> web.StreamResponse:
-        return web.json_response({"ok": True, "sessions": len(self.sessions.sessions)})
+        info = build_info()
+        info["sessions"] = len(self.sessions.sessions)
+        return web.json_response(info)
 
     async def create_session(self, request: web.Request) -> web.StreamResponse:
         session = self.sessions.create()
@@ -955,7 +1529,22 @@ class App:
         session = self.sessions.get(sid)
         if not session:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
-        return web.json_response({"ok": True, "status": session.state.to_status()})
+        status = session.state.to_status()
+        events = session.conn.take_pending_events()
+        status["pending_events"] = events
+        return web.json_response({"ok": True, "status": status})
+
+    async def session_death(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        if not session.state.connected_to_ap:
+            return web.json_response({"ok": False, "error": "not connected"}, status=400)
+        data = await request.json()
+        cause = str(data.get("cause") or "").strip()
+        await session.conn.send_death_link(cause)
+        return web.json_response({"ok": True})
 
     async def session_check(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
@@ -992,6 +1581,34 @@ class App:
         result = await session.conn.on_page_check(page_title, clicks_used)
         return web.json_response({"ok": True, **result})
 
+    async def session_reroll_target(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.reroll_target()
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
+    async def session_debug(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        action = str(data.get("action") or "").strip()
+        result = await session.conn.debug_action(action, data)
+        # Drain pending events once (same as /status) so DeathLink/traps don't double-fire on poll.
+        if isinstance(result.get("status"), dict):
+            result["status"]["pending_events"] = session.conn.take_pending_events()
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
@@ -1001,7 +1618,10 @@ class App:
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
+        app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
+        app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
+        app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 

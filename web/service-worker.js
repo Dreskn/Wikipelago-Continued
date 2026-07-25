@@ -1,12 +1,12 @@
-const CACHE_NAME = "wikipelago-shell-2026-07-23-2";
+const CACHE_NAME = "wikipelago-shell-2026-07-25-14";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/static/app.js?v=20260723-2",
-  "/static/style.css?v=20260723-2",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/static/app.js?v=20260725-14",
+  "/static/style.css?v=20260725-14",
+  "/icons/icon-192_placeholder.png",
+  "/icons/icon-512_placeholder.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -14,10 +14,9 @@ self.addEventListener("install", (event) => {
     const cache = await caches.open(CACHE_NAME);
     await Promise.all(PRECACHE_URLS.map(async (url) => {
       try {
-        const response = await fetch(url, { cache: "no-cache" });
-        if (response.ok) await cache.put(url, response);
-      } catch {
-        // Ignore individual precache misses.
+        await cache.add(url);
+      } catch (error) {
+        console.warn("Precache failed for", url, error);
       }
     }));
     await self.skipWaiting();
@@ -26,10 +25,12 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil((async () => {
-    const names = await caches.keys();
-    await Promise.all(names
-      .filter((name) => name.startsWith("wikipelago-shell-") && name !== CACHE_NAME)
-      .map((name) => caches.delete(name)));
+    const keys = await caches.keys();
+    await Promise.all(
+      keys
+        .filter((name) => name.startsWith("wikipelago-shell-") && name !== CACHE_NAME)
+        .map((name) => caches.delete(name))
+    );
     await self.clients.claim();
   })());
 });
@@ -40,31 +41,46 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/api/") || url.pathname === "/health") return;
-
-  if (request.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const response = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        if (response.ok) await cache.put("/", response.clone());
-        return response;
-      } catch {
-        return (await caches.match("/")) || Response.error();
-      }
-    })());
+  // Never cache API/health/SW itself — stale shell was hiding deploys.
+  if (
+    url.pathname.startsWith("/api/")
+    || url.pathname === "/health"
+    || url.pathname === "/service-worker.js"
+  ) {
     return;
   }
 
+  const isNavigate = request.mode === "navigate" || url.pathname === "/";
+
   event.respondWith((async () => {
+    // HTML shell: network-first so branch/version badge updates after deploy.
+    if (isNavigate) {
+      try {
+        const response = await fetch(request);
+        if (response && response.ok) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put("/", response.clone());
+        }
+        return response;
+      } catch (error) {
+        const fallback = await caches.match("/");
+        if (fallback) return fallback;
+        throw error;
+      }
+    }
+
     const cached = await caches.match(request);
     if (cached) return cached;
 
-    const response = await fetch(request);
-    if (response.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(request, response.clone());
+    try {
+      const response = await fetch(request);
+      if (response && response.ok && url.pathname.startsWith("/static/")) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      throw error;
     }
-    return response;
   })());
 });

@@ -10,12 +10,15 @@ There is no separate desktop client to install for players — use the [hosted w
 
 ## What does randomization do?
 
-Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, useful tools (Back Button, Ctrl+F Lens, Wiki Compass), and optional lenses when those options are enabled. Completing rounds sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
+Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, useful tools (Back Button, Ctrl+F Lens, Wiki Compass), optional lenses, and optional traps when enabled. Completing rounds sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
+
+Optional **deaths** / **DeathLink** / **link bombs** and **Foggy Links** / **Missing Links** traps are off by default — see the [Options guide](options.md).
 
 ## How do rounds work?
 
 1. Navigate by clicking in-article Wikipedia links only (typed URLs / free navigation do not count as checks).
 2. Reach the Target article to send the location check.
+3. Optional: **Reroll** the current target up to 3 times per round if it’s obscure (not available on the Grand Goal round).
 
 Only some rounds are available at the start (`start_rounds_unlocked` in your YAML).
 Additional rounds unlock when you receive **Round Access** items (`rounds_per_unlock` controls how many each one opens).
