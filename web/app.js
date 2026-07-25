@@ -1,16 +1,23 @@
-const APP_VERSION = "2026.07.25.6";
+const APP_VERSION = "2026.07.25.7";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
-  { unlockedKey: "tables_unlocked", lockClass: "lock-tables", label: "Tables" },
-  { unlockedKey: "pictures_unlocked", lockClass: "lock-pictures", label: "Pictures" },
-  { unlockedKey: "incipit_unlocked", lockClass: "lock-incipit", label: "Lead" },
-  { unlockedKey: "infoboxes_unlocked", lockClass: "lock-infoboxes", label: "Infoboxes" },
-  { unlockedKey: "toc_unlocked", lockClass: "lock-toc", label: "Contents" },
-  { unlockedKey: "navboxes_unlocked", lockClass: "lock-navboxes", label: "Navboxes" },
-  { unlockedKey: "hatnotes_unlocked", lockClass: "lock-hatnotes", label: "Hatnotes" },
-  { unlockedKey: "references_unlocked", lockClass: "lock-references", label: "References" },
+  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
+  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", label: "Pictures", glyph: "Pic" },
+  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", label: "Lead", glyph: "Led" },
+  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", label: "Infoboxes", glyph: "Inf" },
+  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", label: "Contents", glyph: "Toc" },
+  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", label: "Navboxes", glyph: "Nav" },
+  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", label: "Hatnotes", glyph: "Hat" },
+  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", label: "References", glyph: "Ref" },
 ];
+
+const TOOL_ICON_SVGS = {
+  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l4.6-4.6L11 5l-7 7 7 7 1.4-1.4L7.8 13H20v-2z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
+  compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
+  scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
+};
 
 let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
 let debugPanelReady = false;
@@ -58,23 +65,21 @@ const el = {
   passwordInput: document.getElementById("passwordInput"),
   connectBtn: document.getElementById("connectBtn"),
   roundText: document.getElementById("roundText"),
+  roundsTrack: document.getElementById("roundsTrack"),
   targetText: document.getElementById("targetText"),
   targetHover: document.getElementById("targetHover"),
   targetTooltip: document.getElementById("targetTooltip"),
   rerollTargetBtn: document.getElementById("rerollTargetBtn"),
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
+  goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
   fragmentsText: document.getElementById("fragmentsText"),
-  playableRoundsText: document.getElementById("playableRoundsText"),
+  fragmentsTrack: document.getElementById("fragmentsTrack"),
   compassHint: document.getElementById("compassHint"),
-  roundProgress: document.getElementById("roundProgress"),
-  roundAccessItem: document.getElementById("roundAccessItem"),
-  backItem: document.getElementById("backItem"),
-  searchItem: document.getElementById("searchItem"),
-  searchLettersItem: document.getElementById("searchLettersItem"),
-  scrollItem: document.getElementById("scrollItem"),
-  compassItem: document.getElementById("compassItem"),
+  toolIconsRow: document.getElementById("toolIconsRow"),
+  lensIconsRow: document.getElementById("lensIconsRow"),
+  letterIconsRow: document.getElementById("letterIconsRow"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -554,7 +559,6 @@ function sanitizeSearchInput(raw) {
 function renderSearchStatus() {
   const letters = [...ownedSearchLetters()].sort();
   el.searchLetters.textContent = `Letters: ${letters.length ? letters.join("") : "-"}`;
-  el.searchLettersItem.textContent = letters.length ? `${letters.length}/26` : (state.status?.searchsanity ? "0/26" : "Free");
 
   if (!state.status?.ctrl_f_unlocked) {
     el.searchStatus.textContent = "Ctrl+F Lens required";
@@ -562,6 +566,143 @@ function renderSearchStatus() {
     el.searchStatus.textContent = "Letter-limited search";
   } else {
     el.searchStatus.textContent = "Search ready";
+  }
+}
+
+function setIconState(node, stateName) {
+  node.classList.remove("item-icon--ok", "item-icon--locked", "item-icon--off");
+  node.classList.add(`item-icon--${stateName}`);
+}
+
+function ensureToolIcons() {
+  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "1") return;
+  const tools = [
+    { id: "back", title: "Back Button", svg: TOOL_ICON_SVGS.back },
+    { id: "search", title: "Ctrl+F Lens", svg: TOOL_ICON_SVGS.search },
+    { id: "compass", title: "Wiki Compass", svg: TOOL_ICON_SVGS.compass },
+    { id: "scroll", title: "Scroll Speed", svg: TOOL_ICON_SVGS.scroll },
+  ];
+  el.toolIconsRow.innerHTML = "";
+  for (const tool of tools) {
+    const node = document.createElement("div");
+    node.className = "item-icon item-icon--locked";
+    node.dataset.tool = tool.id;
+    node.title = tool.title;
+    node.innerHTML = `${tool.svg}<span class="item-icon-badge hidden"></span>`;
+    el.toolIconsRow.appendChild(node);
+  }
+  el.toolIconsRow.dataset.ready = "1";
+}
+
+function renderRoundsTrack(status) {
+  if (!el.roundsTrack) return;
+  const total = Math.max(0, Number(status.check_count) || 0);
+  const current = Math.max(1, Number(status.round) || 1);
+  const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
+  const complete = Boolean(status.boss_completed);
+  el.roundsTrack.innerHTML = "";
+  el.roundsTrack.style.gap = total > 40 ? "1px" : "2px";
+  for (let i = 1; i <= total; i += 1) {
+    const seg = document.createElement("div");
+    seg.className = "seg";
+    if (complete || i < current) seg.classList.add("done");
+    else if (i <= unlocked) seg.classList.add("open");
+    else seg.classList.add("locked");
+    if (!complete && i === current) seg.classList.add("current");
+    seg.title = `Round ${i}`;
+    el.roundsTrack.appendChild(seg);
+  }
+  if (el.roundText) {
+    el.roundText.textContent = complete ? "Complete" : `${current}/${total}`;
+  }
+}
+
+function renderFragmentsTrack(status) {
+  if (!el.fragmentsTrack) return;
+  const required = Math.max(0, Number(status.required_fragments) || 0);
+  const have = Math.max(0, Math.min(required, Number(status.fragments) || 0));
+  el.fragmentsTrack.innerHTML = "";
+  for (let i = 0; i < required; i += 1) {
+    const seg = document.createElement("div");
+    seg.className = "seg";
+    if (i < have) seg.classList.add("filled");
+    el.fragmentsTrack.appendChild(seg);
+  }
+  if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
+  const showGoal = have > 0 || Boolean(status.boss_completed);
+  if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
+  if (el.goalText && showGoal) {
+    const goal = status.goal_article || "...";
+    el.goalText.textContent = status.boss_completed ? `${goal} (Complete)` : goal;
+  }
+}
+
+function renderToolIcons(status) {
+  ensureToolIcons();
+  if (!el.toolIconsRow) return;
+  const back = el.toolIconsRow.querySelector('[data-tool="back"]');
+  const search = el.toolIconsRow.querySelector('[data-tool="search"]');
+  const compass = el.toolIconsRow.querySelector('[data-tool="compass"]');
+  const scroll = el.toolIconsRow.querySelector('[data-tool="scroll"]');
+  if (back) setIconState(back, status.back_button_unlocked ? "ok" : "locked");
+  if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
+  if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
+  if (scroll) {
+    const badge = scroll.querySelector(".item-icon-badge");
+    if (!status.scrollsanity) {
+      setIconState(scroll, "off");
+      if (badge) {
+        badge.classList.add("hidden");
+        badge.textContent = "";
+      }
+    } else {
+      const level = Number(status.scroll_speed_level) || 0;
+      setIconState(scroll, level > 0 ? "ok" : "locked");
+      if (badge) {
+        badge.textContent = `${level}/${status.scroll_speed_upgrades || 0}`;
+        badge.classList.remove("hidden");
+      }
+    }
+  }
+}
+
+function renderLensIcons(status) {
+  if (!el.lensIconsRow) return;
+  const active = DISPLAY_LOCKS.filter((lock) => Boolean(status?.[lock.randomizeKey]));
+  if (!active.length) {
+    el.lensIconsRow.classList.add("hidden");
+    el.lensIconsRow.innerHTML = "";
+    return;
+  }
+  el.lensIconsRow.classList.remove("hidden");
+  el.lensIconsRow.innerHTML = "";
+  for (const lock of active) {
+    const node = document.createElement("div");
+    node.className = "item-icon";
+    node.title = lock.label;
+    const unlocked = Boolean(status?.[lock.unlockedKey]);
+    setIconState(node, unlocked ? "ok" : "locked");
+    node.textContent = lock.glyph;
+    el.lensIconsRow.appendChild(node);
+  }
+}
+
+function renderLetterIcons(status) {
+  if (!el.letterIconsRow) return;
+  if (!status?.searchsanity) {
+    el.letterIconsRow.classList.add("hidden");
+    el.letterIconsRow.innerHTML = "";
+    return;
+  }
+  el.letterIconsRow.classList.remove("hidden");
+  const owned = new Set((status.search_letters || []).map((letter) => String(letter).toUpperCase()));
+  el.letterIconsRow.innerHTML = "";
+  for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+    const chip = document.createElement("span");
+    chip.className = "letter-chip";
+    chip.textContent = letter;
+    if (owned.has(letter)) chip.classList.add("on");
+    el.letterIconsRow.appendChild(chip);
   }
 }
 
@@ -720,33 +861,22 @@ function updateHUD(status) {
     toast("Connected to Archipelago", "ok", 4500);
   }
   if (status.boss_completed) {
-    el.roundText.textContent = "COMPLETE";
     el.targetText.textContent = "GOAL COMPLETE";
-    el.goalText.textContent = `${status.goal_article || "..."} (Complete)`;
     setTargetSummaryTitle("");
   } else {
-    el.roundText.textContent = `${status.round}/${status.check_count}`;
     el.targetText.textContent = status.current_target || "...";
-    el.goalText.textContent = status.goal_article || "...";
     setTargetSummaryTitle(status.current_target || "");
   }
   updateRerollTargetControls(status);
+  renderRoundsTrack(status);
+  renderFragmentsTrack(status);
 
   el.clicksText.textContent = String(state.clicksUsed);
-  el.fragmentsText.textContent = `${status.fragments}/${status.required_fragments}`;
-  el.playableRoundsText.textContent = `${status.unlocked_rounds}/${status.check_count}`;
   el.compassHint.textContent = status.compass_unlocked ? (status.warmer_colder || "Calibrating") : "Locked";
-  el.roundProgress.style.width = `${Math.max(0, Math.min(100, (status.round / Math.max(status.check_count, 1)) * 100))}%`;
-  el.roundAccessItem.textContent = String(status.round_access_count);
-  el.backItem.textContent = status.back_button_unlocked ? "Unlocked" : "Locked";
-  el.searchItem.textContent = status.ctrl_f_unlocked ? "Unlocked" : "Locked";
   renderSearchStatus();
-  if (status.scrollsanity) {
-    el.scrollItem.textContent = `${status.scroll_speed_level}/${status.scroll_speed_upgrades}`;
-  } else {
-    el.scrollItem.textContent = "Off";
-  }
-  el.compassItem.textContent = status.compass_unlocked ? "Unlocked" : "Locked";
+  renderToolIcons(status);
+  renderLensIcons(status);
+  renderLetterIcons(status);
   renderLensStatus(status);
   applyDisplayLocks();
 
@@ -1270,6 +1400,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+ensureToolIcons();
 bindTargetTooltip();
 bindStuckHelper();
 setInterval(pollStatus, 1500);
