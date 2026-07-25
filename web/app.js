@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.11";
+const APP_VERSION = "2026.07.25.12";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -6,6 +6,8 @@ const TRACK_SEG_MIN_PX = 4;
 const TRACK_SEG_GAP_PX = 2;
 /** Current-round / emphasis segment — matches a typical +N overflow chip. */
 const TRACK_EMPHASIS_MIN_PX = 28;
+/** Horizontal track padding (each side) — keep outline / end chips uncropped. */
+const TRACK_PAD_X_PX = 4;
 
 const DISPLAY_LOCKS = [
   { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
@@ -686,8 +688,20 @@ function rleTrackItems(items) {
  * Fit run-length groups into the track width. Start fully compressed (one +N
  * chip per multi-item run), then expand individuals while the row still fits.
  */
+function trackContentWidthPx(trackEl) {
+  const raw = trackEl?.clientWidth || 300;
+  let padX = TRACK_PAD_X_PX * 2;
+  if (trackEl && typeof getComputedStyle === "function") {
+    const style = getComputedStyle(trackEl);
+    const left = parseFloat(style.paddingLeft) || 0;
+    const right = parseFloat(style.paddingRight) || 0;
+    padX = left + right;
+  }
+  return Math.max(40, raw - padX);
+}
+
 function buildTrackPlan(items, trackEl) {
-  const avail = trackEl?.clientWidth || 300;
+  const avail = trackContentWidthPx(trackEl);
   const runs = rleTrackItems(items);
   const plan = runs.map((run) => {
     if (run.current || run.count === 1) {
