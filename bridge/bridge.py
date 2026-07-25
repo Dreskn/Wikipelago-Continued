@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "0.4.0-Continued"
+CLIENT_VERSION = "0.4.0-DeadAndReborn"
 
 
 def build_info() -> dict[str, Any]:
