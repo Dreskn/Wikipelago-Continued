@@ -1,5 +1,10 @@
-const APP_VERSION = "2026.07.25.8";
+const APP_VERSION = "2026.07.25.9";
 console.log("Wikipelago web version", APP_VERSION);
+
+/** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
+const TRACK_SEG_MIN_PX = 4;
+const TRACK_SEG_GAP_PX = 2;
+const TRACK_OVERFLOW_MIN_PX = 22;
 
 const DISPLAY_LOCKS = [
   { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
@@ -619,24 +624,167 @@ function ensureToolIcons() {
   el.toolIconsRow.dataset.ready = "1";
 }
 
+function trackMaxSlots(trackEl, overflowChips = 0) {
+  const width = trackEl?.clientWidth || 300;
+  // Overflow chips are wider than plain ticks; reserve that extra width first.
+  const chipExtra = Math.max(0, overflowChips) * (TRACK_OVERFLOW_MIN_PX - TRACK_SEG_MIN_PX);
+  const usable = Math.max(0, width - chipExtra);
+  return Math.max(8, Math.floor((usable + TRACK_SEG_GAP_PX) / (TRACK_SEG_MIN_PX + TRACK_SEG_GAP_PX)));
+}
+
+function buildTrackPlan(items, trackEl) {
+  const runs = rleTrackItems(items);
+  let maxSlots = trackMaxSlots(trackEl, 0);
+  let plan = planTrackRuns(runs, maxSlots);
+  const chips = plan.filter((p) => p.overflow > 0).length;
+  if (chips > 0) {
+    const adjusted = trackMaxSlots(trackEl, chips);
+    if (adjusted < maxSlots) plan = planTrackRuns(runs, adjusted);
+  }
+  return plan;
+}
+
+function rleTrackItems(items) {
+  const runs = [];
+  for (const item of items) {
+    const prev = runs[runs.length - 1];
+    const same =
+      prev &&
+      prev.state === item.state &&
+      !prev.current &&
+      !item.current;
+    if (same) {
+      prev.count += 1;
+      prev.endLabel = item.label;
+    } else {
+      runs.push({
+        state: item.state,
+        current: Boolean(item.current),
+        count: 1,
+        startLabel: item.label,
+        endLabel: item.label,
+      });
+    }
+  }
+  return runs;
+}
+
+/**
+ * Fit run-length groups into maxSlots. Fully compress first (one +N chip per
+ * multi-item run), then expand individuals toward the current / middle.
+ */
+function planTrackRuns(runs, maxSlots) {
+  const plan = runs.map((run) => {
+    if (run.current || run.count === 1) {
+      return { run, individuals: run.count, overflow: 0 };
+    }
+    return { run, individuals: 0, overflow: run.count };
+  });
+
+  const slotsUsed = () =>
+    plan.reduce((sum, p) => sum + p.individuals + (p.overflow > 0 ? 1 : 0), 0);
+
+  const expandPriority = (p) => {
+    if (p.overflow <= 0) return -1;
+    if (p.run.state === "open" || p.run.state === "filled") return 3;
+    if (p.run.state === "done") return 2;
+    if (p.run.state === "locked" || p.run.state === "empty") return 1;
+    return 0;
+  };
+
+  while (slotsUsed() < maxSlots) {
+    let best = -1;
+    let bestScore = -1;
+    for (let i = 0; i < plan.length; i += 1) {
+      const score = expandPriority(plan[i]);
+      if (score > bestScore) {
+        bestScore = score;
+        best = i;
+      }
+    }
+    if (best < 0) break;
+    const p = plan[best];
+    // Peel from the side nearest "progress": done from the end, locked from the start.
+    p.individuals += 1;
+    p.overflow -= 1;
+  }
+
+  return plan;
+}
+
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "" }) {
+  const seg = document.createElement("div");
+  seg.className = "seg";
+  if (state) seg.classList.add(state);
+  if (current) seg.classList.add("current");
+  if (overflowCount > 0) {
+    seg.classList.add("overflow");
+    seg.textContent = `+${overflowCount}`;
+  }
+  if (title) seg.title = title;
+  trackEl.appendChild(seg);
+}
+
+function renderPlannedTrack(trackEl, plan, kind) {
+  trackEl.innerHTML = "";
+  for (const p of plan) {
+    const { run, individuals, overflow } = p;
+    // Cleared/filled: keep individuals near the right edge; overflow chip on the left.
+    // Locked/empty: individuals on the left; overflow chip on the right.
+    const expandFromEnd = run.state === "done" || run.state === "filled";
+    const startNum = Number(String(run.startLabel).match(/\d+/)?.[0] || 1);
+    const endNum = Number(String(run.endLabel).match(/\d+/)?.[0] || startNum + run.count - 1);
+
+    const appendOverflow = () => {
+      if (overflow <= 0) return;
+      const hiddenStart = expandFromEnd ? startNum : startNum + individuals;
+      const hiddenEnd = expandFromEnd ? endNum - individuals : endNum;
+      appendTrackSeg(trackEl, {
+        state: run.state,
+        overflowCount: overflow,
+        title: `${kind}s ${hiddenStart}–${hiddenEnd} (+${overflow} more like this)`,
+      });
+    };
+    const appendIndividuals = () => {
+      const individualStart = expandFromEnd ? endNum - individuals + 1 : startNum;
+      for (let i = 0; i < individuals; i += 1) {
+        appendTrackSeg(trackEl, {
+          state: run.state,
+          current: Boolean(run.current),
+          title: `${kind} ${individualStart + i}`,
+        });
+      }
+    };
+
+    if (expandFromEnd) {
+      appendOverflow();
+      appendIndividuals();
+    } else {
+      appendIndividuals();
+      appendOverflow();
+    }
+  }
+}
+
 function renderRoundsTrack(status) {
   if (!el.roundsTrack) return;
   const total = Math.max(0, Number(status.check_count) || 0);
   const current = Math.max(1, Number(status.round) || 1);
   const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
   const complete = Boolean(status.boss_completed);
-  el.roundsTrack.innerHTML = "";
-  el.roundsTrack.style.gap = total > 40 ? "1px" : "2px";
+  const items = [];
   for (let i = 1; i <= total; i += 1) {
-    const seg = document.createElement("div");
-    seg.className = "seg";
-    if (complete || i < current) seg.classList.add("done");
-    else if (i <= unlocked) seg.classList.add("open");
-    else seg.classList.add("locked");
-    if (!complete && i === current) seg.classList.add("current");
-    seg.title = `Round ${i}`;
-    el.roundsTrack.appendChild(seg);
+    let state = "locked";
+    if (complete || i < current) state = "done";
+    else if (i <= unlocked) state = "open";
+    items.push({
+      state,
+      current: !complete && i === current,
+      label: `Round ${i}`,
+    });
   }
+  el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
+  renderPlannedTrack(el.roundsTrack, buildTrackPlan(items, el.roundsTrack), "Round");
   if (el.roundText) {
     el.roundText.textContent = complete ? "Complete" : `${current}/${total}`;
   }
@@ -646,13 +794,15 @@ function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
   const required = Math.max(0, Number(status.required_fragments) || 0);
   const have = Math.max(0, Math.min(required, Number(status.fragments) || 0));
-  el.fragmentsTrack.innerHTML = "";
-  for (let i = 0; i < required; i += 1) {
-    const seg = document.createElement("div");
-    seg.className = "seg";
-    if (i < have) seg.classList.add("filled");
-    el.fragmentsTrack.appendChild(seg);
+  const items = [];
+  for (let i = 1; i <= required; i += 1) {
+    items.push({
+      state: i <= have ? "filled" : "empty",
+      label: `Fragment ${i}`,
+    });
   }
+  el.fragmentsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
+  renderPlannedTrack(el.fragmentsTrack, buildTrackPlan(items, el.fragmentsTrack), "Fragment");
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
   const showGoal = have > 0 || Boolean(status.boss_completed);
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
@@ -1548,6 +1698,20 @@ if ("serviceWorker" in navigator) {
 ensureToolIcons();
 bindTargetTooltip();
 bindStuckHelper();
+if (typeof ResizeObserver !== "undefined") {
+  let trackResizeTimer = 0;
+  const rerenderTracks = () => {
+    if (!state.status) return;
+    renderRoundsTrack(state.status);
+    renderFragmentsTrack(state.status);
+  };
+  const trackResizeObserver = new ResizeObserver(() => {
+    window.clearTimeout(trackResizeTimer);
+    trackResizeTimer = window.setTimeout(rerenderTracks, 50);
+  });
+  if (el.roundsTrack) trackResizeObserver.observe(el.roundsTrack);
+  if (el.fragmentsTrack) trackResizeObserver.observe(el.fragmentsTrack);
+}
 setInterval(pollStatus, 1500);
 
 (async () => {
