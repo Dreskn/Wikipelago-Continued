@@ -173,6 +173,8 @@ try {
     Assert-HasPattern $webAppPath 'submitCheck' 'Web submitCheck gating is missing'
     Assert-HasPattern $webAppPath 'toastSticky' 'Web sticky toast helper is missing'
     Assert-HasPattern $webAppPath 'applyDeathEffect' 'Web death effect helper is missing'
+    Assert-HasPattern $webAppPath 'resetRoundVisits\(""\)' 'Web death path must clear visit tracking immediately'
+    Assert-HasPattern $webAppPath 'if \(state\.handlingDeath\) return;' 'Web must ignore input while a death is handling'
     Assert-HasPattern $webAppPath 'armBombsOnPage' 'Web bomb arming helper is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'

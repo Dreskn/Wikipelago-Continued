@@ -101,7 +101,7 @@ Turn categories off to shrink or theme the pool (for example movies + TV only). 
 | `link_bombs` | `false` | Hidden bomb links on each page (requires `deaths`). Hitting one causes a death. |
 | `link_bomb_density` | `few` | `few` (1) / `more` (5) / `insane` (20), capped at half the eligible links. Never bombs Target or Grand Goal links. |
 
-Death effect: jump to a random article; path/visit history for the round is wiped. Fragments and unlocks are kept.
+Death effect: jump to a random article. Round visit tracking is cleared as soon as the death fires (and again on the landing page) so deaths cannot chain into a soft-lock while the random page loads. Fragments and unlocks are kept.
 
 ---
 

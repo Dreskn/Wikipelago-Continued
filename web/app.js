@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.24.4";
+const APP_VERSION = "2026.07.25.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -274,13 +274,18 @@ async function notifyDeathLink(cause) {
 async function applyDeathEffect(reasonText) {
   if (state.handlingDeath) return;
   state.handlingDeath = true;
+  // Clear visit tracking immediately so async fetch latency cannot chain more
+  // loop-deaths / no-op clicks while handlingDeath blocks applyDeathEffect.
+  resetRoundVisits("");
+  state.bombTitles = new Set();
   try {
     toast(reasonText || "Death! Jumping to a random article…", "warn", 7000);
     const title = await fetchRandomWikiTitle();
     resetRoundVisits(title);
-    state.bombTitles = new Set();
     await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
   } catch {
+    // Still leave visits cleared; seed current page if we never left it.
+    resetRoundVisits(state.currentTitle || "");
     toast("Death effect failed to load a random page", "warn");
   } finally {
     state.handlingDeath = false;
@@ -888,6 +893,7 @@ async function openArticle(title, options = {}) {
 
 async function restoreArticleView(force = false) {
   if (!state.status || !isApConnected()) return;
+  if (state.handlingDeath) return;
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
   if (!force && normalizeTitle(desiredTitle) === normalizeTitle(state.currentTitle)) return;
@@ -904,6 +910,7 @@ el.articleBody.addEventListener("click", async (e) => {
   const a = e.target.closest("a[data-title]");
   if (!a) return;
   e.preventDefault();
+  if (state.handlingDeath) return;
   const dest = a.dataset.title || "";
   const destNorm = normalizeTitle(dest);
   const target = state.status?.current_target || "";
