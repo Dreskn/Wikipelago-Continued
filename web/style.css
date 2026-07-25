@@ -226,6 +226,20 @@ button {
 }
 
 .side-panel { display: flex; flex-direction: column; gap: 12px; }
+.helper-link {
+  margin: 2px 4px 0;
+  font-size: 0.78rem;
+  color: #6f8499;
+  line-height: 1.35;
+}
+.helper-link a {
+  color: #8aa3bb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.helper-link a:hover {
+  color: var(--muted);
+}
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }
 .card label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.86rem; }

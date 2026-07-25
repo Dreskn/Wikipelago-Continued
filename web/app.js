@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.1";
+const APP_VERSION = "2026.07.25.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
