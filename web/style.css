@@ -539,8 +539,49 @@ button {
 .toast { margin-top: 8px; padding: 8px; border-radius: 9px; font-weight: 700; }
 .toast.ok { background: #173a2a; color: #aaffd0; }
 .toast.warn { background: #3a2b14; color: #ffd79d; }
+.debug-menu-card h3 {
+  margin: 10px 0 6px;
+  font-size: 0.86rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+.debug-warn {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+  color: #ffb84d;
+  line-height: 1.35;
+}
+.debug-section { margin-bottom: 4px; }
+.debug-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.debug-btn {
+  padding: 5px 8px;
+  font-size: 0.78rem;
+}
+.debug-input {
+  width: 72px;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #3a5068;
+  background: #0f1824;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+.debug-input-wide { width: min(100%, 160px); flex: 1 1 120px; }
+.debug-opt-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  margin-bottom: 8px;
+}
 .debug-lens-list { display: flex; flex-direction: column; gap: 6px; }
-.debug-lens-row { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 0.9rem; cursor: pointer; }
+.debug-lens-row { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 0.86rem; cursor: pointer; }
 
 .hidden { display: none; }
 

@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.12";
+const APP_VERSION = "2026.07.25.13";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -63,7 +63,6 @@ const state = {
   announcedGoalComplete: false,
   restoringArticle: false,
   searchOpen: false,
-  debugUnlocks: null,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
   rerollBusy: false,
@@ -1210,6 +1209,7 @@ function updateHUD(status) {
   renderDifficultyIcons(status);
   renderLensStatus(status);
   applyDisplayLocks();
+  syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
     toast("GOAL COMPLETE! Seed finished.", "ok", 8000);
@@ -1231,9 +1231,6 @@ function updateHUD(status) {
 }
 
 function isDisplayUnlocked(unlockedKey) {
-  if (state.debugUnlocks && typeof state.debugUnlocks[unlockedKey] === "boolean") {
-    return state.debugUnlocks[unlockedKey];
-  }
   const status = state.status;
   if (!status || typeof status[unlockedKey] !== "boolean") return true;
   return status[unlockedKey];
@@ -1274,58 +1271,221 @@ function enableDebugDisplayMenu() {
 function disableDebugDisplayMenu() {
   debugDisplayEnabled = false;
   debugPanelReady = false;
-  state.debugUnlocks = null;
   setDebugQueryParam(false);
-  document.getElementById("debugLensesCard")?.remove();
+  document.getElementById("debugMenuCard")?.remove();
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = false;
-  applyDisplayLocks();
-  if (state.status) renderLensStatus(state.status);
+}
+
+async function runDebugAction(action, payload = {}) {
+  if (!state.sessionId) await ensureSession();
+  if (!isApConnected()) {
+    toast("Connect to Archipelago before using debug", "warn");
+    return null;
+  }
+  try {
+    const result = await api(`/api/session/${state.sessionId}/debug`, "POST", { action, ...payload });
+    if (result.status) updateHUD(result.status);
+    if (result.sent_text) toast(result.sent_text, "ok", 6500);
+    else toast(`Debug: ${action}`, "ok", 3000);
+    return result;
+  } catch (err) {
+    toast(err?.message || `Debug failed: ${action}`, "warn", 6500);
+    return null;
+  }
+}
+
+function debugBtn(label, onClick) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "btn-quiet debug-btn";
+  btn.textContent = label;
+  btn.addEventListener("click", onClick);
+  return btn;
+}
+
+function debugRow(children) {
+  const row = document.createElement("div");
+  row.className = "debug-row";
+  for (const child of children) row.appendChild(child);
+  return row;
+}
+
+function debugSection(title) {
+  const wrap = document.createElement("div");
+  wrap.className = "debug-section";
+  const h = document.createElement("h3");
+  h.textContent = title;
+  wrap.appendChild(h);
+  return wrap;
+}
+
+function syncDebugOptionToggles(card) {
+  if (!card || !state.status) return;
+  const status = state.status;
+  for (const key of ["deaths", "death_link", "link_bombs", "trap_link", "searchsanity", "scrollsanity"]) {
+    const input = card.querySelector(`[data-debug-opt="${key}"]`);
+    if (input) input.checked = Boolean(status[key]);
+  }
+  const density = card.querySelector("[data-debug-opt='link_bomb_density']");
+  if (density) density.value = String(Number(status.link_bomb_density) || 0);
+  const frag = card.querySelector("[data-debug-frag]");
+  if (frag && document.activeElement !== frag) frag.value = String(Number(status.fragments) || 0);
+  const round = card.querySelector("[data-debug-round]");
+  if (round && document.activeElement !== round) round.value = String(Number(status.round) || 1);
 }
 
 function initDebugDisplayPanel() {
   if (!debugDisplayEnabled || debugPanelReady) return;
   debugPanelReady = true;
-  state.debugUnlocks = Object.fromEntries(DISPLAY_LOCKS.map((lock) => [lock.unlockedKey, false]));
 
   const card = document.createElement("div");
-  card.id = "debugLensesCard";
-  card.className = "card";
-  card.innerHTML = "<h2>Debug Lenses</h2>";
-  const list = document.createElement("div");
-  list.className = "debug-lens-list";
+  card.id = "debugMenuCard";
+  card.className = "card debug-menu-card";
+  card.innerHTML = "<h2>Debug (AP)</h2>";
+  const warn = document.createElement("p");
+  warn.className = "debug-warn";
+  warn.textContent = "Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink. No auth in 0.4.";
+  card.appendChild(warn);
 
-  for (const lock of DISPLAY_LOCKS) {
-    const label = document.createElement("label");
-    label.className = "debug-lens-row";
+  const progress = debugSection("Progress");
+  progress.appendChild(debugRow([
+    debugBtn("Complete round", () => runDebugAction("complete_round")),
+    debugBtn("Unlock all rounds", () => runDebugAction("unlock_all_rounds")),
+  ]));
+  const roundInput = document.createElement("input");
+  roundInput.type = "number";
+  roundInput.min = "1";
+  roundInput.dataset.debugRound = "1";
+  roundInput.className = "debug-input";
+  roundInput.value = String(Number(state.status?.round) || 1);
+  progress.appendChild(debugRow([
+    roundInput,
+    debugBtn("Go to round", () => runDebugAction("set_round", { round: Number(roundInput.value) || 1 })),
+  ]));
+  const fragInput = document.createElement("input");
+  fragInput.type = "number";
+  fragInput.min = "0";
+  fragInput.dataset.debugFrag = "1";
+  fragInput.className = "debug-input";
+  fragInput.value = String(Number(state.status?.fragments) || 0);
+  progress.appendChild(debugRow([
+    fragInput,
+    debugBtn("Set fragments", () => runDebugAction("set_fragments", { count: Number(fragInput.value) || 0 })),
+    debugBtn("Fill fragments", () => runDebugAction("fill_fragments")),
+  ]));
+  progress.appendChild(debugRow([
+    debugBtn("Finish Grand Goal", () => runDebugAction("finish_boss")),
+    debugBtn("Reset rerolls", () => runDebugAction("reset_rerolls")),
+  ]));
+  card.appendChild(progress);
+
+  const items = debugSection("Items / sanities");
+  items.appendChild(debugRow([
+    debugBtn("Tools", () => runDebugAction("grant_tools")),
+    debugBtn("Lenses", () => runDebugAction("grant_lenses")),
+    debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
+    debugBtn("Max scroll", () => runDebugAction("grant_scroll")),
+  ]));
+  const itemSelect = document.createElement("select");
+  itemSelect.className = "debug-input";
+  for (const name of [
+    "Back Button", "Wiki Compass", "Ctrl+F Lens",
+    "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
+    "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
+    "Knowledge Fragment", "Round Access", "Progressive Scroll Speed",
+    "Foggy Links", "Missing Links",
+  ]) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    itemSelect.appendChild(opt);
+  }
+  items.appendChild(debugRow([
+    itemSelect,
+    debugBtn("Grant", () => runDebugAction("grant_item", { item: itemSelect.value })),
+  ]));
+  card.appendChild(items);
+
+  const travel = debugSection("Travel");
+  travel.appendChild(debugRow([
+    debugBtn("Start", async () => {
+      const title = state.status?.current_start;
+      if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }),
+    debugBtn("Target", async () => {
+      const title = state.status?.current_target;
+      if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }),
+    debugBtn("Grand Goal", async () => {
+      const title = state.status?.goal_article;
+      if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }),
+  ]));
+  const targetInput = document.createElement("input");
+  targetInput.type = "text";
+  targetInput.className = "debug-input debug-input-wide";
+  targetInput.placeholder = "Set target title…";
+  travel.appendChild(debugRow([
+    targetInput,
+    debugBtn("Set target", () => runDebugAction("set_target", { title: targetInput.value.trim() })),
+  ]));
+  travel.appendChild(debugRow([
+    debugBtn("Clear visits", () => {
+      resetRoundVisits(state.currentTitle || "");
+      toast("Visit tracking cleared", "ok", 3000);
+    }),
+  ]));
+  card.appendChild(travel);
+
+  const challenge = debugSection("Challenge toggles");
+  const optGrid = document.createElement("div");
+  optGrid.className = "debug-opt-grid";
+  for (const [key, label] of [
+    ["deaths", "Deaths"],
+    ["death_link", "DeathLink"],
+    ["link_bombs", "Bombs"],
+    ["trap_link", "TrapLink"],
+    ["searchsanity", "Searchsanity"],
+    ["scrollsanity", "Scrollsanity"],
+  ]) {
+    const lab = document.createElement("label");
+    lab.className = "debug-lens-row";
     const input = document.createElement("input");
     input.type = "checkbox";
-    input.checked = false;
+    input.dataset.debugOpt = key;
     input.addEventListener("change", () => {
-      state.debugUnlocks[lock.unlockedKey] = input.checked;
-      applyDisplayLocks();
-      renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+      runDebugAction("set_options", { [key]: input.checked });
     });
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(` ${lock.label}`));
-    list.appendChild(label);
+    lab.appendChild(input);
+    lab.appendChild(document.createTextNode(` ${label}`));
+    optGrid.appendChild(lab);
   }
-
-  const unlockAll = document.createElement("button");
-  unlockAll.type = "button";
-  unlockAll.textContent = "Unlock all";
-  unlockAll.style.marginTop = "8px";
-  unlockAll.addEventListener("click", () => {
-    for (const lock of DISPLAY_LOCKS) state.debugUnlocks[lock.unlockedKey] = true;
-    list.querySelectorAll("input[type=checkbox]").forEach((input) => { input.checked = true; });
-    applyDisplayLocks();
-    renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+  challenge.appendChild(optGrid);
+  const density = document.createElement("select");
+  density.className = "debug-input";
+  density.dataset.debugOpt = "link_bomb_density";
+  for (const [value, label] of [["0", "Bombs: few"], ["1", "Bombs: more"], ["2", "Bombs: insane"]]) {
+    const opt = document.createElement("option");
+    opt.value = value;
+    opt.textContent = label;
+    density.appendChild(opt);
+  }
+  density.addEventListener("change", () => {
+    runDebugAction("set_options", { link_bomb_density: Number(density.value) || 0 });
   });
+  challenge.appendChild(debugRow([density]));
+  challenge.appendChild(debugRow([
+    debugBtn("Foggy trap", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
+    debugBtn("Missing trap", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+  ]));
+  challenge.appendChild(debugRow([
+    debugBtn("Send DeathLink", () => runDebugAction("send_death_link", { cause: "Debug DeathLink" })),
+    debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
+  ]));
+  card.appendChild(challenge);
 
-  card.appendChild(list);
-  card.appendChild(unlockAll);
   document.querySelector(".side-panel")?.appendChild(card);
-  applyDisplayLocks();
-  renderLensStatus({ ...(state.status || {}), ...state.debugUnlocks });
+  syncDebugOptionToggles(card);
 }
 
 function bindStuckHelper() {

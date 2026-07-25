@@ -64,6 +64,26 @@ TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
 TARGET_REROLLS_PER_ROUND = 3
 
+DEBUG_TOOL_ITEMS = ("Back Button", "Wiki Compass", "Ctrl+F Lens")
+DEBUG_LENS_ITEMS = (
+    "Table Lens",
+    "Picture Lens",
+    "Lead Lens",
+    "Infobox Lens",
+    "Contents Lens",
+    "Navbox Lens",
+    "Hatnote Lens",
+    "Reference Lens",
+)
+DEBUG_OPTION_BOOLS = (
+    "deaths",
+    "death_link",
+    "link_bombs",
+    "trap_link",
+    "searchsanity",
+    "scrollsanity",
+)
+
 SESSION_TTL_SECONDS = 60 * 60 * 6
 # Transient AP drops: retry a few times, then stop and surface last_error.
 # ConnectionRefused (bad password/slot) never retries.
@@ -1157,6 +1177,259 @@ class APConnection:
         self.state.boss_completed = True
         await self.send_goal_status()
 
+    def _debug_item_id(self, name: str) -> int | None:
+        if name in self.state.item_ids:
+            return int(self.state.item_ids[name])
+        item_id: int | None = None
+        if name in DEFAULT_ITEMS:
+            item_id = int(DEFAULT_ITEMS[name])
+        elif name.startswith("Search Letter ") and len(name) == len("Search Letter A"):
+            letter = name[-1].upper()
+            if "A" <= letter <= "Z":
+                item_id = 1_870_000 + 20 + (ord(letter) - ord("A"))
+        if item_id is None:
+            return None
+        # Keep has_item / counts consistent when slot_data omitted an id.
+        self.state.item_ids[name] = item_id
+        return item_id
+
+    async def _debug_grant_named(self, name: str, *, unique: bool = False, fire_trap: bool = True) -> bool:
+        item_id = self._debug_item_id(name)
+        if item_id is None:
+            return False
+        if unique and self.state.has_item(name):
+            return False
+        self.state.received_items.append(item_id)
+        if fire_trap and name in TRAP_ITEM_NAMES:
+            await self._handle_new_items([item_id])
+        return True
+
+    def _debug_set_item_count(self, name: str, count: int) -> None:
+        item_id = self._debug_item_id(name)
+        if item_id is None:
+            return
+        count = max(0, int(count))
+        self.state.received_items = [i for i in self.state.received_items if i != item_id]
+        self.state.received_items.extend([item_id] * count)
+
+    async def _debug_complete_round_at(self, round_index: int) -> dict[str, Any]:
+        if round_index < 0 or round_index >= len(self.state.location_round_ids):
+            return {"advanced": False, "error": "no round location for index"}
+        if self.state.boss_completed:
+            return {"advanced": False, "error": "seed already complete"}
+        round_id = self.state.location_round_ids[round_index]
+        if round_id in self.state.checked_locations:
+            if self.state.round_index <= round_index:
+                self.state.round_index = min(round_index + 1, self.state.check_count)
+                self.state.sync_target_reroll_counter()
+            return {"advanced": False, "already_checked": True}
+        scouted = await self.scout_locations([round_id])
+        await self.send_location_checks([round_id])
+        self.state.round_index = max(self.state.round_index, min(round_index + 1, self.state.check_count))
+        self.state.sync_target_reroll_counter()
+        result: dict[str, Any] = {"advanced": True, "round_completed": round_index + 1}
+        network_item = scouted.get(round_id)
+        if network_item:
+            sent_text = self._format_send_text(network_item)
+            if sent_text:
+                result["sent_text"] = sent_text
+        return result
+
+    async def debug_action(self, action: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Full AP/session debug mutators for playtesting. Unauthenticated for 0.4."""
+        data = data or {}
+        self.state.last_seen = time.time()
+        action = str(action or "").strip()
+
+        if not self.state.connected_to_ap:
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+
+        try:
+            if action == "complete_round":
+                idx = self.state.round_index
+                if idx >= self.state.check_count:
+                    return {"ok": False, "error": "no active round left", "status": self.state.to_status()}
+                result = await self._debug_complete_round_at(idx)
+                await self.try_finish_boss()
+                await self.ensure_goal_status_if_complete()
+                return {"ok": True, "action": action, **result, "status": self.state.to_status()}
+
+            if action == "set_round":
+                # 1-based round number to jump to (incomplete). Completes earlier rounds via AP.
+                target_round = max(1, min(int(data.get("round", 1)), self.state.check_count))
+                target_index = target_round - 1
+                sent_bits: list[str] = []
+                for idx in range(target_index):
+                    result = await self._debug_complete_round_at(idx)
+                    if result.get("sent_text"):
+                        sent_bits.append(str(result["sent_text"]))
+                self.state.round_index = min(target_index, self.state.check_count)
+                self.state.sync_target_reroll_counter()
+                self.state.warmer_colder = None
+                self.state.last_distance_estimate = None
+                await self.try_finish_boss()
+                out: dict[str, Any] = {
+                    "ok": True,
+                    "action": action,
+                    "round": self.state.round_index + 1,
+                    "status": self.state.to_status(),
+                }
+                if sent_bits:
+                    out["sent_text"] = sent_bits[-1]
+                return out
+
+            if action == "unlock_all_rounds":
+                step = max(1, self.state.rounds_per_unlock)
+                need = max(0, self.state.check_count - self.state.start_rounds_unlocked)
+                need_items = (need + step - 1) // step
+                while self.state.round_access_count() < need_items:
+                    await self._debug_grant_named("Round Access", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "round_access_count": self.state.round_access_count(),
+                    "unlocked_rounds": self.state.unlocked_rounds(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "grant_item":
+                name = str(data.get("item") or "").strip()
+                if not name:
+                    return {"ok": False, "error": "item is required", "status": self.state.to_status()}
+                unique = name not in ("Knowledge Fragment", "Round Access", "Progressive Scroll Speed", *TRAP_ITEM_NAMES)
+                granted = await self._debug_grant_named(name, unique=unique, fire_trap=True)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "item": name,
+                    "granted": granted,
+                    "status": self.state.to_status(),
+                }
+
+            if action == "grant_tools":
+                granted = [n for n in DEBUG_TOOL_ITEMS if await self._debug_grant_named(n, unique=True, fire_trap=False)]
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_lenses":
+                granted = [n for n in DEBUG_LENS_ITEMS if await self._debug_grant_named(n, unique=True, fire_trap=False)]
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_letters":
+                granted = []
+                for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                    name = f"Search Letter {letter}"
+                    if await self._debug_grant_named(name, unique=True, fire_trap=False):
+                        granted.append(letter)
+                return {"ok": True, "action": action, "granted": granted, "status": self.state.to_status()}
+
+            if action == "grant_scroll":
+                # Fill to configured upgrade cap.
+                target = max(1, int(self.state.scroll_speed_upgrades))
+                while self.state.item_count("Progressive Scroll Speed") < target:
+                    await self._debug_grant_named("Progressive Scroll Speed", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "scroll_speed_level": self.state.item_count("Progressive Scroll Speed"),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "set_fragments":
+                count = max(0, int(data.get("count", 0)))
+                self._debug_set_item_count("Knowledge Fragment", count)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "fragments": self.state.fragments(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "fill_fragments":
+                self._debug_set_item_count("Knowledge Fragment", self.state.required_fragments)
+                await self.try_finish_boss()
+                return {
+                    "ok": True,
+                    "action": action,
+                    "fragments": self.state.fragments(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "set_target":
+                title = str(data.get("title") or "").strip()
+                if not title:
+                    return {"ok": False, "error": "title is required", "status": self.state.to_status()}
+                if self.state.round_index >= len(self.state.round_pairs):
+                    return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+                new_target = await self._canonicalize_title(title)
+                self.state.round_pairs[self.state.round_index]["target"] = new_target
+                self.state.warmer_colder = None
+                self.state.last_distance_estimate = None
+                return {
+                    "ok": True,
+                    "action": action,
+                    "new_target": new_target,
+                    "status": self.state.to_status(),
+                }
+
+            if action == "reset_rerolls":
+                self.state.target_rerolls_used = 0
+                self.state.target_rerolls_round = self.state.round_index
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "set_options":
+                changed: list[str] = []
+                for key in DEBUG_OPTION_BOOLS:
+                    if key in data:
+                        setattr(self.state, key, bool(data[key]))
+                        changed.append(key)
+                if "link_bomb_density" in data:
+                    self.state.link_bomb_density = max(0, min(2, int(data["link_bomb_density"])))
+                    changed.append("link_bomb_density")
+                if "death_link" in data or "trap_link" in data:
+                    await self._update_link_tags()
+                return {"ok": True, "action": action, "changed": changed, "status": self.state.to_status()}
+
+            if action == "queue_trap":
+                trap = str(data.get("trap") or "").strip()
+                if trap not in TRAP_ITEM_NAMES:
+                    return {"ok": False, "error": "trap must be Foggy Links or Missing Links", "status": self.state.to_status()}
+                # Inject as a received trap item so inventory + TrapLink stay consistent.
+                await self._debug_grant_named(trap, unique=False, fire_trap=True)
+                return {"ok": True, "action": action, "trap": trap, "status": self.state.to_status()}
+
+            if action == "send_death_link":
+                if not self.state.death_link:
+                    self.state.death_link = True
+                    await self._update_link_tags()
+                cause = str(data.get("cause") or "Debug DeathLink").strip()
+                await self.send_death_link(cause)
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "receive_death":
+                cause = str(data.get("cause") or "Debug death").strip()
+                self._queue_event({"type": "death", "source": "Debug", "cause": cause})
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            if action == "finish_boss":
+                self._debug_set_item_count("Knowledge Fragment", max(self.state.required_fragments, self.state.fragments()))
+                # Complete any remaining round locations, then grand goal.
+                remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
+                if remaining:
+                    await self.send_location_checks(remaining)
+                self.state.round_index = self.state.check_count
+                if self.state.location_grand_goal:
+                    await self.send_location_checks([self.state.location_grand_goal])
+                self.state.boss_completed = True
+                await self.send_goal_status()
+                return {"ok": True, "action": action, "status": self.state.to_status()}
+
+            return {"ok": False, "error": f"unknown action: {action}", "status": self.state.to_status()}
+        except Exception as exc:
+            LOG.exception("debug_action failed: %s", action)
+            return {"ok": False, "error": str(exc), "status": self.state.to_status()}
+
 
 @dataclass
 class Session:
@@ -1317,6 +1590,25 @@ class App:
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
 
+    async def session_debug(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        action = str(data.get("action") or "").strip()
+        result = await session.conn.debug_action(action, data)
+        # Drain pending events once (same as /status) so DeathLink/traps don't double-fire on poll.
+        if isinstance(result.get("status"), dict):
+            result["status"]["pending_events"] = session.conn.take_pending_events()
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
@@ -1329,6 +1621,7 @@ class App:
         app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
+        app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 
