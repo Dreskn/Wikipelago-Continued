@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260725-13" />
+  <link rel="stylesheet" href="/static/style.css?v=20260725-14" />
 </head>
 <body>
   <div class="layout">
@@ -67,11 +67,13 @@
           </p>
 
           <div class="goal-block">
-            <div class="run-label-row">
-              <strong>Fragments</strong>
-              <span id="fragmentsText" class="muted-meta">0/0</span>
+            <div id="fragmentsBlock">
+              <div class="run-label-row">
+                <strong>Fragments</strong>
+                <span id="fragmentsText" class="muted-meta">0/0</span>
+              </div>
+              <div id="fragmentsTrack" class="fragments-track" aria-label="Knowledge fragments"></div>
             </div>
-            <div id="fragmentsTrack" class="fragments-track" aria-label="Knowledge fragments"></div>
             <p id="goalRow" class="goal-row hidden">
               <strong>Grand Goal:</strong> <span id="goalText">-</span>
             </p>
@@ -124,6 +126,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260725-13"></script>
+  <script src="/static/app.js?v=20260725-14"></script>
 </body>
 </html>

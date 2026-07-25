@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.13";
+const APP_VERSION = "2026.07.25.14";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -100,6 +100,7 @@ const el = {
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
+  fragmentsBlock: document.getElementById("fragmentsBlock"),
   fragmentsText: document.getElementById("fragmentsText"),
   fragmentsTrack: document.getElementById("fragmentsTrack"),
   compassHint: document.getElementById("compassHint"),
@@ -828,6 +829,16 @@ function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
   const required = Math.max(0, Number(status.required_fragments) || 0);
   const have = Math.max(0, Math.min(required, Number(status.fragments) || 0));
+  // Grand Goal replaces the fragment bar once enough fragments are unlocked.
+  const showGoal = Boolean(status.boss_ready) || Boolean(status.boss_completed) || (required > 0 && have >= required);
+  if (el.fragmentsBlock) el.fragmentsBlock.classList.toggle("hidden", showGoal);
+  if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
+  if (el.goalText && showGoal) {
+    const goal = status.goal_article || "...";
+    el.goalText.textContent = status.boss_completed ? `${goal} (Complete)` : goal;
+  }
+  if (showGoal) return;
+
   const items = [];
   for (let i = 1; i <= required; i += 1) {
     items.push({
@@ -839,12 +850,6 @@ function renderFragmentsTrack(status) {
   const fragPlan = buildTrackPlan(items, el.fragmentsTrack);
   renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, "Fragment", fragPlan.chipMinPx);
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
-  const showGoal = have > 0 || Boolean(status.boss_completed);
-  if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
-  if (el.goalText && showGoal) {
-    const goal = status.goal_article || "...";
-    el.goalText.textContent = status.boss_completed ? `${goal} (Complete)` : goal;
-  }
 }
 
 function renderToolIcons(status) {
@@ -1328,10 +1333,6 @@ function syncDebugOptionToggles(card) {
   }
   const density = card.querySelector("[data-debug-opt='link_bomb_density']");
   if (density) density.value = String(Number(status.link_bomb_density) || 0);
-  const frag = card.querySelector("[data-debug-frag]");
-  if (frag && document.activeElement !== frag) frag.value = String(Number(status.fragments) || 0);
-  const round = card.querySelector("[data-debug-round]");
-  if (round && document.activeElement !== round) round.value = String(Number(status.round) || 1);
 }
 
 function initDebugDisplayPanel() {
@@ -1350,30 +1351,10 @@ function initDebugDisplayPanel() {
   const progress = debugSection("Progress");
   progress.appendChild(debugRow([
     debugBtn("Complete round", () => runDebugAction("complete_round")),
-    debugBtn("Unlock all rounds", () => runDebugAction("unlock_all_rounds")),
-  ]));
-  const roundInput = document.createElement("input");
-  roundInput.type = "number";
-  roundInput.min = "1";
-  roundInput.dataset.debugRound = "1";
-  roundInput.className = "debug-input";
-  roundInput.value = String(Number(state.status?.round) || 1);
-  progress.appendChild(debugRow([
-    roundInput,
-    debugBtn("Go to round", () => runDebugAction("set_round", { round: Number(roundInput.value) || 1 })),
-  ]));
-  const fragInput = document.createElement("input");
-  fragInput.type = "number";
-  fragInput.min = "0";
-  fragInput.dataset.debugFrag = "1";
-  fragInput.className = "debug-input";
-  fragInput.value = String(Number(state.status?.fragments) || 0);
-  progress.appendChild(debugRow([
-    fragInput,
-    debugBtn("Set fragments", () => runDebugAction("set_fragments", { count: Number(fragInput.value) || 0 })),
     debugBtn("Fill fragments", () => runDebugAction("fill_fragments")),
   ]));
   progress.appendChild(debugRow([
+    debugBtn("Unlock all rounds", () => runDebugAction("unlock_all_rounds")),
     debugBtn("Finish Grand Goal", () => runDebugAction("finish_boss")),
     debugBtn("Reset rerolls", () => runDebugAction("reset_rerolls")),
   ]));
