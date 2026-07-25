@@ -349,13 +349,16 @@ button {
 .run-label-row:first-of-type { margin-top: 0; }
 .rounds-track,
 .fragments-track {
+  --track-chip-min: 28px;
   display: flex;
   gap: 2px;
   width: 100%;
-  min-height: 14px;
+  min-height: 18px;
   margin-bottom: 10px;
+  padding: 2px 1px;
   overflow: hidden;
   align-items: center;
+  box-sizing: border-box;
 }
 .rounds-track .seg,
 .fragments-track .seg {
@@ -371,7 +374,7 @@ button {
   flex: 0 0 auto;
   flex-shrink: 0;
   width: max-content;
-  min-width: max-content;
+  min-width: var(--track-chip-min);
   padding: 0 5px;
   height: 14px;
   font-size: 0.62rem;
@@ -408,8 +411,14 @@ button {
   border-color: #7a3a44;
 }
 .rounds-track .seg.current {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: var(--track-chip-min);
+  min-width: var(--track-chip-min);
   outline: 1px solid #40c4ff;
   outline-offset: 1px;
+  position: relative;
+  z-index: 1;
 }
 .fragments-track .seg.filled {
   background: linear-gradient(180deg, #ffd76a 0%, #d4a017 100%);

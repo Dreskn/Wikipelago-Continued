@@ -1,9 +1,11 @@
-const APP_VERSION = "2026.07.25.10";
+const APP_VERSION = "2026.07.25.11";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
 const TRACK_SEG_GAP_PX = 2;
+/** Current-round / emphasis segment — matches a typical +N overflow chip. */
+const TRACK_EMPHASIS_MIN_PX = 28;
 
 const DISPLAY_LOCKS = [
   { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
@@ -628,18 +630,27 @@ function overflowChipWidthPx(count) {
   return 12 + (1 + String(Math.max(0, count)).length) * 7;
 }
 
-function estimatePlanWidthPx(plan) {
+function trackChipMinPx(plan) {
+  let width = TRACK_EMPHASIS_MIN_PX;
+  for (const p of plan) {
+    if (p.overflow > 0) width = Math.max(width, overflowChipWidthPx(p.overflow));
+  }
+  return width;
+}
+
+function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
   let parts = 0;
   let width = 0;
   for (const p of plan) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
-      width += TRACK_SEG_MIN_PX;
+      // Current round uses the same footprint as a +N chip so its outline stays visible.
+      width += p.run.current ? chipMinPx : TRACK_SEG_MIN_PX;
       parts += 1;
     }
     if (p.overflow > 0) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
-      width += overflowChipWidthPx(p.overflow);
+      width += Math.max(chipMinPx, overflowChipWidthPx(p.overflow));
       parts += 1;
     }
   }
@@ -709,7 +720,7 @@ function buildTrackPlan(items, trackEl) {
     const p = plan[best];
     p.individuals += 1;
     p.overflow -= 1;
-    if (estimatePlanWidthPx(plan) > avail) {
+    if (estimatePlanWidthPx(plan, trackChipMinPx(plan)) > avail) {
       p.individuals -= 1;
       p.overflow += 1;
       blocked.add(best);
@@ -717,7 +728,7 @@ function buildTrackPlan(items, trackEl) {
     }
   }
 
-  return plan;
+  return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
 function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "" }) {
@@ -733,8 +744,9 @@ function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, ti
   trackEl.appendChild(seg);
 }
 
-function renderPlannedTrack(trackEl, plan, kind) {
+function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
   trackEl.innerHTML = "";
+  trackEl.style.setProperty("--track-chip-min", `${chipMinPx}px`);
   for (const p of plan) {
     const { run, individuals, overflow } = p;
     // Cleared/filled: keep individuals near the right edge; overflow chip on the left.
@@ -792,7 +804,8 @@ function renderRoundsTrack(status) {
     });
   }
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
-  renderPlannedTrack(el.roundsTrack, buildTrackPlan(items, el.roundsTrack), "Round");
+  const roundsPlan = buildTrackPlan(items, el.roundsTrack);
+  renderPlannedTrack(el.roundsTrack, roundsPlan.plan, "Round", roundsPlan.chipMinPx);
   if (el.roundText) {
     el.roundText.textContent = complete ? "Complete" : `${current}/${total}`;
   }
@@ -810,7 +823,8 @@ function renderFragmentsTrack(status) {
     });
   }
   el.fragmentsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
-  renderPlannedTrack(el.fragmentsTrack, buildTrackPlan(items, el.fragmentsTrack), "Fragment");
+  const fragPlan = buildTrackPlan(items, el.fragmentsTrack);
+  renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, "Fragment", fragPlan.chipMinPx);
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
   const showGoal = have > 0 || Boolean(status.boss_completed);
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
