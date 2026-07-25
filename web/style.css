@@ -369,16 +369,20 @@ button {
 .rounds-track .seg.overflow,
 .fragments-track .seg.overflow {
   flex: 0 0 auto;
-  min-width: 22px;
-  padding: 0 4px;
+  flex-shrink: 0;
+  width: max-content;
+  min-width: max-content;
+  padding: 0 5px;
   height: 14px;
   font-size: 0.62rem;
   font-weight: 700;
   line-height: 14px;
   text-align: center;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   color: #d7e6f5;
+  overflow: visible;
 }
 .rounds-track .seg.overflow.done { color: #062816; }
 .rounds-track .seg.overflow.open { color: #9fb2c7; }

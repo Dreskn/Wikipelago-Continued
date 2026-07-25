@@ -1,10 +1,9 @@
-const APP_VERSION = "2026.07.25.9";
+const APP_VERSION = "2026.07.25.10";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
 const TRACK_SEG_GAP_PX = 2;
-const TRACK_OVERFLOW_MIN_PX = 22;
 
 const DISPLAY_LOCKS = [
   { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
@@ -624,24 +623,27 @@ function ensureToolIcons() {
   el.toolIconsRow.dataset.ready = "1";
 }
 
-function trackMaxSlots(trackEl, overflowChips = 0) {
-  const width = trackEl?.clientWidth || 300;
-  // Overflow chips are wider than plain ticks; reserve that extra width first.
-  const chipExtra = Math.max(0, overflowChips) * (TRACK_OVERFLOW_MIN_PX - TRACK_SEG_MIN_PX);
-  const usable = Math.max(0, width - chipExtra);
-  return Math.max(8, Math.floor((usable + TRACK_SEG_GAP_PX) / (TRACK_SEG_MIN_PX + TRACK_SEG_GAP_PX)));
+function overflowChipWidthPx(count) {
+  // Padding/border (~12px) + "+123" at ~7px/char — keep full labels visible.
+  return 12 + (1 + String(Math.max(0, count)).length) * 7;
 }
 
-function buildTrackPlan(items, trackEl) {
-  const runs = rleTrackItems(items);
-  let maxSlots = trackMaxSlots(trackEl, 0);
-  let plan = planTrackRuns(runs, maxSlots);
-  const chips = plan.filter((p) => p.overflow > 0).length;
-  if (chips > 0) {
-    const adjusted = trackMaxSlots(trackEl, chips);
-    if (adjusted < maxSlots) plan = planTrackRuns(runs, adjusted);
+function estimatePlanWidthPx(plan) {
+  let parts = 0;
+  let width = 0;
+  for (const p of plan) {
+    for (let i = 0; i < p.individuals; i += 1) {
+      if (parts > 0) width += TRACK_SEG_GAP_PX;
+      width += TRACK_SEG_MIN_PX;
+      parts += 1;
+    }
+    if (p.overflow > 0) {
+      if (parts > 0) width += TRACK_SEG_GAP_PX;
+      width += overflowChipWidthPx(p.overflow);
+      parts += 1;
+    }
   }
-  return plan;
+  return width;
 }
 
 function rleTrackItems(items) {
@@ -670,19 +672,18 @@ function rleTrackItems(items) {
 }
 
 /**
- * Fit run-length groups into maxSlots. Fully compress first (one +N chip per
- * multi-item run), then expand individuals toward the current / middle.
+ * Fit run-length groups into the track width. Start fully compressed (one +N
+ * chip per multi-item run), then expand individuals while the row still fits.
  */
-function planTrackRuns(runs, maxSlots) {
+function buildTrackPlan(items, trackEl) {
+  const avail = trackEl?.clientWidth || 300;
+  const runs = rleTrackItems(items);
   const plan = runs.map((run) => {
     if (run.current || run.count === 1) {
       return { run, individuals: run.count, overflow: 0 };
     }
     return { run, individuals: 0, overflow: run.count };
   });
-
-  const slotsUsed = () =>
-    plan.reduce((sum, p) => sum + p.individuals + (p.overflow > 0 ? 1 : 0), 0);
 
   const expandPriority = (p) => {
     if (p.overflow <= 0) return -1;
@@ -692,10 +693,12 @@ function planTrackRuns(runs, maxSlots) {
     return 0;
   };
 
-  while (slotsUsed() < maxSlots) {
+  const blocked = new Set();
+  while (true) {
     let best = -1;
     let bestScore = -1;
     for (let i = 0; i < plan.length; i += 1) {
+      if (blocked.has(i)) continue;
       const score = expandPriority(plan[i]);
       if (score > bestScore) {
         bestScore = score;
@@ -704,9 +707,14 @@ function planTrackRuns(runs, maxSlots) {
     }
     if (best < 0) break;
     const p = plan[best];
-    // Peel from the side nearest "progress": done from the end, locked from the start.
     p.individuals += 1;
     p.overflow -= 1;
+    if (estimatePlanWidthPx(plan) > avail) {
+      p.individuals -= 1;
+      p.overflow += 1;
+      blocked.add(best);
+      continue;
+    }
   }
 
   return plan;
