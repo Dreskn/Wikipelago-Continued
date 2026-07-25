@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import time
 import urllib.parse
 import urllib.request
@@ -61,6 +62,7 @@ DEFAULT_ITEMS = {
 
 TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
+TARGET_REROLLS_PER_ROUND = 3
 
 SESSION_TTL_SECONDS = 60 * 60 * 6
 # Transient AP drops: retry a few times, then stop and surface last_error.
@@ -128,6 +130,9 @@ class SessionState:
     trap_link: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=lambda: [{"start": "Wikipedia", "target": "Philosophy"}])
+    reroll_pool: list[str] = field(default_factory=list)
+    target_rerolls_used: int = 0
+    target_rerolls_round: int = -1
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
     item_ids: dict[str, int] = field(default_factory=lambda: DEFAULT_ITEMS.copy())
@@ -191,7 +196,28 @@ class SessionState:
         unlock_items = self.round_access_count()
         return min(self.check_count, self.start_rounds_unlocked + (unlock_items * step))
 
+    def sync_target_reroll_counter(self) -> None:
+        if self.target_rerolls_round != self.round_index:
+            self.target_rerolls_round = self.round_index
+            self.target_rerolls_used = 0
+
+    def target_rerolls_remaining(self) -> int:
+        self.sync_target_reroll_counter()
+        return max(0, TARGET_REROLLS_PER_ROUND - self.target_rerolls_used)
+
+    def can_reroll_target(self) -> bool:
+        self.sync_target_reroll_counter()
+        if not self.connected_to_ap or self.boss_completed:
+            return False
+        # Final round target is the Grand Goal — do not reroll it.
+        if self.round_index >= max(0, self.check_count - 1):
+            return False
+        if self.target_rerolls_remaining() <= 0:
+            return False
+        return bool(self.reroll_pool)
+
     def to_status(self) -> dict[str, Any]:
+        self.sync_target_reroll_counter()
         return {
             "connected_to_ap": self.connected_to_ap,
             "ap_server": self.ap_server,
@@ -201,6 +227,10 @@ class SessionState:
             "goal_article": self.goal_article(),
             "round": min(self.round_index + 1, self.check_count),
             "check_count": self.check_count,
+            "target_rerolls_max": TARGET_REROLLS_PER_ROUND,
+            "target_rerolls_used": self.target_rerolls_used,
+            "target_rerolls_remaining": self.target_rerolls_remaining(),
+            "can_reroll_target": self.can_reroll_target(),
             "clicks_used": self.clicks_used,
             "fragments": self.fragments(),
             "required_fragments": self.required_fragments,
@@ -471,6 +501,14 @@ class APConnection:
                 normalized_pairs.append({"start": start, "target": target})
             if normalized_pairs:
                 self.state.round_pairs = normalized_pairs
+
+        reroll_pool = slot_data.get("reroll_pool")
+        if isinstance(reroll_pool, list):
+            self.state.reroll_pool = [
+                self._canonicalize_known_title(str(title).strip())
+                for title in reroll_pool
+                if str(title).strip()
+            ]
 
         self.state.check_count = int(slot_data.get("check_count", len(self.state.round_pairs)))
         self.state.required_fragments = int(slot_data.get("required_fragments", self.state.required_fragments))
@@ -998,6 +1036,7 @@ class APConnection:
                 scouted = await self.scout_locations([round_id])
                 await self.send_location_checks([round_id])
                 self.state.round_index += 1
+                self.state.sync_target_reroll_counter()
                 result["advanced"] = True
                 network_item = scouted.get(round_id)
                 if network_item:
@@ -1010,6 +1049,89 @@ class APConnection:
         result["status"] = self.state.to_status()
         result["next_target"] = self.state.current_target()
         return result
+
+    async def reroll_target(self) -> dict[str, Any]:
+        self.state.last_seen = time.time()
+        self.state.sync_target_reroll_counter()
+
+        if not self.state.connected_to_ap:
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+        if self.state.boss_completed:
+            return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
+        if self.state.round_index >= max(0, self.state.check_count - 1):
+            return {
+                "ok": False,
+                "error": "cannot reroll the Grand Goal round",
+                "status": self.state.to_status(),
+            }
+        if self.state.target_rerolls_remaining() <= 0:
+            return {
+                "ok": False,
+                "error": f"no rerolls left this round ({TARGET_REROLLS_PER_ROUND} max)",
+                "status": self.state.to_status(),
+            }
+
+        def _norm(title: str) -> str:
+            return str(title or "").replace("_", " ").strip().casefold()
+
+        start = self.state.current_start()
+        old_target = self.state.current_target()
+        blocked = {_norm(start), _norm(old_target), _norm(self.state.goal_article())}
+        for pair in self.state.round_pairs:
+            blocked.add(_norm(pair.get("target", "")))
+
+        candidates = [title for title in self.state.reroll_pool if _norm(title) not in blocked]
+        if not candidates:
+            return {
+                "ok": False,
+                "error": "no alternate targets left in the seed pool",
+                "status": self.state.to_status(),
+            }
+
+        picked = random.choice(candidates)
+        new_target = await self._canonicalize_title(picked)
+        if _norm(new_target) in blocked or not new_target:
+            # Canonicalization collided with a blocked title; try a few more.
+            random.shuffle(candidates)
+            new_target = ""
+            for candidate in candidates[:12]:
+                resolved = await self._canonicalize_title(candidate)
+                if resolved and _norm(resolved) not in blocked:
+                    new_target = resolved
+                    picked = candidate
+                    break
+            if not new_target:
+                return {
+                    "ok": False,
+                    "error": "no usable alternate targets after title resolution",
+                    "status": self.state.to_status(),
+                }
+
+        self.state.round_pairs[self.state.round_index]["target"] = new_target
+        self.state.reroll_pool = [title for title in self.state.reroll_pool if _norm(title) != _norm(picked)]
+        # Return the discarded target to the pool for later rounds / rerolls.
+        if old_target and _norm(old_target) != _norm(self.state.goal_article()):
+            still_used = any(
+                _norm(pair.get("target", "")) == _norm(old_target)
+                for idx, pair in enumerate(self.state.round_pairs)
+                if idx != self.state.round_index
+            )
+            if not still_used and all(_norm(title) != _norm(old_target) for title in self.state.reroll_pool):
+                self.state.reroll_pool.append(old_target)
+
+        self.state.target_rerolls_used += 1
+        self.state.warmer_colder = None
+        self.state.last_distance_estimate = None
+
+        return {
+            "ok": True,
+            "rerolled": True,
+            "old_target": old_target,
+            "new_target": new_target,
+            "rerolls_used": self.state.target_rerolls_used,
+            "rerolls_remaining": self.state.target_rerolls_remaining(),
+            "status": self.state.to_status(),
+        }
 
     async def try_finish_boss(self) -> None:
         if self.state.boss_completed:
@@ -1183,6 +1305,15 @@ class App:
         result = await session.conn.on_page_check(page_title, clicks_used)
         return web.json_response({"ok": True, **result})
 
+    async def session_reroll_target(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.reroll_target()
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
@@ -1194,6 +1325,7 @@ class App:
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
+        app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 

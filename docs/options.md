@@ -21,6 +21,12 @@ After installing the apworld, you can generate a fresh template from the Archipe
 
 Rough pacing tip: if `start_rounds_unlocked` is high relative to `check_count`, the seed feels more open early; if low, you wait more on Round Access.
 
+### Target rerolls (client)
+
+While connected, you can **Reroll** the current round’s target up to **3 times per round** from the web client. Alternatives come from leftover articles in the same seed pool (same enabled categories). The Grand Goal round cannot be rerolled. Requires a seed generated with a current apworld that includes a `reroll_pool` (rebuild/reinstall if the button stays disabled).
+
+Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
+
 ---
 
 ## Grand Goal article

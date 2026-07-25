@@ -18,6 +18,7 @@ Optional **deaths** / **DeathLink** / **link bombs** and **Foggy Links** / **Mis
 
 1. Navigate by clicking in-article Wikipedia links only (typed URLs / free navigation do not count as checks).
 2. Reach the Target article to send the location check.
+3. Optional: **Reroll** the current target up to 3 times per round if it’s obscure (not available on the Grand Goal round).
 
 Only some rounds are available at the start (`start_rounds_unlocked` in your YAML).
 Additional rounds unlock when you receive **Round Access** items (`rounds_per_unlock` controls how many each one opens).

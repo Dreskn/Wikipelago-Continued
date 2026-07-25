@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.2";
+const APP_VERSION = "2026.07.25.5";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -31,6 +31,10 @@ const state = {
   debugUnlocks: null,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
+  rerollBusy: false,
+  targetSummaryCache: new Map(),
+  targetSummaryTitle: "",
+  targetTooltipVisible: false,
   trapQueue: [],
   activeFoggy: false,
   activeMissing: false,
@@ -54,6 +58,10 @@ const el = {
   connectBtn: document.getElementById("connectBtn"),
   roundText: document.getElementById("roundText"),
   targetText: document.getElementById("targetText"),
+  targetHover: document.getElementById("targetHover"),
+  targetTooltip: document.getElementById("targetTooltip"),
+  rerollTargetBtn: document.getElementById("rerollTargetBtn"),
+  rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
   fragmentsText: document.getElementById("fragmentsText"),
@@ -225,6 +233,150 @@ function normalizeTitle(title) {
 
 function deathsEnabled() {
   return Boolean(state.status?.deaths);
+}
+
+function firstLeadParagraph(text, maxLen = 320) {
+  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) return "";
+  // REST summary extract is already the lead; keep the first paragraph-worth.
+  if (cleaned.length <= maxLen) return cleaned;
+  const cut = cleaned.slice(0, maxLen);
+  const lastStop = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("! "), cut.lastIndexOf("? "));
+  if (lastStop >= 80) return `${cut.slice(0, lastStop + 1).trim()}`;
+  return `${cut.trim()}…`;
+}
+
+function formatTargetSummary(data) {
+  // Plain text only: short description + lead paragraph (no HTML/images).
+  const description = String(data?.description || "").replace(/\s+/g, " ").trim();
+  const lead = firstLeadParagraph(data?.extract || "");
+  if (description && lead) {
+    if (normalizeTitle(lead).startsWith(normalizeTitle(description))) return lead;
+    return `${description}\n\n${lead}`;
+  }
+  return description || lead || "";
+}
+
+async function fetchTargetSummary(title) {
+  const key = normalizeTitle(title);
+  if (!key || key === "..." || key === "goal complete") return "";
+  if (state.targetSummaryCache.has(key)) return state.targetSummaryCache.get(key);
+
+  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`summary HTTP ${res.status}`);
+  const data = await res.json();
+  const summary = formatTargetSummary(data) || "No short description available.";
+  state.targetSummaryCache.set(key, summary);
+  return summary;
+}
+
+function hideTargetTooltip() {
+  state.targetTooltipVisible = false;
+  if (!el.targetTooltip) return;
+  el.targetTooltip.classList.add("hidden");
+  el.targetTooltip.classList.remove("loading");
+  el.targetTooltip.textContent = "";
+}
+
+async function showTargetTooltip(title) {
+  if (!el.targetTooltip || !title) return;
+  state.targetTooltipVisible = true;
+  el.targetTooltip.classList.remove("hidden");
+  el.targetTooltip.classList.add("loading");
+  el.targetTooltip.textContent = "Loading…";
+  try {
+    const summary = await fetchTargetSummary(title);
+    if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
+      return;
+    }
+    el.targetTooltip.classList.remove("loading");
+    el.targetTooltip.textContent = summary || "No short description available.";
+  } catch {
+    if (!state.targetTooltipVisible) return;
+    el.targetTooltip.classList.remove("loading");
+    el.targetTooltip.textContent = "Could not load description.";
+  }
+}
+
+function bindTargetTooltip() {
+  if (!el.targetHover || !el.targetTooltip) return;
+  el.targetHover.addEventListener("mouseenter", () => {
+    const title = state.targetSummaryTitle;
+    if (!title) return;
+    showTargetTooltip(title);
+  });
+  el.targetHover.addEventListener("mouseleave", () => {
+    hideTargetTooltip();
+  });
+  el.targetHover.addEventListener("focusin", () => {
+    const title = state.targetSummaryTitle;
+    if (!title) return;
+    showTargetTooltip(title);
+  });
+  el.targetHover.addEventListener("focusout", () => {
+    hideTargetTooltip();
+  });
+}
+
+function setTargetSummaryTitle(title) {
+  const next = String(title || "").trim();
+  if (next === "GOAL COMPLETE" || next === "..." || !next) {
+    state.targetSummaryTitle = "";
+    hideTargetTooltip();
+    if (el.targetHover) el.targetHover.removeAttribute("tabindex");
+    return;
+  }
+  const changed = normalizeTitle(next) !== normalizeTitle(state.targetSummaryTitle);
+  state.targetSummaryTitle = next;
+  if (el.targetHover) el.targetHover.tabIndex = 0;
+  if (changed) {
+    hideTargetTooltip();
+    // Prefetch so hover feels instant.
+    fetchTargetSummary(next).catch(() => {});
+  }
+}
+
+function updateRerollTargetControls(status) {
+  if (!el.rerollTargetBtn || !el.rerollTargetMeta) return;
+  const max = Number(status?.target_rerolls_max) || 3;
+  const remaining = Number(status?.target_rerolls_remaining);
+  const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
+  el.rerollTargetBtn.disabled = !canReroll;
+  if (status?.boss_completed || !status?.connected_to_ap) {
+    el.rerollTargetMeta.textContent = "";
+    return;
+  }
+  if (Number(status?.round) >= Number(status?.check_count)) {
+    el.rerollTargetMeta.textContent = "Goal round";
+    return;
+  }
+  if (Number.isFinite(remaining)) {
+    el.rerollTargetMeta.textContent = `${Math.max(0, remaining)}/${max} left`;
+  } else {
+    el.rerollTargetMeta.textContent = "";
+  }
+}
+
+async function rerollCurrentTarget() {
+  if (!requireApConnection() || state.rerollBusy) return;
+  if (!state.status?.can_reroll_target) {
+    toast("No target rerolls available right now", "warn", 4500);
+    return;
+  }
+  state.rerollBusy = true;
+  updateRerollTargetControls(state.status);
+  try {
+    const result = await api(`/api/session/${state.sessionId}/reroll-target`, "POST", {});
+    if (result.status) updateHUD(result.status);
+    toast(`Target rerolled → ${result.new_target}`, "ok", 6500);
+  } catch (err) {
+    toast(`Could not reroll target: ${err.message || err}`, "warn", 6500);
+    try { await pollStatus(); } catch { /* ignore */ }
+  } finally {
+    state.rerollBusy = false;
+    if (state.status) updateRerollTargetControls(state.status);
+  }
 }
 
 function deathLinkEnabled() {
@@ -567,11 +719,14 @@ function updateHUD(status) {
     el.roundText.textContent = "COMPLETE";
     el.targetText.textContent = "GOAL COMPLETE";
     el.goalText.textContent = `${status.goal_article || "..."} (Complete)`;
+    setTargetSummaryTitle("");
   } else {
     el.roundText.textContent = `${status.round}/${status.check_count}`;
     el.targetText.textContent = status.current_target || "...";
     el.goalText.textContent = status.goal_article || "...";
+    setTargetSummaryTitle(status.current_target || "");
   }
+  updateRerollTargetControls(status);
 
   el.clicksText.textContent = String(state.clicksUsed);
   el.fragmentsText.textContent = `${status.fragments}/${status.required_fragments}`;
@@ -942,6 +1097,10 @@ el.articleBody.addEventListener("wheel", (e) => {
   el.articleBody.scrollTop += e.deltaY * scrollFactor();
 }, { passive: false });
 
+el.rerollTargetBtn?.addEventListener("click", () => {
+  rerollCurrentTarget();
+});
+
 el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
@@ -1052,6 +1211,7 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+bindTargetTooltip();
 initDebugDisplayPanel();
 setInterval(pollStatus, 1500);
 

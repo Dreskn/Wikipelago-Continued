@@ -383,6 +383,7 @@ class WikipelagoWorld(World):
 
     round_pairs: list[dict[str, str]]
     goal_article: str
+    reroll_pool: list[str]
 
     @staticmethod
     def _is_reasonable_title(title: str) -> bool:
@@ -616,6 +617,9 @@ class WikipelagoWorld(World):
             pairs.append({"start": start_choice, "target": target})
 
         self.round_pairs = pairs
+        used_targets = {pair["target"] for pair in pairs}
+        # Leftover titles for client-side target rerolls (same filtered category pool).
+        self.reroll_pool = [title for title in filtered_pool if title not in used_targets]
 
     def create_regions(self) -> None:
         create_regions(self)
@@ -733,6 +737,7 @@ class WikipelagoWorld(World):
             "rounds_per_unlock": per_unlock,
             "goal_article": self.goal_article,
             "round_pairs": self.round_pairs,
+            "reroll_pool": list(getattr(self, "reroll_pool", [])),
             "searchsanity": bool(self.options.searchsanity.value),
             "scrollsanity": bool(self.options.scrollsanity.value),
             "scroll_speed_upgrades": SCROLL_SPEED_UPGRADES,

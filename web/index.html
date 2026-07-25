@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260725-2" />
+  <link rel="stylesheet" href="/static/style.css?v=20260725-5" />
 </head>
 <body>
   <div class="layout">
@@ -51,7 +51,15 @@
         <div class="card">
           <h2>Run</h2>
           <p><strong>Round:</strong> <span id="roundText">-</span></p>
-          <p><strong>Target:</strong> <span id="targetText">-</span></p>
+          <p class="target-row">
+            <strong>Target:</strong>
+            <span class="target-hover" id="targetHover">
+              <span id="targetText">-</span>
+              <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
+            </span>
+            <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll this round's target (up to 3 per round; not on Grand Goal)">Reroll</button>
+            <span id="rerollTargetMeta" class="muted-meta"></span>
+          </p>
           <p><strong>Goal:</strong> <span id="goalText">-</span></p>
           <p><strong>Clicks:</strong> <span id="clicksText">0</span></p>
           <p><strong>Fragments:</strong> <span id="fragmentsText">0/0</span></p>
@@ -80,6 +88,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260725-2"></script>
+  <script src="/static/app.js?v=20260725-5"></script>
 </body>
 </html>

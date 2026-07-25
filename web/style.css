@@ -226,6 +226,64 @@ button {
 }
 
 .side-panel { display: flex; flex-direction: column; gap: 12px; }
+.target-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.target-hover {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: inline-block;
+  max-width: 100%;
+}
+.target-hover #targetText {
+  border-bottom: 1px dotted #6f8499;
+  cursor: help;
+}
+.target-tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 40;
+  width: min(320px, 75vw);
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #3a5068;
+  background: #0e1620;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.target-tooltip.loading { color: var(--muted); font-style: italic; white-space: normal; }
+.btn-quiet {
+  padding: 4px 9px;
+  border-radius: 7px;
+  border: 1px solid #3a5068;
+  background: #152131;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.btn-quiet:hover:not(:disabled) {
+  color: var(--text);
+  border-color: #52708d;
+}
+.btn-quiet:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.muted-meta {
+  color: #6f8499;
+  font-size: 0.75rem;
+}
 .helper-link {
   margin: 2px 4px 0;
   font-size: 0.78rem;

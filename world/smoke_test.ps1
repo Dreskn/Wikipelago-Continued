@@ -176,6 +176,10 @@ try {
     Assert-HasPattern $webAppPath 'resetRoundVisits\(""\)' 'Web death path must clear visit tracking immediately'
     Assert-HasPattern $webAppPath 'if \(state\.handlingDeath\) return;' 'Web must ignore input while a death is handling'
     Assert-HasPattern $webAppPath 'armBombsOnPage' 'Web bomb arming helper is missing'
+    Assert-HasPattern $webAppPath 'rerollCurrentTarget' 'Web target reroll helper is missing'
+    Assert-HasPattern $bridgePath 'reroll-target' 'Bridge target reroll route is missing'
+    Assert-HasPattern $bridgePath 'TARGET_REROLLS_PER_ROUND' 'Bridge target reroll limit is missing'
+    Assert-HasPattern $initPath '"reroll_pool"' 'World slot_data reroll_pool is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
     Write-Pass "Known bad title regressions are absent from source pools"
