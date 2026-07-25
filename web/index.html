@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260725-7" />
+  <link rel="stylesheet" href="/static/style.css?v=20260725-8" />
 </head>
 <body>
   <div class="layout">
@@ -84,13 +84,24 @@
 
         <div class="card">
           <h2>Items</h2>
-          <div class="item-rows">
-            <div id="toolIconsRow" class="item-icon-row" aria-label="Tools"></div>
-            <div id="lensIconsRow" class="item-icon-row hidden" aria-label="Display lenses"></div>
-            <div id="letterIconsRow" class="letter-row hidden" aria-label="Search letters"></div>
-          </div>
-          <!-- Kept for debug lens status text updates; visually unused -->
+          <div id="toolIconsRow" class="item-icon-row" aria-label="Tools"></div>
+        </div>
+
+        <div id="lensesCard" class="card hidden">
+          <h2>Lenses</h2>
+          <div id="lensIconsRow" class="item-icon-row" aria-label="Display lenses"></div>
           <span id="lensesItem" class="hidden"></span>
+        </div>
+
+        <div id="sanityCard" class="card hidden">
+          <h2>Sanity unlocks</h2>
+          <div id="scrollIconsRow" class="item-icon-row" aria-label="Scroll speed"></div>
+          <div id="letterIconsRow" class="letter-row" aria-label="Search letters"></div>
+        </div>
+
+        <div id="difficultyCard" class="card hidden">
+          <h2>Difficulty</h2>
+          <div id="difficultyIconsRow" class="item-icon-row" aria-label="Difficulty options"></div>
         </div>
 
         <div class="helper-box">
@@ -113,6 +124,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260725-7"></script>
+  <script src="/static/app.js?v=20260725-8"></script>
 </body>
 </html>

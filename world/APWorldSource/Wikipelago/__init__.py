@@ -754,6 +754,7 @@ class WikipelagoWorld(World):
             "death_link": bool(self.options.death_link.value),
             "link_bombs": bool(self.options.link_bombs.value),
             "link_bomb_density": int(self.options.link_bomb_density.value),
+            "trap_count": int(self.options.trap_count.value),
             "trap_type": int(self.options.trap_type.value),
             "trap_link": bool(self.options.trap_link.value),
             "location_ids": {

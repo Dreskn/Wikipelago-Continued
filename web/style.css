@@ -426,6 +426,10 @@ button {
   color: #6f8499;
   opacity: 0.55;
 }
+.item-icon--dim {
+  filter: grayscale(0.85);
+  opacity: 0.45;
+}
 .item-icon--off::after {
   content: "";
   position: absolute;
@@ -438,6 +442,24 @@ button {
   );
   pointer-events: none;
 }
+.item-icon--bomb-few.item-icon--ok {
+  color: #ffe08a;
+  border-color: #c4a24a;
+  background: #2a2414;
+}
+.item-icon--bomb-more.item-icon--ok {
+  color: #ffb84d;
+  border-color: #c47a20;
+  background: #2a1c10;
+}
+.item-icon--bomb-insane.item-icon--ok {
+  color: #ff8a96;
+  border-color: #c44a58;
+  background: #2a1418;
+}
+#sanityCard .letter-row { margin-top: 8px; }
+#sanityCard .letter-row:empty,
+#sanityCard .item-icon-row:empty { display: none; margin: 0; }
 .item-icon-badge {
   position: absolute;
   right: -4px;

@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.7";
+const APP_VERSION = "2026.07.25.8";
 console.log("Wikipelago web version", APP_VERSION);
 
 const DISPLAY_LOCKS = [
@@ -17,6 +17,25 @@ const TOOL_ICON_SVGS = {
   search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
   compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
   scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
+  searchsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10v2H4V6zm0 5h16v2H4v-2zm0 5h12v2H4v-2z"/></svg>',
+  scrollsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
+  deaths: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v1H5v3h1v8h12v-8h1V8h-2V7a5 5 0 0 0-5-5zm-1 10h2v5h-2v-5z"/></svg>',
+  deathlink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a4 4 0 1 1 0 8H7v2h1a6 6 0 1 0 0-12h1v2H8zm8 0h-1V5h1a6 6 0 1 1 0 12h-1v-2h1a4 4 0 1 0 0-8z"/></svg>',
+  traplink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v6h6v2h-6v6h-2v-6H5V9h6V3zm-7 14h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>',
+  bombs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 4.3 13 6H9L7.3 4.3 5.9 5.7 7.2 7H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8a3 3 0 0 0-3-3h-1.2l1.3-1.3-1.4-1.4zM9 11h6v2H9v-2z"/></svg>',
+  traps: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5zm0 9L4.5 7.8 12 4.1l7.5 3.7L12 11zm0 2.2L4 9.5V17l8 4 8-4V9.5l-8 3.7z"/></svg>',
+};
+
+const TRAP_TYPE_LABELS = {
+  0: "Foggy + Missing Links",
+  1: "Foggy Links only",
+  2: "Missing Links only",
+};
+
+const BOMB_DENSITY_LABELS = {
+  0: "few",
+  1: "more",
+  2: "insane",
 };
 
 let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
@@ -78,8 +97,13 @@ const el = {
   fragmentsTrack: document.getElementById("fragmentsTrack"),
   compassHint: document.getElementById("compassHint"),
   toolIconsRow: document.getElementById("toolIconsRow"),
+  lensesCard: document.getElementById("lensesCard"),
   lensIconsRow: document.getElementById("lensIconsRow"),
+  sanityCard: document.getElementById("sanityCard"),
+  scrollIconsRow: document.getElementById("scrollIconsRow"),
   letterIconsRow: document.getElementById("letterIconsRow"),
+  difficultyCard: document.getElementById("difficultyCard"),
+  difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -574,23 +598,24 @@ function setIconState(node, stateName) {
   node.classList.add(`item-icon--${stateName}`);
 }
 
+function makeIconNode({ id, title, svg, extraClass = "" }) {
+  const node = document.createElement("div");
+  node.className = `item-icon item-icon--locked ${extraClass}`.trim();
+  node.dataset.tool = id;
+  node.title = title;
+  node.innerHTML = `${svg}<span class="item-icon-badge hidden"></span>`;
+  return node;
+}
+
 function ensureToolIcons() {
   if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "1") return;
   const tools = [
     { id: "back", title: "Back Button", svg: TOOL_ICON_SVGS.back },
     { id: "search", title: "Ctrl+F Lens", svg: TOOL_ICON_SVGS.search },
     { id: "compass", title: "Wiki Compass", svg: TOOL_ICON_SVGS.compass },
-    { id: "scroll", title: "Scroll Speed", svg: TOOL_ICON_SVGS.scroll },
   ];
   el.toolIconsRow.innerHTML = "";
-  for (const tool of tools) {
-    const node = document.createElement("div");
-    node.className = "item-icon item-icon--locked";
-    node.dataset.tool = tool.id;
-    node.title = tool.title;
-    node.innerHTML = `${tool.svg}<span class="item-icon-badge hidden"></span>`;
-    el.toolIconsRow.appendChild(node);
-  }
+  for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
   el.toolIconsRow.dataset.ready = "1";
 }
 
@@ -643,67 +668,186 @@ function renderToolIcons(status) {
   const back = el.toolIconsRow.querySelector('[data-tool="back"]');
   const search = el.toolIconsRow.querySelector('[data-tool="search"]');
   const compass = el.toolIconsRow.querySelector('[data-tool="compass"]');
-  const scroll = el.toolIconsRow.querySelector('[data-tool="scroll"]');
   if (back) setIconState(back, status.back_button_unlocked ? "ok" : "locked");
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
-  if (scroll) {
-    const badge = scroll.querySelector(".item-icon-badge");
-    if (!status.scrollsanity) {
-      setIconState(scroll, "off");
-      if (badge) {
-        badge.classList.add("hidden");
-        badge.textContent = "";
-      }
-    } else {
-      const level = Number(status.scroll_speed_level) || 0;
-      setIconState(scroll, level > 0 ? "ok" : "locked");
-      if (badge) {
-        badge.textContent = `${level}/${status.scroll_speed_upgrades || 0}`;
-        badge.classList.remove("hidden");
-      }
-    }
-  }
 }
 
 function renderLensIcons(status) {
-  if (!el.lensIconsRow) return;
+  if (!el.lensIconsRow || !el.lensesCard) return;
   const active = DISPLAY_LOCKS.filter((lock) => Boolean(status?.[lock.randomizeKey]));
   if (!active.length) {
-    el.lensIconsRow.classList.add("hidden");
+    el.lensesCard.classList.add("hidden");
     el.lensIconsRow.innerHTML = "";
     return;
   }
-  el.lensIconsRow.classList.remove("hidden");
+  el.lensesCard.classList.remove("hidden");
   el.lensIconsRow.innerHTML = "";
   for (const lock of active) {
     const node = document.createElement("div");
     node.className = "item-icon";
     node.title = lock.label;
-    const unlocked = Boolean(status?.[lock.unlockedKey]);
-    setIconState(node, unlocked ? "ok" : "locked");
+    setIconState(node, status?.[lock.unlockedKey] ? "ok" : "locked");
     node.textContent = lock.glyph;
     el.lensIconsRow.appendChild(node);
   }
 }
 
-function renderLetterIcons(status) {
-  if (!el.letterIconsRow) return;
-  if (!status?.searchsanity) {
-    el.letterIconsRow.classList.add("hidden");
-    el.letterIconsRow.innerHTML = "";
+function renderSanityUnlocks(status) {
+  if (!el.sanityCard) return;
+  const showScroll = Boolean(status?.scrollsanity);
+  const showLetters = Boolean(status?.searchsanity);
+  if (!showScroll && !showLetters) {
+    el.sanityCard.classList.add("hidden");
+    if (el.scrollIconsRow) el.scrollIconsRow.innerHTML = "";
+    if (el.letterIconsRow) el.letterIconsRow.innerHTML = "";
     return;
   }
-  el.letterIconsRow.classList.remove("hidden");
-  const owned = new Set((status.search_letters || []).map((letter) => String(letter).toUpperCase()));
-  el.letterIconsRow.innerHTML = "";
-  for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-    const chip = document.createElement("span");
-    chip.className = "letter-chip";
-    chip.textContent = letter;
-    if (owned.has(letter)) chip.classList.add("on");
-    el.letterIconsRow.appendChild(chip);
+  el.sanityCard.classList.remove("hidden");
+
+  if (el.scrollIconsRow) {
+    if (!showScroll) {
+      el.scrollIconsRow.classList.add("hidden");
+      el.scrollIconsRow.innerHTML = "";
+    } else {
+      el.scrollIconsRow.classList.remove("hidden");
+      el.scrollIconsRow.innerHTML = "";
+      const scroll = makeIconNode({
+        id: "scroll",
+        title: "Progressive Scroll Speed",
+        svg: TOOL_ICON_SVGS.scroll,
+      });
+      const level = Number(status.scroll_speed_level) || 0;
+      setIconState(scroll, level > 0 ? "ok" : "locked");
+      const badge = scroll.querySelector(".item-icon-badge");
+      if (badge) {
+        badge.textContent = `${level}/${status.scroll_speed_upgrades || 0}`;
+        badge.classList.remove("hidden");
+      }
+      scroll.title = `Scroll Speed ${level}/${status.scroll_speed_upgrades || 0}`;
+      el.scrollIconsRow.appendChild(scroll);
+    }
   }
+
+  if (el.letterIconsRow) {
+    if (!showLetters) {
+      el.letterIconsRow.classList.add("hidden");
+      el.letterIconsRow.innerHTML = "";
+    } else {
+      el.letterIconsRow.classList.remove("hidden");
+      const owned = new Set((status.search_letters || []).map((letter) => String(letter).toUpperCase()));
+      el.letterIconsRow.innerHTML = "";
+      for (const letter of "ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
+        const chip = document.createElement("span");
+        chip.className = "letter-chip";
+        chip.textContent = letter;
+        if (owned.has(letter)) chip.classList.add("on");
+        el.letterIconsRow.appendChild(chip);
+      }
+    }
+  }
+}
+
+function renderDifficultyIcons(status) {
+  if (!el.difficultyCard || !el.difficultyIconsRow) return;
+  const trapCount = Number(status?.trap_count) || 0;
+  const bombsOn = Boolean(status?.link_bombs);
+  const relevant = Boolean(
+    status?.searchsanity
+    || status?.scrollsanity
+    || status?.deaths
+    || status?.death_link
+    || status?.trap_link
+    || bombsOn
+    || trapCount > 0
+  );
+  if (!relevant) {
+    el.difficultyCard.classList.add("hidden");
+    el.difficultyIconsRow.innerHTML = "";
+    return;
+  }
+  el.difficultyCard.classList.remove("hidden");
+  el.difficultyIconsRow.innerHTML = "";
+
+  const addDiffIcon = ({ id, title, svg, on, extraClass = "", badge = "" }) => {
+    const node = makeIconNode({ id, title, svg, extraClass });
+    setIconState(node, on ? "ok" : "locked");
+    if (!on) node.classList.add("item-icon--dim");
+    if (badge) {
+      const badgeEl = node.querySelector(".item-icon-badge");
+      if (badgeEl) {
+        badgeEl.textContent = badge;
+        badgeEl.classList.remove("hidden");
+      }
+    }
+    el.difficultyIconsRow.appendChild(node);
+  };
+
+  addDiffIcon({
+    id: "searchsanity",
+    title: status.searchsanity ? "Searchsanity ON" : "Searchsanity off",
+    svg: TOOL_ICON_SVGS.searchsanity,
+    on: Boolean(status.searchsanity),
+  });
+  addDiffIcon({
+    id: "scrollsanity",
+    title: status.scrollsanity ? "Scrollsanity ON" : "Scrollsanity off",
+    svg: TOOL_ICON_SVGS.scrollsanity,
+    on: Boolean(status.scrollsanity),
+  });
+  addDiffIcon({
+    id: "deaths",
+    title: status.deaths ? "Loop deaths ON" : "Loop deaths off",
+    svg: TOOL_ICON_SVGS.deaths,
+    on: Boolean(status.deaths),
+  });
+  addDiffIcon({
+    id: "deathlink",
+    title: status.death_link ? "DeathLink ON" : "DeathLink off",
+    svg: TOOL_ICON_SVGS.deathlink,
+    on: Boolean(status.death_link),
+  });
+  addDiffIcon({
+    id: "traplink",
+    title: status.trap_link ? "TrapLink ON" : "TrapLink off",
+    svg: TOOL_ICON_SVGS.traplink,
+    on: Boolean(status.trap_link),
+  });
+
+  const bombDensity = Number(status.link_bomb_density) || 0;
+  const bombCount = Number(status.link_bomb_count) || 0;
+  const bombLabel = BOMB_DENSITY_LABELS[bombDensity] || "few";
+  const bombNode = makeIconNode({
+    id: "bombs",
+    title: bombsOn
+      ? `Link bombs ON (${bombLabel}, ~${bombCount}/page)`
+      : "Link bombs off",
+    svg: TOOL_ICON_SVGS.bombs,
+    extraClass: bombsOn ? `item-icon--bomb-${bombLabel}` : "",
+  });
+  setIconState(bombNode, bombsOn ? "ok" : "locked");
+  if (!bombsOn) bombNode.classList.add("item-icon--dim");
+  if (bombsOn) {
+    const badge = bombNode.querySelector(".item-icon-badge");
+    if (badge) {
+      badge.textContent = String(bombCount);
+      badge.classList.remove("hidden");
+    }
+  }
+  el.difficultyIconsRow.appendChild(bombNode);
+
+  const trapType = Number(status.trap_type) || 0;
+  const trapTypeLabel = TRAP_TYPE_LABELS[trapType] || TRAP_TYPE_LABELS[0];
+  const trapsOn = trapCount > 0;
+  addDiffIcon({
+    id: "traps",
+    title: trapsOn
+      ? `Traps: ${trapCount}× (${trapTypeLabel})`
+      : "Traps off (0 in pool)",
+    svg: TOOL_ICON_SVGS.traps,
+    on: trapsOn,
+    badge: trapsOn ? String(trapCount) : "",
+  });
 }
 
 function scrollLevel() {
@@ -876,7 +1020,8 @@ function updateHUD(status) {
   renderSearchStatus();
   renderToolIcons(status);
   renderLensIcons(status);
-  renderLetterIcons(status);
+  renderSanityUnlocks(status);
+  renderDifficultyIcons(status);
   renderLensStatus(status);
   applyDisplayLocks();
 

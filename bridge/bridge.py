@@ -126,6 +126,7 @@ class SessionState:
     death_link: bool = False
     link_bombs: bool = False
     link_bomb_density: int = 0
+    trap_count: int = 0
     trap_type: int = 0
     trap_link: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
@@ -259,6 +260,7 @@ class SessionState:
             "link_bombs": self.link_bombs,
             "link_bomb_density": self.link_bomb_density,
             "link_bomb_count": LINK_BOMB_DENSITY_COUNTS.get(self.link_bomb_density, 1),
+            "trap_count": self.trap_count,
             "trap_type": self.trap_type,
             "trap_link": self.trap_link,
             "pending_events": list(self.pending_events),
@@ -532,6 +534,7 @@ class APConnection:
         self.state.death_link = bool(slot_data.get("death_link", False))
         self.state.link_bombs = bool(slot_data.get("link_bombs", False))
         self.state.link_bomb_density = int(slot_data.get("link_bomb_density", 0))
+        self.state.trap_count = int(slot_data.get("trap_count", 0))
         self.state.trap_type = int(slot_data.get("trap_type", 0))
         self.state.trap_link = bool(slot_data.get("trap_link", False))
 
