@@ -1,5 +1,11 @@
-const APP_VERSION = "2026.07.26.3";
+const APP_VERSION = "2026.07.26.5";
 console.log("Wikipelago web version", APP_VERSION);
+
+/** Non-article namespaces blocked for navigation. Portal is allowed to browse. */
+const BLOCKED_WIKI_NAMESPACES = new Set([
+  "file", "category", "help", "template", "special", "talk", "user",
+  "wikipedia", "module", "book", "draft", "mediawiki",
+]);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
@@ -1644,6 +1650,20 @@ function wikiTitleFromHref(href) {
   return decoded.replace(/_/g, " ");
 }
 
+function wikiNamespace(title) {
+  if (!String(title || "").includes(":")) return "";
+  return title.split(":", 1)[0].toLowerCase();
+}
+
+function isBlockedWikiTitle(title) {
+  const ns = wikiNamespace(title);
+  return Boolean(ns && BLOCKED_WIKI_NAMESPACES.has(ns));
+}
+
+function toastBlockedWikiPage() {
+  toast("That type of page is not allowed in Wikipelago", "warn");
+}
+
 function rewriteLinks(root) {
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
@@ -1651,14 +1671,28 @@ function rewriteLinks(root) {
       unwrapElement(a);
       return;
     }
+    // /w/... must not keep a host-relative href (would leave the SPA).
+    if (href.startsWith("/w/")) {
+      a.removeAttribute("data-title");
+      a.dataset.blockedNs = "1";
+      a.href = "#";
+      return;
+    }
     if (!href.startsWith("/wiki/")) return;
     const title = wikiTitleFromHref(href);
-    if (!title) return;
-    const ns = title.split(":", 1)[0].toLowerCase();
-    const blockedNamespaces = new Set(["file", "category", "help", "template", "special", "portal", "talk", "user", "wikipedia", "module", "book", "draft", "mediawiki"]);
-    if (title.includes(":") && blockedNamespaces.has(ns)) return;
-    a.dataset.title = title;
+    if (!title) {
+      unwrapElement(a);
+      return;
+    }
+    // Never leave raw /wiki/... hrefs — browser would hit a host 404.
     a.href = "#";
+    if (isBlockedWikiTitle(title)) {
+      a.removeAttribute("data-title");
+      a.dataset.blockedNs = "1";
+      return;
+    }
+    a.removeAttribute("data-blocked-ns");
+    a.dataset.title = title;
   });
 }
 
@@ -1681,6 +1715,10 @@ async function openArticle(title, options = {}) {
     requireConnection = false,
   } = options;
   if (requireConnection && !requireApConnection()) return;
+  if (isBlockedWikiTitle(title)) {
+    toastBlockedWikiPage();
+    return;
+  }
 
   try {
     const html = await fetchWikiHtml(title);
@@ -1760,6 +1798,12 @@ async function restoreArticleView(force = false) {
 }
 
 el.articleBody.addEventListener("click", async (e) => {
+  const blocked = e.target.closest("a[data-blocked-ns]");
+  if (blocked) {
+    e.preventDefault();
+    toastBlockedWikiPage();
+    return;
+  }
   const a = e.target.closest("a[data-title]");
   if (!a) return;
   e.preventDefault();
