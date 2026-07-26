@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.26.2";
+const APP_VERSION = "2026.07.26.3";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -1592,6 +1592,18 @@ function prepareArticleHtml(root) {
   applyDisplayLocks();
 }
 
+function neutralizeTableChromeColors(el) {
+  // Drop wiki hard-coded colors so the dark client theme controls contrast.
+  el.removeAttribute("bgcolor");
+  el.removeAttribute("background");
+  el.removeAttribute("color");
+  if (!el.style) return;
+  el.style.removeProperty("background");
+  el.style.removeProperty("background-color");
+  el.style.removeProperty("background-image");
+  el.style.removeProperty("color");
+}
+
 function wrapTables(root) {
   root.querySelectorAll("table").forEach((table) => {
     table.removeAttribute("width");
@@ -1600,6 +1612,10 @@ function wrapTables(root) {
       table.style.removeProperty("min-width");
       table.style.removeProperty("max-width");
     }
+    neutralizeTableChromeColors(table);
+    table
+      .querySelectorAll("caption, colgroup, col, thead, tbody, tfoot, tr, th, td")
+      .forEach(neutralizeTableChromeColors);
     if (table.parentElement?.classList.contains("table-scroll")) return;
     const wrap = document.createElement("div");
     wrap.className = "table-scroll";

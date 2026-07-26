@@ -206,6 +206,13 @@ button {
   padding: 6px 8px;
   vertical-align: top;
   white-space: normal;
+  color: var(--text);
+}
+.article-body td {
+  background: transparent;
+}
+.article-body tr:nth-child(even) > td {
+  background: #152131;
 }
 .article-body th {
   background: #182433;
