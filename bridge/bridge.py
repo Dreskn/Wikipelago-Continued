@@ -150,7 +150,7 @@ class SessionState:
     trap_type: int = 0
     trap_link: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
-    round_pairs: list[dict[str, str]] = field(default_factory=lambda: [{"start": "Wikipedia", "target": "Philosophy"}])
+    round_pairs: list[dict[str, str]] = field(default_factory=list)
     reroll_pool: list[str] = field(default_factory=list)
     target_rerolls_used: int = 0
     target_rerolls_round: int = -1
@@ -179,8 +179,10 @@ class SessionState:
         return self.round_pairs[self.round_index]["target"]
 
     def current_start(self) -> str:
+        if not self.round_pairs:
+            return ""
         if self.round_index >= len(self.round_pairs):
-            return self.round_pairs[-1]["start"] if self.round_pairs else "Wikipedia"
+            return self.round_pairs[-1]["start"]
         return self.round_pairs[self.round_index]["start"]
 
     def goal_article(self) -> str:

@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.26.6";
+const APP_VERSION = "2026.07.26.7";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -1151,10 +1151,11 @@ function preferredResumeTitle() {
   const hashTitle = decodeURIComponent((window.location.hash || "").replace(/^#/, "")).trim();
   if (hashTitle) return hashTitle;
   if (state.status?.last_page) return state.status.last_page;
+  if (state.status?.current_start) return state.status.current_start;
   const savedTitle = loadSavedTitle();
   if (savedTitle) return savedTitle;
-  if (state.status?.current_start) return state.status.current_start;
-  return "Wikipedia";
+  // Wait for AP round data — never invent a hard-coded default article.
+  return "";
 }
 
 async function api(path, method = "GET", body = null, retryOnInvalidSession = true) {
