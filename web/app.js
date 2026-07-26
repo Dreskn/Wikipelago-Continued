@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.26.1";
+const APP_VERSION = "2026.07.26.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -1608,6 +1608,26 @@ function wrapTables(root) {
   });
 }
 
+function wikiTitleFromHref(href) {
+  // Path only — fragments/queries are not part of the article title, and
+  // section anchors sometimes contain bare "%" that break decodeURIComponent.
+  const wikiPart = href.replace(/^\/wiki\//, "").split("#", 1)[0].split("?", 1)[0];
+  if (!wikiPart) return "";
+  let decoded;
+  try {
+    decoded = decodeURIComponent(wikiPart);
+  } catch {
+    decoded = wikiPart.replace(/%[0-9A-Fa-f]{2}/g, (m) => {
+      try {
+        return decodeURIComponent(m);
+      } catch {
+        return m;
+      }
+    });
+  }
+  return decoded.replace(/_/g, " ");
+}
+
 function rewriteLinks(root) {
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
@@ -1616,9 +1636,8 @@ function rewriteLinks(root) {
       return;
     }
     if (!href.startsWith("/wiki/")) return;
-    const wikiPart = href.replace("/wiki/", "");
-    if (!wikiPart) return;
-    const title = decodeURIComponent(wikiPart).replace(/_/g, " ");
+    const title = wikiTitleFromHref(href);
+    if (!title) return;
     const ns = title.split(":", 1)[0].toLowerCase();
     const blockedNamespaces = new Set(["file", "category", "help", "template", "special", "portal", "talk", "user", "wikipedia", "module", "book", "draft", "mediawiki"]);
     if (title.includes(":") && blockedNamespaces.has(ns)) return;
