@@ -18,11 +18,6 @@ ARTICLE_TOPIC_BY_TITLE: dict[str, str] = {
     title: topic for title, topic in ENTERTAINMENT_ARTICLE_POOL
 }
 
-STOPWORDS: set[str] = {
-    "the", "a", "an", "and", "or", "of", "in", "on", "to", "for", "by", "with",
-    "at", "from", "into", "about", "after", "before", "over", "under", "new",
-}
-
 BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
     "rifle",
     "pistol",
@@ -182,115 +177,6 @@ EXACT_TITLE_TOPICS: dict[str, str] = {
     "youtube": "technology",
 }
 
-GLOBAL_START_ARTICLES: tuple[str, ...] = (
-    "Wikipedia",
-    "History",
-    "Science",
-    "Technology",
-    "Internet",
-    "Culture",
-    "Entertainment",
-    "Art",
-    "Food",
-    "Geography",
-)
-
-TOPIC_START_ARTICLES: dict[str, tuple[str, ...]] = {
-    "video_games": (
-        "Video game",
-        "Arcade game",
-        "Nintendo",
-        "PlayStation",
-        "Xbox",
-        "Game engine",
-    ),
-    "board_games": (
-        "Board game",
-        "Tabletop game",
-        "Card game",
-        "Chess",
-    ),
-    "movies": (
-        "Film",
-        "Cinema",
-        "Animation",
-        "Academy Awards",
-        "Screenplay",
-    ),
-    "tv_shows": (
-        "Television show",
-        "Television",
-        "Streaming television",
-        "Sitcom",
-        "Animation",
-    ),
-    "anime_manga": (
-        "Anime",
-        "Manga",
-        "Animation",
-        "Japanese popular culture",
-    ),
-    "sports": (
-        "Sport",
-        "Competition",
-        "Tournament",
-        "Athlete",
-    ),
-    "science_space": (
-        "Science",
-        "Astronomy",
-        "Physics",
-        "Biology",
-        "Space exploration",
-    ),
-    "technology": (
-        "Technology",
-        "Computer",
-        "Internet",
-        "World Wide Web",
-        "Software",
-    ),
-    "history": (
-        "History",
-        "Ancient history",
-        "Civilization",
-        "Archaeology",
-    ),
-    "geography": (
-        "Geography",
-        "Earth",
-        "Country",
-        "Landform",
-        "City",
-    ),
-    "food_cuisine": (
-        "Food",
-        "Cuisine",
-        "Cooking",
-        "Ingredient",
-    ),
-    "art_literature": (
-        "Art",
-        "Literature",
-        "Novel",
-        "Painting",
-        "Poetry",
-    ),
-    "mythology_folklore": (
-        "Mythology",
-        "Folklore",
-        "Legend",
-        "Myth",
-    ),
-    "music": (
-        "Music",
-        "Song",
-        "Album",
-        "Musician",
-        "Popular music",
-    ),
-}
-
 SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
     0: set(),
     1: {"A", "E", "I", "O", "U"},
@@ -425,13 +311,8 @@ class WikipelagoWorld(World):
             return False
         return True
 
-    @staticmethod
-    def _title_tokens(title: str) -> set[str]:
-        tokens = {tok for tok in re.findall(r"[A-Za-z]+", title.lower()) if len(tok) > 2}
-        return {tok for tok in tokens if tok not in STOPWORDS}
-
     def _infer_topic(self, title: str) -> str | None:
-        # Prefer explicit pool tags; fall back to heuristics for start hubs / presets.
+        # Prefer explicit pool tags; fall back to heuristics for presets.
         tagged = ARTICLE_TOPIC_BY_TITLE.get(title)
         if tagged:
             return tagged
@@ -489,36 +370,6 @@ class WikipelagoWorld(World):
     def _filter_pool_by_topics(self, pool: list[str], selected_topics: set[str]) -> list[str]:
         return [title for title in pool if self._infer_topic(title) in selected_topics]
 
-    def _is_doable_pair(self, start: str, target: str) -> bool:
-        return True
-
-    def _is_challenging_pair(self, start: str, target: str) -> bool:
-        if start == target:
-            return False
-        sl = start.lower()
-        tl = target.lower()
-        if sl in tl or tl in sl:
-            return False
-        s_tokens = self._title_tokens(start)
-        t_tokens = self._title_tokens(target)
-        if s_tokens and t_tokens and s_tokens.intersection(t_tokens):
-            return False
-        return True
-
-    def _candidate_start_articles(self, target: str) -> list[str]:
-        topic = self._infer_topic(target)
-        ordered = list(TOPIC_START_ARTICLES.get(topic or "", ())) + list(GLOBAL_START_ARTICLES)
-        candidates: list[str] = []
-        seen: set[str] = set()
-        for start in ordered:
-            if start == target:
-                continue
-            if start in seen:
-                continue
-            seen.add(start)
-            candidates.append(start)
-        return candidates
-
     def _search_starting_letters(self) -> set[str]:
         return set(SEARCH_STARTING_LETTERS.get(self.options.search_starting_letters.value, set()))
 
@@ -560,10 +411,9 @@ class WikipelagoWorld(World):
         ]
         filtered_pool = self._filter_pool_by_topics(filtered_pool, selected_topics)
 
-        # Strict no-repeat: each round needs distinct start/target material from the pool,
-        # so generation requires about 2 unique titles per round (including the goal).
-        needed_total = max(2, round_count * 2)
-        max_rounds_for_pool = len(filtered_pool) // 2
+        # Unique titles: one random opening start + one target per round (last = goal).
+        needed_total = max(2, round_count + 1)
+        max_rounds_for_pool = max(0, len(filtered_pool) - 1)
         if len(filtered_pool) < needed_total:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
@@ -589,37 +439,28 @@ class WikipelagoWorld(World):
                 filtered_pool.append(self.goal_article)
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
-        needed_non_goal = max(0, (2 * round_count) - 1)
-        if len(remaining) < needed_non_goal:
+        # First-round opening start + non-goal targets (later rounds continue from prior target).
+        needed_from_remaining = round_count
+        if len(remaining) < needed_from_remaining:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
-                f"check_count={round_count} needs {needed_non_goal + 1} unique usable articles "
+                f"check_count={round_count} needs {needed_from_remaining + 1} unique usable articles "
                 f"(including the goal), but only {len(remaining) + 1} are available after filtering. "
                 "Lower check_count or enable more article categories."
             )
 
-        picks = self.random.sample(remaining, needed_non_goal)
-        non_final_targets = picks[: round_count - 1]
+        picks = self.random.sample(remaining, needed_from_remaining)
+        first_start = picks[0]
+        non_final_targets = picks[1:]
         targets = non_final_targets + [self.goal_article]
-        pairs: list[dict[str, str]] = []
-
-        for target in targets:
-            curated_starts = self._candidate_start_articles(target)
-            challenging_and_doable = [
-                start for start in curated_starts
-                if self._is_doable_pair(start, target) and self._is_challenging_pair(start, target)
-            ]
-            doable_only = [start for start in curated_starts if self._is_doable_pair(start, target)]
-            challenging_only = [start for start in curated_starts if self._is_challenging_pair(start, target)]
-            fallback = ["Wikipedia"] if target != "Wikipedia" else ["History"]
-            candidates = challenging_and_doable or doable_only or challenging_only or fallback
-            start_choice = self.random.choice(candidates)
-            pairs.append({"start": start_choice, "target": target})
-
-        self.round_pairs = pairs
-        used_targets = {pair["target"] for pair in pairs}
+        starts = [first_start, *targets[:-1]]
+        self.round_pairs = [
+            {"start": start, "target": target}
+            for start, target in zip(starts, targets)
+        ]
+        used_titles = {first_start, *targets}
         # Leftover titles for client-side target rerolls (same filtered category pool).
-        self.reroll_pool = [title for title in filtered_pool if title not in used_targets]
+        self.reroll_pool = [title for title in filtered_pool if title not in used_titles]
 
     def create_regions(self) -> None:
         create_regions(self)
