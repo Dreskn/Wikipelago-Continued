@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.25.14";
+const APP_VERSION = "2026.07.26.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
@@ -1193,6 +1193,8 @@ function updateHUD(status) {
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
     toast("Connected to Archipelago", "ok", 4500);
+    // /connect returns before AP handshake finishes; restore once we are actually online.
+    void restoreArticleView(true);
   }
   if (status.boss_completed) {
     el.targetText.textContent = "GOAL COMPLETE";
@@ -1762,6 +1764,18 @@ el.rerollTargetBtn?.addEventListener("click", () => {
   rerollCurrentTarget();
 });
 
+async function waitForApConnection(timeoutMs = 10000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    await pollStatus();
+    if (isApConnected()) return true;
+    if (state.status?.last_error) return false;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  await pollStatus();
+  return isApConnected();
+}
+
 el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
@@ -1775,7 +1789,11 @@ el.connectBtn.addEventListener("click", async () => {
       password: el.passwordInput.value,
     });
     toast("Connecting to Archipelago...", "ok", 4500);
-    await pollStatus();
+    const online = await waitForApConnection();
+    if (!online) {
+      toastSticky(state.status?.last_error || "Could not connect to Archipelago", "warn");
+      return;
+    }
     await restoreArticleView(true);
   } catch (err) {
     toastSticky(err.message || "Connect failed", "warn");
