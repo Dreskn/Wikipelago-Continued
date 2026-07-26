@@ -1,9 +1,9 @@
-const APP_VERSION = "2026.07.26.5";
+const APP_VERSION = "2026.07.26.6";
 console.log("Wikipelago web version", APP_VERSION);
 
-/** Non-article namespaces blocked for navigation. Portal is allowed to browse. */
+/** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
 const BLOCKED_WIKI_NAMESPACES = new Set([
-  "file", "category", "help", "template", "special", "talk", "user",
+  "file", "category", "help", "template", "special", "portal", "talk", "user",
   "wikipedia", "module", "book", "draft", "mediawiki",
 ]);
 
