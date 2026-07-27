@@ -185,6 +185,7 @@ class SessionState:
     last_error: str = ""
     last_seen: float = field(default_factory=lambda: time.time())
     slot: int = 0
+    team: int = 0
     player_names: dict[int, str] = field(default_factory=dict)
     slot_games: dict[int, str] = field(default_factory=dict)
     item_id_to_name: dict[str, dict[int, str]] = field(default_factory=dict)
@@ -399,6 +400,7 @@ class APConnection:
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
         self.state.slot = 0
+        self.state.team = 0
         self.state.player_names.clear()
         self.state.slot_games.clear()
         self.state.item_id_to_name.clear()
@@ -519,6 +521,7 @@ class APConnection:
                 await self._update_link_tags()
                 await self._canonicalize_active_targets()
                 await self._request_data_package()
+                await self._request_bingo_stamps_from_storage()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
                 raise RuntimeError(self.state.last_error)
@@ -542,6 +545,8 @@ class APConnection:
                 self._apply_data_package(packet)
             elif cmd == "LocationInfo":
                 self._resolve_location_info(packet)
+            elif cmd == "Retrieved":
+                self._resolve_retrieved(packet)
 
     def _apply_connected(self, packet: dict[str, Any]) -> None:
         slot_data = packet.get("slot_data") or {}
@@ -549,6 +554,10 @@ class APConnection:
             self.state.slot = int(packet.get("slot") or 0)
         except Exception:
             self.state.slot = 0
+        try:
+            self.state.team = int(packet.get("team") or 0)
+        except Exception:
+            self.state.team = 0
 
         self.state.player_names.clear()
         self.state.slot_games.clear()
@@ -953,26 +962,95 @@ class APConnection:
         if not self.state.connected_to_ap or self.ws is None:
             return []
 
+        before = frozenset(self.state.bingo_stamped_pairs)
         pair = letter_pair_from_title(page_title)
         if pair and any(pair in row for row in self.state.bingo_letterpairs_board):
             self.state.bingo_stamped_pairs.add(pair)
 
-        return await self._flush_bingo_line_checks()
+        events = await self._flush_bingo_line_checks()
+        if frozenset(self.state.bingo_stamped_pairs) != before:
+            await self._persist_bingo_stamps()
+        return events
 
     async def merge_bingo_stamps(self, stamped_pairs: list[Any]) -> list[dict[str, Any]]:
-        """Merge persisted stamps from the client (refresh/reconnect); may complete lines."""
+        """Merge persisted stamps (client cache / AP storage); may complete lines."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
             return []
         if not self.state.connected_to_ap:
             return []
 
+        before = frozenset(self.state.bingo_stamped_pairs)
         on_board = {pair for row in self.state.bingo_letterpairs_board for pair in row}
         for raw in stamped_pairs or []:
             pair = str(raw or "").strip().upper()
             if pair in on_board:
                 self.state.bingo_stamped_pairs.add(pair)
 
-        return await self._flush_bingo_line_checks()
+        events = await self._flush_bingo_line_checks()
+        if frozenset(self.state.bingo_stamped_pairs) != before:
+            await self._persist_bingo_stamps()
+        return events
+
+    def _bingo_storage_key(self) -> str:
+        return f"wikipelago_bingo_letterpairs_{self.state.team}_{self.state.slot}"
+
+    def _resolve_retrieved(self, packet: dict[str, Any]) -> None:
+        keys = packet.get("keys")
+        if not isinstance(keys, dict):
+            return
+        storage_key = self._bingo_storage_key()
+        if storage_key not in keys:
+            return
+        raw = keys.get(storage_key)
+        asyncio.create_task(self._apply_bingo_storage_payload(raw))
+
+    async def _request_bingo_stamps_from_storage(self) -> None:
+        """Ask Archipelago DataStorage for stamped pairs (answer handled via Retrieved)."""
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
+            return
+        if self.ws is None or not self.state.connected_to_ap:
+            return
+        payload = [{"cmd": "Get", "keys": [self._bingo_storage_key()]}]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Bingo DataStorage Get request failed: %s", exc)
+
+    async def _apply_bingo_storage_payload(self, raw: Any) -> None:
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
+            return
+        before = frozenset(self.state.bingo_stamped_pairs)
+        on_board = {pair for row in self.state.bingo_letterpairs_board for pair in row}
+        if isinstance(raw, list):
+            for item in raw:
+                pair = str(item or "").strip().upper()
+                if pair in on_board:
+                    self.state.bingo_stamped_pairs.add(pair)
+        await self._flush_bingo_line_checks()
+        # Keep storage in sync with line-inferred stamps after reconnect.
+        if frozenset(self.state.bingo_stamped_pairs) != before or self.state.bingo_stamped_pairs:
+            await self._persist_bingo_stamps()
+
+    async def _persist_bingo_stamps(self) -> None:
+        if not self.state.bingo_letterpairs or self.ws is None or not self.state.connected_to_ap:
+            return
+        key = self._bingo_storage_key()
+        payload = [{
+            "cmd": "Set",
+            "key": key,
+            "default": [],
+            "want_reply": False,
+            "operations": [{
+                "operation": "replace",
+                "value": sorted(self.state.bingo_stamped_pairs),
+            }],
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Bingo DataStorage Set failed for %s: %s", key, exc)
 
     async def _flush_bingo_line_checks(self) -> list[dict[str, Any]]:
         pending: list[tuple[str, int]] = []

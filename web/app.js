@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.27.3";
+const APP_VERSION = "2026.07.27.4";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
