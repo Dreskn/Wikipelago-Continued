@@ -422,6 +422,19 @@ class APConnection:
 
         self.reader_task = asyncio.create_task(self._connection_loop())
 
+    async def disconnect(self) -> None:
+        """Force-close the Archipelago websocket so the player can reconnect (e.g. another device)."""
+        self.state.connected_to_ap = False
+        self.state.last_error = ""
+        if self.reader_task and not self.reader_task.done():
+            self.reader_task.cancel()
+            try:
+                await self.reader_task
+            except Exception:
+                pass
+        self.reader_task = None
+        self.ws = None
+
     async def _connection_loop(self) -> None:
         fail_streak = 0
         while True:
@@ -1794,6 +1807,14 @@ class App:
         await session.conn.connect(server, slot_name, password)
         return web.json_response({"ok": True})
 
+    async def disconnect_session(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        await session.conn.disconnect()
+        return web.json_response({"ok": True, "status": session.conn.state.to_status()})
+
     async def session_status(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -1916,6 +1937,7 @@ class App:
         app.router.add_get("/health", self.health)
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
+        app.router.add_post("/api/session/{sid}/disconnect", self.disconnect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)

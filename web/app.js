@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.27.4";
+const APP_VERSION = "2026.07.27.5";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -97,6 +97,10 @@ const el = {
   slotInput: document.getElementById("slotInput"),
   passwordInput: document.getElementById("passwordInput"),
   connectBtn: document.getElementById("connectBtn"),
+  disconnectBtn: document.getElementById("disconnectBtn"),
+  connectionForm: document.getElementById("connectionForm"),
+  connectionSummary: document.getElementById("connectionSummary"),
+  connectedServerText: document.getElementById("connectedServerText"),
   roundText: document.getElementById("roundText"),
   roundsTrack: document.getElementById("roundsTrack"),
   targetText: document.getElementById("targetText"),
@@ -270,6 +274,18 @@ function clearStickyConnectionError() {
 
 function isApConnected() {
   return state.status?.connected_to_ap === true;
+}
+
+function updateConnectionPanel(status) {
+  const connected = Boolean(status?.connected_to_ap);
+  if (el.connectionForm) el.connectionForm.classList.toggle("hidden", connected);
+  if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !connected);
+  if (el.connectedServerText) {
+    el.connectedServerText.textContent = connected
+      ? (status.ap_server || el.serverInput?.value?.trim() || "—")
+      : "-";
+  }
+  if (el.disconnectBtn) el.disconnectBtn.disabled = !connected;
 }
 
 function requireApConnection() {
@@ -1332,6 +1348,7 @@ function updateHUD(status) {
   syncRoundVisitTracking(status);
   el.connBadge.textContent = status.connected_to_ap ? "Connected" : "Offline";
   el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
+  updateConnectionPanel(status);
 
   if (wasConnected && !status.connected_to_ap) {
     toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
@@ -2025,6 +2042,18 @@ el.connectBtn.addEventListener("click", async () => {
     await restoreArticleView(true);
   } catch (err) {
     toastSticky(err.message || "Connect failed", "warn");
+  }
+});
+
+el.disconnectBtn?.addEventListener("click", async () => {
+  try {
+    await ensureSession();
+    const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
+    if (result.status) updateHUD(result.status);
+    else await pollStatus();
+    toast("Disconnected from Archipelago", "warn", 4500);
+  } catch (err) {
+    toastSticky(err.message || "Disconnect failed", "warn");
   }
 });
 

@@ -380,6 +380,18 @@ button {
   background: #0f1824; color: var(--text);
 }
 .card p { margin: 6px 0; }
+.connection-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.connection-summary-line {
+  margin: 0;
+  word-break: break-word;
+}
+.connection-summary .btn-quiet {
+  align-self: flex-start;
+}
 
 .run-label-row {
   display: flex;
