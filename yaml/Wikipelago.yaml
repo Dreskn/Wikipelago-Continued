@@ -133,3 +133,11 @@ Wikipelago:
 
   # Share traps with other Trap Link players (independent of trap_count).
   trap_link: false
+
+  # --- Letter-pair bingo (on by default) ---
+
+  # Ungated bingo grid: stamp letter pairs from page titles; row/col/diag/full checks.
+  toggle_bingo_letterpairs: true
+
+  # Grid size N (3–26). Default 5 → 13 checks. N=26 is the full sorted A–Z×A–Z board.
+  bingo_letterpairs_grid: 5

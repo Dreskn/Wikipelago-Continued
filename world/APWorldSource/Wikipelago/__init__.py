@@ -12,6 +12,11 @@ from .Locations import location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
 from .entertainment_articles import ENTERTAINMENT_ARTICLE_POOL
+from .letter_pairs import (
+    bingo_location_count,
+    bingo_slot_location_ids,
+    build_letter_pair_bingo_board,
+)
 
 # Explicit category tags from the curated pool (preferred over keyword inference).
 ARTICLE_TOPIC_BY_TITLE: dict[str, str] = {
@@ -270,6 +275,17 @@ class WikipelagoWorld(World):
     round_pairs: list[dict[str, str]]
     goal_article: str
     reroll_pool: list[str]
+    bingo_letterpairs_board: list[list[str]]
+
+    def _bingo_enabled(self) -> bool:
+        return bool(self.options.toggle_bingo_letterpairs.value)
+
+    def _bingo_grid_size(self) -> int:
+        return int(self.options.bingo_letterpairs_grid.value) if self._bingo_enabled() else 0
+
+    def _bingo_check_count(self) -> int:
+        grid_size = self._bingo_grid_size()
+        return bingo_location_count(grid_size) if grid_size else 0
 
     @staticmethod
     def _is_reasonable_title(title: str) -> bool:
@@ -462,6 +478,13 @@ class WikipelagoWorld(World):
         # Leftover titles for client-side target rerolls (same filtered category pool).
         self.reroll_pool = [title for title in filtered_pool if title not in used_titles]
 
+        if self._bingo_enabled():
+            self.bingo_letterpairs_board = build_letter_pair_bingo_board(
+                self.random, self._bingo_grid_size()
+            )
+        else:
+            self.bingo_letterpairs_board = []
+
     def create_regions(self) -> None:
         create_regions(self)
 
@@ -471,6 +494,8 @@ class WikipelagoWorld(World):
 
     def create_items(self) -> None:
         round_count = self.options.check_count.value
+        bingo_count = self._bingo_check_count()
+        free_locations = round_count + bingo_count
         required_fragments = min(self.options.required_fragments.value, round_count)
         start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
         per_unlock = max(1, self.options.rounds_per_unlock.value)
@@ -490,10 +515,11 @@ class WikipelagoWorld(World):
             + len(display_unlocks)
             + trap_count
         )
-        if mandatory_items > round_count:
+        if mandatory_items > free_locations:
             raise Exception(
-                "Wikipelago item math invalid: required progression items exceed round locations. "
-                f"mandatory={mandatory_items}, round_locations={round_count}. "
+                "Wikipelago item math invalid: required progression items exceed free locations. "
+                f"mandatory={mandatory_items}, free_locations={free_locations} "
+                f"(rounds={round_count}, bingo={bingo_count}). "
                 "Lower required_fragments, trap_count, reduce sanity/display unlock load, or lower round access pressure "
                 "(increase start_rounds_unlocked / rounds_per_unlock)."
             )
@@ -517,7 +543,7 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Round Access"))
         for trap_name in self._trap_item_names(trap_count):
             pool.append(self.create_item(trap_name))
-        while len(pool) < round_count:
+        while len(pool) < free_locations:
             pool.append(self.create_item("Footnote"))
 
         self.multiworld.itempool.extend(pool)
@@ -570,6 +596,17 @@ class WikipelagoWorld(World):
             self.location_name_to_id[f"Round {index} Complete"]
             for index in range(1, round_count + 1)
         ]
+        bingo_enabled = self._bingo_enabled()
+        bingo_grid = self._bingo_grid_size()
+        bingo_board = list(getattr(self, "bingo_letterpairs_board", []) or [])
+        location_ids: dict[str, Any] = {
+            "rounds": round_location_ids,
+            "grand_goal": self.location_name_to_id["Grand Goal"],
+        }
+        if bingo_enabled:
+            location_ids["bingo_letterpairs"] = bingo_slot_location_ids(
+                self.location_name_to_id, bingo_grid
+            )
 
         return {
             "check_count": round_count,
@@ -598,10 +635,10 @@ class WikipelagoWorld(World):
             "trap_count": int(self.options.trap_count.value),
             "trap_type": int(self.options.trap_type.value),
             "trap_link": bool(self.options.trap_link.value),
-            "location_ids": {
-                "rounds": round_location_ids,
-                "grand_goal": self.location_name_to_id["Grand Goal"],
-            },
+            "bingo_letterpairs": bingo_enabled,
+            "bingo_letterpairs_grid": bingo_grid if bingo_enabled else 0,
+            "bingo_letterpairs_board": bingo_board if bingo_enabled else [],
+            "location_ids": location_ids,
             "item_ids": {name: data.code for name, data in item_table.items()},
         }
 

@@ -116,6 +116,8 @@ try {
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
     Assert-HasPattern $yamlToCheck 'trap_type:\s*(both|only_foggy_links|only_missing_links)' 'YAML template is missing trap_type'
     Assert-HasPattern $yamlToCheck 'trap_link:\s*(true|false)' 'YAML template is missing trap_link'
+    Assert-HasPattern $yamlToCheck 'toggle_bingo_letterpairs:\s*(true|false)' 'YAML template is missing toggle_bingo_letterpairs'
+    Assert-HasPattern $yamlToCheck 'bingo_letterpairs_grid:\s*\d+' 'YAML template is missing bingo_letterpairs_grid'
     Write-Pass "YAML template encoding and preset values look sane"
 } catch {
     $failures.Add($_.Exception.Message)
@@ -164,6 +166,8 @@ try {
     Assert-HasPattern $optionsPath 'class TrapCount' 'TrapCount option is missing'
     Assert-HasPattern $optionsPath 'class TrapType' 'TrapType option is missing'
     Assert-HasPattern $optionsPath 'class TrapLink' 'TrapLink option is missing'
+    Assert-HasPattern $optionsPath 'class ToggleBingoLetterpairs' 'ToggleBingoLetterpairs option is missing'
+    Assert-HasPattern $optionsPath 'class BingoLetterpairsGrid' 'BingoLetterpairsGrid option is missing'
     Assert-HasPattern $itemsPath '"Foggy Links"' 'Foggy Links trap item is missing'
     Assert-HasPattern $itemsPath '"Missing Links"' 'Missing Links trap item is missing'
     Assert-HasPattern $initPath '_trap_item_names' 'Trap item name helper is missing'
@@ -181,6 +185,13 @@ try {
     Assert-HasPattern $bridgePath 'TARGET_REROLLS_PER_ROUND' 'Bridge target reroll limit is missing'
     Assert-HasPattern $initPath '"reroll_pool"' 'World slot_data reroll_pool is missing'
     Assert-HasPattern $initPath '"trap_count"' 'World slot_data trap_count is missing'
+    Assert-HasPattern $initPath '"bingo_letterpairs"' 'World slot_data bingo_letterpairs is missing'
+    Assert-HasPattern $initPath '"bingo_letterpairs_board"' 'World slot_data bingo_letterpairs_board is missing'
+    Assert-HasPattern $initPath 'build_letter_pair_bingo_board' 'Letter-pair bingo board builder wiring is missing'
+    Assert-HasPattern $initPath 'free_locations = round_count \+ bingo_count' 'Bingo free_locations padding math is missing'
+    Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'Letter Pair Bingo - Full Card' 'Bingo Full Card location is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'def letter_pair_from_title' 'letter_pair_from_title helper is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights.json") '"TH"' 'Shipped letter_pair_weights.json is missing TH'
     Assert-HasPattern $bridgePath '"trap_count"' 'Bridge status trap_count is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'

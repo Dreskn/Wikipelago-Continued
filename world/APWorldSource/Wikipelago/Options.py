@@ -252,6 +252,20 @@ class TrapLink(Toggle):
     default = 0
 
 
+class ToggleBingoLetterpairs(Toggle):
+    """When enabled, add an ungated letter-pair bingo grid with row/column/diagonal/full-card checks."""
+    display_name = "Letter Pair Bingo"
+    default = 1
+
+
+class BingoLetterpairsGrid(Range):
+    """Bingo grid size N (N×N cells). N=26 is the full sorted A–Z×A–Z board; smaller sizes are weighted samples."""
+    display_name = "Letter Pair Bingo Grid Size"
+    range_start = 3
+    range_end = 26
+    default = 5
+
+
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
@@ -292,3 +306,5 @@ class WikipelagoOptions(PerGameCommonOptions):
     trap_count: TrapCount
     trap_type: TrapType
     trap_link: TrapLink
+    toggle_bingo_letterpairs: ToggleBingoLetterpairs
+    bingo_letterpairs_grid: BingoLetterpairsGrid
