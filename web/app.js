@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.26.7";
+const APP_VERSION = "2026.07.27.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -118,6 +118,9 @@ const el = {
   letterIconsRow: document.getElementById("letterIconsRow"),
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
+  bingoCard: document.getElementById("bingoCard"),
+  bingoGrid: document.getElementById("bingoGrid"),
+  bingoMeta: document.getElementById("bingoMeta"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -1046,6 +1049,53 @@ function renderDifficultyIcons(status) {
   });
 }
 
+function renderBingoHud(status) {
+  if (!el.bingoCard || !el.bingoGrid) return;
+  const enabled = Boolean(status?.bingo_letterpairs);
+  el.bingoCard.classList.toggle("hidden", !enabled);
+  if (!enabled) {
+    el.bingoGrid.innerHTML = "";
+    if (el.bingoMeta) el.bingoMeta.textContent = "";
+    return;
+  }
+
+  const board = Array.isArray(status.bingo_letterpairs_board) ? status.bingo_letterpairs_board : [];
+  const n = board.length;
+  const stampedPairs = new Set((status.bingo_stamped_pairs || []).map((pair) => String(pair).toUpperCase()));
+  const stampedCells = new Set(
+    (status.bingo_stamped_cells || [])
+      .filter((cell) => Array.isArray(cell) && cell.length >= 2)
+      .map((cell) => `${Number(cell[0])},${Number(cell[1])}`)
+  );
+  const lines = status.bingo_lines_checked && typeof status.bingo_lines_checked === "object"
+    ? status.bingo_lines_checked
+    : {};
+
+  el.bingoGrid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
+  el.bingoGrid.innerHTML = "";
+  for (let row = 0; row < n; row += 1) {
+    for (let col = 0; col < n; col += 1) {
+      const pair = String(board[row]?.[col] || "").toUpperCase();
+      const cell = document.createElement("div");
+      cell.className = "bingo-cell";
+      cell.textContent = pair || "·";
+      cell.title = pair || "";
+      const stamped = (pair && stampedPairs.has(pair)) || stampedCells.has(`${row},${col}`);
+      if (stamped) cell.classList.add("stamped");
+      el.bingoGrid.appendChild(cell);
+    }
+  }
+
+  const lineKeys = Object.keys(lines);
+  const checkedCount = lineKeys.filter((key) => Boolean(lines[key])).length;
+  const totalLines = lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
+  if (el.bingoMeta) {
+    el.bingoMeta.textContent = n
+      ? `${n}×${n} · ${checkedCount}/${totalLines} lines`
+      : "";
+  }
+}
+
 function scrollLevel() {
   return Math.max(0, Math.min(state.status?.scroll_speed_level || 0, state.status?.scroll_speed_upgrades || 5));
 }
@@ -1221,6 +1271,7 @@ function updateHUD(status) {
   renderLensIcons(status);
   renderSanityUnlocks(status);
   renderDifficultyIcons(status);
+  renderBingoHud(status);
   renderLensStatus(status);
   applyDisplayLocks();
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
@@ -1753,12 +1804,9 @@ async function openArticle(title, options = {}) {
       history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
     }
 
-    // Display-only paths (restore/hash/back) stop here — no scoring.
-    if (!submitCheck) return;
-
-    // Checks only while connected — browse is allowed if the link drops mid-run.
+    // Always visit/stamp when connected. Only intentional wiki clicks score rounds.
     if (!isApConnected()) {
-      if (countAsClick) toast("Disconnected — reconnect to send checks", "warn");
+      if (countAsClick && submitCheck) toast("Disconnected — reconnect to send checks", "warn");
       return;
     }
 
@@ -1766,17 +1814,19 @@ async function openArticle(title, options = {}) {
     const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
       page_title: title,
       clicks_used: state.clicksUsed,
-      submit_check: true,
+      submit_check: Boolean(submitCheck),
     });
 
-    if (result.matched) {
-      let msg = `Target hit: ${result.target}`;
-      if (result.sent_text) msg += ` — ${result.sent_text}`;
-      toast(msg, "ok", 7500);
-      // Next round starts from its start article — visit set refreshes on round change via HUD.
+    if (submitCheck) {
+      if (result.matched) {
+        let msg = `Target hit: ${result.target}`;
+        if (result.sent_text) msg += ` — ${result.sent_text}`;
+        toast(msg, "ok", 7500);
+        // Next round starts from its start article — visit set refreshes on round change via HUD.
+      }
+      if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
+      if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
     }
-    if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
-    if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
     if (result.status) updateHUD(result.status);
   } catch {
     toast(`Could not open article: ${title}`, "warn");
