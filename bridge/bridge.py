@@ -1013,10 +1013,10 @@ class APConnection:
     async def ensure_goal_status_if_complete(self) -> None:
         if self.state.goal_status_sent:
             return
-        if self.state.location_grand_goal and self.state.location_grand_goal in self.state.checked_locations:
+        if self.state.boss_completed:
             await self.send_goal_status()
             return
-        if self.state.location_round_ids and all(loc in self.state.checked_locations for loc in self.state.location_round_ids):
+        if self.state.location_grand_goal and self.state.location_grand_goal in self.state.checked_locations:
             await self.send_goal_status()
 
     async def on_page_check(self, page_title: str, clicks_used: int) -> dict[str, Any]:
