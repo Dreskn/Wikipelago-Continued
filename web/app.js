@@ -1,5 +1,11 @@
-const APP_VERSION = "2026.07.25.14";
+const APP_VERSION = "2026.07.26.7";
 console.log("Wikipelago web version", APP_VERSION);
+
+/** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
+const BLOCKED_WIKI_NAMESPACES = new Set([
+  "file", "category", "help", "template", "special", "portal", "talk", "user",
+  "wikipedia", "module", "book", "draft", "mediawiki",
+]);
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
@@ -1145,10 +1151,11 @@ function preferredResumeTitle() {
   const hashTitle = decodeURIComponent((window.location.hash || "").replace(/^#/, "")).trim();
   if (hashTitle) return hashTitle;
   if (state.status?.last_page) return state.status.last_page;
+  if (state.status?.current_start) return state.status.current_start;
   const savedTitle = loadSavedTitle();
   if (savedTitle) return savedTitle;
-  if (state.status?.current_start) return state.status.current_start;
-  return "Wikipedia";
+  // Wait for AP round data — never invent a hard-coded default article.
+  return "";
 }
 
 async function api(path, method = "GET", body = null, retryOnInvalidSession = true) {
@@ -1193,6 +1200,8 @@ function updateHUD(status) {
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
     toast("Connected to Archipelago", "ok", 4500);
+    // /connect returns before AP handshake finishes; restore once we are actually online.
+    void restoreArticleView(true);
   }
   if (status.boss_completed) {
     el.targetText.textContent = "GOAL COMPLETE";
@@ -1590,6 +1599,18 @@ function prepareArticleHtml(root) {
   applyDisplayLocks();
 }
 
+function neutralizeTableChromeColors(el) {
+  // Drop wiki hard-coded colors so the dark client theme controls contrast.
+  el.removeAttribute("bgcolor");
+  el.removeAttribute("background");
+  el.removeAttribute("color");
+  if (!el.style) return;
+  el.style.removeProperty("background");
+  el.style.removeProperty("background-color");
+  el.style.removeProperty("background-image");
+  el.style.removeProperty("color");
+}
+
 function wrapTables(root) {
   root.querySelectorAll("table").forEach((table) => {
     table.removeAttribute("width");
@@ -1598,12 +1619,50 @@ function wrapTables(root) {
       table.style.removeProperty("min-width");
       table.style.removeProperty("max-width");
     }
+    neutralizeTableChromeColors(table);
+    table
+      .querySelectorAll("caption, colgroup, col, thead, tbody, tfoot, tr, th, td")
+      .forEach(neutralizeTableChromeColors);
     if (table.parentElement?.classList.contains("table-scroll")) return;
     const wrap = document.createElement("div");
     wrap.className = "table-scroll";
     table.replaceWith(wrap);
     wrap.appendChild(table);
   });
+}
+
+function wikiTitleFromHref(href) {
+  // Path only — fragments/queries are not part of the article title, and
+  // section anchors sometimes contain bare "%" that break decodeURIComponent.
+  const wikiPart = href.replace(/^\/wiki\//, "").split("#", 1)[0].split("?", 1)[0];
+  if (!wikiPart) return "";
+  let decoded;
+  try {
+    decoded = decodeURIComponent(wikiPart);
+  } catch {
+    decoded = wikiPart.replace(/%[0-9A-Fa-f]{2}/g, (m) => {
+      try {
+        return decodeURIComponent(m);
+      } catch {
+        return m;
+      }
+    });
+  }
+  return decoded.replace(/_/g, " ");
+}
+
+function wikiNamespace(title) {
+  if (!String(title || "").includes(":")) return "";
+  return title.split(":", 1)[0].toLowerCase();
+}
+
+function isBlockedWikiTitle(title) {
+  const ns = wikiNamespace(title);
+  return Boolean(ns && BLOCKED_WIKI_NAMESPACES.has(ns));
+}
+
+function toastBlockedWikiPage() {
+  toast("That type of page is not allowed in Wikipelago", "warn");
 }
 
 function rewriteLinks(root) {
@@ -1613,15 +1672,28 @@ function rewriteLinks(root) {
       unwrapElement(a);
       return;
     }
+    // /w/... must not keep a host-relative href (would leave the SPA).
+    if (href.startsWith("/w/")) {
+      a.removeAttribute("data-title");
+      a.dataset.blockedNs = "1";
+      a.href = "#";
+      return;
+    }
     if (!href.startsWith("/wiki/")) return;
-    const wikiPart = href.replace("/wiki/", "");
-    if (!wikiPart) return;
-    const title = decodeURIComponent(wikiPart).replace(/_/g, " ");
-    const ns = title.split(":", 1)[0].toLowerCase();
-    const blockedNamespaces = new Set(["file", "category", "help", "template", "special", "portal", "talk", "user", "wikipedia", "module", "book", "draft", "mediawiki"]);
-    if (title.includes(":") && blockedNamespaces.has(ns)) return;
-    a.dataset.title = title;
+    const title = wikiTitleFromHref(href);
+    if (!title) {
+      unwrapElement(a);
+      return;
+    }
+    // Never leave raw /wiki/... hrefs — browser would hit a host 404.
     a.href = "#";
+    if (isBlockedWikiTitle(title)) {
+      a.removeAttribute("data-title");
+      a.dataset.blockedNs = "1";
+      return;
+    }
+    a.removeAttribute("data-blocked-ns");
+    a.dataset.title = title;
   });
 }
 
@@ -1644,6 +1716,10 @@ async function openArticle(title, options = {}) {
     requireConnection = false,
   } = options;
   if (requireConnection && !requireApConnection()) return;
+  if (isBlockedWikiTitle(title)) {
+    toastBlockedWikiPage();
+    return;
+  }
 
   try {
     const html = await fetchWikiHtml(title);
@@ -1723,6 +1799,12 @@ async function restoreArticleView(force = false) {
 }
 
 el.articleBody.addEventListener("click", async (e) => {
+  const blocked = e.target.closest("a[data-blocked-ns]");
+  if (blocked) {
+    e.preventDefault();
+    toastBlockedWikiPage();
+    return;
+  }
   const a = e.target.closest("a[data-title]");
   if (!a) return;
   e.preventDefault();
@@ -1762,6 +1844,18 @@ el.rerollTargetBtn?.addEventListener("click", () => {
   rerollCurrentTarget();
 });
 
+async function waitForApConnection(timeoutMs = 10000) {
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    await pollStatus();
+    if (isApConnected()) return true;
+    if (state.status?.last_error) return false;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  await pollStatus();
+  return isApConnected();
+}
+
 el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
@@ -1775,7 +1869,11 @@ el.connectBtn.addEventListener("click", async () => {
       password: el.passwordInput.value,
     });
     toast("Connecting to Archipelago...", "ok", 4500);
-    await pollStatus();
+    const online = await waitForApConnection();
+    if (!online) {
+      toastSticky(state.status?.last_error || "Could not connect to Archipelago", "warn");
+      return;
+    }
     await restoreArticleView(true);
   } catch (err) {
     toastSticky(err.message || "Connect failed", "warn");

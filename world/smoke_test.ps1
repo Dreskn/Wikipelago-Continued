@@ -135,7 +135,7 @@ try {
     Assert-NoPattern $entertainmentPath '\(''Her \(film\)''' 'Old Her redirect title still present'
     Assert-NoPattern $entertainmentPath 'Clue \(board game\)' 'Old Clue redirect title still present'
     Assert-HasPattern $entertainmentPath 'ENTERTAINMENT_ARTICLE_POOL: list\[tuple\[str, str\]\]' 'Tagged (title, category) pool type annotation missing'
-    Assert-HasPattern $initPath 'TOPIC_START_ARTICLES' 'Curated start article map is missing'
+    Assert-HasPattern $initPath 'first_start = picks\[0\]' 'Random first-round start selection is missing'
     Assert-HasPattern $optionsPath 'class Searchsanity' 'Searchsanity option is missing'
     Assert-HasPattern $optionsPath 'class Scrollsanity' 'Scrollsanity option is missing'
     Assert-HasPattern $optionsPath 'class SearchStartingLetters' 'Search Starting Letters option is missing'
