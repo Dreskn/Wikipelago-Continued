@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "0.4.1-DeadAndReborn"
+CLIENT_VERSION = "0.4.2-DeadAndReborn"
 
 
 def build_info() -> dict[str, Any]:
@@ -151,6 +151,7 @@ class SessionState:
     trap_link: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
+    goal_article_title: str = ""
     reroll_pool: list[str] = field(default_factory=list)
     target_rerolls_used: int = 0
     target_rerolls_round: int = -1
@@ -175,17 +176,20 @@ class SessionState:
 
     def current_target(self) -> str:
         if self.round_index >= len(self.round_pairs):
-            return self.round_pairs[-1]["target"] if self.round_pairs else ""
+            return self.goal_article()
         return self.round_pairs[self.round_index]["target"]
 
     def current_start(self) -> str:
         if not self.round_pairs:
             return ""
         if self.round_index >= len(self.round_pairs):
-            return self.round_pairs[-1]["start"]
+            # Boss hunt begins from the final round's completed target page.
+            return self.round_pairs[-1]["target"]
         return self.round_pairs[self.round_index]["start"]
 
     def goal_article(self) -> str:
+        if self.goal_article_title:
+            return self.goal_article_title
         return self.round_pairs[-1]["target"] if self.round_pairs else ""
 
     def fragments(self) -> int:
@@ -232,8 +236,9 @@ class SessionState:
         self.sync_target_reroll_counter()
         if not self.connected_to_ap or self.boss_completed:
             return False
-        # Final round target is the Grand Goal — do not reroll it.
-        if self.round_index >= max(0, self.check_count - 1):
+        # Reroll is available for every normal round, including the final one.
+        # Boss hunt (past all rounds) cannot reroll the Grand Goal.
+        if self.round_index >= self.check_count:
             return False
         if self.target_rerolls_remaining() <= 0:
             return False
@@ -249,6 +254,7 @@ class SessionState:
             "current_target": self.current_target(),
             "goal_article": self.goal_article(),
             "round": min(self.round_index + 1, self.check_count),
+            "rounds_completed": min(self.round_index, self.check_count),
             "check_count": self.check_count,
             "target_rerolls_max": TARGET_REROLLS_PER_ROUND,
             "target_rerolls_used": self.target_rerolls_used,
@@ -525,6 +531,13 @@ class APConnection:
                 normalized_pairs.append({"start": start, "target": target})
             if normalized_pairs:
                 self.state.round_pairs = normalized_pairs
+
+        goal_from_slot = slot_data.get("goal_article")
+        if isinstance(goal_from_slot, str) and goal_from_slot.strip():
+            self.state.goal_article_title = self._canonicalize_known_title(goal_from_slot.strip())
+        elif self.state.round_pairs:
+            # Legacy seeds: last round target was the Grand Goal.
+            self.state.goal_article_title = self.state.round_pairs[-1]["target"]
 
         reroll_pool = slot_data.get("reroll_pool")
         if isinstance(reroll_pool, list):
@@ -859,6 +872,8 @@ class APConnection:
             pair = self.state.round_pairs[idx]
             pair["start"] = self._canonicalize_known_title(pair.get("start", ""))
             pair["target"] = await self._canonicalize_title(pair.get("target", ""))
+        if self.state.goal_article_title:
+            self.state.goal_article_title = await self._canonicalize_title(self.state.goal_article_title)
 
     def _fetch_page_links(self, title: str) -> set[str]:
         norm = normalize_title(title)
@@ -1083,10 +1098,10 @@ class APConnection:
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
-        if self.state.round_index >= max(0, self.state.check_count - 1):
+        if self.state.round_index >= self.state.check_count:
             return {
                 "ok": False,
-                "error": "cannot reroll the Grand Goal round",
+                "error": "cannot reroll the Grand Goal",
                 "status": self.state.to_status(),
             }
         if self.state.target_rerolls_remaining() <= 0:
@@ -1164,8 +1179,7 @@ class APConnection:
         if not self.state.boss_ready():
             return
         goal_title = await self._canonicalize_title(self.state.goal_article())
-        if self.state.round_pairs:
-            self.state.round_pairs[-1]["target"] = goal_title
+        self.state.goal_article_title = goal_title
         if not await self._titles_match(self.state.last_page, goal_title):
             return
 
