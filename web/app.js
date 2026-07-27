@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.27.2";
+const APP_VERSION = "2026.07.27.3";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -68,6 +68,7 @@ const state = {
   clicksUsed: 0,
   announcedGoalComplete: false,
   restoringArticle: false,
+  bingoStampSyncKey: "",
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -1206,6 +1207,67 @@ function storageKey(suffix) {
   return `wikipelago_${suffix}_${state.sessionId || "pending"}`;
 }
 
+function bingoStampStorageKey(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  const board = Array.isArray(status?.bingo_letterpairs_board) ? status.bingo_letterpairs_board : [];
+  if (!server || !slot || !board.length) return "";
+  const boardKey = board.map((row) => (Array.isArray(row) ? row.join("") : "")).join("/");
+  return `wikipelago_bingo_stamps:${server}:${slot}:${boardKey}`;
+}
+
+function loadLocalBingoStamps(storageKeyValue) {
+  if (!storageKeyValue) return [];
+  try {
+    const raw = localStorage.getItem(storageKeyValue);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return [...new Set(parsed.map((pair) => String(pair || "").trim().toUpperCase()).filter(Boolean))];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalBingoStamps(status) {
+  if (!status?.bingo_letterpairs) return;
+  const key = bingoStampStorageKey(status);
+  if (!key) return;
+  const remote = (status.bingo_stamped_pairs || [])
+    .map((pair) => String(pair || "").trim().toUpperCase())
+    .filter(Boolean);
+  const merged = [...new Set([...loadLocalBingoStamps(key), ...remote])].sort();
+  localStorage.setItem(key, JSON.stringify(merged));
+}
+
+async function syncBingoStampsToBridge(status) {
+  if (!status?.bingo_letterpairs || !status.connected_to_ap || !state.sessionId) return;
+  const key = bingoStampStorageKey(status);
+  if (!key || state.bingoStampSyncKey === key) return;
+
+  const local = loadLocalBingoStamps(key);
+  const remote = new Set(
+    (status.bingo_stamped_pairs || []).map((pair) => String(pair || "").trim().toUpperCase()).filter(Boolean)
+  );
+  const needsPush = local.some((pair) => !remote.has(pair));
+  state.bingoStampSyncKey = key;
+  if (!needsPush) {
+    saveLocalBingoStamps(status);
+    return;
+  }
+
+  try {
+    const result = await api(`/api/session/${state.sessionId}/bingo-stamps`, "POST", {
+      stamped_pairs: [...new Set([...remote, ...local])],
+    });
+    toastBingoCompletions(result.bingo_completed);
+    if (result.status) updateHUD(result.status);
+  } catch {
+    // Allow a later poll/connect to retry.
+    state.bingoStampSyncKey = "";
+  }
+}
+
 function saveLocalProgress() {
   if (!state.sessionId) return;
   if (state.currentTitle) localStorage.setItem(storageKey("last_title"), state.currentTitle);
@@ -1273,6 +1335,7 @@ function updateHUD(status) {
 
   if (wasConnected && !status.connected_to_ap) {
     toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
+    state.bingoStampSyncKey = "";
   }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
@@ -1299,6 +1362,8 @@ function updateHUD(status) {
   renderSanityUnlocks(status);
   renderDifficultyIcons(status);
   renderBingoHud(status);
+  saveLocalBingoStamps(status);
+  void syncBingoStampsToBridge(status);
   renderLensStatus(status);
   applyDisplayLocks();
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));

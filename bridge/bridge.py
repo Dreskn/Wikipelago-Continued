@@ -954,13 +954,27 @@ class APConnection:
             return []
 
         pair = letter_pair_from_title(page_title)
-        if not pair:
-            return []
-
-        on_board = any(pair in row for row in self.state.bingo_letterpairs_board)
-        if on_board:
+        if pair and any(pair in row for row in self.state.bingo_letterpairs_board):
             self.state.bingo_stamped_pairs.add(pair)
 
+        return await self._flush_bingo_line_checks()
+
+    async def merge_bingo_stamps(self, stamped_pairs: list[Any]) -> list[dict[str, Any]]:
+        """Merge persisted stamps from the client (refresh/reconnect); may complete lines."""
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
+            return []
+        if not self.state.connected_to_ap:
+            return []
+
+        on_board = {pair for row in self.state.bingo_letterpairs_board for pair in row}
+        for raw in stamped_pairs or []:
+            pair = str(raw or "").strip().upper()
+            if pair in on_board:
+                self.state.bingo_stamped_pairs.add(pair)
+
+        return await self._flush_bingo_line_checks()
+
+    async def _flush_bingo_line_checks(self) -> list[dict[str, Any]]:
         pending: list[tuple[str, int]] = []
         for key in self.state.bingo_completed_line_keys():
             loc_id = self.state.bingo_letterpairs_location_ids.get(key)
@@ -1774,6 +1788,29 @@ class App:
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
 
+    async def session_bingo_stamps(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        if not session.state.connected_to_ap:
+            return web.json_response({"ok": False, "error": "not connected"}, status=400)
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        stamped_pairs = data.get("stamped_pairs")
+        if not isinstance(stamped_pairs, list):
+            stamped_pairs = []
+        bingo_completed = await session.conn.merge_bingo_stamps(stamped_pairs)
+        return web.json_response({
+            "ok": True,
+            "bingo_completed": bingo_completed,
+            "status": session.conn.state.to_status(),
+        })
+
     async def session_debug(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -1804,6 +1841,7 @@ class App:
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
+        app.router.add_post("/api/session/{sid}/bingo-stamps", self.session_bingo_stamps)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
