@@ -96,6 +96,17 @@ def normalize_title(title: str) -> str:
     return deaccented.casefold()
 
 
+def letter_pair_from_title(title: str) -> str | None:
+    """First two A–Z letters in title order (must match world bingo stamping)."""
+    letters: list[str] = []
+    for ch in title:
+        if "A" <= ch <= "Z" or "a" <= ch <= "z":
+            letters.append(ch.upper())
+            if len(letters) == 2:
+                return letters[0] + letters[1]
+    return None
+
+
 TITLE_CANONICALS: dict[str, str] = {
     normalize_title("Pokemon"): "Pok\u00e9mon",
     normalize_title("Pokemon Red and Blue"): "Pok\u00e9mon Red and Blue",
@@ -149,6 +160,11 @@ class SessionState:
     trap_count: int = 0
     trap_type: int = 0
     trap_link: bool = False
+    bingo_letterpairs: bool = False
+    bingo_letterpairs_grid: int = 0
+    bingo_letterpairs_board: list[list[str]] = field(default_factory=list)
+    bingo_letterpairs_location_ids: dict[str, int] = field(default_factory=dict)
+    bingo_stamped_pairs: set[str] = field(default_factory=set)
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     reroll_pool: list[str] = field(default_factory=list)
@@ -239,6 +255,43 @@ class SessionState:
             return False
         return bool(self.reroll_pool)
 
+    def bingo_stamped_cells(self) -> list[list[int]]:
+        cells: list[list[int]] = []
+        if not self.bingo_letterpairs or not self.bingo_letterpairs_board:
+            return cells
+        for row_index, row in enumerate(self.bingo_letterpairs_board):
+            for col_index, pair in enumerate(row):
+                if pair in self.bingo_stamped_pairs:
+                    cells.append([row_index, col_index])
+        return cells
+
+    def bingo_completed_line_keys(self) -> list[str]:
+        board = self.bingo_letterpairs_board
+        n = len(board)
+        if not self.bingo_letterpairs or n == 0:
+            return []
+        stamped = self.bingo_stamped_pairs
+        completed: list[str] = []
+        for row_index, row in enumerate(board):
+            if row and all(pair in stamped for pair in row):
+                completed.append(f"row_{row_index + 1}")
+        for col_index in range(n):
+            if all(board[row_index][col_index] in stamped for row_index in range(n)):
+                completed.append(f"col_{col_index + 1}")
+        if all(board[i][i] in stamped for i in range(n)):
+            completed.append("diag")
+        if all(board[i][n - 1 - i] in stamped for i in range(n)):
+            completed.append("anti")
+        if all(pair in stamped for row in board for pair in row):
+            completed.append("full")
+        return completed
+
+    def bingo_lines_checked(self) -> dict[str, bool]:
+        return {
+            key: (loc_id in self.checked_locations)
+            for key, loc_id in self.bingo_letterpairs_location_ids.items()
+        }
+
     def to_status(self) -> dict[str, Any]:
         self.sync_target_reroll_counter()
         return {
@@ -285,6 +338,12 @@ class SessionState:
             "trap_count": self.trap_count,
             "trap_type": self.trap_type,
             "trap_link": self.trap_link,
+            "bingo_letterpairs": self.bingo_letterpairs,
+            "bingo_letterpairs_grid": self.bingo_letterpairs_grid,
+            "bingo_letterpairs_board": self.bingo_letterpairs_board,
+            "bingo_stamped_pairs": sorted(self.bingo_stamped_pairs),
+            "bingo_stamped_cells": self.bingo_stamped_cells(),
+            "bingo_lines_checked": self.bingo_lines_checked(),
             "pending_events": list(self.pending_events),
             "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
             "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
@@ -334,6 +393,11 @@ class APConnection:
         self.state.warmer_colder = None
         self.state.last_distance_estimate = None
         self.state.pending_events.clear()
+        self.state.bingo_letterpairs = False
+        self.state.bingo_letterpairs_grid = 0
+        self.state.bingo_letterpairs_board = []
+        self.state.bingo_letterpairs_location_ids = {}
+        self.state.bingo_stamped_pairs.clear()
         self.state.slot = 0
         self.state.player_names.clear()
         self.state.slot_games.clear()
@@ -560,10 +624,33 @@ class APConnection:
         self.state.trap_type = int(slot_data.get("trap_type", 0))
         self.state.trap_link = bool(slot_data.get("trap_link", False))
 
+        self.state.bingo_letterpairs = bool(slot_data.get("bingo_letterpairs", False))
+        self.state.bingo_letterpairs_grid = int(slot_data.get("bingo_letterpairs_grid", 0) or 0)
+        board_raw = slot_data.get("bingo_letterpairs_board")
+        board: list[list[str]] = []
+        if isinstance(board_raw, list):
+            for row in board_raw:
+                if not isinstance(row, list):
+                    continue
+                board.append([str(cell).upper() for cell in row if str(cell).strip()])
+        self.state.bingo_letterpairs_board = board if self.state.bingo_letterpairs else []
+        if self.state.bingo_letterpairs and self.state.bingo_letterpairs_grid <= 0:
+            self.state.bingo_letterpairs_grid = len(board)
+
         location_ids = slot_data.get("location_ids", {})
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
         grand_goal = location_ids.get("grand_goal")
         self.state.location_grand_goal = int(grand_goal) if grand_goal is not None else None
+        bingo_ids_raw = location_ids.get("bingo_letterpairs") if isinstance(location_ids, dict) else None
+        bingo_ids: dict[str, int] = {}
+        if isinstance(bingo_ids_raw, dict):
+            for key, value in bingo_ids_raw.items():
+                try:
+                    bingo_ids[str(key)] = int(value)
+                except Exception:
+                    pass
+        self.state.bingo_letterpairs_location_ids = bingo_ids if self.state.bingo_letterpairs else {}
+        self.state.bingo_stamped_pairs.clear()
 
         item_ids = slot_data.get("item_ids")
         if isinstance(item_ids, dict):
@@ -605,8 +692,42 @@ class APConnection:
                 self.state.boss_completed = True
                 self.state.goal_status_sent = True
 
+        self._rebuild_bingo_stamps_from_checked()
+
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
+
+    def _rebuild_bingo_stamps_from_checked(self) -> None:
+        """Infer stamped cells from already-checked bingo lines (HUD after reconnect)."""
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
+            return
+        board = self.state.bingo_letterpairs_board
+        n = len(board)
+        stamped = self.state.bingo_stamped_pairs
+        for key, loc_id in self.state.bingo_letterpairs_location_ids.items():
+            if loc_id not in self.state.checked_locations:
+                continue
+            if key.startswith("row_"):
+                try:
+                    row_index = int(key.split("_", 1)[1]) - 1
+                except Exception:
+                    continue
+                if 0 <= row_index < n:
+                    stamped.update(board[row_index])
+            elif key.startswith("col_"):
+                try:
+                    col_index = int(key.split("_", 1)[1]) - 1
+                except Exception:
+                    continue
+                if 0 <= col_index < n:
+                    for row_index in range(n):
+                        stamped.add(board[row_index][col_index])
+            elif key == "diag":
+                stamped.update(board[i][i] for i in range(n))
+            elif key == "anti":
+                stamped.update(board[i][n - 1 - i] for i in range(n))
+            elif key == "full":
+                stamped.update(pair for row in board for pair in row)
 
     async def _request_data_package(self) -> None:
         if self.ws is None or self._datapackage_requested:
@@ -824,6 +945,33 @@ class APConnection:
         async with self.send_lock:
             await self.ws.send(json.dumps(payload))
         self.state.checked_locations.update(location_ids)
+
+    async def apply_bingo_visit(self, page_title: str) -> list[int]:
+        """Stamp letter-pair cells for this page; send newly completed bingo line checks."""
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
+            return []
+        if not self.state.connected_to_ap or self.ws is None:
+            return []
+
+        pair = letter_pair_from_title(page_title)
+        if not pair:
+            return []
+
+        on_board = any(pair in row for row in self.state.bingo_letterpairs_board)
+        if on_board:
+            self.state.bingo_stamped_pairs.add(pair)
+
+        newly_checked: list[int] = []
+        for key in self.state.bingo_completed_line_keys():
+            loc_id = self.state.bingo_letterpairs_location_ids.get(key)
+            if loc_id is None or loc_id in self.state.checked_locations:
+                continue
+            newly_checked.append(loc_id)
+
+        if newly_checked:
+            await self.send_location_checks(newly_checked)
+            LOG.info("Bingo lines checked: %s", newly_checked)
+        return newly_checked
 
     @staticmethod
     def _canonicalize_known_title(title: str) -> str:
@@ -1564,8 +1712,11 @@ class App:
         if not page_title:
             return web.json_response({"ok": False, "error": "page_title is required"}, status=400)
 
+        session.conn.state.last_seen = time.time()
+        if session.state.connected_to_ap:
+            await session.conn.apply_bingo_visit(page_title)
+
         if not submit_check:
-            session.conn.state.last_seen = time.time()
             session.conn.state.last_page = page_title
             session.conn.state.clicks_used = clicks_used
             return web.json_response({

@@ -193,6 +193,10 @@ try {
     Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'def letter_pair_from_title' 'letter_pair_from_title helper is missing'
     Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights.json") '"TH"' 'Shipped letter_pair_weights.json is missing TH'
     Assert-HasPattern $bridgePath '"trap_count"' 'Bridge status trap_count is missing'
+    Assert-HasPattern $bridgePath 'letter_pair_from_title' 'Bridge letter_pair_from_title helper is missing'
+    Assert-HasPattern $bridgePath 'apply_bingo_visit' 'Bridge bingo visit helper is missing'
+    Assert-HasPattern $bridgePath 'bingo_letterpairs_board' 'Bridge bingo board status is missing'
+    Assert-HasPattern $bridgePath 'bingo_stamped_cells' 'Bridge bingo stamped cells status is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
     Write-Pass "Known bad title regressions are absent from source pools"
