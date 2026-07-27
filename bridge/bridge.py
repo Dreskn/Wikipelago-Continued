@@ -946,7 +946,7 @@ class APConnection:
             await self.ws.send(json.dumps(payload))
         self.state.checked_locations.update(location_ids)
 
-    async def apply_bingo_visit(self, page_title: str) -> list[int]:
+    async def apply_bingo_visit(self, page_title: str) -> list[dict[str, Any]]:
         """Stamp letter-pair cells for this page; send newly completed bingo line checks."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_board:
             return []
@@ -961,17 +961,45 @@ class APConnection:
         if on_board:
             self.state.bingo_stamped_pairs.add(pair)
 
-        newly_checked: list[int] = []
+        pending: list[tuple[str, int]] = []
         for key in self.state.bingo_completed_line_keys():
             loc_id = self.state.bingo_letterpairs_location_ids.get(key)
             if loc_id is None or loc_id in self.state.checked_locations:
                 continue
-            newly_checked.append(loc_id)
+            pending.append((key, loc_id))
 
-        if newly_checked:
-            await self.send_location_checks(newly_checked)
-            LOG.info("Bingo lines checked: %s", newly_checked)
-        return newly_checked
+        if not pending:
+            return []
+
+        location_ids = [loc_id for _, loc_id in pending]
+        scouted = await self.scout_locations(location_ids)
+        await self.send_location_checks(location_ids)
+        LOG.info("Bingo lines checked: %s", [key for key, _ in pending])
+
+        events: list[dict[str, Any]] = []
+        for key, loc_id in pending:
+            network_item = scouted.get(loc_id)
+            sent_text = self._format_send_text(network_item) if network_item else ""
+            events.append({
+                "key": key,
+                "label": self._bingo_line_label(key),
+                "sent_text": sent_text,
+            })
+        return events
+
+    @staticmethod
+    def _bingo_line_label(key: str) -> str:
+        if key.startswith("row_"):
+            return f"Bingo Row {key.split('_', 1)[1]}"
+        if key.startswith("col_"):
+            return f"Bingo Column {key.split('_', 1)[1]}"
+        if key == "diag":
+            return "Bingo Diagonal"
+        if key == "anti":
+            return "Bingo Anti-Diagonal"
+        if key == "full":
+            return "Bingo Full Card"
+        return f"Bingo {key}"
 
     @staticmethod
     def _canonicalize_known_title(title: str) -> str:
@@ -1713,8 +1741,9 @@ class App:
             return web.json_response({"ok": False, "error": "page_title is required"}, status=400)
 
         session.conn.state.last_seen = time.time()
+        bingo_completed: list[dict[str, Any]] = []
         if session.state.connected_to_ap:
-            await session.conn.apply_bingo_visit(page_title)
+            bingo_completed = await session.conn.apply_bingo_visit(page_title)
 
         if not submit_check:
             session.conn.state.last_page = page_title
@@ -1725,6 +1754,7 @@ class App:
                 "advanced": False,
                 "locked": False,
                 "display_only": True,
+                "bingo_completed": bingo_completed,
                 "target": session.conn.state.current_target(),
                 "next_target": session.conn.state.current_target(),
                 "boss_completed": session.conn.state.boss_completed,
@@ -1732,6 +1762,7 @@ class App:
             })
 
         result = await session.conn.on_page_check(page_title, clicks_used)
+        result["bingo_completed"] = bingo_completed
         return web.json_response({"ok": True, **result})
 
     async def session_reroll_target(self, request: web.Request) -> web.StreamResponse:

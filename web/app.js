@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.27.1";
+const APP_VERSION = "2026.07.27.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -1049,6 +1049,31 @@ function renderDifficultyIcons(status) {
   });
 }
 
+function formatBingoCompletionParts(bingoCompleted) {
+  if (!Array.isArray(bingoCompleted) || !bingoCompleted.length) return [];
+  return bingoCompleted.map((line) => {
+    const label = String(line?.label || "Bingo line").trim() || "Bingo line";
+    const sent = String(line?.sent_text || "").trim();
+    return sent ? `${label} complete — ${sent}` : `${label} complete`;
+  });
+}
+
+function toastBingoCompletions(bingoCompleted) {
+  const parts = formatBingoCompletionParts(bingoCompleted);
+  if (!parts.length) return;
+  toast(parts.join(" · "), "ok", 7500);
+}
+
+function bingoCellInCompletedLine(row, col, gridSize, lines) {
+  if (!lines || typeof lines !== "object") return false;
+  if (lines.full) return true;
+  if (lines[`row_${row + 1}`]) return true;
+  if (lines[`col_${col + 1}`]) return true;
+  if (lines.diag && row === col) return true;
+  if (lines.anti && col === gridSize - 1 - row) return true;
+  return false;
+}
+
 function renderBingoHud(status) {
   if (!el.bingoCard || !el.bingoGrid) return;
   const enabled = Boolean(status?.bingo_letterpairs);
@@ -1081,7 +1106,9 @@ function renderBingoHud(status) {
       cell.textContent = pair || "·";
       cell.title = pair || "";
       const stamped = (pair && stampedPairs.has(pair)) || stampedCells.has(`${row},${col}`);
-      if (stamped) cell.classList.add("stamped");
+      const lineDone = bingoCellInCompletedLine(row, col, n, lines);
+      if (lineDone) cell.classList.add("line-complete");
+      else if (stamped) cell.classList.add("stamped");
       el.bingoGrid.appendChild(cell);
     }
   }
@@ -1821,11 +1848,17 @@ async function openArticle(title, options = {}) {
       if (result.matched) {
         let msg = `Target hit: ${result.target}`;
         if (result.sent_text) msg += ` — ${result.sent_text}`;
-        toast(msg, "ok", 7500);
+        const bingoParts = formatBingoCompletionParts(result.bingo_completed);
+        if (bingoParts.length) msg += ` · ${bingoParts.join(" · ")}`;
+        toast(msg, "ok", 8000);
         // Next round starts from its start article — visit set refreshes on round change via HUD.
+      } else {
+        toastBingoCompletions(result.bingo_completed);
       }
       if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
       if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
+    } else {
+      toastBingoCompletions(result.bingo_completed);
     }
     if (result.status) updateHUD(result.status);
   } catch {

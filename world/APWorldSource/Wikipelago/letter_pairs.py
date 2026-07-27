@@ -30,8 +30,24 @@ def letter_pair_from_title(title: str) -> str | None:
 def load_letter_pair_weights() -> dict[str, int]:
     global _WEIGHTS_CACHE
     if _WEIGHTS_CACHE is None:
-        raw = json.loads(WEIGHTS_PATH.read_text(encoding="utf-8"))
-        _WEIGHTS_CACHE = {str(k).upper(): int(v) for k, v in raw.items()}
+        raw: str | None = None
+        # Prefer package resources so zip/apworld installs still find the JSON.
+        try:
+            from importlib.resources import files
+
+            raw = files(__package__).joinpath("letter_pair_weights.json").read_text(encoding="utf-8")
+        except Exception:
+            raw = None
+        if raw is None:
+            if not WEIGHTS_PATH.is_file():
+                raise FileNotFoundError(
+                    "letter_pair_weights.json is missing from the Wikipelago apworld. "
+                    "Rebuild with world/build_apworld.ps1 and reinstall the package "
+                    f"(expected next to letter_pairs.py: {WEIGHTS_PATH})."
+                )
+            raw = WEIGHTS_PATH.read_text(encoding="utf-8")
+        parsed = json.loads(raw)
+        _WEIGHTS_CACHE = {str(k).upper(): int(v) for k, v in parsed.items()}
     return _WEIGHTS_CACHE
 
 

@@ -177,7 +177,11 @@ try {
     Assert-HasPattern $webAppPath 'submitCheck' 'Web submitCheck gating is missing'
     Assert-HasPattern $webAppPath 'submit_check: Boolean\(submitCheck\)' 'Web always-visit check payload is missing'
     Assert-HasPattern $webAppPath 'function renderBingoHud' 'Web bingo HUD renderer is missing'
+    Assert-HasPattern $webAppPath 'function toastBingoCompletions' 'Web bingo toast helper is missing'
     Assert-HasPattern $webAppPath 'bingo_letterpairs_board' 'Web bingo board status handling is missing'
+    Assert-HasPattern $webAppPath 'line-complete' 'Web bingo completed-line styling hook is missing'
+    Assert-HasPattern $bridgePath 'bingo_completed' 'Bridge bingo_completed response field is missing'
+    Assert-HasPattern $bridgePath '_bingo_line_label' 'Bridge bingo line label helper is missing'
     Assert-HasPattern $webIndexPath 'id="bingoCard"' 'Web bingo card markup is missing'
     Assert-HasPattern $webAppPath 'toastSticky' 'Web sticky toast helper is missing'
     Assert-HasPattern $webAppPath 'applyDeathEffect' 'Web death effect helper is missing'
@@ -273,6 +277,11 @@ try {
                     throw "Packaged APWorld file is not strict UTF-8: $($file.Name)"
                 }
             }
+            $packagedWeights = Join-Path $temp "Wikipelago\letter_pair_weights.json"
+            if (-not (Test-Path $packagedWeights)) {
+                throw "Packaged APWorld is missing letter_pair_weights.json"
+            }
+            Assert-HasPattern $packagedWeights '"TH"' 'Packaged letter_pair_weights.json is missing TH'
             $packagedInit = Join-Path $temp "Wikipelago\__init__.py"
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

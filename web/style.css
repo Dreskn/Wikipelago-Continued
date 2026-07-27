@@ -258,6 +258,12 @@ button {
   border-color: #2d4054;
   opacity: 0.55;
 }
+.bingo-cell.line-complete {
+  background: #1ecb70;
+  border-color: #148a4c;
+  color: #062816;
+  opacity: 1;
+}
 .target-row {
   display: flex;
   flex-wrap: wrap;
