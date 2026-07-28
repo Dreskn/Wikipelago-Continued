@@ -25,9 +25,9 @@ Additional rounds unlock when you receive **Round Access** items (`rounds_per_un
 
 ## What is the goal?
 
-Collect enough **Knowledge Fragments** (count set by `required_fragments`). The Grand Goal article is then revealed. Reach that article to finish your slot (Archipelago goal / victory event).
+Collect enough **Knowledge Fragments** (count set by `required_fragments`). The Grand Goal article is then revealed. Reach that article to finish your slot (Archipelago goal).
 
-Grand Goal does **not** hold a shuffled useful item — clearing it marks you complete. What happens to any remaining unchecked locations is up to the room’s release settings, as with any Archipelago game.
+Grand Goal holds a locked local **Victory** token (not shuffled into the multiworld). Clearing it marks you complete. What happens to any remaining unchecked locations is up to the room’s release settings, as with any Archipelago game.
 
 The goal article can be random from your enabled categories, or a fixed preset — see the [Options guide](options.md).
 

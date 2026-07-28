@@ -590,11 +590,11 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Footnote"))
 
         self.multiworld.itempool.extend(pool)
-        # Grand Goal is a real checkable location that holds only a Victory *event*
-        # (nothing useful / not shuffled). Play completion is CLIENT_GOAL from the bridge;
-        # remaining uncleared checks follow room release settings as usual.
+        # Grand Goal is checkable (real location id) so it must hold a real item code for hosting.
+        # Victory stays locked / unshuffled — nothing useful for the multiworld; clearing goal still
+        # completes the slot via the bridge CLIENT_GOAL. Remaining checks follow room release settings.
         grand_goal = self.multiworld.get_location("Grand Goal", self.player)
-        grand_goal.place_locked_item(self.create_event("Victory"))
+        grand_goal.place_locked_item(self.create_item("Victory"))
 
     def _trap_item_names(self, trap_count: int) -> list[str]:
         if trap_count <= 0:

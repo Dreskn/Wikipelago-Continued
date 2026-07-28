@@ -259,8 +259,9 @@ try {
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
     Assert-HasPattern $initPath 'def create_event' 'World create_event helper is missing'
-    Assert-HasPattern $initPath 'place_locked_item\(self\.create_event\("Victory"\)\)' 'Grand Goal must lock a Victory event, not a shuffled item'
-    Assert-NoPattern $itemsPath '"Victory"' 'Victory must not be a datapackage/shuffled item'
+    Assert-HasPattern $initPath 'place_locked_item\(self\.create_item\("Victory"\)\)' 'Grand Goal must lock a real Victory item id for hosting'
+    Assert-NoPattern $initPath 'place_locked_item\(self\.create_event\("Victory"\)\)' 'Grand Goal must not lock a None-id Victory event'
+    Assert-HasPattern $itemsPath '"Victory"' 'Victory must exist as a datapackage item (locked on Grand Goal only)'
     Write-Pass "Known bad title regressions are absent from source pools"
 } catch {
     $failures.Add($_.Exception.Message)

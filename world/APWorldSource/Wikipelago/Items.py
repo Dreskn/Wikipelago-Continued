@@ -16,6 +16,7 @@ item_table: dict[str, WikipelagoItemData] = {
     "Progressive Back": WikipelagoItemData(ITEM_OFFSET + 2, ItemClassification.useful),
     "Wiki Compass": WikipelagoItemData(ITEM_OFFSET + 3, ItemClassification.useful),
     "Ctrl+F Lens": WikipelagoItemData(ITEM_OFFSET + 4, ItemClassification.useful),
+    "Victory": WikipelagoItemData(ITEM_OFFSET + 5, ItemClassification.progression_skip_balancing),
     "Footnote": WikipelagoItemData(ITEM_OFFSET + 6, ItemClassification.filler),
     "Round Access": WikipelagoItemData(ITEM_OFFSET + 7, ItemClassification.progression),
     "Progressive Scroll Speed": WikipelagoItemData(ITEM_OFFSET + 8, ItemClassification.useful),
