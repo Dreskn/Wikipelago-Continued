@@ -584,10 +584,10 @@ async function processPendingEvents(events) {
     } else if (event.type === "trap") {
       queueTrap(event.trap);
     } else if (event.type === "bingo_stamps_updated") {
-      // DataStorage Retrieved/SetNotify arrived — unlock local→remote merge retry.
-      // Status already includes the new stamps (same poll); avoid nested pollStatus.
+      // DataStorage Retrieved/SetNotify arrived — unlock merge and repaint from status.
       state.bingoStampSyncKey = "";
       if (state.status) {
+        renderBingoHud(state.status);
         saveLocalBingoStamps(state.status);
         void syncBingoStampsToBridge(state.status);
       }
@@ -1444,19 +1444,8 @@ async function syncBingoStampsToBridge(status) {
   }
 
   const storageReady = Boolean(status.bingo_storage_ready);
-  // Before DataStorage Retrieved, never lock the sync key — empty remote is not final.
+  // Before DataStorage Retrieved, never push — replace would wipe room stamps.
   if (!storageReady) {
-    if (needsPush) {
-      try {
-        const result = await api(`/api/session/${state.sessionId}/bingo-stamps`, "POST", {
-          stamped_pairs: payload,
-        });
-        toastBingoCompletions(result.bingo_completed);
-        if (result.status) updateHUD(result.status);
-      } catch {
-        // Retry on later poll once storage is ready.
-      }
-    }
     saveLocalBingoStamps(status);
     return;
   }

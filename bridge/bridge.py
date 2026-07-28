@@ -1195,6 +1195,7 @@ class APConnection:
 
         events = await self._flush_bingo_line_checks()
         if self._bingo_stamps_snapshot() != before:
+            # Never write DataStorage until Retrieved applied — early replace wipes room stamps.
             await self._persist_bingo_stamps()
         return events
 
@@ -1206,6 +1207,7 @@ class APConnection:
         if not isinstance(keys, dict):
             return
         storage_key = self._bingo_storage_key()
+        # Only handle our bingo Get. Key may be present with null when empty.
         if storage_key not in keys:
             return
         raw = keys.get(storage_key)
@@ -1267,17 +1269,24 @@ class APConnection:
         after = self._bingo_stamps_snapshot()
         changed = after != before
         was_ready = self.state.bingo_storage_ready
+        # Mark ready before any persist so gated writers can flush the unioned state.
         self.state.bingo_storage_ready = True
-        # Keep storage in sync with line-inferred stamps after reconnect.
-        if changed or any(self.state.bingo_stamped_pairs.values()):
-            # Avoid echo-persist loop on our own SetReply confirmations.
-            if source != "SetReply" or changed:
-                await self._persist_bingo_stamps()
+        # Keep storage in sync with line-inferred / in-memory stamps after reconnect.
+        # Never echo-persist unchanged SetReply (would loop with want_reply).
+        if source == "SetReply":
+            if changed:
+                await self._persist_bingo_stamps(force=True)
+        elif changed or any(self.state.bingo_stamped_pairs.values()):
+            await self._persist_bingo_stamps(force=True)
         if changed or not was_ready:
             self._queue_event({"type": "bingo_stamps_updated", "source": source or "storage"})
 
-    async def _persist_bingo_stamps(self) -> None:
+    async def _persist_bingo_stamps(self, *, force: bool = False) -> None:
         if not self.state.bingo_letterpairs or self.ws is None or not self.state.connected_to_ap:
+            return
+        # Replacing DataStorage before the initial Get returns drops stamps written by
+        # other clients while this device was offline.
+        if not force and not self.state.bingo_storage_ready:
             return
         key = self._bingo_storage_key()
         value = {
