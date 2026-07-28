@@ -253,7 +253,7 @@ class TrapLink(Toggle):
 
 
 class ToggleBingoLetterpairs(Toggle):
-    """When enabled, add an ungated letter-pair bingo grid with row/column/diagonal/full-card checks."""
+    """When enabled, add letter-pair bingo board(s) with row/column/diagonal/full-card checks."""
     display_name = "Letter Pair Bingo"
     default = 1
 
@@ -264,6 +264,54 @@ class BingoLetterpairsGrid(Range):
     range_start = 3
     range_end = 26
     default = 5
+
+
+class BingoCardsStart(Range):
+    """How many letter-pair bingo boards are unlocked from the start (when bingo is enabled)."""
+    display_name = "Bingo Cards Start"
+    range_start = 1
+    range_end = 5
+    default = 1
+
+
+class BingoCardUnlocks(Range):
+    """Number of Progressive Bingo Card items in the pool (extra boards beyond Bingo Cards Start)."""
+    display_name = "Bingo Card Unlocks"
+    range_start = 0
+    range_end = 5
+    default = 2
+
+
+class BackDepthStart(Range):
+    """Starting Back depth per round (0 = Back locked until Progressive Back items are found)."""
+    display_name = "Back Depth Start"
+    range_start = 0
+    range_end = 5
+    default = 0
+
+
+class BackDepthUnlocks(Range):
+    """Number of Progressive Back items in the pool (each raises per-round Back depth by 1)."""
+    display_name = "Back Depth Unlocks"
+    range_start = 0
+    range_end = 5
+    default = 3
+
+
+class TargetRerollsStart(Range):
+    """Starting target rerolls available each round."""
+    display_name = "Target Rerolls Start"
+    range_start = 0
+    range_end = 5
+    default = 1
+
+
+class TargetRerollUnlocks(Range):
+    """Number of Progressive Reroll items in the pool (each raises per-round reroll max by 1)."""
+    display_name = "Target Reroll Unlocks"
+    range_start = 0
+    range_end = 5
+    default = 2
 
 
 @dataclass
@@ -308,3 +356,9 @@ class WikipelagoOptions(PerGameCommonOptions):
     trap_link: TrapLink
     toggle_bingo_letterpairs: ToggleBingoLetterpairs
     bingo_letterpairs_grid: BingoLetterpairsGrid
+    bingo_cards_start: BingoCardsStart
+    bingo_card_unlocks: BingoCardUnlocks
+    back_depth_start: BackDepthStart
+    back_depth_unlocks: BackDepthUnlocks
+    target_rerolls_start: TargetRerollsStart
+    target_reroll_unlocks: TargetRerollUnlocks

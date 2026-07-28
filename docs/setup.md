@@ -65,7 +65,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **0.4.2-DeadAndReborn** |
+| Wikipelago world (`apworld`) | **0.5.0-Bingo!-alpha1** |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above (always use the current deploy) |
 

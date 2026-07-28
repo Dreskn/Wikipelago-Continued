@@ -233,6 +233,22 @@ button {
 }
 
 .side-panel { display: flex; flex-direction: column; gap: 12px; }
+.bingo-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bingo-board-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bingo-board-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
 .bingo-grid {
   display: grid;
   gap: 0;

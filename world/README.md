@@ -1,6 +1,6 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.4.2-DeadAndReborn** (see `APWorldSource/archipelago.json`).
+World package version: **0.5.0-Bingo!-alpha1** (see `APWorldSource/archipelago.json`).
 
 The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
 

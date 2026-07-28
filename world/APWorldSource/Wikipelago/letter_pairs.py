@@ -52,32 +52,53 @@ def load_letter_pair_weights() -> dict[str, int]:
 
 
 def bingo_location_count(grid_size: int) -> int:
-    """N rows + N cols + 2 diagonals + full card."""
+    """N rows + N cols + 2 diagonals + full card (one board)."""
     return 2 * grid_size + 3
 
 
-def bingo_location_names(grid_size: int) -> list[str]:
-    names = [f"Letter Pair Bingo - Row {index}" for index in range(1, grid_size + 1)]
-    names.extend(f"Letter Pair Bingo - Column {index}" for index in range(1, grid_size + 1))
+def bingo_location_names(grid_size: int, board: int = 1) -> list[str]:
+    names = [f"Letter Pair Bingo - Board {board} Row {index}" for index in range(1, grid_size + 1)]
+    names.extend(
+        f"Letter Pair Bingo - Board {board} Column {index}" for index in range(1, grid_size + 1)
+    )
     names.extend(
         [
-            "Letter Pair Bingo - Diagonal",
-            "Letter Pair Bingo - Anti-Diagonal",
-            "Letter Pair Bingo - Full Card",
+            f"Letter Pair Bingo - Board {board} Diagonal",
+            f"Letter Pair Bingo - Board {board} Anti-Diagonal",
+            f"Letter Pair Bingo - Board {board} Full Card",
         ]
     )
     return names
 
 
-def bingo_slot_location_ids(location_name_to_id: dict[str, int], grid_size: int) -> dict[str, int]:
+def bingo_slot_location_ids(
+    location_name_to_id: dict[str, int],
+    grid_size: int,
+    board: int = 1,
+) -> dict[str, int]:
     ids: dict[str, int] = {}
     for index in range(1, grid_size + 1):
-        ids[f"row_{index}"] = location_name_to_id[f"Letter Pair Bingo - Row {index}"]
-        ids[f"col_{index}"] = location_name_to_id[f"Letter Pair Bingo - Column {index}"]
-    ids["diag"] = location_name_to_id["Letter Pair Bingo - Diagonal"]
-    ids["anti"] = location_name_to_id["Letter Pair Bingo - Anti-Diagonal"]
-    ids["full"] = location_name_to_id["Letter Pair Bingo - Full Card"]
+        ids[f"row_{index}"] = location_name_to_id[
+            f"Letter Pair Bingo - Board {board} Row {index}"
+        ]
+        ids[f"col_{index}"] = location_name_to_id[
+            f"Letter Pair Bingo - Board {board} Column {index}"
+        ]
+    ids["diag"] = location_name_to_id[f"Letter Pair Bingo - Board {board} Diagonal"]
+    ids["anti"] = location_name_to_id[f"Letter Pair Bingo - Board {board} Anti-Diagonal"]
+    ids["full"] = location_name_to_id[f"Letter Pair Bingo - Board {board} Full Card"]
     return ids
+
+
+def bingo_slot_location_ids_by_board(
+    location_name_to_id: dict[str, int],
+    grid_size: int,
+    board_count: int,
+) -> dict[str, dict[str, int]]:
+    return {
+        str(board): bingo_slot_location_ids(location_name_to_id, grid_size, board)
+        for board in range(1, board_count + 1)
+    }
 
 
 def _weighted_sample_without_replacement(rng: Random, pairs: list[str], weights: list[int], count: int) -> list[str]:

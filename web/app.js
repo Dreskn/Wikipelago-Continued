@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.07.27.5";
+const APP_VERSION = "2026.07.28.3";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
@@ -28,6 +28,7 @@ const DISPLAY_LOCKS = [
 
 const TOOL_ICON_SVGS = {
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l4.6-4.6L11 5l-7 7 7 7 1.4-1.4L7.8 13H20v-2z"/></svg>',
+  reroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.1A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>',
   search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
   compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
   scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
@@ -124,7 +125,7 @@ const el = {
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   bingoCard: document.getElementById("bingoCard"),
-  bingoGrid: document.getElementById("bingoGrid"),
+  bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
@@ -638,15 +639,16 @@ function makeIconNode({ id, title, svg, extraClass = "" }) {
 }
 
 function ensureToolIcons() {
-  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "1") return;
+  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "3") return;
   const tools = [
-    { id: "back", title: "Back Button", svg: TOOL_ICON_SVGS.back },
+    { id: "back", title: "Progressive Back", svg: TOOL_ICON_SVGS.back },
+    { id: "reroll", title: "Progressive Reroll", svg: TOOL_ICON_SVGS.reroll },
     { id: "search", title: "Ctrl+F Lens", svg: TOOL_ICON_SVGS.search },
     { id: "compass", title: "Wiki Compass", svg: TOOL_ICON_SVGS.compass },
   ];
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
-  el.toolIconsRow.dataset.ready = "1";
+  el.toolIconsRow.dataset.ready = "3";
 }
 
 function overflowChipWidthPx(count) {
@@ -875,13 +877,44 @@ function renderFragmentsTrack(status) {
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
 }
 
+function setToolBadge(node, text) {
+  const badge = node?.querySelector(".item-icon-badge");
+  if (!badge) return;
+  if (text) {
+    badge.textContent = text;
+    badge.classList.remove("hidden");
+  } else {
+    badge.textContent = "";
+    badge.classList.add("hidden");
+  }
+}
+
 function renderToolIcons(status) {
   ensureToolIcons();
   if (!el.toolIconsRow) return;
   const back = el.toolIconsRow.querySelector('[data-tool="back"]');
+  const reroll = el.toolIconsRow.querySelector('[data-tool="reroll"]');
   const search = el.toolIconsRow.querySelector('[data-tool="search"]');
   const compass = el.toolIconsRow.querySelector('[data-tool="compass"]');
-  if (back) setIconState(back, status.back_button_unlocked ? "ok" : "locked");
+
+  const backMax = Math.max(0, Number(status.back_depth_max) || 0);
+  const backsRemaining = Number(status.backs_remaining);
+  const backLeft = Number.isFinite(backsRemaining) ? Math.max(0, backsRemaining) : backMax;
+  if (back) {
+    setIconState(back, backMax > 0 ? "ok" : "locked");
+    setToolBadge(back, backMax > 0 ? `${backLeft}/${backMax}` : "");
+    back.title = backMax > 0 ? `Progressive Back ${backLeft}/${backMax}` : "Progressive Back";
+  }
+
+  const rerollMax = Math.max(0, Number(status.target_rerolls_max) || 0);
+  const rerollRemaining = Number(status.target_rerolls_remaining);
+  const rerollLeft = Number.isFinite(rerollRemaining) ? Math.max(0, rerollRemaining) : rerollMax;
+  if (reroll) {
+    setIconState(reroll, rerollMax > 0 ? "ok" : "locked");
+    setToolBadge(reroll, rerollMax > 0 ? `${rerollLeft}/${rerollMax}` : "");
+    reroll.title = rerollMax > 0 ? `Progressive Reroll ${rerollLeft}/${rerollMax}` : "Progressive Reroll";
+  }
+
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
 }
@@ -1088,30 +1121,86 @@ function bingoCellInCompletedLine(row, col, gridSize, lines) {
   return false;
 }
 
-function renderBingoHud(status) {
-  if (!el.bingoCard || !el.bingoGrid) return;
-  const enabled = Boolean(status?.bingo_letterpairs);
-  el.bingoCard.classList.toggle("hidden", !enabled);
-  if (!enabled) {
-    el.bingoGrid.innerHTML = "";
-    if (el.bingoMeta) el.bingoMeta.textContent = "";
-    return;
+function bingoBoardsFromStatus(status) {
+  if (Array.isArray(status?.bingo_letterpairs_boards) && status.bingo_letterpairs_boards.length) {
+    return status.bingo_letterpairs_boards;
   }
+  if (Array.isArray(status?.bingo_letterpairs_board) && status.bingo_letterpairs_board.length) {
+    return [status.bingo_letterpairs_board];
+  }
+  return [];
+}
 
-  const board = Array.isArray(status.bingo_letterpairs_board) ? status.bingo_letterpairs_board : [];
+function normalizeBingoPairList(raw) {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.map((pair) => String(pair || "").trim().toUpperCase()).filter(Boolean))];
+}
+
+/** Normalize stamped pairs to { boardKey: string[] }. Legacy flat list → board "1". */
+function normalizeBingoStampedPairs(raw) {
+  if (Array.isArray(raw)) return { "1": normalizeBingoPairList(raw) };
+  if (!raw || typeof raw !== "object") return {};
+  const out = {};
+  for (const [key, value] of Object.entries(raw)) {
+    out[String(key)] = normalizeBingoPairList(value);
+  }
+  return out;
+}
+
+/** Normalize stamped cells to { boardKey: [[r,c], ...] }. Legacy flat list → board "1". */
+function normalizeBingoStampedCells(raw) {
+  const asCells = (list) => (Array.isArray(list) ? list : [])
+    .filter((cell) => Array.isArray(cell) && cell.length >= 2)
+    .map((cell) => [Number(cell[0]), Number(cell[1])]);
+  if (Array.isArray(raw)) return { "1": asCells(raw) };
+  if (!raw || typeof raw !== "object") return {};
+  const out = {};
+  for (const [key, value] of Object.entries(raw)) {
+    out[String(key)] = asCells(value);
+  }
+  return out;
+}
+
+/** Normalize line checks to { boardKey: { row_1: bool, ... } }. Flat bool map → board "1". */
+function normalizeBingoLinesChecked(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const values = Object.values(raw);
+  if (!values.length) return {};
+  const looksNested = values.every((value) => value && typeof value === "object" && !Array.isArray(value));
+  if (looksNested) {
+    const out = {};
+    for (const [key, value] of Object.entries(raw)) out[String(key)] = value;
+    return out;
+  }
+  return { "1": raw };
+}
+
+function mergeBingoStampMaps(...maps) {
+  const out = {};
+  for (const map of maps) {
+    if (!map || typeof map !== "object") continue;
+    for (const [key, pairs] of Object.entries(map)) {
+      const boardKey = String(key);
+      const merged = new Set([...(out[boardKey] || []), ...normalizeBingoPairList(pairs)]);
+      out[boardKey] = [...merged].sort();
+    }
+  }
+  return out;
+}
+
+function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
   const n = board.length;
-  const stampedPairs = new Set((status.bingo_stamped_pairs || []).map((pair) => String(pair).toUpperCase()));
-  const stampedCells = new Set(
-    (status.bingo_stamped_cells || [])
+  const pairSet = new Set(normalizeBingoPairList(stampedPairs));
+  const cellSet = new Set(
+    (stampedCells || [])
       .filter((cell) => Array.isArray(cell) && cell.length >= 2)
       .map((cell) => `${Number(cell[0])},${Number(cell[1])}`)
   );
-  const lines = status.bingo_lines_checked && typeof status.bingo_lines_checked === "object"
-    ? status.bingo_lines_checked
-    : {};
+  const lineMap = lines && typeof lines === "object" ? lines : {};
 
-  el.bingoGrid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
-  el.bingoGrid.innerHTML = "";
+  const grid = document.createElement("div");
+  grid.className = "bingo-grid";
+  grid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
   for (let row = 0; row < n; row += 1) {
     for (let col = 0; col < n; col += 1) {
       const pair = String(board[row]?.[col] || "").toUpperCase();
@@ -1119,21 +1208,77 @@ function renderBingoHud(status) {
       cell.className = "bingo-cell";
       cell.textContent = pair || "·";
       cell.title = pair || "";
-      const stamped = (pair && stampedPairs.has(pair)) || stampedCells.has(`${row},${col}`);
-      const lineDone = bingoCellInCompletedLine(row, col, n, lines);
+      const stamped = (pair && pairSet.has(pair)) || cellSet.has(`${row},${col}`);
+      const lineDone = bingoCellInCompletedLine(row, col, n, lineMap);
       if (lineDone) cell.classList.add("line-complete");
       else if (stamped) cell.classList.add("stamped");
-      el.bingoGrid.appendChild(cell);
+      grid.appendChild(cell);
     }
   }
+  return { grid, n, lines: lineMap };
+}
 
-  const lineKeys = Object.keys(lines);
-  const checkedCount = lineKeys.filter((key) => Boolean(lines[key])).length;
-  const totalLines = lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
+function renderBingoHud(status) {
+  if (!el.bingoCard || !el.bingoBoards) return;
+  const enabled = Boolean(status?.bingo_letterpairs);
+  el.bingoCard.classList.toggle("hidden", !enabled);
+  if (!enabled) {
+    el.bingoBoards.innerHTML = "";
+    if (el.bingoMeta) el.bingoMeta.textContent = "";
+    return;
+  }
+
+  const boards = bingoBoardsFromStatus(status);
+  const unlockedRaw = Number(status.bingo_unlocked_boards);
+  const unlocked = Number.isFinite(unlockedRaw)
+    ? Math.max(0, Math.min(boards.length, unlockedRaw))
+    : boards.length;
+  const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
+  const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
+
+  el.bingoBoards.innerHTML = "";
+  let totalChecked = 0;
+  let totalLines = 0;
+  let anySize = 0;
+
+  for (let i = 0; i < unlocked; i += 1) {
+    const boardKey = String(i + 1);
+    const board = boards[i] || [];
+    const block = document.createElement("div");
+    block.className = "bingo-board-block";
+    block.dataset.board = boardKey;
+
+    const label = document.createElement("p");
+    label.className = "bingo-board-label";
+    label.textContent = `Board ${boardKey}`;
+    block.appendChild(label);
+
+    const { grid, n, lines } = renderBingoBoardGrid(
+      board,
+      stampedMap[boardKey] || [],
+      cellsMap[boardKey] || [],
+      linesMap[boardKey] || {}
+    );
+    block.appendChild(grid);
+    el.bingoBoards.appendChild(block);
+
+    anySize = Math.max(anySize, n);
+    const lineKeys = Object.keys(lines);
+    totalChecked += lineKeys.filter((key) => Boolean(lines[key])).length;
+    totalLines += lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
+  }
+
   if (el.bingoMeta) {
-    el.bingoMeta.textContent = n
-      ? `${n}×${n} · ${checkedCount}/${totalLines} lines`
-      : "";
+    if (!unlocked) {
+      el.bingoMeta.textContent = "No boards unlocked";
+    } else if (unlocked === 1 && anySize) {
+      el.bingoMeta.textContent = `${anySize}×${anySize} · ${totalChecked}/${totalLines} lines`;
+    } else if (unlocked > 1) {
+      el.bingoMeta.textContent = `${unlocked} boards · ${totalChecked}/${totalLines} lines`;
+    } else {
+      el.bingoMeta.textContent = "";
+    }
   }
 }
 
@@ -1223,22 +1368,23 @@ function storageKey(suffix) {
 function bingoStampStorageKey(status) {
   const server = String(status?.ap_server || "").trim().toLowerCase();
   const slot = String(status?.slot_name || "").trim().toLowerCase();
-  const board = Array.isArray(status?.bingo_letterpairs_board) ? status.bingo_letterpairs_board : [];
-  if (!server || !slot || !board.length) return "";
-  const boardKey = board.map((row) => (Array.isArray(row) ? row.join("") : "")).join("/");
+  const boards = bingoBoardsFromStatus(status);
+  if (!server || !slot || !boards.length) return "";
+  const boardKey = boards
+    .map((board) => (Array.isArray(board) ? board.map((row) => (Array.isArray(row) ? row.join("") : "")).join("/") : ""))
+    .join("||");
   return `wikipelago_bingo_stamps:${server}:${slot}:${boardKey}`;
 }
 
 function loadLocalBingoStamps(storageKeyValue) {
-  if (!storageKeyValue) return [];
+  if (!storageKeyValue) return {};
   try {
     const raw = localStorage.getItem(storageKeyValue);
-    if (!raw) return [];
+    if (!raw) return {};
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return [...new Set(parsed.map((pair) => String(pair || "").trim().toUpperCase()).filter(Boolean))];
+    return normalizeBingoStampedPairs(parsed);
   } catch {
-    return [];
+    return {};
   }
 }
 
@@ -1246,10 +1392,9 @@ function saveLocalBingoStamps(status) {
   if (!status?.bingo_letterpairs) return;
   const key = bingoStampStorageKey(status);
   if (!key) return;
-  const remote = (status.bingo_stamped_pairs || [])
-    .map((pair) => String(pair || "").trim().toUpperCase())
-    .filter(Boolean);
-  const merged = [...new Set([...loadLocalBingoStamps(key), ...remote])].sort();
+  const remote = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const local = loadLocalBingoStamps(key);
+  const merged = mergeBingoStampMaps(local, remote);
   localStorage.setItem(key, JSON.stringify(merged));
 }
 
@@ -1259,10 +1404,25 @@ async function syncBingoStampsToBridge(status) {
   if (!key || state.bingoStampSyncKey === key) return;
 
   const local = loadLocalBingoStamps(key);
-  const remote = new Set(
-    (status.bingo_stamped_pairs || []).map((pair) => String(pair || "").trim().toUpperCase()).filter(Boolean)
-  );
-  const needsPush = local.some((pair) => !remote.has(pair));
+  const remote = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const boards = bingoBoardsFromStatus(status);
+  const unlockedRaw = Number(status.bingo_unlocked_boards);
+  const unlocked = Number.isFinite(unlockedRaw)
+    ? Math.max(0, Math.min(boards.length, unlockedRaw))
+    : boards.length;
+  const payload = {};
+  let needsPush = false;
+  for (let i = 1; i <= unlocked; i += 1) {
+    const boardKey = String(i);
+    const localPairs = local[boardKey] || [];
+    const remotePairs = new Set(remote[boardKey] || []);
+    if (localPairs.some((pair) => !remotePairs.has(pair))) needsPush = true;
+    payload[boardKey] = [...new Set([...(remote[boardKey] || []), ...localPairs])].sort();
+  }
+  for (const boardKey of Object.keys(remote)) {
+    if (!payload[boardKey]) payload[boardKey] = [...(remote[boardKey] || [])];
+  }
+
   state.bingoStampSyncKey = key;
   if (!needsPush) {
     saveLocalBingoStamps(status);
@@ -1271,7 +1431,7 @@ async function syncBingoStampsToBridge(status) {
 
   try {
     const result = await api(`/api/session/${state.sessionId}/bingo-stamps`, "POST", {
-      stamped_pairs: [...new Set([...remote, ...local])],
+      stamped_pairs: payload,
     });
     toastBingoCompletions(result.bingo_completed);
     if (result.status) updateHUD(result.status);
@@ -1536,7 +1696,8 @@ function initDebugDisplayPanel() {
   const itemSelect = document.createElement("select");
   itemSelect.className = "debug-input";
   for (const name of [
-    "Back Button", "Wiki Compass", "Ctrl+F Lens",
+    "Progressive Back", "Progressive Reroll", "Progressive Bingo Card",
+    "Wiki Compass", "Ctrl+F Lens",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
     "Knowledge Fragment", "Round Access", "Progressive Scroll Speed",
@@ -2074,6 +2235,28 @@ el.pageSearchInput.addEventListener("input", () => {
   }
 });
 
+function backBlockedToast() {
+  const max = Number(state.status?.back_depth_max) || 0;
+  if (max <= 0) toast("Progressive Back is locked", "warn");
+  else toast("No backs remaining this round", "warn");
+}
+
+function canGoBackNow() {
+  return Boolean(state.status?.can_go_back);
+}
+
+function rePushCurrentHistory() {
+  const title = state.currentTitle || "";
+  history.pushState({ title }, "", title ? `#${encodeURIComponent(title)}` : "#");
+}
+
+async function consumeBackCharge() {
+  if (!state.sessionId) throw new Error("no session");
+  const result = await api(`/api/session/${state.sessionId}/use-back`, "POST", {});
+  if (result.status) updateHUD(result.status);
+  return result;
+}
+
 document.addEventListener("keydown", (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
     e.preventDefault();
@@ -2085,16 +2268,18 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (e.altKey && e.key === "ArrowLeft") {
-    if (state.status && !state.status.back_button_unlocked) {
+    if (state.status) {
       e.preventDefault();
-      toast("Back Button is locked", "warn");
+      if (!canGoBackNow()) backBlockedToast();
+      else history.back();
     }
   }
   if (e.key === "Backspace") {
     const typing = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
-    if (!typing && state.status && !state.status.back_button_unlocked) {
+    if (!typing && state.status) {
       e.preventDefault();
-      toast("Back Button is locked", "warn");
+      if (!canGoBackNow()) backBlockedToast();
+      else history.back();
     }
   }
   if (e.key === "Escape" && state.searchOpen) {
@@ -2126,11 +2311,20 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-window.addEventListener("popstate", (e) => {
-  if (state.status && !state.status.back_button_unlocked) {
-    history.pushState({ title: state.currentTitle }, "", `#${encodeURIComponent(state.currentTitle)}`);
-    toast("Back Button is locked", "warn");
+window.addEventListener("popstate", async (e) => {
+  if (state.status && !canGoBackNow()) {
+    rePushCurrentHistory();
+    backBlockedToast();
     return;
+  }
+  if (state.status && canGoBackNow()) {
+    try {
+      await consumeBackCharge();
+    } catch (err) {
+      rePushCurrentHistory();
+      toast(`Could not use back: ${err.message || err}`, "warn");
+      return;
+    }
   }
   const title = e.state?.title;
   if (title) openArticle(title, { countAsClick: false });
