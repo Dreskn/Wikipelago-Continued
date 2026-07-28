@@ -70,6 +70,7 @@ const state = {
   announcedGoalComplete: false,
   restoringArticle: false,
   bingoStampSyncKey: "",
+  bingoRemoteStampCount: 0,
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -582,8 +583,20 @@ async function processPendingEvents(events) {
       await applyDeathEffect(`DeathLink${who}!`);
     } else if (event.type === "trap") {
       queueTrap(event.trap);
+    } else if (event.type === "bingo_stamps_updated") {
+      // DataStorage Retrieved/SetNotify arrived — unlock local→remote merge retry.
+      // Status already includes the new stamps (same poll); avoid nested pollStatus.
+      state.bingoStampSyncKey = "";
+      if (state.status) {
+        saveLocalBingoStamps(state.status);
+        void syncBingoStampsToBridge(state.status);
+      }
     }
   }
+}
+
+function bingoStampCount(map) {
+  return Object.values(map || {}).reduce((n, pairs) => n + (Array.isArray(pairs) ? pairs.length : 0), 0);
 }
 
 function ownedSearchLetters() {
@@ -1401,10 +1414,17 @@ function saveLocalBingoStamps(status) {
 async function syncBingoStampsToBridge(status) {
   if (!status?.bingo_letterpairs || !status.connected_to_ap || !state.sessionId) return;
   const key = bingoStampStorageKey(status);
-  if (!key || state.bingoStampSyncKey === key) return;
+  if (!key) return;
 
   const local = loadLocalBingoStamps(key);
   const remote = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const remoteCount = bingoStampCount(remote);
+  // Other device / SetNotify grew remote — allow another local merge pass.
+  if (remoteCount > (state.bingoRemoteStampCount || 0)) {
+    state.bingoStampSyncKey = "";
+  }
+  state.bingoRemoteStampCount = Math.max(state.bingoRemoteStampCount || 0, remoteCount);
+
   const boards = bingoBoardsFromStatus(status);
   const unlockedRaw = Number(status.bingo_unlocked_boards);
   const unlocked = Number.isFinite(unlockedRaw)
@@ -1423,12 +1443,36 @@ async function syncBingoStampsToBridge(status) {
     if (!payload[boardKey]) payload[boardKey] = [...(remote[boardKey] || [])];
   }
 
-  state.bingoStampSyncKey = key;
-  if (!needsPush) {
+  const storageReady = Boolean(status.bingo_storage_ready);
+  // Before DataStorage Retrieved, never lock the sync key — empty remote is not final.
+  if (!storageReady) {
+    if (needsPush) {
+      try {
+        const result = await api(`/api/session/${state.sessionId}/bingo-stamps`, "POST", {
+          stamped_pairs: payload,
+        });
+        toastBingoCompletions(result.bingo_completed);
+        if (result.status) updateHUD(result.status);
+      } catch {
+        // Retry on later poll once storage is ready.
+      }
+    }
     saveLocalBingoStamps(status);
     return;
   }
 
+  if (state.bingoStampSyncKey === key && !needsPush) {
+    saveLocalBingoStamps(status);
+    return;
+  }
+
+  if (!needsPush) {
+    state.bingoStampSyncKey = key;
+    saveLocalBingoStamps(status);
+    return;
+  }
+
+  state.bingoStampSyncKey = key;
   try {
     const result = await api(`/api/session/${state.sessionId}/bingo-stamps`, "POST", {
       stamped_pairs: payload,
@@ -1510,6 +1554,7 @@ function updateHUD(status) {
   if (wasConnected && !status.connected_to_ap) {
     toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
     state.bingoStampSyncKey = "";
+    state.bingoRemoteStampCount = 0;
   }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();

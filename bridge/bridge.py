@@ -179,6 +179,7 @@ class SessionState:
     bingo_card_unlocks: int = 0
     bingo_letterpairs_location_ids: dict[str, dict[str, int]] = field(default_factory=dict)
     bingo_stamped_pairs: dict[str, set[str]] = field(default_factory=dict)
+    bingo_storage_ready: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     goal_article_title: str = ""
@@ -431,6 +432,7 @@ class SessionState:
             "bingo_stamped_pairs": stamped_pairs,
             "bingo_stamped_cells": self.bingo_stamped_cells(),
             "bingo_lines_checked": self.bingo_lines_checked(),
+            "bingo_storage_ready": self.bingo_storage_ready,
             "pending_events": list(self.pending_events),
             "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
             "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
@@ -487,6 +489,7 @@ class APConnection:
         self.state.bingo_card_unlocks = 0
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
+        self.state.bingo_storage_ready = False
         self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
         self.state.target_rerolls_used = 0
         self.state.target_rerolls_round = -1
@@ -654,6 +657,8 @@ class APConnection:
                 self._resolve_location_info(packet)
             elif cmd == "Retrieved":
                 self._resolve_retrieved(packet)
+            elif cmd == "SetReply":
+                self._resolve_set_reply(packet)
 
     def _apply_connected(self, packet: dict[str, Any]) -> None:
         slot_data = packet.get("slot_data") or {}
@@ -1204,23 +1209,37 @@ class APConnection:
         if storage_key not in keys:
             return
         raw = keys.get(storage_key)
-        asyncio.create_task(self._apply_bingo_storage_payload(raw))
+        asyncio.create_task(self._apply_bingo_storage_payload(raw, source="Retrieved"))
+
+    def _resolve_set_reply(self, packet: dict[str, Any]) -> None:
+        storage_key = self._bingo_storage_key()
+        if packet.get("key") != storage_key:
+            return
+        # SetNotify / want_reply: value is the post-operation DataStorage payload.
+        raw = packet.get("value")
+        asyncio.create_task(self._apply_bingo_storage_payload(raw, source="SetReply"))
 
     async def _request_bingo_stamps_from_storage(self) -> None:
-        """Ask Archipelago DataStorage for stamped pairs (answer handled via Retrieved)."""
+        """Subscribe + Get stamped pairs from Archipelago DataStorage."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
             return
         if self.ws is None or not self.state.connected_to_ap:
             return
-        payload = [{"cmd": "Get", "keys": [self._bingo_storage_key()]}]
+        self.state.bingo_storage_ready = False
+        key = self._bingo_storage_key()
+        payload = [
+            {"cmd": "SetNotify", "keys": [key]},
+            {"cmd": "Get", "keys": [key]},
+        ]
         try:
             async with self.send_lock:
                 await self.ws.send(json.dumps(payload))
         except Exception as exc:
-            LOG.info("Bingo DataStorage Get request failed: %s", exc)
+            LOG.info("Bingo DataStorage Get/SetNotify request failed: %s", exc)
 
-    async def _apply_bingo_storage_payload(self, raw: Any) -> None:
+    async def _apply_bingo_storage_payload(self, raw: Any, *, source: str = "") -> None:
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
+            self.state.bingo_storage_ready = True
             return
         before = self._bingo_stamps_snapshot()
         if isinstance(raw, dict):
@@ -1245,9 +1264,17 @@ class APConnection:
                 if pair in on_board:
                     stamped.add(pair)
         await self._flush_bingo_line_checks()
+        after = self._bingo_stamps_snapshot()
+        changed = after != before
+        was_ready = self.state.bingo_storage_ready
+        self.state.bingo_storage_ready = True
         # Keep storage in sync with line-inferred stamps after reconnect.
-        if self._bingo_stamps_snapshot() != before or any(self.state.bingo_stamped_pairs.values()):
-            await self._persist_bingo_stamps()
+        if changed or any(self.state.bingo_stamped_pairs.values()):
+            # Avoid echo-persist loop on our own SetReply confirmations.
+            if source != "SetReply" or changed:
+                await self._persist_bingo_stamps()
+        if changed or not was_ready:
+            self._queue_event({"type": "bingo_stamps_updated", "source": source or "storage"})
 
     async def _persist_bingo_stamps(self) -> None:
         if not self.state.bingo_letterpairs or self.ws is None or not self.state.connected_to_ap:
@@ -1262,7 +1289,7 @@ class APConnection:
             "cmd": "Set",
             "key": key,
             "default": {},
-            "want_reply": False,
+            "want_reply": True,
             "operations": [{
                 "operation": "replace",
                 "value": value,
