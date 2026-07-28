@@ -14,7 +14,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `25` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `5` | Knowledge Fragments needed before you can finish the Grand Goal. |
+| `required_fragments` | `5` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
 | `progression_balancing` | `50` | Standard Archipelago balancing (0–99). Higher tends to place useful progression a bit earlier. |

@@ -235,6 +235,9 @@ try {
     Assert-HasPattern $bridgePath 'bingo_stamped_cells' 'Bridge bingo stamped cells status is missing'
     Assert-HasPattern $itemsPath 'for index, letter in enumerate\("ABCDEFGHIJKLMNOPQRSTUVWXYZ"' 'Search Letter item loop is missing'
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
+    Assert-HasPattern $initPath 'def create_event' 'World create_event helper is missing'
+    Assert-HasPattern $initPath 'place_locked_item\(self\.create_event\("Victory"\)\)' 'Grand Goal must lock a Victory event, not a shuffled item'
+    Assert-NoPattern $itemsPath '"Victory"' 'Victory must not be a datapackage/shuffled item'
     Write-Pass "Known bad title regressions are absent from source pools"
 } catch {
     $failures.Add($_.Exception.Message)

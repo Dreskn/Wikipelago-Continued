@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from BaseClasses import Item, Location
+from BaseClasses import Item, ItemClassification, Location
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import set_rule
 
@@ -493,6 +493,10 @@ class WikipelagoWorld(World):
         data = item_table[name]
         return self.item_class(name, data.classification, data.code, self.player)
 
+    def create_event(self, name: str) -> WikipelagoItem:
+        # Generation-only: no datapackage id, never shuffled or sent as a real item.
+        return self.item_class(name, ItemClassification.progression, None, self.player)
+
     def create_items(self) -> None:
         round_count = self.options.check_count.value
         bingo_count = self._bingo_check_count()
@@ -548,8 +552,11 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Footnote"))
 
         self.multiworld.itempool.extend(pool)
+        # Grand Goal is a real checkable location that holds only a Victory *event*
+        # (nothing useful / not shuffled). Play completion is CLIENT_GOAL from the bridge;
+        # remaining uncleared checks follow room release settings as usual.
         grand_goal = self.multiworld.get_location("Grand Goal", self.player)
-        grand_goal.place_locked_item(self.create_item("Victory"))
+        grand_goal.place_locked_item(self.create_event("Victory"))
 
     def _trap_item_names(self, trap_count: int) -> list[str]:
         if trap_count <= 0:
