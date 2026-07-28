@@ -427,13 +427,14 @@ class WikipelagoWorld(World):
         ]
         filtered_pool = self._filter_pool_by_topics(filtered_pool, selected_topics)
 
-        # Unique titles: one random opening start + one target per round (last = goal).
-        needed_total = max(2, round_count + 1)
-        max_rounds_for_pool = max(0, len(filtered_pool) - 1)
+        # Unique titles: opening start + one target per round + separate Grand Goal article.
+        needed_total = max(3, round_count + 2)
+        max_rounds_for_pool = max(0, len(filtered_pool) - 2)
         if len(filtered_pool) < needed_total:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
-                f"check_count={round_count} needs at least {needed_total} unique usable articles, "
+                f"check_count={round_count} needs at least {needed_total} unique usable articles "
+                f"(including a Grand Goal distinct from round targets), "
                 f"but the enabled categories only provide {len(filtered_pool)} "
                 f"(supports at most {max_rounds_for_pool} rounds). "
                 "Lower check_count or enable more article categories."
@@ -455,26 +456,26 @@ class WikipelagoWorld(World):
                 filtered_pool.append(self.goal_article)
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
-        # First-round opening start + non-goal targets (later rounds continue from prior target).
-        needed_from_remaining = round_count
+        # Opening start + one target per round; Grand Goal stays out of round_pairs.
+        needed_from_remaining = round_count + 1
         if len(remaining) < needed_from_remaining:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
                 f"check_count={round_count} needs {needed_from_remaining + 1} unique usable articles "
-                f"(including the goal), but only {len(remaining) + 1} are available after filtering. "
+                f"(including a Grand Goal distinct from round targets), "
+                f"but only {len(remaining) + 1} are available after filtering. "
                 "Lower check_count or enable more article categories."
             )
 
         picks = self.random.sample(remaining, needed_from_remaining)
         first_start = picks[0]
-        non_final_targets = picks[1:]
-        targets = non_final_targets + [self.goal_article]
+        targets = picks[1:]
         starts = [first_start, *targets[:-1]]
         self.round_pairs = [
             {"start": start, "target": target}
             for start, target in zip(starts, targets)
         ]
-        used_titles = {first_start, *targets}
+        used_titles = {first_start, *targets, self.goal_article}
         # Leftover titles for client-side target rerolls (same filtered category pool).
         self.reroll_pool = [title for title in filtered_pool if title not in used_titles]
 

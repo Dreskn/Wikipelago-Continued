@@ -414,10 +414,6 @@ function updateRerollTargetControls(status) {
     el.rerollTargetMeta.textContent = "";
     return;
   }
-  if (Number(status?.round) >= Number(status?.check_count)) {
-    el.rerollTargetMeta.textContent = "Goal round";
-    return;
-  }
   if (Number.isFinite(remaining)) {
     el.rerollTargetMeta.textContent = `${Math.max(0, remaining)}/${max} left`;
   } else {
@@ -830,16 +826,17 @@ function renderRoundsTrack(status) {
   if (!el.roundsTrack) return;
   const total = Math.max(0, Number(status.check_count) || 0);
   const current = Math.max(1, Number(status.round) || 1);
+  const completed = Math.max(0, Number(status.rounds_completed) || 0);
   const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
   const complete = Boolean(status.boss_completed);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
     let state = "locked";
-    if (complete || i < current) state = "done";
+    if (complete || i <= completed) state = "done";
     else if (i <= unlocked) state = "open";
     items.push({
       state,
-      current: !complete && i === current,
+      current: !complete && i === current && i > completed,
       label: `Round ${i}`,
     });
   }

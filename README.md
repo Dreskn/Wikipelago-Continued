@@ -17,7 +17,7 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 Live web client: https://wikipelago-contd.onrender.com/
 
 Recommended Archipelago version: **0.6.7**  
-World version: **0.4.1-DeadAndReborn**
+World version: **0.4.2-DeadAndReborn**
 
 Looking for more info about Archipelago in general? See the [website](https://archipelago.gg/) or [GitHub](https://github.com/ArchipelagoMW/Archipelago).
 
