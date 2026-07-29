@@ -238,19 +238,6 @@ button {
   flex-direction: column;
   gap: 12px;
 }
-.bingo-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.bingo-card-header h2 {
-  margin: 0;
-}
-.bingo-body.collapsed {
-  display: none;
-}
 .bingo-board-block {
   display: flex;
   flex-direction: column;

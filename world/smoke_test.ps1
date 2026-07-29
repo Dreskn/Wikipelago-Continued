@@ -180,7 +180,7 @@ try {
     Assert-HasPattern $webAppPath 'submit_check: Boolean\(submitCheck\)' 'Web always-visit check payload is missing'
     Assert-HasPattern $webAppPath 'function renderBingoHud' 'Web bingo HUD renderer is missing'
     Assert-HasPattern $webAppPath 'applyBingoAutoHide' 'Web bingo auto-hide helper is missing'
-    Assert-HasPattern $webIndexPath 'id="bingoSectionToggleBtn"' 'Web bingo section toggle markup is missing'
+    Assert-NoPattern $webIndexPath 'id="bingoSectionToggleBtn"' 'Web must not keep section-level bingo toggle'
     Assert-HasPattern $webAppPath 'function toastBingoCompletions' 'Web bingo toast helper is missing'
     Assert-HasPattern $webAppPath 'bingo_letterpairs_boards' 'Web multi-board bingo status handling is missing'
     Assert-HasPattern $webAppPath 'use-back' 'Web Progressive Back use-back call is missing'

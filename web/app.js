@@ -127,10 +127,8 @@ const el = {
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   bingoCard: document.getElementById("bingoCard"),
-  bingoBody: document.getElementById("bingoBody"),
   bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
-  bingoSectionToggleBtn: document.getElementById("bingoSectionToggleBtn"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -1242,7 +1240,7 @@ function bingoUiStorageKey(status) {
 }
 
 function defaultBingoUiState() {
-  return { sectionCollapsed: false, boards: {} };
+  return { boards: {} };
 }
 
 function loadBingoUiState(status) {
@@ -1262,10 +1260,7 @@ function loadBingoUiState(status) {
         autoHidden: Boolean(entry.autoHidden),
       };
     }
-    return {
-      sectionCollapsed: Boolean(parsed.sectionCollapsed),
-      boards: normalized,
-    };
+    return { boards: normalized };
   } catch {
     return defaultBingoUiState();
   }
@@ -1275,7 +1270,6 @@ function saveBingoUiState(status, ui) {
   const key = bingoUiStorageKey(status);
   if (!key || !ui) return;
   localStorage.setItem(key, JSON.stringify({
-    sectionCollapsed: Boolean(ui.sectionCollapsed),
     boards: ui.boards || {},
   }));
 }
@@ -1287,12 +1281,6 @@ function ensureBingoUiState(status) {
 
 function isBingoBoardFullyComplete(lines) {
   return Boolean(lines && lines.full);
-}
-
-function setBingoSectionCollapsed(status, collapsed) {
-  const ui = ensureBingoUiState(status);
-  ui.sectionCollapsed = Boolean(collapsed);
-  saveBingoUiState(status, ui);
 }
 
 function setBingoBoardCollapsed(status, boardKey, collapsed) {
@@ -1313,19 +1301,6 @@ function applyBingoAutoHide(status, boardKey, complete) {
     return true;
   }
   return Boolean(prev.collapsed);
-}
-
-function syncBingoSectionToggle(status) {
-  const ui = ensureBingoUiState(status);
-  if (el.bingoBody) el.bingoBody.classList.toggle("collapsed", ui.sectionCollapsed);
-  if (el.bingoSectionToggleBtn) {
-    el.bingoSectionToggleBtn.textContent = ui.sectionCollapsed ? "Show" : "Hide";
-    el.bingoSectionToggleBtn.setAttribute("aria-expanded", ui.sectionCollapsed ? "false" : "true");
-    el.bingoSectionToggleBtn.onclick = () => {
-      setBingoSectionCollapsed(status, !ui.sectionCollapsed);
-      syncBingoSectionToggle(status);
-    };
-  }
 }
 
 function renderBingoHud(status) {
@@ -1354,8 +1329,6 @@ function renderBingoHud(status) {
   const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
   const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
   const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
-
-  syncBingoSectionToggle(status);
 
   el.bingoBoards.innerHTML = "";
   let totalChecked = 0;
