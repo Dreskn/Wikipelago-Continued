@@ -142,7 +142,8 @@ Wikipelago:
   # Grid size N (3–26). Default 5 → 13 checks per board. N=26 is the full sorted A–Z×A–Z board.
   bingo_letterpairs_grid: 5
 
-  # Boards unlocked from the start (1–5). Extra boards come from Progressive Bingo Card items.
+  # Boards unlocked from the start (0–5). 0 = all boards locked behind Progressive Bingo Card.
+  # Bingo on with start 0 and unlocks 0 is rejected (no boards).
   bingo_cards_start: 1
 
   # Progressive Bingo Card items in the pool (0–5). Default 2 → three boards total with start 1.

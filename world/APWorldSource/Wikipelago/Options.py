@@ -267,9 +267,9 @@ class BingoLetterpairsGrid(Range):
 
 
 class BingoCardsStart(Range):
-    """How many letter-pair bingo boards are unlocked from the start (when bingo is enabled)."""
+    """How many letter-pair bingo boards are unlocked from the start (0 = all boards locked behind Progressive Bingo Card)."""
     display_name = "Bingo Cards Start"
-    range_start = 1
+    range_start = 0
     range_end = 5
     default = 1
 

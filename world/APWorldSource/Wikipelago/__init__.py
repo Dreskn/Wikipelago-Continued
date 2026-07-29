@@ -287,7 +287,7 @@ class WikipelagoWorld(World):
     def _bingo_cards_start(self) -> int:
         if not self._bingo_enabled():
             return 0
-        return max(1, int(self.options.bingo_cards_start.value))
+        return max(0, int(self.options.bingo_cards_start.value))
 
     def _bingo_card_unlocks(self) -> int:
         if not self._bingo_enabled():
@@ -298,6 +298,12 @@ class WikipelagoWorld(World):
         if not self._bingo_enabled():
             return 0
         total = self._bingo_cards_start() + self._bingo_card_unlocks()
+        if total <= 0:
+            raise Exception(
+                "Wikipelago bingo is enabled but no boards are available: "
+                "bingo_cards_start and bingo_card_unlocks are both 0. "
+                "Set bingo_cards_start >= 1, add bingo_card_unlocks, or disable toggle_bingo_letterpairs."
+            )
         if total > MAX_BINGO_BOARDS:
             raise Exception(
                 "Wikipelago bingo board count exceeds datapackage limit: "
