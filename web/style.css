@@ -233,6 +233,57 @@ button {
 }
 
 .side-panel { display: flex; flex-direction: column; gap: 12px; }
+.bingo-boards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bingo-board-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bingo-board-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.bingo-grid {
+  display: grid;
+  gap: 0;
+  width: min(100%, 10.5rem);
+  border-top: 1px solid #3a5068;
+  border-left: 1px solid #3a5068;
+  background: #3a5068;
+}
+.bingo-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #3a5068;
+  border-bottom: 1px solid #3a5068;
+  border-radius: 0;
+  padding: 0;
+  background: #14202e;
+  color: var(--text);
+  font-size: clamp(0.48rem, 1.35vw, 0.62rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+  user-select: none;
+}
+.bingo-cell.stamped {
+  background: #243246;
+  color: #7f93a8;
+  opacity: 0.55;
+}
+.bingo-cell.line-complete {
+  background: #1ecb70;
+  color: #062816;
+  opacity: 1;
+}
 .target-row {
   display: flex;
   flex-wrap: wrap;
@@ -345,6 +396,18 @@ button {
   background: #0f1824; color: var(--text);
 }
 .card p { margin: 6px 0; }
+.connection-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.connection-summary-line {
+  margin: 0;
+  word-break: break-word;
+}
+.connection-summary .btn-quiet {
+  align-self: flex-start;
+}
 
 .run-label-row {
   display: flex;

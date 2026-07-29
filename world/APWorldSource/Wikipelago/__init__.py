@@ -3,15 +3,21 @@
 import re
 from typing import Any
 
-from BaseClasses import Item, Location
+from BaseClasses import Item, ItemClassification, Location
 from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import set_rule
 
 from .Items import TRAP_ITEM_NAMES, item_table
-from .Locations import location_table
+from .Locations import MAX_BINGO_BOARDS, location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
 from .entertainment_articles import ENTERTAINMENT_ARTICLE_POOL
+from .letter_pairs import (
+    bingo_location_count,
+    bingo_location_names,
+    bingo_slot_location_ids_by_board,
+    build_letter_pair_bingo_board,
+)
 
 # Explicit category tags from the curated pool (preferred over keyword inference).
 ARTICLE_TOPIC_BY_TITLE: dict[str, str] = {
@@ -270,6 +276,46 @@ class WikipelagoWorld(World):
     round_pairs: list[dict[str, str]]
     goal_article: str
     reroll_pool: list[str]
+    bingo_letterpairs_boards: list[list[list[str]]]
+
+    def _bingo_enabled(self) -> bool:
+        return bool(self.options.toggle_bingo_letterpairs.value)
+
+    def _bingo_grid_size(self) -> int:
+        return int(self.options.bingo_letterpairs_grid.value) if self._bingo_enabled() else 0
+
+    def _bingo_cards_start(self) -> int:
+        if not self._bingo_enabled():
+            return 0
+        return max(0, int(self.options.bingo_cards_start.value))
+
+    def _bingo_card_unlocks(self) -> int:
+        if not self._bingo_enabled():
+            return 0
+        return max(0, int(self.options.bingo_card_unlocks.value))
+
+    def _bingo_board_count(self) -> int:
+        if not self._bingo_enabled():
+            return 0
+        total = self._bingo_cards_start() + self._bingo_card_unlocks()
+        if total <= 0:
+            raise Exception(
+                "Wikipelago bingo is enabled but no boards are available: "
+                "bingo_cards_start and bingo_card_unlocks are both 0. "
+                "Set bingo_cards_start >= 1, add bingo_card_unlocks, or disable toggle_bingo_letterpairs."
+            )
+        if total > MAX_BINGO_BOARDS:
+            raise Exception(
+                "Wikipelago bingo board count exceeds datapackage limit: "
+                f"bingo_cards_start + bingo_card_unlocks = {total}, max={MAX_BINGO_BOARDS}."
+            )
+        return total
+
+    def _bingo_check_count(self) -> int:
+        grid_size = self._bingo_grid_size()
+        if not grid_size:
+            return 0
+        return bingo_location_count(grid_size) * self._bingo_board_count()
 
     @staticmethod
     def _is_reasonable_title(title: str) -> bool:
@@ -463,6 +509,16 @@ class WikipelagoWorld(World):
         # Leftover titles for client-side target rerolls (same filtered category pool).
         self.reroll_pool = [title for title in filtered_pool if title not in used_titles]
 
+        if self._bingo_enabled():
+            grid_size = self._bingo_grid_size()
+            board_count = self._bingo_board_count()
+            self.bingo_letterpairs_boards = [
+                build_letter_pair_bingo_board(self.random, grid_size)
+                for _ in range(board_count)
+            ]
+        else:
+            self.bingo_letterpairs_boards = []
+
     def create_regions(self) -> None:
         create_regions(self)
 
@@ -470,8 +526,14 @@ class WikipelagoWorld(World):
         data = item_table[name]
         return self.item_class(name, data.classification, data.code, self.player)
 
+    def create_event(self, name: str) -> WikipelagoItem:
+        # Generation-only: no datapackage id, never shuffled or sent as a real item.
+        return self.item_class(name, ItemClassification.progression, None, self.player)
+
     def create_items(self) -> None:
         round_count = self.options.check_count.value
+        bingo_count = self._bingo_check_count()
+        free_locations = round_count + bingo_count
         required_fragments = min(self.options.required_fragments.value, round_count)
         start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
         per_unlock = max(1, self.options.rounds_per_unlock.value)
@@ -481,30 +543,42 @@ class WikipelagoWorld(World):
         scroll_upgrades_needed = SCROLL_SPEED_UPGRADES if self.options.scrollsanity.value else 0
         display_unlocks = self._display_unlock_items()
         trap_count = int(self.options.trap_count.value)
+        back_unlocks = max(0, int(self.options.back_depth_unlocks.value))
+        reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
+        bingo_card_unlocks = self._bingo_card_unlocks()
 
         mandatory_items = (
             required_fragments
-            + 3
+            + 2  # Wiki Compass + Ctrl+F Lens
+            + back_unlocks
+            + reroll_unlocks
+            + bingo_card_unlocks
             + round_access_count
             + search_letters_needed
             + scroll_upgrades_needed
             + len(display_unlocks)
             + trap_count
         )
-        if mandatory_items > round_count:
+        if mandatory_items > free_locations:
             raise Exception(
-                "Wikipelago item math invalid: required progression items exceed round locations. "
-                f"mandatory={mandatory_items}, round_locations={round_count}. "
-                "Lower required_fragments, trap_count, reduce sanity/display unlock load, or lower round access pressure "
-                "(increase start_rounds_unlocked / rounds_per_unlock)."
+                "Wikipelago item math invalid: required progression items exceed free locations. "
+                f"mandatory={mandatory_items}, free_locations={free_locations} "
+                f"(rounds={round_count}, bingo={bingo_count}). "
+                "Lower required_fragments, trap_count, unlock counts, reduce sanity/display unlock load, "
+                "or lower round access pressure (increase start_rounds_unlocked / rounds_per_unlock)."
             )
 
         pool: list[WikipelagoItem] = []
         for _ in range(required_fragments):
             pool.append(self.create_item("Knowledge Fragment"))
-        pool.append(self.create_item("Back Button"))
+        for _ in range(back_unlocks):
+            pool.append(self.create_item("Progressive Back"))
         pool.append(self.create_item("Wiki Compass"))
         pool.append(self.create_item("Ctrl+F Lens"))
+        for _ in range(reroll_unlocks):
+            pool.append(self.create_item("Progressive Reroll"))
+        for _ in range(bingo_card_unlocks):
+            pool.append(self.create_item("Progressive Bingo Card"))
         if self.options.scrollsanity.value:
             for _ in range(SCROLL_SPEED_UPGRADES):
                 pool.append(self.create_item("Progressive Scroll Speed"))
@@ -518,10 +592,13 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Round Access"))
         for trap_name in self._trap_item_names(trap_count):
             pool.append(self.create_item(trap_name))
-        while len(pool) < round_count:
+        while len(pool) < free_locations:
             pool.append(self.create_item("Footnote"))
 
         self.multiworld.itempool.extend(pool)
+        # Grand Goal is checkable (real location id) so it must hold a real item code for hosting.
+        # Victory stays locked / unshuffled — nothing useful for the multiworld; clearing goal still
+        # completes the slot via the bridge CLIENT_GOAL. Remaining checks follow room release settings.
         grand_goal = self.multiworld.get_location("Grand Goal", self.player)
         grand_goal.place_locked_item(self.create_item("Victory"))
 
@@ -560,6 +637,22 @@ class WikipelagoWorld(World):
                 lambda state, need=needed_round_access: state.has("Round Access", self.player, need),
             )
 
+        if self._bingo_enabled():
+            grid_size = self._bingo_grid_size()
+            cards_start = self._bingo_cards_start()
+            for board in range(1, self._bingo_board_count() + 1):
+                need_cards = max(0, board - cards_start)
+                for name in bingo_location_names(grid_size, board):
+                    location = self.multiworld.get_location(name, self.player)
+                    if need_cards <= 0:
+                        continue
+                    set_rule(
+                        location,
+                        lambda state, need=need_cards: state.has(
+                            "Progressive Bingo Card", self.player, need
+                        ),
+                    )
+
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def fill_slot_data(self) -> dict[str, Any]:
@@ -571,6 +664,23 @@ class WikipelagoWorld(World):
             self.location_name_to_id[f"Round {index} Complete"]
             for index in range(1, round_count + 1)
         ]
+        bingo_enabled = self._bingo_enabled()
+        bingo_grid = self._bingo_grid_size()
+        bingo_boards = list(getattr(self, "bingo_letterpairs_boards", []) or [])
+        bingo_cards_start = self._bingo_cards_start()
+        bingo_card_unlocks = self._bingo_card_unlocks()
+        back_depth_start = max(0, int(self.options.back_depth_start.value))
+        back_depth_unlocks = max(0, int(self.options.back_depth_unlocks.value))
+        target_rerolls_start = max(0, int(self.options.target_rerolls_start.value))
+        target_reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
+        location_ids: dict[str, Any] = {
+            "rounds": round_location_ids,
+            "grand_goal": self.location_name_to_id["Grand Goal"],
+        }
+        if bingo_enabled:
+            location_ids["bingo_letterpairs"] = bingo_slot_location_ids_by_board(
+                self.location_name_to_id, bingo_grid, len(bingo_boards)
+            )
 
         return {
             "check_count": round_count,
@@ -599,10 +709,16 @@ class WikipelagoWorld(World):
             "trap_count": int(self.options.trap_count.value),
             "trap_type": int(self.options.trap_type.value),
             "trap_link": bool(self.options.trap_link.value),
-            "location_ids": {
-                "rounds": round_location_ids,
-                "grand_goal": self.location_name_to_id["Grand Goal"],
-            },
+            "bingo_letterpairs": bingo_enabled,
+            "bingo_letterpairs_grid": bingo_grid if bingo_enabled else 0,
+            "bingo_letterpairs_boards": bingo_boards if bingo_enabled else [],
+            "bingo_cards_start": bingo_cards_start if bingo_enabled else 0,
+            "bingo_card_unlocks": bingo_card_unlocks if bingo_enabled else 0,
+            "back_depth_start": back_depth_start,
+            "back_depth_unlocks": back_depth_unlocks,
+            "target_rerolls_start": target_rerolls_start,
+            "target_reroll_unlocks": target_reroll_unlocks,
+            "location_ids": location_ids,
             "item_ids": {name: data.code for name, data in item_table.items()},
         }
 

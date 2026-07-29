@@ -133,3 +133,32 @@ Wikipelago:
 
   # Share traps with other Trap Link players (independent of trap_count).
   trap_link: false
+
+  # --- Letter-pair bingo (on by default) ---
+
+  # Bingo board(s): stamp letter pairs from page titles; row/col/diag/full checks per board.
+  toggle_bingo_letterpairs: true
+
+  # Grid size N (3–26). Default 5 → 13 checks per board. N=26 is the full sorted A–Z×A–Z board.
+  bingo_letterpairs_grid: 5
+
+  # Boards unlocked from the start (0–5). 0 = all boards locked behind Progressive Bingo Card.
+  # Bingo on with start 0 and unlocks 0 is rejected (no boards).
+  bingo_cards_start: 1
+
+  # Progressive Bingo Card items in the pool (0–5). Default 2 → three boards total with start 1.
+  bingo_card_unlocks: 2
+
+  # --- Progressive Back / Reroll ---
+
+  # Starting Back depth per round (0–5). 0 = Back locked until Progressive Back items are found.
+  back_depth_start: 0
+
+  # Progressive Back items in the pool (0–5). Each raises per-round Back depth by 1.
+  back_depth_unlocks: 3
+
+  # Starting target rerolls available each round (0–5).
+  target_rerolls_start: 1
+
+  # Progressive Reroll items in the pool (0–5). Each raises per-round reroll max by 1.
+  target_reroll_unlocks: 2

@@ -13,7 +13,7 @@ ITEM_OFFSET = 1_870_000
 
 item_table: dict[str, WikipelagoItemData] = {
     "Knowledge Fragment": WikipelagoItemData(ITEM_OFFSET + 1, ItemClassification.progression),
-    "Back Button": WikipelagoItemData(ITEM_OFFSET + 2, ItemClassification.useful),
+    "Progressive Back": WikipelagoItemData(ITEM_OFFSET + 2, ItemClassification.useful),
     "Wiki Compass": WikipelagoItemData(ITEM_OFFSET + 3, ItemClassification.useful),
     "Ctrl+F Lens": WikipelagoItemData(ITEM_OFFSET + 4, ItemClassification.useful),
     "Victory": WikipelagoItemData(ITEM_OFFSET + 5, ItemClassification.progression_skip_balancing),
@@ -28,6 +28,8 @@ item_table: dict[str, WikipelagoItemData] = {
     "Navbox Lens": WikipelagoItemData(ITEM_OFFSET + 14, ItemClassification.useful),
     "Hatnote Lens": WikipelagoItemData(ITEM_OFFSET + 15, ItemClassification.useful),
     "Reference Lens": WikipelagoItemData(ITEM_OFFSET + 16, ItemClassification.useful),
+    "Progressive Reroll": WikipelagoItemData(ITEM_OFFSET + 17, ItemClassification.useful),
+    "Progressive Bingo Card": WikipelagoItemData(ITEM_OFFSET + 18, ItemClassification.progression),
     "Foggy Links": WikipelagoItemData(ITEM_OFFSET + 46, ItemClassification.trap),
     "Missing Links": WikipelagoItemData(ITEM_OFFSET + 47, ItemClassification.trap),
 }

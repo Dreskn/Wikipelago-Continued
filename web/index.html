@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260728-1" />
+  <link rel="stylesheet" href="/static/style.css?v=20260729-2" />
 </head>
 <body>
   <div class="layout">
@@ -37,15 +37,23 @@
       </section>
 
       <aside class="side-panel">
-        <div class="card">
+        <div class="card" id="connectionCard">
           <h2>Connection</h2>
-          <label>Server</label>
-          <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
-          <label>Slot</label>
-          <input id="slotInput" type="text" placeholder="WikiTester" />
-          <label>Password</label>
-          <input id="passwordInput" type="password" placeholder="(optional)" />
-          <button id="connectBtn">Connect</button>
+          <div id="connectionForm">
+            <label>Server</label>
+            <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
+            <label>Slot</label>
+            <input id="slotInput" type="text" placeholder="WikiTester" />
+            <label>Password</label>
+            <input id="passwordInput" type="password" placeholder="(optional)" />
+            <button id="connectBtn" type="button">Connect</button>
+          </div>
+          <div id="connectionSummary" class="connection-summary hidden">
+            <p class="connection-summary-line">
+              <strong>Server:</strong> <span id="connectedServerText">-</span>
+            </p>
+            <button id="disconnectBtn" type="button" class="btn-quiet">Disconnect</button>
+          </div>
         </div>
 
         <div class="card">
@@ -82,6 +90,12 @@
           <p><strong>Clicks:</strong> <span id="clicksText">0</span></p>
           <p><strong>Compass:</strong> <span id="compassHint">-</span></p>
           <div id="toast" class="toast hidden"></div>
+        </div>
+
+        <div id="bingoCard" class="card hidden">
+          <h2>Letter Pair Bingo</h2>
+          <div id="bingoBoards" class="bingo-boards" aria-label="Letter pair bingo boards"></div>
+          <p id="bingoMeta" class="muted-meta"></p>
         </div>
 
         <div class="card">
@@ -126,6 +140,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260728-1"></script>
+  <script src="/static/app.js?v=20260729-2"></script>
 </body>
 </html>

@@ -14,16 +14,24 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `25` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `5` | Knowledge Fragments needed before you can finish the Grand Goal. |
+| `required_fragments` | `5` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
 | `progression_balancing` | `50` | Standard Archipelago balancing (0–99). Higher tends to place useful progression a bit earlier. |
 
 Rough pacing tip: if `start_rounds_unlocked` is high relative to `check_count`, the seed feels more open early; if low, you wait more on Round Access.
 
-### Target rerolls (client)
+### Target rerolls
 
-While connected, you can **Reroll** the current round’s target up to **3 times per round** from the web client (including the final round). Alternatives come from leftover articles in the same seed pool (same enabled categories). The Grand Goal article itself cannot be rerolled. Requires a seed generated with a current apworld that includes a `reroll_pool` (rebuild/reinstall if the button stays disabled).
+Per-round target rerolls are YAML-tuned (`target_rerolls_start`, default **1**) and increased by **Progressive Reroll** items (`target_reroll_unlocks`, default **2** → max 3/round when fully upgraded). Reroll the current target from the web client (including the final round). Alternatives come from leftover articles in the same seed pool. The Grand Goal article itself cannot be rerolled.
+
+### Progressive Back
+
+Browser back is limited per round by `back_depth_start` (default **0**) plus **Progressive Back** items (`back_depth_unlocks`, default **3**). When you hit the limit, Back does nothing until the round advances.
+
+### Letter-pair bingo
+
+When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid`. Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles.
 
 Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
 
