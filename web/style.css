@@ -442,21 +442,25 @@ button {
 }
 .rounds-track .seg.overflow,
 .fragments-track .seg.overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   flex-shrink: 0;
   width: max-content;
   min-width: var(--track-chip-min);
-  padding: 0 5px;
+  padding: 0 4px;
   height: 14px;
+  box-sizing: border-box;
   font-size: 0.62rem;
   font-weight: 700;
-  line-height: 14px;
+  line-height: 1;
   text-align: center;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   color: #d7e6f5;
-  overflow: visible;
+  overflow: hidden;
 }
 .rounds-track .seg.overflow.done { color: #062816; }
 .rounds-track .seg.overflow.open { color: #9fb2c7; }
