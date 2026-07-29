@@ -71,6 +71,7 @@ const state = {
   restoringArticle: false,
   bingoStampSyncKey: "",
   bingoRemoteStampCount: 0,
+  bingoUi: null,
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -126,8 +127,10 @@ const el = {
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   bingoCard: document.getElementById("bingoCard"),
+  bingoBody: document.getElementById("bingoBody"),
   bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
+  bingoSectionToggleBtn: document.getElementById("bingoSectionToggleBtn"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -1231,6 +1234,100 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
   return { grid, n, lines: lineMap };
 }
 
+function bingoUiStorageKey(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  if (!server || !slot) return "";
+  return `wikipelago_bingo_ui:${server}:${slot}`;
+}
+
+function defaultBingoUiState() {
+  return { sectionCollapsed: false, boards: {} };
+}
+
+function loadBingoUiState(status) {
+  const key = bingoUiStorageKey(status);
+  if (!key) return defaultBingoUiState();
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return defaultBingoUiState();
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return defaultBingoUiState();
+    const boards = parsed.boards && typeof parsed.boards === "object" ? parsed.boards : {};
+    const normalized = {};
+    for (const [boardKey, entry] of Object.entries(boards)) {
+      if (!entry || typeof entry !== "object") continue;
+      normalized[String(boardKey)] = {
+        collapsed: Boolean(entry.collapsed),
+        autoHidden: Boolean(entry.autoHidden),
+      };
+    }
+    return {
+      sectionCollapsed: Boolean(parsed.sectionCollapsed),
+      boards: normalized,
+    };
+  } catch {
+    return defaultBingoUiState();
+  }
+}
+
+function saveBingoUiState(status, ui) {
+  const key = bingoUiStorageKey(status);
+  if (!key || !ui) return;
+  localStorage.setItem(key, JSON.stringify({
+    sectionCollapsed: Boolean(ui.sectionCollapsed),
+    boards: ui.boards || {},
+  }));
+}
+
+function ensureBingoUiState(status) {
+  if (!state.bingoUi) state.bingoUi = loadBingoUiState(status);
+  return state.bingoUi;
+}
+
+function isBingoBoardFullyComplete(lines) {
+  return Boolean(lines && lines.full);
+}
+
+function setBingoSectionCollapsed(status, collapsed) {
+  const ui = ensureBingoUiState(status);
+  ui.sectionCollapsed = Boolean(collapsed);
+  saveBingoUiState(status, ui);
+}
+
+function setBingoBoardCollapsed(status, boardKey, collapsed) {
+  const ui = ensureBingoUiState(status);
+  const key = String(boardKey);
+  const prev = ui.boards[key] || { collapsed: false, autoHidden: false };
+  ui.boards[key] = { ...prev, collapsed: Boolean(collapsed) };
+  saveBingoUiState(status, ui);
+}
+
+function applyBingoAutoHide(status, boardKey, complete) {
+  const ui = ensureBingoUiState(status);
+  const key = String(boardKey);
+  const prev = ui.boards[key] || { collapsed: false, autoHidden: false };
+  if (complete && !prev.autoHidden) {
+    ui.boards[key] = { collapsed: true, autoHidden: true };
+    saveBingoUiState(status, ui);
+    return true;
+  }
+  return Boolean(prev.collapsed);
+}
+
+function syncBingoSectionToggle(status) {
+  const ui = ensureBingoUiState(status);
+  if (el.bingoBody) el.bingoBody.classList.toggle("collapsed", ui.sectionCollapsed);
+  if (el.bingoSectionToggleBtn) {
+    el.bingoSectionToggleBtn.textContent = ui.sectionCollapsed ? "Show" : "Hide";
+    el.bingoSectionToggleBtn.setAttribute("aria-expanded", ui.sectionCollapsed ? "false" : "true");
+    el.bingoSectionToggleBtn.onclick = () => {
+      setBingoSectionCollapsed(status, !ui.sectionCollapsed);
+      syncBingoSectionToggle(status);
+    };
+  }
+}
+
 function renderBingoHud(status) {
   if (!el.bingoCard || !el.bingoBoards) return;
   const enabled = Boolean(status?.bingo_letterpairs);
@@ -1238,7 +1335,15 @@ function renderBingoHud(status) {
   if (!enabled) {
     el.bingoBoards.innerHTML = "";
     if (el.bingoMeta) el.bingoMeta.textContent = "";
+    state.bingoUi = null;
     return;
+  }
+
+  // Reload UI prefs when slot/server identity changes.
+  const uiKey = bingoUiStorageKey(status);
+  if (!state.bingoUi || state.bingoUi._key !== uiKey) {
+    state.bingoUi = loadBingoUiState(status);
+    state.bingoUi._key = uiKey;
   }
 
   const boards = bingoBoardsFromStatus(status);
@@ -1250,6 +1355,8 @@ function renderBingoHud(status) {
   const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
   const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
 
+  syncBingoSectionToggle(status);
+
   el.bingoBoards.innerHTML = "";
   let totalChecked = 0;
   let totalLines = 0;
@@ -1258,27 +1365,46 @@ function renderBingoHud(status) {
   for (let i = 0; i < unlocked; i += 1) {
     const boardKey = String(i + 1);
     const board = boards[i] || [];
+    const lines = linesMap[boardKey] || {};
+    const complete = isBingoBoardFullyComplete(lines);
+    const collapsed = applyBingoAutoHide(status, boardKey, complete);
+
     const block = document.createElement("div");
-    block.className = "bingo-board-block";
+    block.className = `bingo-board-block${collapsed ? " collapsed" : ""}`;
     block.dataset.board = boardKey;
+
+    const header = document.createElement("div");
+    header.className = "bingo-board-header";
 
     const label = document.createElement("p");
     label.className = "bingo-board-label";
-    label.textContent = `Board ${boardKey}`;
-    block.appendChild(label);
+    label.textContent = complete ? `Board ${boardKey} · complete` : `Board ${boardKey}`;
+    header.appendChild(label);
 
-    const { grid, n, lines } = renderBingoBoardGrid(
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "btn-quiet bingo-board-toggle";
+    toggle.textContent = collapsed ? "Show" : "Hide";
+    toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    toggle.addEventListener("click", () => {
+      setBingoBoardCollapsed(status, boardKey, !collapsed);
+      renderBingoHud(state.status || status);
+    });
+    header.appendChild(toggle);
+    block.appendChild(header);
+
+    const { grid, n, lines: lineMap } = renderBingoBoardGrid(
       board,
       stampedMap[boardKey] || [],
       cellsMap[boardKey] || [],
-      linesMap[boardKey] || {}
+      lines
     );
     block.appendChild(grid);
     el.bingoBoards.appendChild(block);
 
     anySize = Math.max(anySize, n);
-    const lineKeys = Object.keys(lines);
-    totalChecked += lineKeys.filter((key) => Boolean(lines[key])).length;
+    const lineKeys = Object.keys(lineMap);
+    totalChecked += lineKeys.filter((key) => Boolean(lineMap[key])).length;
     totalLines += lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
   }
 
@@ -1544,6 +1670,7 @@ function updateHUD(status) {
     toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
+    state.bingoUi = null;
   }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();

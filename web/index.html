@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260729-4" />
+  <link rel="stylesheet" href="/static/style.css?v=20260729-5" />
 </head>
 <body>
   <div class="layout">
@@ -103,9 +103,14 @@
         </div>
 
         <div id="bingoCard" class="card hidden">
-          <h2>Letter Pair Bingo</h2>
-          <div id="bingoBoards" class="bingo-boards" aria-label="Letter pair bingo boards"></div>
-          <p id="bingoMeta" class="muted-meta"></p>
+          <div class="bingo-card-header">
+            <h2>Letter Pair Bingo</h2>
+            <button type="button" id="bingoSectionToggleBtn" class="btn-quiet" aria-expanded="true">Hide</button>
+          </div>
+          <div id="bingoBody" class="bingo-body">
+            <div id="bingoBoards" class="bingo-boards" aria-label="Letter pair bingo boards"></div>
+            <p id="bingoMeta" class="muted-meta"></p>
+          </div>
         </div>
 
         <div id="lensesCard" class="card hidden">
@@ -139,6 +144,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260729-4"></script>
+  <script src="/static/app.js?v=20260729-5"></script>
 </body>
 </html>

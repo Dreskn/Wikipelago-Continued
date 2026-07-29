@@ -238,16 +238,43 @@ button {
   flex-direction: column;
   gap: 12px;
 }
+.bingo-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.bingo-card-header h2 {
+  margin: 0;
+}
+.bingo-body.collapsed {
+  display: none;
+}
 .bingo-board-block {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+.bingo-board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
 .bingo-board-label {
   margin: 0;
   font-size: 0.78rem;
   font-weight: 700;
   color: var(--muted);
+}
+.bingo-board-toggle {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  padding: 2px 8px;
+}
+.bingo-board-block.collapsed .bingo-grid {
+  display: none;
 }
 .bingo-grid {
   display: grid;
