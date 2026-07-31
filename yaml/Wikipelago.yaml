@@ -91,11 +91,15 @@ Wikipelago:
   # Hide footnotes/references until Reference Lens.
   randomize_references: false
 
+  # Wikipedia language edition for this slot (native titles + page fetches).
+  # Valid: en | fr | de | es | it | pt | nl | sv | pl
+  wikipedia_language: en
+
   # --- Article categories ---
+  # Multi-tag OR: a title is kept if any of its tags intersects an enabled category.
   # Turn categories on/off to shape which articles can appear in rounds.
 
   include_video_games: true
-  include_board_games: true
   include_movies: true
   include_tv_shows: true
   include_anime_manga: true
@@ -108,6 +112,16 @@ Wikipelago:
   include_art_literature: true
   include_mythology_folklore: true
   include_music: true
+  include_politics: true
+  include_famous_people: true
+  include_animals: true
+  include_biology_medicine: true
+  # Catch-all for pages with no other category (off by default — can be large).
+  include_miscellaneous: false
+
+  # When false (default), pages flagged sensitive (porn, terrorism, violent/sexual
+  # crime, illicit drugs) are excluded even if they match an enabled category.
+  include_sensitive_pages: false
 
   # --- Deaths / DeathLink / bombs (off by default = peaceful) ---
 

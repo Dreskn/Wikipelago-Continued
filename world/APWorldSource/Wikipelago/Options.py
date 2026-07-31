@@ -107,13 +107,23 @@ class SearchStartingLetters(Choice):
     default = 0
 
 
+class WikipediaLanguage(Choice):
+    """Wikipedia language edition for article titles and page fetches (one per slot)."""
+    display_name = "Wikipedia Language"
+    option_en = 0
+    option_fr = 1
+    option_de = 2
+    option_es = 3
+    option_it = 4
+    option_pt = 5
+    option_nl = 6
+    option_sv = 7
+    option_pl = 8
+    default = 0
+
+
 class IncludeVideoGames(Toggle):
     display_name = "Include Video Games"
-    default = 1
-
-
-class IncludeBoardGames(Toggle):
-    display_name = "Include Board Games"
     default = 1
 
 
@@ -177,7 +187,44 @@ class IncludeMusic(Toggle):
     default = 1
 
 
+class IncludePolitics(Toggle):
+    display_name = "Include Politics"
+    default = 1
+
+
+class IncludeFamousPeople(Toggle):
+    display_name = "Include Famous People"
+    default = 1
+
+
+class IncludeMiscellaneous(Toggle):
+    """Catch-all pages that matched no other category (or have no Wikidata entity)."""
+    display_name = "Include Miscellaneous"
+    default = 0
+
+
+class IncludeAnimals(Toggle):
+    display_name = "Include Animals"
+    default = 1
+
+
+class IncludeBiologyMedicine(Toggle):
+    display_name = "Include Biology and Medicine"
+    default = 1
+
+
+class IncludeSensitivePages(Toggle):
+    """
+    When off (default), pages flagged sensitive (porn, terrorism, violent/sexual crime,
+    illicit drugs) are excluded even if they match an enabled category.
+    When on, those pages may appear if they also match an enabled category.
+    """
+    display_name = "Include Sensitive Pages"
+    default = 0
+
+
 class GoalArticlePreset(Choice):
+    """Deprecated: prefer random_goal_article. Kept for existing YAMLs."""
     display_name = "Goal Article Preset (used when random goal is off)"
     option_minecraft = 0
     option_the_legend_of_zelda = 1
@@ -332,8 +379,8 @@ class WikipelagoOptions(PerGameCommonOptions):
     randomize_hatnotes: RandomizeHatnotes
     randomize_references: RandomizeReferences
     search_starting_letters: SearchStartingLetters
+    wikipedia_language: WikipediaLanguage
     include_video_games: IncludeVideoGames
-    include_board_games: IncludeBoardGames
     include_movies: IncludeMovies
     include_tv_shows: IncludeTVShows
     include_anime_manga: IncludeAnimeManga
@@ -346,6 +393,12 @@ class WikipelagoOptions(PerGameCommonOptions):
     include_art_literature: IncludeArtLiterature
     include_mythology_folklore: IncludeMythologyFolklore
     include_music: IncludeMusic
+    include_politics: IncludePolitics
+    include_famous_people: IncludeFamousPeople
+    include_miscellaneous: IncludeMiscellaneous
+    include_animals: IncludeAnimals
+    include_biology_medicine: IncludeBiologyMedicine
+    include_sensitive_pages: IncludeSensitivePages
     goal_article_preset: GoalArticlePreset
     deaths: Deaths
     death_link: DeathLink

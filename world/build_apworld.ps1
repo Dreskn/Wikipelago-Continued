@@ -35,6 +35,8 @@ try {
     $names = @($zip.Entries | ForEach-Object { ($_.FullName -replace '\\', '/').TrimStart('/') })
     foreach ($need in @(
         "Wikipelago/__init__.py",
+        "Wikipelago/article_pool.py",
+        "Wikipelago/data/pool_en.json",
         "Wikipelago/letter_pairs.py",
         "Wikipelago/letter_pair_weights.json",
         "archipelago.json"

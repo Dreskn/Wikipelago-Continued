@@ -1,5 +1,14 @@
-const APP_VERSION = "2026.07.28.3";
+const APP_VERSION = "2026.07.31.2";
 console.log("Wikipelago web version", APP_VERSION);
+
+function wikipediaLanguage() {
+  const lang = String(state.status?.wikipedia_language || "en").trim().toLowerCase();
+  return lang || "en";
+}
+
+function wikipediaOrigin() {
+  return `https://${wikipediaLanguage()}.wikipedia.org`;
+}
 
 /** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
 const BLOCKED_WIKI_NAMESPACES = new Set([
@@ -84,6 +93,9 @@ const state = {
   activeMissing: false,
   bombTitles: new Set(),
   handlingDeath: false,
+  /** After slot/language switch, open current_start instead of sticky hash/last_page. */
+  forceResumeStart: false,
+  resumeIdentity: "",
 };
 
 const el = {
@@ -328,15 +340,33 @@ function formatTargetSummary(data) {
 }
 
 async function fetchTargetSummary(title) {
-  const key = normalizeTitle(title);
-  if (!key || key === "..." || key === "goal complete") return "";
+  const norm = normalizeTitle(title);
+  if (!norm || norm === "..." || norm === "goal complete") return "";
+  const lang = wikipediaLanguage();
+  const key = `${lang}:${norm}`;
   if (state.targetSummaryCache.has(key)) return state.targetSummaryCache.get(key);
 
-  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  // Prefer action API (same CORS path as article parse; works for all language wikis).
+  const params = new URLSearchParams({
+    action: "query",
+    format: "json",
+    formatversion: "2",
+    origin: "*",
+    redirects: "1",
+    prop: "extracts|description",
+    exintro: "1",
+    explaintext: "1",
+    titles: title,
+  });
+  const res = await fetch(`${wikipediaOrigin()}/w/api.php?${params}`);
   if (!res.ok) throw new Error(`summary HTTP ${res.status}`);
-  const data = await res.json();
-  const summary = formatTargetSummary(data) || "No short description available.";
+  const payload = await res.json();
+  const page = payload?.query?.pages?.[0];
+  if (!page || page.missing) throw new Error("summary missing");
+  const summary = formatTargetSummary({
+    description: page.description || "",
+    extract: page.extract || "",
+  }) || "No short description available.";
   state.targetSummaryCache.set(key, summary);
   return summary;
 }
@@ -472,7 +502,7 @@ function titlesMatch(a, b) {
 }
 
 async function fetchRandomWikiTitle() {
-  const url = "https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*";
+  const url = `${wikipediaOrigin()}/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`;
   const res = await fetch(url);
   const data = await res.json();
   const title = data?.query?.random?.[0]?.title;
@@ -1473,8 +1503,26 @@ function applySearchHighlights(query) {
   return count;
 }
 
+function progressIdentity() {
+  const server = String(state.status?.ap_server || el.serverInput?.value || "").trim().toLowerCase();
+  const slot = String(state.status?.slot_name || el.slotInput?.value || "").trim().toLowerCase();
+  const lang = wikipediaLanguage();
+  if (server && slot) return `${server}::${slot}::${lang}`;
+  return `session::${state.sessionId || "pending"}::${lang}`;
+}
+
 function storageKey(suffix) {
-  return `wikipelago_${suffix}_${state.sessionId || "pending"}`;
+  return `wikipelago_${suffix}_${progressIdentity()}`;
+}
+
+function clearStickyArticleResume() {
+  state.forceResumeStart = true;
+  state.currentTitle = "";
+  state.baseArticleHtml = "";
+  state.targetSummaryCache.clear();
+  hideTargetTooltip();
+  const path = `${window.location.pathname}${window.location.search}`;
+  history.replaceState({ title: "" }, "", path);
 }
 
 function bingoStampStorageKey(status) {
@@ -1592,6 +1640,10 @@ function loadSavedClicks() {
 }
 
 function preferredResumeTitle() {
+  if (state.forceResumeStart) {
+    state.forceResumeStart = false;
+    return state.status?.current_start || "";
+  }
   const hashTitle = decodeURIComponent((window.location.hash || "").replace(/^#/, "")).trim();
   if (hashTitle) return hashTitle;
   if (state.status?.last_page) return state.status.last_page;
@@ -1600,6 +1652,18 @@ function preferredResumeTitle() {
   if (savedTitle) return savedTitle;
   // Wait for AP round data — never invent a hard-coded default article.
   return "";
+}
+
+function noteResumeIdentityFromStatus(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  const lang = String(status?.wikipedia_language || "en").trim().toLowerCase() || "en";
+  if (!server || !slot) return;
+  const identity = `${server}::${slot}::${lang}`;
+  if (state.resumeIdentity && state.resumeIdentity !== identity) {
+    clearStickyArticleResume();
+  }
+  state.resumeIdentity = identity;
 }
 
 async function api(path, method = "GET", body = null, retryOnInvalidSession = true) {
@@ -1632,6 +1696,7 @@ async function ensureSession() {
 function updateHUD(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
+  noteResumeIdentityFromStatus(status);
   state.status = status;
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
   syncRoundVisitTracking(status);
@@ -2150,10 +2215,24 @@ function rewriteLinks(root) {
 }
 
 async function fetchWikiHtml(title) {
-  const url = `https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text&formatversion=2&format=json&origin=*`;
+  const params = new URLSearchParams({
+    action: "parse",
+    page: title,
+    prop: "text",
+    formatversion: "2",
+    format: "json",
+    origin: "*",
+    redirects: "true",
+  });
+  const url = `${wikipediaOrigin()}/w/api.php?${params}`;
   const res = await fetch(url);
+  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${wikipediaLanguage()})`);
   const data = await res.json();
-  if (!data.parse || !data.parse.text) throw new Error("Article unavailable");
+  if (data?.error) {
+    const info = data.error.info || data.error.code || "Article unavailable";
+    throw new Error(`${info} [${wikipediaLanguage()}]`);
+  }
+  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${wikipediaLanguage()}]`);
   return data.parse.text;
 }
 
@@ -2173,8 +2252,16 @@ async function openArticle(title, options = {}) {
     return;
   }
 
+  let html;
   try {
-    const html = await fetchWikiHtml(title);
+    html = await fetchWikiHtml(title);
+  } catch (err) {
+    const detail = err?.message ? ` (${err.message})` : "";
+    toast(`Could not open article: ${title}${detail}`, "warn");
+    return;
+  }
+
+  try {
     state.currentTitle = title;
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
@@ -2235,8 +2322,9 @@ async function openArticle(title, options = {}) {
       toastBingoCompletions(result.bingo_completed);
     }
     if (result.status) updateHUD(result.status);
-  } catch {
-    toast(`Could not open article: ${title}`, "warn");
+  } catch (err) {
+    // Page is already visible; do not pretend the Wikipedia fetch failed.
+    toast(err?.message || "Connected page sync failed", "warn");
   }
 }
 
@@ -2317,6 +2405,7 @@ el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
     const slotName = el.slotInput.value.trim();
+    const prevIdentity = state.resumeIdentity;
     saveConnection(server, slotName);
     clearStickyConnectionError();
     await ensureSession();
@@ -2331,6 +2420,11 @@ el.connectBtn.addEventListener("click", async () => {
       toastSticky(state.status?.last_error || "Could not connect to Archipelago", "warn");
       return;
     }
+    const nextIdentity = progressIdentity();
+    if (prevIdentity && prevIdentity !== nextIdentity) {
+      clearStickyArticleResume();
+    }
+    state.resumeIdentity = nextIdentity;
     await restoreArticleView(true);
   } catch (err) {
     toastSticky(err.message || "Connect failed", "warn");

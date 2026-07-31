@@ -1,0 +1,98 @@
+{
+  "elapsed_s": 10659.76,
+  "api_calls": 23182,
+  "qid_cache_size": 43925,
+  "sample_n": 0,
+  "languages": [
+    {
+      "lang": "en",
+      "annotated_count": 9630,
+      "no_qid": 19,
+      "miscellaneous_only": 1126,
+      "sensitive_flagged": 243,
+      "sitelink_cache_hits": 0,
+      "new_qids_classified": 9367,
+      "api_calls_delta": 9549
+    },
+    {
+      "lang": "de",
+      "annotated_count": 8790,
+      "no_qid": 105,
+      "miscellaneous_only": 1309,
+      "sensitive_flagged": 155,
+      "sitelink_cache_hits": 2901,
+      "new_qids_classified": 5626,
+      "api_calls_delta": 4417
+    },
+    {
+      "lang": "es",
+      "annotated_count": 7431,
+      "no_qid": 33,
+      "miscellaneous_only": 1449,
+      "sensitive_flagged": 135,
+      "sitelink_cache_hits": 3020,
+      "new_qids_classified": 4060,
+      "api_calls_delta": 1935
+    },
+    {
+      "lang": "fr",
+      "annotated_count": 8059,
+      "no_qid": 42,
+      "miscellaneous_only": 932,
+      "sensitive_flagged": 124,
+      "sitelink_cache_hits": 3586,
+      "new_qids_classified": 4150,
+      "api_calls_delta": 1400
+    },
+    {
+      "lang": "it",
+      "annotated_count": 8481,
+      "no_qid": 101,
+      "miscellaneous_only": 920,
+      "sensitive_flagged": 136,
+      "sitelink_cache_hits": 3767,
+      "new_qids_classified": 4333,
+      "api_calls_delta": 1104
+    },
+    {
+      "lang": "nl",
+      "annotated_count": 7887,
+      "no_qid": 58,
+      "miscellaneous_only": 1225,
+      "sensitive_flagged": 117,
+      "sitelink_cache_hits": 3297,
+      "new_qids_classified": 4353,
+      "api_calls_delta": 1436
+    },
+    {
+      "lang": "pl",
+      "annotated_count": 7050,
+      "no_qid": 45,
+      "miscellaneous_only": 1463,
+      "sensitive_flagged": 81,
+      "sitelink_cache_hits": 2865,
+      "new_qids_classified": 3930,
+      "api_calls_delta": 1306
+    },
+    {
+      "lang": "pt",
+      "annotated_count": 7338,
+      "no_qid": 134,
+      "miscellaneous_only": 1390,
+      "sensitive_flagged": 108,
+      "sitelink_cache_hits": 3283,
+      "new_qids_classified": 3553,
+      "api_calls_delta": 915
+    },
+    {
+      "lang": "sv",
+      "annotated_count": 7338,
+      "no_qid": 17,
+      "miscellaneous_only": 1059,
+      "sensitive_flagged": 111,
+      "sitelink_cache_hits": 2603,
+      "new_qids_classified": 4553,
+      "api_calls_delta": 1120
+    }
+  ]
+}

@@ -1,9 +1,11 @@
-﻿{
-  "name": "Wikipelago",
+{
+  "game": "Wikipelago",
   "display_name": "Wikipelago Continued",
-  "author": "Dreskn (continued) / original by Skrumptily69",
-  "version": "0.5.0-Bingo!",
+  "authors": ["Dreskn (continued)", "Skrumptily69 (original)"],
+  "world_version": "0.6.0",
+  "minimum_ap_version": "0.6.0",
+  "version": 6,
   "compatible_version": 6,
-  "description": "Navigate Wikipedia start-to-target rounds in Archipelago. Continued fork of the original Wikipelago world.",
+  "description": "Navigate Wikipedia start-to-target rounds in Archipelago. Continued fork of the original Wikipelago world. Working title 0.6.0-ZaWarudo.",
   "homepage": "https://github.com/Dreskn/Wikipelago-Continued"
 }

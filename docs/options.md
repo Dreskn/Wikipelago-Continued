@@ -81,14 +81,19 @@ When **true**, that part stays hidden until you receive the matching **Lens** it
 
 ---
 
+## Wikipedia language
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `wikipedia_language` | `en` | One of `en`, `fr`, `de`, `es`, `it`, `pt`, `nl`, `sv`, `pl`. Native titles for that wiki; bridge/web fetch `{lang}.wikipedia.org`. |
+
 ## Article categories
 
-Each `include_*` toggle shapes which articles can appear in rounds and (when random) the Grand Goal pool.
+Each `include_*` toggle shapes which articles can appear in rounds and (when random) the Grand Goal pool. Titles are **multi-tag**: kept if **any** tag intersects an enabled category (**OR**).
 
 | Option | Default |
 | --- | --- |
 | `include_video_games` | `true` |
-| `include_board_games` | `true` |
 | `include_movies` | `true` |
 | `include_tv_shows` | `true` |
 | `include_anime_manga` | `true` |
@@ -101,8 +106,19 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `include_art_literature` | `true` |
 | `include_mythology_folklore` | `true` |
 | `include_music` | `true` |
+| `include_politics` | `true` |
+| `include_famous_people` | `true` |
+| `include_animals` | `true` |
+| `include_biology_medicine` | `true` |
+| `include_miscellaneous` | `false` |
 
-Turn categories off to shrink or theme the pool (for example movies + TV only). Leave at least one category enabled.
+`board_games` was removed in 0.6. Leave at least one category enabled.
+
+## Sensitive pages
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `include_sensitive_pages` | `false` | Not a category. When off, pages flagged sensitive (porn, terrorism, violent/sexual crime, illicit drugs) are excluded even if they match an enabled category. When on, they may appear if they also match an enabled category. |
 
 ---
 

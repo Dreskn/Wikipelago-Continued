@@ -118,8 +118,8 @@ function New-WikipelagoSettings {
             randomize_navboxes = Get-RandomBool
             randomize_hatnotes = Get-RandomBool
             randomize_references = Get-RandomBool
+            wikipedia_language = Get-Random -InputObject @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
             include_video_games = Get-RandomBool
-            include_board_games = Get-RandomBool
             include_movies = Get-RandomBool
             include_tv_shows = Get-RandomBool
             include_anime_manga = Get-RandomBool
@@ -131,6 +131,13 @@ function New-WikipelagoSettings {
             include_food_cuisine = Get-RandomBool
             include_art_literature = Get-RandomBool
             include_mythology_folklore = Get-RandomBool
+            include_music = Get-RandomBool
+            include_politics = Get-RandomBool
+            include_famous_people = Get-RandomBool
+            include_animals = Get-RandomBool
+            include_biology_medicine = Get-RandomBool
+            include_miscellaneous = Get-RandomBool
+            include_sensitive_pages = Get-RandomBool
         }
 
         if (-not ($settings.GetEnumerator() | Where-Object { $_.Key -like 'include_*' -and $_.Value }).Count) {
@@ -168,8 +175,8 @@ Wikipelago:
   randomize_navboxes: $([string]$Settings.randomize_navboxes).ToLower()
   randomize_hatnotes: $([string]$Settings.randomize_hatnotes).ToLower()
   randomize_references: $([string]$Settings.randomize_references).ToLower()
+  wikipedia_language: $($Settings.wikipedia_language)
   include_video_games: $([string]$Settings.include_video_games).ToLower()
-  include_board_games: $([string]$Settings.include_board_games).ToLower()
   include_movies: $([string]$Settings.include_movies).ToLower()
   include_tv_shows: $([string]$Settings.include_tv_shows).ToLower()
   include_anime_manga: $([string]$Settings.include_anime_manga).ToLower()
@@ -181,6 +188,13 @@ Wikipelago:
   include_food_cuisine: $([string]$Settings.include_food_cuisine).ToLower()
   include_art_literature: $([string]$Settings.include_art_literature).ToLower()
   include_mythology_folklore: $([string]$Settings.include_mythology_folklore).ToLower()
+  include_music: $([string]$Settings.include_music).ToLower()
+  include_politics: $([string]$Settings.include_politics).ToLower()
+  include_famous_people: $([string]$Settings.include_famous_people).ToLower()
+  include_animals: $([string]$Settings.include_animals).ToLower()
+  include_biology_medicine: $([string]$Settings.include_biology_medicine).ToLower()
+  include_miscellaneous: $([string]$Settings.include_miscellaneous).ToLower()
+  include_sensitive_pages: $([string]$Settings.include_sensitive_pages).ToLower()
 "@
 }
 

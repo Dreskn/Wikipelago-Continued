@@ -183,6 +183,7 @@ class SessionState:
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     goal_article_title: str = ""
+    wikipedia_language: str = "en"
     reroll_pool: list[str] = field(default_factory=list)
     target_rerolls_start: int = TARGET_REROLLS_PER_ROUND
     target_rerolls_used: int = 0
@@ -382,6 +383,7 @@ class SessionState:
             "current_start": self.current_start(),
             "current_target": self.current_target(),
             "goal_article": self.goal_article(),
+            "wikipedia_language": self.wikipedia_language or "en",
             "round": min(self.round_index + 1, self.check_count),
             "rounds_completed": min(self.round_index, self.check_count),
             "check_count": self.check_count,
@@ -466,6 +468,12 @@ class APConnection:
         self._datapackage_requested = False
 
     async def connect(self, server: str, slot_name: str, password: str = "") -> None:
+        prev_server = (self.server or "").strip().lower()
+        prev_slot = (self.slot_name or "").strip().lower()
+        next_server = (server or "").strip().lower()
+        next_slot = (slot_name or "").strip().lower()
+        slot_changed = prev_server != next_server or prev_slot != next_slot
+
         self.server = server
         self.slot_name = slot_name
         self.password = password
@@ -501,6 +509,14 @@ class APConnection:
         self.state.player_names.clear()
         self.state.slot_games.clear()
         self.state.item_id_to_name.clear()
+        # Switching slots/languages must not resume the previous wiki page.
+        if slot_changed:
+            self.state.last_page = ""
+            self.state.clicks_used = 0
+            self.state.wikipedia_language = "en"
+            self.state.round_pairs = []
+            self.state.goal_article_title = ""
+            self.state.reroll_pool = []
         self.items_seen = 0
         self.link_cache.clear()
         self.resolved_title_cache.clear()
@@ -718,6 +734,12 @@ class APConnection:
             # Legacy seeds: last round target was the Grand Goal.
             self.state.goal_article_title = self.state.round_pairs[-1]["target"]
 
+        wiki_lang = slot_data.get("wikipedia_language", "en")
+        if isinstance(wiki_lang, str) and wiki_lang.strip():
+            self.state.wikipedia_language = wiki_lang.strip().lower()
+        else:
+            self.state.wikipedia_language = "en"
+
         reroll_pool = slot_data.get("reroll_pool")
         if isinstance(reroll_pool, list):
             self.state.reroll_pool = [
@@ -872,6 +894,7 @@ class APConnection:
 
         self._rebuild_bingo_stamps_from_checked()
 
+        # Fresh connect to this slot: resume only within-slot last_page, else round start.
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
 
@@ -1417,7 +1440,7 @@ class APConnection:
             if plcontinue:
                 params["plcontinue"] = plcontinue
 
-            url = "https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode(params)
+            url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
             req = urllib.request.Request(
                 url,
                 headers={
@@ -1442,6 +1465,10 @@ class APConnection:
 
         self.link_cache[norm] = links
         return links
+
+    def _wikipedia_api_root(self) -> str:
+        lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        return f"https://{lang}.wikipedia.org"
 
     async def _estimate_click_distance(self, page_title: str, target_title: str) -> int | None:
         page_norm = normalize_title(page_title)
@@ -1469,7 +1496,7 @@ class APConnection:
             "redirects": "1",
             "format": "json",
         }
-        url = "https://en.wikipedia.org/w/api.php?" + urllib.parse.urlencode(params)
+        url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
         req = urllib.request.Request(
             url,
             headers={

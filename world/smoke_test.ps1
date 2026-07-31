@@ -128,16 +128,21 @@ try {
     $initPath = Join-Path $worldRoot "__init__.py"
     $optionsPath = Join-Path $worldRoot "Options.py"
     $itemsPath = Join-Path $worldRoot "Items.py"
-    $entertainmentPath = Join-Path $worldRoot "entertainment_articles.py"
+    $articlePoolPath = Join-Path $worldRoot "article_pool.py"
+    $poolEnPath = Join-Path $worldRoot "data\pool_en.json"
 
     Assert-NoPattern $initPath '`r`n' 'Literal backtick newline text regression found in __init__.py'
     Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
-    Assert-NoPattern $entertainmentPath '\bPokemon\b' 'Plain Pokemon title found in entertainment article pool'
-    Assert-NoPattern $entertainmentPath 'La La Land \(film\)' 'Old La La Land redirect title still present'
-    Assert-NoPattern $entertainmentPath '\(''Her \(film\)''' 'Old Her redirect title still present'
-    Assert-NoPattern $entertainmentPath 'Clue \(board game\)' 'Old Clue redirect title still present'
-    Assert-HasPattern $entertainmentPath 'ENTERTAINMENT_ARTICLE_POOL: list\[tuple\[str, str\]\]' 'Tagged (title, category) pool type annotation missing'
+    Assert-NoPattern $optionsPath 'include_board_games' 'board_games category should be removed in 0.6'
+    Assert-HasPattern $articlePoolPath 'def load_article_pool' 'article_pool.load_article_pool missing'
+    if (-not (Test-Path -LiteralPath $poolEnPath)) {
+        throw "EN multi-tag pool data/pool_en.json missing [$poolEnPath]"
+    }
+    Assert-HasPattern $optionsPath 'class WikipediaLanguage' 'WikipediaLanguage option is missing'
+    Assert-HasPattern $optionsPath 'class IncludeSensitivePages' 'IncludeSensitivePages option is missing'
+    Assert-HasPattern $optionsPath 'class IncludeFamousPeople' 'IncludeFamousPeople option is missing'
     Assert-HasPattern $initPath 'first_start = picks\[0\]' 'Random first-round start selection is missing'
+    Assert-HasPattern $initPath '_entry_matches' 'Multi-tag pool filter helper is missing'
     Assert-HasPattern $optionsPath 'class Searchsanity' 'Searchsanity option is missing'
     Assert-HasPattern $optionsPath 'class Scrollsanity' 'Scrollsanity option is missing'
     Assert-HasPattern $optionsPath 'class SearchStartingLetters' 'Search Starting Letters option is missing'
