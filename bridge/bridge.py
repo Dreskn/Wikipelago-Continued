@@ -1015,7 +1015,10 @@ class APConnection:
     @staticmethod
     def _to_ws_url(server: str) -> str:
         cleaned = server.replace("ws://", "").replace("wss://", "").replace("http://", "").replace("https://", "").strip("/")
-        scheme = "wss" if cleaned.startswith("archipelago.gg") else "ws"
+        host = cleaned.split("/", 1)[0].split(":", 1)[0].lower()
+        # Plain ws only for local/dev hosts; public rooms need wss from an HTTPS web client.
+        local_hosts = {"localhost", "127.0.0.1", "::1"}
+        scheme = "ws" if host in local_hosts else "wss"
         return f"{scheme}://{cleaned}"
 
     def _item_id_to_name(self, item_id: int) -> str | None:
