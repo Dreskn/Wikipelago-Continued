@@ -14,10 +14,19 @@ class CheckCount(Range):
 
 
 class RequiredFragments(Range):
+    """Knowledge Fragments needed to reveal and clear the Grand Goal."""
     display_name = "Required Fragments"
     range_start = 1
     range_end = 793
-    default = 5
+    default = 7
+
+
+class AdditionalFragmentsInPool(Range):
+    """Extra Knowledge Fragments placed in the item pool beyond required_fragments (goal still needs only the required count)."""
+    display_name = "Additional Fragments In Pool"
+    range_start = 0
+    range_end = 793
+    default = 2
 
 
 class StartRoundsUnlocked(Range):
@@ -365,6 +374,7 @@ class TargetRerollUnlocks(Range):
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
     required_fragments: RequiredFragments
+    additional_fragments_in_pool: AdditionalFragmentsInPool
     start_rounds_unlocked: StartRoundsUnlocked
     rounds_per_unlock: RoundsPerUnlock
     random_goal_article: RandomGoalArticle

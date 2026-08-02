@@ -16,6 +16,10 @@ Wikipelago:
   # Knowledge Fragments required to open/finish the Grand Goal.
   required_fragments: 7
 
+  # Extra Knowledge Fragments placed in the pool beyond required_fragments.
+  # The Grand Goal still only needs required_fragments; extras are surplus.
+  additional_fragments_in_pool: 2
+
   # How many rounds are playable immediately at the start of the seed.
   start_rounds_unlocked: 10
 

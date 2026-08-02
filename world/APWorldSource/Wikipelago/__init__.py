@@ -522,6 +522,8 @@ class WikipelagoWorld(World):
         bingo_count = self._bingo_check_count()
         free_locations = round_count + bingo_count
         required_fragments = min(self.options.required_fragments.value, round_count)
+        additional_fragments = max(0, int(self.options.additional_fragments_in_pool.value))
+        fragment_pool_count = required_fragments + additional_fragments
         start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
         per_unlock = max(1, self.options.rounds_per_unlock.value)
         early_open = start_unlocked
@@ -535,7 +537,7 @@ class WikipelagoWorld(World):
         bingo_card_unlocks = self._bingo_card_unlocks()
 
         mandatory_items = (
-            required_fragments
+            fragment_pool_count
             + 2  # Wiki Compass + Ctrl+F Lens
             + back_unlocks
             + reroll_unlocks
@@ -551,12 +553,13 @@ class WikipelagoWorld(World):
                 "Wikipelago item math invalid: required progression items exceed free locations. "
                 f"mandatory={mandatory_items}, free_locations={free_locations} "
                 f"(rounds={round_count}, bingo={bingo_count}). "
-                "Lower required_fragments, trap_count, unlock counts, reduce sanity/display unlock load, "
-                "or lower round access pressure (increase start_rounds_unlocked / rounds_per_unlock)."
+                "Lower required_fragments, additional_fragments_in_pool, trap_count, unlock counts, "
+                "reduce sanity/display unlock load, or lower round access pressure "
+                "(increase start_rounds_unlocked / rounds_per_unlock)."
             )
 
         pool: list[WikipelagoItem] = []
-        for _ in range(required_fragments):
+        for _ in range(fragment_pool_count):
             pool.append(self.create_item("Knowledge Fragment"))
         for _ in range(back_unlocks):
             pool.append(self.create_item("Progressive Back"))
