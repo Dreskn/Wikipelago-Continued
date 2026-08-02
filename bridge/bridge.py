@@ -185,9 +185,51 @@ TITLE_ALIASES: dict[str, set[str]] = {
     normalize_title("Clue (board game)"): {normalize_title("Cluedo")},
 }
 
+PRACTICE_POOL_DIR = (
+    Path(__file__).resolve().parent.parent / "world" / "APWorldSource" / "Wikipelago" / "data"
+)
+PRACTICE_SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
+_PRACTICE_POOL_CACHE: dict[str, list[str]] = {}
+
+
+def load_practice_titles(lang: str = "en", *, include_sensitive: bool = False) -> list[str]:
+    """Titles from repo pool_*.json (same pools as the apworld)."""
+    code = (lang or "en").strip().lower()
+    if code not in PRACTICE_SUPPORTED_LANGS:
+        raise ValueError(
+            f"Unsupported wikipedia_language '{lang}'. "
+            f"Supported: {', '.join(PRACTICE_SUPPORTED_LANGS)}"
+        )
+    cache_key = f"{code}:{'all' if include_sensitive else 'safe'}"
+    cached = _PRACTICE_POOL_CACHE.get(cache_key)
+    if cached is not None:
+        return list(cached)
+
+    path = PRACTICE_POOL_DIR / f"pool_{code}.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing practice article pool: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    titles: list[str] = []
+    for entry in payload.get("entries") or []:
+        title = str(entry.get("title") or "").strip()
+        if not title:
+            continue
+        if not include_sensitive and bool(entry.get("sensitive")):
+            continue
+        titles.append(title)
+    # Preserve order, drop dupes.
+    titles = list(dict.fromkeys(titles))
+    if len(titles) < 3:
+        raise RuntimeError(f"Practice pool for '{code}' is too small ({len(titles)} titles).")
+    _PRACTICE_POOL_CACHE[cache_key] = titles
+    return list(titles)
+
+
 @dataclass
 class SessionState:
     connected_to_ap: bool = False
+    practice: bool = False
+    practice_pool_titles: list[str] = field(default_factory=list)
     ap_server: str = ""
     slot_name: str = ""
     check_count: int = 10
@@ -286,6 +328,10 @@ class SessionState:
         item_id = self.item_ids.get(name, DEFAULT_ITEMS.get(name, -1))
         return sum(1 for item in self.received_items if item == item_id)
 
+    def is_playable(self) -> bool:
+        """Archipelago connected, or local Practice mode."""
+        return self.connected_to_ap or self.practice
+
     def owned_search_letters(self) -> list[str]:
         letters = set(self.search_starting_letters)
         for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
@@ -294,6 +340,8 @@ class SessionState:
         return sorted(letters)
 
     def boss_ready(self) -> bool:
+        if self.practice:
+            return False
         return self.fragments() >= self.required_fragments
 
     def unlocked_rounds(self) -> int:
@@ -326,7 +374,7 @@ class SessionState:
 
     def can_go_back(self) -> bool:
         self.sync_back_counter()
-        if not self.connected_to_ap:
+        if not self.is_playable():
             return False
         return self.backs_remaining() > 0
 
@@ -344,11 +392,11 @@ class SessionState:
 
     def can_reroll_target(self) -> bool:
         self.sync_target_reroll_counter()
-        if not self.connected_to_ap or self.boss_completed:
+        if not self.is_playable() or self.boss_completed:
             return False
         # Reroll is available for every normal round, including the final one.
         # Boss hunt (past all rounds) cannot reroll the Grand Goal.
-        if self.round_index >= self.check_count:
+        if not self.practice and self.round_index >= self.check_count:
             return False
         if self.target_rerolls_remaining() <= 0:
             return False
@@ -419,6 +467,7 @@ class SessionState:
         }
         return {
             "connected_to_ap": self.connected_to_ap,
+            "practice": self.practice,
             "ap_server": self.ap_server,
             "slot_name": self.slot_name,
             "current_start": self.current_start(),
@@ -508,12 +557,104 @@ class APConnection:
         self._scout_waiters: dict[int, asyncio.Future] = {}
         self._datapackage_requested = False
 
+    def _clear_practice_state(self) -> None:
+        self.state.practice = False
+        self.state.practice_pool_titles = []
+
+    def _roll_practice_race(self) -> None:
+        titles = list(self.state.practice_pool_titles)
+        if len(titles) < 3:
+            raise RuntimeError("Practice pool is too small to start a race.")
+        start, target = random.sample(titles, 2)
+        rest = [title for title in titles if title not in (start, target)]
+        random.shuffle(rest)
+        self.state.round_pairs = [{"start": start, "target": target}]
+        self.state.round_index = 0
+        self.state.check_count = 1
+        self.state.reroll_pool = rest
+        self.state.goal_article_title = ""
+        self.state.clicks_used = 0
+        self.state.backs_used = 0
+        self.state.backs_round = 0
+        self.state.target_rerolls_used = 0
+        self.state.target_rerolls_round = 0
+        self.state.last_page = start
+        self.state.warmer_colder = None
+        self.state.last_distance_estimate = None
+        self.state.boss_completed = False
+        self.state.goal_status_sent = False
+
+    async def start_practice(self, wikipedia_language: str = "en") -> dict[str, Any]:
+        """Begin unlimited local Practice (no Archipelago). Exits any AP connection."""
+        # Drop AP without treating this as "exit practice" (we are entering it).
+        await self.disconnect(leave_practice=False)
+        lang = (wikipedia_language or "en").strip().lower() or "en"
+        titles = load_practice_titles(lang, include_sensitive=False)
+
+        self.state.practice = True
+        self.state.practice_pool_titles = titles
+        self.state.connected_to_ap = False
+        self.state.ap_server = ""
+        self.state.slot_name = ""
+        self.state.last_error = ""
+        self.state.wikipedia_language = lang
+        self.state.required_fragments = 999
+        self.state.start_rounds_unlocked = 1
+        self.state.rounds_per_unlock = 1
+        self.state.searchsanity = False
+        self.state.scrollsanity = False
+        self.state.search_starting_letters = []
+        self.state.randomize_tables = False
+        self.state.randomize_pictures = False
+        self.state.randomize_incipit = False
+        self.state.randomize_infoboxes = False
+        self.state.randomize_toc = False
+        self.state.randomize_navboxes = False
+        self.state.randomize_hatnotes = False
+        self.state.randomize_references = False
+        self.state.deaths = False
+        self.state.death_link = False
+        self.state.link_bombs = False
+        self.state.link_bomb_density = 0
+        self.state.trap_count = 0
+        self.state.trap_link = False
+        self.state.bingo_letterpairs = False
+        self.state.bingo_letterpairs_grid = 0
+        self.state.bingo_letterpairs_boards = []
+        self.state.bingo_cards_start = 0
+        self.state.bingo_card_unlocks = 0
+        self.state.bingo_letterpairs_location_ids = {}
+        self.state.bingo_stamped_pairs.clear()
+        self.state.bingo_storage_ready = False
+        self.state.location_round_ids = []
+        self.state.location_grand_goal = None
+        self.state.checked_locations.clear()
+        self.state.pending_events.clear()
+        self.state.back_depth_start = 3
+        self.state.target_rerolls_start = 3
+        self.state.received_items = [
+            DEFAULT_ITEMS["Wiki Compass"],
+            DEFAULT_ITEMS["Ctrl+F Lens"],
+        ]
+        self._roll_practice_race()
+        LOG.info(
+            "Practice started lang=%s pool=%s start=%s target=%s",
+            lang,
+            len(titles),
+            self.state.current_start(),
+            self.state.current_target(),
+        )
+        return {"ok": True, "status": self.state.to_status()}
+
     async def connect(self, server: str, slot_name: str, password: str = "") -> None:
         prev_server = (self.server or "").strip().lower()
         prev_slot = (self.slot_name or "").strip().lower()
         next_server = (server or "").strip().lower()
         next_slot = (slot_name or "").strip().lower()
         slot_changed = prev_server != next_server or prev_slot != next_slot
+
+        # Connect always leaves Practice.
+        self._clear_practice_state()
 
         self.server = server
         self.slot_name = slot_name
@@ -576,10 +717,24 @@ class APConnection:
 
         self.reader_task = asyncio.create_task(self._connection_loop())
 
-    async def disconnect(self) -> None:
-        """Force-close the Archipelago websocket so the player can reconnect (e.g. another device)."""
+    async def disconnect(self, *, leave_practice: bool = True) -> None:
+        """Leave Archipelago and optionally Practice so the player can reconnect or idle."""
+        was_practice = self.state.practice if leave_practice else False
+        if leave_practice:
+            self._clear_practice_state()
         self.state.connected_to_ap = False
         self.state.last_error = ""
+        if was_practice:
+            self.state.round_pairs = []
+            self.state.reroll_pool = []
+            self.state.goal_article_title = ""
+            self.state.received_items.clear()
+            self.state.back_depth_start = 0
+            self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
+            self.state.clicks_used = 0
+            self.state.last_page = ""
+            self.state.warmer_colder = None
+            self.state.last_distance_estimate = None
         if self.reader_task and not self.reader_task.done():
             self.reader_task.cancel()
             try:
@@ -1627,8 +1782,8 @@ class APConnection:
     async def on_page_check(self, page_title: str, clicks_used: int) -> dict[str, Any]:
         self.state.last_seen = time.time()
 
-        # Refuse gameplay checks while offline so rounds cannot advance without AP.
-        if not self.state.connected_to_ap:
+        # Refuse gameplay checks while offline so rounds cannot advance without AP/Practice.
+        if not self.state.is_playable():
             return {
                 "matched": False,
                 "target": self.state.current_target(),
@@ -1656,6 +1811,15 @@ class APConnection:
             "locked": False,
             "boss_completed": self.state.boss_completed,
         }
+
+        if self.state.practice:
+            if matched:
+                self._roll_practice_race()
+                result["advanced"] = True
+                result["practice_rolled"] = True
+            result["status"] = self.state.to_status()
+            result["next_target"] = self.state.current_target()
+            return result
 
         if matched and self.state.round_index < self.state.check_count and self.state.location_round_ids:
             round_number = self.state.round_index + 1
@@ -1685,11 +1849,11 @@ class APConnection:
         self.state.last_seen = time.time()
         self.state.sync_target_reroll_counter()
 
-        if not self.state.connected_to_ap:
+        if not self.state.is_playable():
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
-        if self.state.round_index >= self.state.check_count:
+        if not self.state.practice and self.state.round_index >= self.state.check_count:
             return {
                 "ok": False,
                 "error": "cannot reroll the Grand Goal",
@@ -1769,7 +1933,7 @@ class APConnection:
         self.state.last_seen = time.time()
         self.state.sync_back_counter()
 
-        if not self.state.connected_to_ap:
+        if not self.state.is_playable():
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if not self.state.can_go_back():
             return {
@@ -2167,6 +2331,24 @@ class App:
         await session.conn.connect(server, slot_name, password)
         return web.json_response({"ok": True})
 
+    async def practice_session(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        lang = str(data.get("wikipedia_language") or "en").strip() or "en"
+        try:
+            result = await session.conn.start_practice(lang)
+        except (ValueError, FileNotFoundError, RuntimeError) as exc:
+            return web.json_response({"ok": False, "error": str(exc)}, status=400)
+        return web.json_response(result)
+
     async def disconnect_session(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -2306,6 +2488,7 @@ class App:
         app.router.add_get("/health", self.health)
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
+        app.router.add_post("/api/session/{sid}/practice", self.practice_session)
         app.router.add_post("/api/session/{sid}/disconnect", self.disconnect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/death", self.session_death)

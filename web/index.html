@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260731-2" />
+  <link rel="stylesheet" href="/static/style.css?v=20260803-1" />
 </head>
 <body>
   <div class="layout">
@@ -46,22 +46,27 @@
             <input id="slotInput" type="text" placeholder="WikiTester" />
             <label>Password</label>
             <input id="passwordInput" type="password" placeholder="(optional)" />
-            <button id="connectBtn" type="button">Connect</button>
+            <div class="connection-actions">
+              <button id="connectBtn" type="button">Connect</button>
+              <button id="practiceBtn" type="button" class="btn-quiet">Practice</button>
+            </div>
           </div>
           <div id="connectionSummary" class="connection-summary hidden">
             <p class="connection-summary-line">
-              <strong>Server:</strong> <span id="connectedServerText">-</span>
+              <strong id="connectionSummaryLabel">Server:</strong> <span id="connectedServerText">-</span>
             </p>
             <button id="disconnectBtn" type="button" class="btn-quiet">Disconnect</button>
           </div>
         </div>
 
         <div class="card">
-          <div class="run-label-row">
-            <strong>Rounds</strong>
-            <span id="roundText" class="muted-meta">-</span>
+          <div id="roundsBlock">
+            <div class="run-label-row">
+              <strong>Rounds</strong>
+              <span id="roundText" class="muted-meta">-</span>
+            </div>
+            <div id="roundsTrack" class="rounds-track" aria-label="Round progress"></div>
           </div>
-          <div id="roundsTrack" class="rounds-track" aria-label="Round progress"></div>
 
           <p class="target-row">
             <strong>Target:</strong>
@@ -139,6 +144,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260731-2"></script>
+  <script src="/static/app.js?v=20260803-1"></script>
 </body>
 </html>

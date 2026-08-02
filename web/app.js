@@ -112,10 +112,13 @@ const el = {
   slotInput: document.getElementById("slotInput"),
   passwordInput: document.getElementById("passwordInput"),
   connectBtn: document.getElementById("connectBtn"),
+  practiceBtn: document.getElementById("practiceBtn"),
   disconnectBtn: document.getElementById("disconnectBtn"),
   connectionForm: document.getElementById("connectionForm"),
   connectionSummary: document.getElementById("connectionSummary"),
+  connectionSummaryLabel: document.getElementById("connectionSummaryLabel"),
   connectedServerText: document.getElementById("connectedServerText"),
+  roundsBlock: document.getElementById("roundsBlock"),
   roundText: document.getElementById("roundText"),
   roundsTrack: document.getElementById("roundsTrack"),
   targetText: document.getElementById("targetText"),
@@ -291,21 +294,43 @@ function isApConnected() {
   return state.status?.connected_to_ap === true;
 }
 
+function isPracticeMode() {
+  return state.status?.practice === true;
+}
+
+function isPlayable() {
+  return isApConnected() || isPracticeMode();
+}
+
 function updateConnectionPanel(status) {
   const connected = Boolean(status?.connected_to_ap);
-  if (el.connectionForm) el.connectionForm.classList.toggle("hidden", connected);
-  if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !connected);
-  if (el.connectedServerText) {
-    el.connectedServerText.textContent = connected
-      ? (status.ap_server || el.serverInput?.value?.trim() || "—")
-      : "-";
+  const practice = Boolean(status?.practice);
+  const active = connected || practice;
+  if (el.connectionForm) el.connectionForm.classList.toggle("hidden", active);
+  if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !active);
+  if (el.connectionSummaryLabel) {
+    el.connectionSummaryLabel.textContent = practice ? "Mode:" : "Server:";
   }
-  if (el.disconnectBtn) el.disconnectBtn.disabled = !connected;
+  if (el.connectedServerText) {
+    if (practice) el.connectedServerText.textContent = "Practice (no Archipelago)";
+    else if (connected) el.connectedServerText.textContent = status.ap_server || el.serverInput?.value?.trim() || "—";
+    else el.connectedServerText.textContent = "-";
+  }
+  if (el.disconnectBtn) {
+    el.disconnectBtn.disabled = !active;
+    el.disconnectBtn.textContent = practice ? "Exit practice" : "Disconnect";
+  }
 }
 
 function requireApConnection() {
   if (isApConnected()) return true;
   toast("Connect to Archipelago to play", "warn");
+  return false;
+}
+
+function requirePlayable() {
+  if (isPlayable()) return true;
+  toast("Connect to Archipelago or start Practice", "warn");
   return false;
 }
 
@@ -441,9 +466,10 @@ function updateRerollTargetControls(status) {
   if (!el.rerollTargetBtn || !el.rerollTargetMeta) return;
   const max = Number(status?.target_rerolls_max) || 3;
   const remaining = Number(status?.target_rerolls_remaining);
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
   const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
   el.rerollTargetBtn.disabled = !canReroll;
-  if (status?.boss_completed || !status?.connected_to_ap) {
+  if (status?.boss_completed || !playable) {
     el.rerollTargetMeta.textContent = "";
     return;
   }
@@ -455,7 +481,7 @@ function updateRerollTargetControls(status) {
 }
 
 async function rerollCurrentTarget() {
-  if (!requireApConnection() || state.rerollBusy) return;
+  if (!requirePlayable() || state.rerollBusy) return;
   if (!state.status?.can_reroll_target) {
     toast("No target rerolls available right now", "warn", 4500);
     return;
@@ -870,6 +896,13 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
 
 function renderRoundsTrack(status) {
   if (!el.roundsTrack) return;
+  if (status?.practice) {
+    if (el.roundsBlock) el.roundsBlock.classList.add("hidden");
+    el.roundsTrack.innerHTML = "";
+    if (el.roundText) el.roundText.textContent = "";
+    return;
+  }
+  if (el.roundsBlock) el.roundsBlock.classList.remove("hidden");
   const total = Math.max(0, Number(status.check_count) || 0);
   const current = Math.max(1, Number(status.round) || 1);
   const completed = Math.max(0, Number(status.rounds_completed) || 0);
@@ -896,6 +929,13 @@ function renderRoundsTrack(status) {
 
 function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
+  if (status?.practice) {
+    if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
+    if (el.goalRow) el.goalRow.classList.add("hidden");
+    el.fragmentsTrack.innerHTML = "";
+    if (el.fragmentsText) el.fragmentsText.textContent = "";
+    return;
+  }
   const required = Math.max(0, Number(status.required_fragments) || 0);
   const have = Math.max(0, Math.min(required, Number(status.fragments) || 0));
   // Grand Goal replaces the fragment bar once enough fragments are unlocked.
@@ -1696,19 +1736,31 @@ async function ensureSession() {
 function updateHUD(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
+  const wasPractice = state.status?.practice === true;
   noteResumeIdentityFromStatus(status);
   state.status = status;
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
   syncRoundVisitTracking(status);
-  el.connBadge.textContent = status.connected_to_ap ? "Connected" : "Offline";
-  el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
+  if (status.practice) {
+    el.connBadge.textContent = "Practice";
+    el.connBadge.className = "badge practice";
+  } else if (status.connected_to_ap) {
+    el.connBadge.textContent = "Connected";
+    el.connBadge.className = "badge online";
+  } else {
+    el.connBadge.textContent = "Offline";
+    el.connBadge.className = "badge offline";
+  }
   updateConnectionPanel(status);
 
-  if (wasConnected && !status.connected_to_ap) {
+  if (wasConnected && !status.connected_to_ap && !status.practice) {
     toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
+  }
+  if (wasPractice && !status.practice && !status.connected_to_ap) {
+    clearStickyConnectionError();
   }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
@@ -2246,7 +2298,7 @@ async function openArticle(title, options = {}) {
     replaceHistory = false,
     requireConnection = false,
   } = options;
-  if (requireConnection && !requireApConnection()) return;
+  if (requireConnection && !requirePlayable()) return;
   if (isBlockedWikiTitle(title)) {
     toastBlockedWikiPage();
     return;
@@ -2292,8 +2344,8 @@ async function openArticle(title, options = {}) {
       history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
     }
 
-    // Always visit/stamp when connected. Only intentional wiki clicks score rounds.
-    if (!isApConnected()) {
+    // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
+    if (!isPlayable()) {
       if (countAsClick && submitCheck) toast("Disconnected — reconnect to send checks", "warn");
       return;
     }
@@ -2306,6 +2358,20 @@ async function openArticle(title, options = {}) {
     });
 
     if (submitCheck) {
+      if (result.matched && (result.status?.practice || result.practice_rolled)) {
+        // Unlimited practice: silently roll a new race and open its start.
+        if (result.status) updateHUD(result.status);
+        resetRoundVisits(result.status?.current_start || "");
+        const nextStart = result.status?.current_start;
+        if (nextStart) {
+          await openArticle(nextStart, {
+            replaceHistory: true,
+            countAsClick: false,
+            submitCheck: false,
+          });
+        }
+        return;
+      }
       if (result.matched) {
         let msg = `Target hit: ${result.target}`;
         if (result.sent_text) msg += ` — ${result.sent_text}`;
@@ -2329,7 +2395,7 @@ async function openArticle(title, options = {}) {
 }
 
 async function restoreArticleView(force = false) {
-  if (!state.status || !isApConnected()) return;
+  if (!state.status || !isPlayable()) return;
   if (state.handlingDeath) return;
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
@@ -2431,13 +2497,37 @@ el.connectBtn.addEventListener("click", async () => {
   }
 });
 
+el.practiceBtn?.addEventListener("click", async () => {
+  try {
+    clearStickyConnectionError();
+    await ensureSession();
+    const result = await api(`/api/session/${state.sessionId}/practice`, "POST", {
+      wikipedia_language: "en",
+    });
+    if (result.status) updateHUD(result.status);
+    else await pollStatus();
+    const start = state.status?.current_start;
+    if (start) {
+      await openArticle(start, {
+        replaceHistory: true,
+        countAsClick: false,
+        submitCheck: false,
+        requireConnection: true,
+      });
+    }
+  } catch (err) {
+    toastSticky(err.message || "Could not start Practice", "warn");
+  }
+});
+
 el.disconnectBtn?.addEventListener("click", async () => {
   try {
+    const leavingPractice = isPracticeMode();
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
     if (result.status) updateHUD(result.status);
     else await pollStatus();
-    toast("Disconnected from Archipelago", "warn", 4500);
+    toast(leavingPractice ? "Left Practice" : "Disconnected from Archipelago", "warn", 4500);
   } catch (err) {
     toastSticky(err.message || "Disconnect failed", "warn");
   }
@@ -2589,5 +2679,5 @@ setInterval(pollStatus, 1500);
   await loadBuildBadge();
   await ensureSession();
   await pollStatus();
-  if (isApConnected()) await restoreArticleView(true);
+  if (isPlayable()) await restoreArticleView(true);
 })();

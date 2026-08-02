@@ -43,6 +43,20 @@ body {
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; }
 .badge.offline { background: #3a2026; color: #ffccd3; }
 .badge.online { background: #163427; color: #a8ffd1; }
+.badge.practice { background: #1a2a3a; color: #9ec9ff; }
+
+.connection-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+.connection-actions #connectBtn {
+  flex: 1 1 auto;
+}
+.connection-actions #practiceBtn {
+  flex: 0 0 auto;
+}
 
 .main-grid { display: grid; grid-template-columns: 1fr 330px; gap: 16px; margin-top: 14px; }
 .article-panel, .card {
