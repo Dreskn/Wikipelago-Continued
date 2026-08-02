@@ -2359,17 +2359,12 @@ async function openArticle(title, options = {}) {
 
     if (submitCheck) {
       if (result.matched && (result.status?.practice || result.practice_rolled)) {
-        // Unlimited practice: silently roll a new race and open its start.
+        // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
-        resetRoundVisits(result.status?.current_start || "");
-        const nextStart = result.status?.current_start;
-        if (nextStart) {
-          await openArticle(nextStart, {
-            replaceHistory: true,
-            countAsClick: false,
-            submitCheck: false,
-          });
-        }
+        resetRoundVisits(title);
+        state.clicksUsed = Number(result.status?.clicks_used) || 0;
+        el.clicksText.textContent = String(state.clicksUsed);
+        saveLocalProgress();
         return;
       }
       if (result.matched) {

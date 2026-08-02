@@ -561,12 +561,27 @@ class APConnection:
         self.state.practice = False
         self.state.practice_pool_titles = []
 
-    def _roll_practice_race(self) -> None:
+    def _roll_practice_race(self, *, continue_from: str | None = None) -> None:
+        """Pick a practice start/target. If continue_from is set, chain like AP rounds
+        (stay on that page; only the target changes)."""
         titles = list(self.state.practice_pool_titles)
         if len(titles) < 3:
             raise RuntimeError("Practice pool is too small to start a race.")
-        start, target = random.sample(titles, 2)
-        rest = [title for title in titles if title not in (start, target)]
+
+        def _norm(title: str) -> str:
+            return str(title or "").replace("_", " ").strip().casefold()
+
+        if continue_from and _norm(continue_from):
+            start = continue_from
+            candidates = [title for title in titles if _norm(title) != _norm(start)]
+            if not candidates:
+                raise RuntimeError("Practice pool has no alternate targets.")
+            target = random.choice(candidates)
+        else:
+            start, target = random.sample(titles, 2)
+
+        blocked = {_norm(start), _norm(target)}
+        rest = [title for title in titles if _norm(title) not in blocked]
         random.shuffle(rest)
         self.state.round_pairs = [{"start": start, "target": target}]
         self.state.round_index = 0
@@ -1814,7 +1829,8 @@ class APConnection:
 
         if self.state.practice:
             if matched:
-                self._roll_practice_race()
+                # Chain like AP: keep the player on the cleared target; only roll a new target.
+                self._roll_practice_race(continue_from=page_title)
                 result["advanced"] = True
                 result["practice_rolled"] = True
             result["status"] = self.state.to_status()
