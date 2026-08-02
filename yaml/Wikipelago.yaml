@@ -11,10 +11,10 @@ Wikipelago:
   progression_balancing: 50
 
   # How many round checks are generated for this player (Start → Target races).
-  check_count: 25
+  check_count: 40
 
   # Knowledge Fragments required to open/finish the Grand Goal.
-  required_fragments: 5
+  required_fragments: 7
 
   # How many rounds are playable immediately at the start of the seed.
   start_rounds_unlocked: 10
