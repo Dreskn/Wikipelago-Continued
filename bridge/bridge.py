@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import random
+import subprocess
 import time
 import urllib.parse
 import urllib.request
@@ -23,13 +24,53 @@ LOG = logging.getLogger("wikipelago-cloud")
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
 CLIENT_VERSION = "0.5.0-Bingo!"
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _env_first(*names: str) -> str:
+    for name in names:
+        value = (os.environ.get(name) or "").strip()
+        if value:
+            return value
+    return ""
+
+
+def _git_output(*args: str) -> str:
+    """Best-effort git identity for self-hosted/VPS deploys (Render sets env instead)."""
+    try:
+        out = subprocess.check_output(
+            ["git", *args],
+            cwd=_REPO_ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=2,
+        )
+        return (out or "").strip()
+    except Exception:
+        return ""
+
 
 def build_info() -> dict[str, Any]:
-    """Deploy identity for the UI. Render injects RENDER_GIT_* on hosted services."""
-    branch = (os.environ.get("RENDER_GIT_BRANCH") or "").strip() or "local"
-    commit_full = (os.environ.get("RENDER_GIT_COMMIT") or "").strip()
+    """Deploy identity for the UI.
+
+    Prefer Render-injected RENDER_GIT_* / RENDER_SERVICE_NAME. On a VPS or local
+    checkout, fall back to WIKIPELAGO_* overrides, then `git` in the repo root.
+    """
+    branch = _env_first("RENDER_GIT_BRANCH", "WIKIPELAGO_GIT_BRANCH")
+    commit_full = _env_first("RENDER_GIT_COMMIT", "WIKIPELAGO_GIT_COMMIT")
+    service = _env_first("RENDER_SERVICE_NAME", "WIKIPELAGO_SERVICE_NAME")
+
+    if not branch:
+        branch = _git_output("rev-parse", "--abbrev-ref", "HEAD")
+        if branch == "HEAD":
+            # Detached checkout — keep a usable label if possible.
+            branch = _git_output("name-rev", "--name-only", "--no-undefined", "HEAD") or "HEAD"
+    if not branch:
+        branch = "local"
+    if not commit_full:
+        commit_full = _git_output("rev-parse", "HEAD")
+
     commit = commit_full[:7] if commit_full else ""
-    service = (os.environ.get("RENDER_SERVICE_NAME") or "").strip()
     staging = branch not in ("main", "master")
     return {
         "ok": True,
