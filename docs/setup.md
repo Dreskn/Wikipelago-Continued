@@ -65,9 +65,10 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **0.5.0-Bingo!** |
+| Wikipelago world (`apworld`) | **0.6.0** (`0.6.0-ZaWarudo` on `dev`) |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above (always use the current deploy) |
 
-Hosts and generators should use a matching apworld version for the seed they create.
+The player YAML template pins these via top-level `requires` (`version` + `game.Wikipelago`) so generation fails if the host apworld is too old.
+Hosts and generators should still use a matching apworld for the seed they create.
 Players only need a browser and the web client.

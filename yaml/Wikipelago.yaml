@@ -5,6 +5,13 @@ name: MadWikiRacer
 game: Wikipelago
 description: Default Wikipelago player template
 
+# Fail generation if the host Archipelago / Wikipelago apworld is too old for this
+# template (avoids silent ignores of newer options like progressive tools).
+requires:
+  version: 0.6.7
+  game:
+    Wikipelago: 0.6.0
+
 Wikipelago:
 
   # =============================================================================
