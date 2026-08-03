@@ -1970,10 +1970,17 @@ function initDebugDisplayPanel() {
   ]));
   card.appendChild(progress);
 
-  const items = debugSection("Items / sanities");
+  const items = debugSection("Unlock items");
   items.appendChild(debugRow([
-    debugBtn("Tools", () => runDebugAction("grant_tools")),
-    debugBtn("Lenses", () => runDebugAction("grant_lenses")),
+    debugBtn("Back", () => runDebugAction("grant_item", { item: "Progressive Back" })),
+    debugBtn("Reroll", () => runDebugAction("grant_item", { item: "Progressive Reroll" })),
+    debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
+    debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
+    debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
+  ]));
+  items.appendChild(debugRow([
+    debugBtn("All tools", () => runDebugAction("grant_tools")),
+    debugBtn("All lenses", () => runDebugAction("grant_lenses")),
     debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
     debugBtn("Max scroll", () => runDebugAction("grant_scroll")),
   ]));
@@ -1981,11 +1988,12 @@ function initDebugDisplayPanel() {
   itemSelect.className = "debug-input";
   for (const name of [
     "Progressive Back", "Progressive Reroll", "Progressive Bingo Card",
-    "Wiki Compass", "Ctrl+F Lens",
+    "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
-    "Knowledge Fragment", "Round Access", "Progressive Scroll Speed",
+    "Knowledge Fragment", "Round Access", "Footnote",
     "Foggy Links", "Missing Links",
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => `Search Letter ${letter}`),
   ]) {
     const opt = document.createElement("option");
     opt.value = name;
@@ -1994,16 +2002,12 @@ function initDebugDisplayPanel() {
   }
   items.appendChild(debugRow([
     itemSelect,
-    debugBtn("Grant", () => runDebugAction("grant_item", { item: itemSelect.value })),
+    debugBtn("Grant +1", () => runDebugAction("grant_item", { item: itemSelect.value })),
   ]));
   card.appendChild(items);
 
   const travel = debugSection("Travel");
   travel.appendChild(debugRow([
-    debugBtn("Start", async () => {
-      const title = state.status?.current_start;
-      if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
-    }),
     debugBtn("Target", async () => {
       const title = state.status?.current_target;
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
@@ -2013,23 +2017,24 @@ function initDebugDisplayPanel() {
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
-  const targetInput = document.createElement("input");
-  targetInput.type = "text";
-  targetInput.className = "debug-input debug-input-wide";
-  targetInput.placeholder = "Set target title…";
+  const pageInput = document.createElement("input");
+  pageInput.type = "text";
+  pageInput.className = "debug-input debug-input-wide";
+  pageInput.placeholder = "Teleport to page title…";
   travel.appendChild(debugRow([
-    targetInput,
-    debugBtn("Set target", () => runDebugAction("set_target", { title: targetInput.value.trim() })),
-  ]));
-  travel.appendChild(debugRow([
-    debugBtn("Clear visits", () => {
-      resetRoundVisits(state.currentTitle || "");
-      toast("Visit tracking cleared", "ok", 3000);
+    pageInput,
+    debugBtn("Go", async () => {
+      const title = pageInput.value.trim();
+      if (!title) {
+        toast("Enter a Wikipedia page title", "warn", 3000);
+        return;
+      }
+      await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
   card.appendChild(travel);
 
-  const challenge = debugSection("Challenge toggles");
+  const challenge = debugSection("Challenges");
   const optGrid = document.createElement("div");
   optGrid.className = "debug-opt-grid";
   for (const [key, label] of [
@@ -2067,12 +2072,15 @@ function initDebugDisplayPanel() {
   });
   challenge.appendChild(debugRow([density]));
   challenge.appendChild(debugRow([
-    debugBtn("Foggy trap", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
-    debugBtn("Missing trap", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+    debugBtn("Clear visits", () => {
+      resetRoundVisits(state.currentTitle || "");
+      toast("Visit tracking cleared", "ok", 3000);
+    }),
   ]));
   challenge.appendChild(debugRow([
-    debugBtn("Send DeathLink", () => runDebugAction("send_death_link", { cause: "Debug DeathLink" })),
-    debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
+    debugBtn("Trigger Foggy", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
+    debugBtn("Trigger Missing", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+    debugBtn("Fake death here", () => runDebugAction("receive_death", { cause: "Debug death" })),
   ]));
   card.appendChild(challenge);
 

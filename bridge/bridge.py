@@ -87,8 +87,9 @@ DEFAULT_ITEMS = {
     "Progressive Back": 1_870_002,
     "Wiki Compass": 1_870_003,
     "Ctrl+F Lens": 1_870_004,
-    "Progressive Scroll Speed": 1_870_008,
+    "Footnote": 1_870_006,
     "Round Access": 1_870_007,
+    "Progressive Scroll Speed": 1_870_008,
     "Table Lens": 1_870_009,
     "Picture Lens": 1_870_010,
     "Lead Lens": 1_870_011,
@@ -117,7 +118,13 @@ PROGRESSIVE_STACK_ITEMS = frozenset({
     *TRAP_ITEM_NAMES,
 })
 
-DEBUG_TOOL_ITEMS = ("Progressive Back", "Wiki Compass", "Ctrl+F Lens")
+DEBUG_TOOL_ITEMS = (
+    "Progressive Back",
+    "Progressive Reroll",
+    "Progressive Bingo Card",
+    "Wiki Compass",
+    "Ctrl+F Lens",
+)
 DEBUG_LENS_ITEMS = (
     "Table Lens",
     "Picture Lens",
