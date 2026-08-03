@@ -583,16 +583,8 @@ function consumeTrapQueueForPage(title, status) {
   state.activeMissing = queued.includes("Missing Links");
 }
 
-function applyFoggyLinks(root) {
-  root.querySelectorAll("a[data-title]").forEach((a) => {
-    a.textContent = "[Link]";
-    a.title = "";
-  });
-}
-
-function applyMissingLinks(root) {
-  const links = [...root.querySelectorAll("a[data-title]")];
-  if (links.length <= 1) return;
+function applyMissingToLinks(links) {
+  if (!Array.isArray(links) || links.length <= 1) return;
   const removeCount = Math.max(1, Math.min(links.length - 1, Math.floor(links.length * 0.3)));
   for (let i = links.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -600,6 +592,7 @@ function applyMissingLinks(root) {
   }
   for (let i = 0; i < removeCount; i += 1) {
     const a = links[i];
+    if (!a?.isConnected) continue;
     const span = document.createElement("span");
     span.textContent = a.textContent;
     span.className = "missing-link";
@@ -2108,12 +2101,6 @@ function unwrapElement(node) {
   node.remove();
 }
 
-function stripExternalLinks(root) {
-  root.querySelectorAll("a[href]").forEach((a) => {
-    if (isExternalHref(a.getAttribute("href"))) unwrapElement(a);
-  });
-}
-
 function headingLabel(node) {
   return String(node.textContent || "")
     .replace(/\[\s*edit\s*\]/gi, "")
@@ -2156,15 +2143,14 @@ function markNamedSections(root, names, className) {
   }
 }
 
-function prepareArticleHtml(root) {
+function prepareArticleHtml(root, options = {}) {
   sanitizeHtml(root);
-  stripExternalLinks(root);
   markLeadSection(root);
   markNamedSections(root, ["see also"], "wiki-section-seealso");
   markNamedSections(root, ["external links", "external link"], "wiki-section-external");
   markNamedSections(root, ["references", "notes", "citations"], "wiki-section-references");
   wrapTables(root);
-  rewriteLinks(root);
+  processArticleLinks(root, options);
   applyDisplayLocks();
 }
 
@@ -2234,7 +2220,12 @@ function toastBlockedWikiPage() {
   toast("That type of page is not allowed in Wikipelago", "warn");
 }
 
-function rewriteLinks(root) {
+function processArticleLinks(root, options = {}) {
+  // One pass: strip externals, rewrite /wiki links, optional foggy/missing traps.
+  const foggy = Boolean(options.foggy);
+  const missing = Boolean(options.missing);
+  const playable = missing ? [] : null;
+
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
     if (isExternalHref(href)) {
@@ -2263,7 +2254,18 @@ function rewriteLinks(root) {
     }
     a.removeAttribute("data-blocked-ns");
     a.dataset.title = title;
+    if (foggy) {
+      a.textContent = "[Link]";
+      a.title = "";
+    }
+    if (playable) playable.push(a);
   });
+
+  if (playable) applyMissingToLinks(playable);
+}
+
+function rewriteLinks(root) {
+  processArticleLinks(root);
 }
 
 async function fetchWikiHtml(title) {
@@ -2317,10 +2319,11 @@ async function openArticle(title, options = {}) {
     state.currentTitle = title;
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
-    prepareArticleHtml(el.articleBody);
     consumeTrapQueueForPage(title, state.status);
-    if (state.activeFoggy) applyFoggyLinks(el.articleBody);
-    if (state.activeMissing) applyMissingLinks(el.articleBody);
+    prepareArticleHtml(el.articleBody, {
+      foggy: state.activeFoggy,
+      missing: state.activeMissing,
+    });
     armBombsOnPage(el.articleBody, state.status);
     if (countAsClick || !state.roundVisitSet.size) {
       state.roundVisitSet.add(normalizeTitle(title));
