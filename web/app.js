@@ -1,5 +1,10 @@
-const APP_VERSION = "2026.07.31.2";
+const APP_VERSION = "2026.08.03.5";
 console.log("Wikipelago web version", APP_VERSION);
+
+/** Hover-prefetch: keep a few parsed pages ready for the next click. */
+const WIKI_PREFETCH_MAX_CACHE = 8;
+const WIKI_PREFETCH_CONCURRENCY = 2;
+const WIKI_PREFETCH_HOVER_MS = 140;
 
 function wikipediaLanguage() {
   const lang = String(state.status?.wikipedia_language || "en").trim().toLowerCase();
@@ -97,6 +102,15 @@ const state = {
   /** After slot/language switch, open current_start instead of sticky hash/last_page. */
   forceResumeStart: false,
   resumeIdentity: "",
+  /** lang::title → { html } (LRU via Map insertion order). */
+  wikiHtmlCache: new Map(),
+  /** lang::title → in-flight fetch Promise */
+  wikiHtmlInflight: new Map(),
+  wikiPrefetchQueue: [],
+  wikiPrefetchActive: 0,
+  wikiPrefetchHoverTimer: null,
+  wikiPrefetchHoverTitle: "",
+  wikiCacheLanguage: "",
 };
 
 const el = {
@@ -1562,6 +1576,7 @@ function clearStickyArticleResume() {
   state.forceResumeStart = true;
   state.currentTitle = "";
   state.baseArticleClone = null;
+  clearWikiHtmlCache();
   state.targetSummaryCache.clear();
   hideTargetTooltip();
   const path = `${window.location.pathname}${window.location.search}`;
@@ -2274,7 +2289,55 @@ function processArticleLinks(root, options = {}) {
   if (playable) applyMissingToLinks(playable);
 }
 
-async function fetchWikiHtml(title) {
+function wikiHtmlCacheKey(title) {
+  return `${wikipediaLanguage()}::${normalizeTitle(title)}`;
+}
+
+function clearWikiHtmlCache() {
+  state.wikiHtmlCache.clear();
+  state.wikiHtmlInflight.clear();
+  state.wikiPrefetchQueue = [];
+  state.wikiPrefetchActive = 0;
+  state.wikiPrefetchHoverTitle = "";
+  if (state.wikiPrefetchHoverTimer) {
+    clearTimeout(state.wikiPrefetchHoverTimer);
+    state.wikiPrefetchHoverTimer = null;
+  }
+  state.wikiCacheLanguage = wikipediaLanguage();
+}
+
+function ensureWikiHtmlCacheLanguage() {
+  const lang = wikipediaLanguage();
+  if (state.wikiCacheLanguage && state.wikiCacheLanguage !== lang) {
+    clearWikiHtmlCache();
+    return;
+  }
+  if (!state.wikiCacheLanguage) state.wikiCacheLanguage = lang;
+}
+
+function storeWikiHtmlCache(title, html) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
+  state.wikiHtmlCache.set(key, { html: String(html || "") });
+  while (state.wikiHtmlCache.size > WIKI_PREFETCH_MAX_CACHE) {
+    const oldest = state.wikiHtmlCache.keys().next().value;
+    state.wikiHtmlCache.delete(oldest);
+  }
+}
+
+function takeWikiHtmlCache(title) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  const hit = state.wikiHtmlCache.get(key);
+  if (!hit) return null;
+  // Refresh LRU order.
+  state.wikiHtmlCache.delete(key);
+  state.wikiHtmlCache.set(key, hit);
+  return hit.html;
+}
+
+async function fetchWikiHtmlUncached(title) {
   const params = new URLSearchParams({
     action: "parse",
     page: title,
@@ -2294,6 +2357,78 @@ async function fetchWikiHtml(title) {
   }
   if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${wikipediaLanguage()}]`);
   return data.parse.text;
+}
+
+async function fetchWikiHtml(title) {
+  ensureWikiHtmlCacheLanguage();
+  const cached = takeWikiHtmlCache(title);
+  if (cached != null) return cached;
+
+  const key = wikiHtmlCacheKey(title);
+  let inflight = state.wikiHtmlInflight.get(key);
+  if (!inflight) {
+    inflight = (async () => {
+      try {
+        const html = await fetchWikiHtmlUncached(title);
+        storeWikiHtmlCache(title, html);
+        return html;
+      } finally {
+        state.wikiHtmlInflight.delete(key);
+      }
+    })();
+    state.wikiHtmlInflight.set(key, inflight);
+  }
+  return inflight;
+}
+
+function pumpWikiPrefetchQueue() {
+  while (
+    state.wikiPrefetchActive < WIKI_PREFETCH_CONCURRENCY
+    && state.wikiPrefetchQueue.length
+  ) {
+    const title = state.wikiPrefetchQueue.shift();
+    if (!title || isBlockedWikiTitle(title)) continue;
+    if (normalizeTitle(title) === normalizeTitle(state.currentTitle)) continue;
+    const key = wikiHtmlCacheKey(title);
+    if (state.wikiHtmlCache.has(key) || state.wikiHtmlInflight.has(key)) continue;
+    state.wikiPrefetchActive += 1;
+    fetchWikiHtml(title)
+      .catch(() => {})
+      .finally(() => {
+        state.wikiPrefetchActive = Math.max(0, state.wikiPrefetchActive - 1);
+        pumpWikiPrefetchQueue();
+      });
+  }
+}
+
+function prefetchWikiHtml(title) {
+  const clean = String(title || "").trim();
+  if (!clean || isBlockedWikiTitle(clean)) return;
+  if (normalizeTitle(clean) === normalizeTitle(state.currentTitle)) return;
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(clean);
+  if (state.wikiHtmlCache.has(key) || state.wikiHtmlInflight.has(key)) return;
+  if (state.wikiPrefetchQueue.some((queued) => normalizeTitle(queued) === normalizeTitle(clean))) {
+    return;
+  }
+  state.wikiPrefetchQueue.push(clean);
+  // Bound queue so rapid hover doesn't pile up stale titles.
+  while (state.wikiPrefetchQueue.length > WIKI_PREFETCH_MAX_CACHE) {
+    state.wikiPrefetchQueue.shift();
+  }
+  pumpWikiPrefetchQueue();
+}
+
+function scheduleWikiPrefetchFromHover(title) {
+  const clean = String(title || "").trim();
+  if (!clean) return;
+  if (state.wikiPrefetchHoverTitle === clean && state.wikiPrefetchHoverTimer) return;
+  state.wikiPrefetchHoverTitle = clean;
+  if (state.wikiPrefetchHoverTimer) clearTimeout(state.wikiPrefetchHoverTimer);
+  state.wikiPrefetchHoverTimer = setTimeout(() => {
+    state.wikiPrefetchHoverTimer = null;
+    prefetchWikiHtml(clean);
+  }, WIKI_PREFETCH_HOVER_MS);
 }
 
 async function openArticle(title, options = {}) {
@@ -2413,6 +2548,15 @@ async function restoreArticleView(force = false) {
     state.restoringArticle = false;
   }
 }
+
+el.articleBody.addEventListener("pointerover", (e) => {
+  const a = e.target.closest?.("a[data-title]");
+  if (!a || !el.articleBody.contains(a)) return;
+  // Only fire when entering the link (not bubbling across children repeatedly).
+  const related = e.relatedTarget;
+  if (related && a.contains(related)) return;
+  scheduleWikiPrefetchFromHover(a.dataset.title || "");
+});
 
 el.articleBody.addEventListener("click", async (e) => {
   const blocked = e.target.closest("a[data-blocked-ns]");
