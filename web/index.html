@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260803-14" />
+  <link rel="stylesheet" href="/static/style.css?v=20260803-15" />
 </head>
 <body>
   <div class="layout">
@@ -17,7 +17,10 @@
         <h1>Wikipelago</h1>
         <div id="buildBadge" class="build-badge" title="Deploy build" data-i18n-title="build.deploy">…</div>
       </div>
-      <div id="connBadge" class="badge offline" data-i18n="badge.offline">Offline</div>
+      <div class="topbar-status">
+        <select id="uiLangSelect" class="topbar-lang" aria-label="Language" data-i18n-aria="conn.language"></select>
+        <div id="connBadge" class="badge offline" data-i18n="badge.offline">Offline</div>
+      </div>
     </header>
 
     <main class="main-grid">
@@ -48,8 +51,6 @@
         <div class="card" id="connectionCard">
           <h2 data-i18n="conn.title">Connection</h2>
           <div id="connectionForm">
-            <label data-i18n="conn.language">Language</label>
-            <select id="uiLangSelect" aria-label="Language"></select>
             <label data-i18n="conn.server">Server</label>
             <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
             <label data-i18n="conn.slot">Slot</label>
@@ -62,8 +63,6 @@
             </div>
           </div>
           <div id="connectionSummary" class="connection-summary hidden">
-            <label class="connection-lang-label" data-i18n="conn.language">Language</label>
-            <select id="uiLangSelectActive" aria-label="Language"></select>
             <p class="connection-summary-line">
               <strong id="connectionSummaryLabel" data-i18n="conn.serverLabel">Server:</strong> <span id="connectedServerText">-</span>
             </p>
@@ -162,7 +161,7 @@
     </main>
   </div>
 
-  <script src="/static/i18n.js?v=20260803-14"></script>
-  <script src="/static/app.js?v=20260803-14"></script>
+  <script src="/static/i18n.js?v=20260803-15"></script>
+  <script src="/static/app.js?v=20260803-15"></script>
 </body>
 </html>

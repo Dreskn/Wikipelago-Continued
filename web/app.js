@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.03.14";
+const APP_VERSION = "2026.08.03.15";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -189,7 +189,6 @@ const el = {
   debugConsentPanel: document.getElementById("debugConsentPanel"),
   showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
   uiLangSelect: document.getElementById("uiLangSelect"),
-  uiLangSelectActive: document.getElementById("uiLangSelectActive"),
 };
 
 function loadSavedConnection() {
@@ -375,16 +374,14 @@ function requirePlayable() {
   return false;
 }
 
-function syncUiLanguageSelects() {
-  const lang = uiLanguage();
-  if (el.uiLangSelect) el.uiLangSelect.value = lang;
-  if (el.uiLangSelectActive) el.uiLangSelectActive.value = lang;
+function syncUiLanguageSelect() {
+  if (el.uiLangSelect) el.uiLangSelect.value = uiLanguage();
 }
 
 function onUiLanguageChanged(code) {
   if (I18n?.setUiLanguage) I18n.setUiLanguage(code);
   else if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
-  syncUiLanguageSelects();
+  syncUiLanguageSelect();
   if (state.status) updateHUD(state.status);
   else {
     updateConnectionPanel(null);
@@ -397,14 +394,9 @@ function onUiLanguageChanged(code) {
 }
 
 function bindUiLanguageControls() {
-  if (I18n?.fillLanguageSelect) {
-    I18n.fillLanguageSelect(el.uiLangSelect);
-    I18n.fillLanguageSelect(el.uiLangSelectActive);
-  }
-  syncUiLanguageSelects();
-  const onChange = (e) => onUiLanguageChanged(e.target.value);
-  el.uiLangSelect?.addEventListener("change", onChange);
-  el.uiLangSelectActive?.addEventListener("change", onChange);
+  if (I18n?.fillLanguageSelect) I18n.fillLanguageSelect(el.uiLangSelect);
+  syncUiLanguageSelect();
+  el.uiLangSelect?.addEventListener("change", (e) => onUiLanguageChanged(e.target.value));
   if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
 }
 

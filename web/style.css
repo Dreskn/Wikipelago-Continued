@@ -64,18 +64,28 @@ body {
 .badge.online { background: #163427; color: #a8ffd1; }
 .badge.practice { background: #1a2a3a; color: #9ec9ff; }
 
-.connection-lang-label {
-  display: block;
-  margin-top: 0;
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
 }
-#connectionSummary #uiLangSelectActive {
-  width: 100%;
-  margin: 4px 0 10px;
-  padding: 9px;
-  border-radius: 8px;
+.topbar-lang {
+  width: auto;
+  min-width: 7.5rem;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
   border: 1px solid #3a5068;
   background: #0f1824;
   color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.topbar-lang:hover {
+  border-color: #54708c;
 }
 .connection-actions {
   display: flex;
