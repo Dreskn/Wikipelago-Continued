@@ -1,11 +1,20 @@
-const APP_VERSION = "2026.08.03.6";
+const APP_VERSION = "2026.08.03.14";
 console.log("Wikipelago web version", APP_VERSION);
+
+const I18n = window.WikipelagoI18n;
+function t(key, vars) {
+  return I18n?.t ? I18n.t(key, vars) : key;
+}
+function uiLanguage() {
+  return I18n?.uiLanguage ? I18n.uiLanguage() : "en";
+}
 
 /** Hover-prefetch: keep a few parsed pages ready for the next click. */
 const WIKI_PREFETCH_MAX_CACHE = 8;
 const WIKI_PREFETCH_CONCURRENCY = 2;
 const WIKI_PREFETCH_HOVER_MS = 200;
 
+/** Wikipedia edition for article fetches (AP slot language, or practice pool language). */
 function wikipediaLanguage() {
   const lang = String(state.status?.wikipedia_language || "en").trim().toLowerCase();
   return lang || "en";
@@ -30,14 +39,14 @@ const TRACK_EMPHASIS_MIN_PX = 28;
 const TRACK_PAD_X_PX = 4;
 
 const DISPLAY_LOCKS = [
-  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
-  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", label: "Pictures", glyph: "Pic" },
-  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", label: "Lead", glyph: "Led" },
-  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", label: "Infoboxes", glyph: "Inf" },
-  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", label: "Contents", glyph: "Toc" },
-  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", label: "Navboxes", glyph: "Nav" },
-  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", label: "Hatnotes", glyph: "Hat" },
-  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", label: "References", glyph: "Ref" },
+  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyph: "Tbl" },
+  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyph: "Pic" },
+  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyph: "Led" },
+  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyph: "Inf" },
+  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyph: "Toc" },
+  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyph: "Nav" },
+  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyph: "Hat" },
+  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
 ];
 
 const TOOL_ICON_SVGS = {
@@ -55,17 +64,26 @@ const TOOL_ICON_SVGS = {
   traps: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5zm0 9L4.5 7.8 12 4.1l7.5 3.7L12 11zm0 2.2L4 9.5V17l8 4 8-4V9.5l-8 3.7z"/></svg>',
 };
 
-const TRAP_TYPE_LABELS = {
-  0: "Foggy + Missing Links",
-  1: "Foggy Links only",
-  2: "Missing Links only",
-};
+function trapTypeLabel(trapType) {
+  const key = {
+    0: "diff.trapType.both",
+    1: "diff.trapType.foggy",
+    2: "diff.trapType.missing",
+  }[Number(trapType) || 0] || "diff.trapType.both";
+  return t(key);
+}
 
-const BOMB_DENSITY_LABELS = {
-  0: "few",
-  1: "more",
-  2: "insane",
-};
+function bombDensityKey(density) {
+  return {
+    0: "few",
+    1: "more",
+    2: "insane",
+  }[Number(density) || 0] || "few";
+}
+
+function bombDensityLabel(density) {
+  return t(`diff.density.${bombDensityKey(density)}`);
+}
 
 let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
 let debugPanelReady = false;
@@ -170,6 +188,8 @@ const el = {
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
   debugConsentPanel: document.getElementById("debugConsentPanel"),
   showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
+  uiLangSelect: document.getElementById("uiLangSelect"),
+  uiLangSelectActive: document.getElementById("uiLangSelectActive"),
 };
 
 function loadSavedConnection() {
@@ -269,7 +289,7 @@ async function loadBuildBadge() {
       applyBuildBadge(embedded);
       return;
     }
-    el.buildBadge.textContent = "unknown";
+    el.buildBadge.textContent = t("build.unknown");
     el.buildBadge.title = `Could not load build info (${err})`;
   }
 }
@@ -330,29 +350,68 @@ function updateConnectionPanel(status) {
   if (el.connectionForm) el.connectionForm.classList.toggle("hidden", active);
   if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !active);
   if (el.connectionSummaryLabel) {
-    el.connectionSummaryLabel.textContent = practice ? "Mode:" : "Server:";
+    el.connectionSummaryLabel.textContent = practice ? t("conn.modeLabel") : t("conn.serverLabel");
   }
   if (el.connectedServerText) {
-    if (practice) el.connectedServerText.textContent = "Practice (no Archipelago)";
+    if (practice) el.connectedServerText.textContent = t("conn.practiceMode");
     else if (connected) el.connectedServerText.textContent = status.ap_server || el.serverInput?.value?.trim() || "—";
     else el.connectedServerText.textContent = "-";
   }
   if (el.disconnectBtn) {
     el.disconnectBtn.disabled = !active;
-    el.disconnectBtn.textContent = practice ? "Exit practice" : "Disconnect";
+    el.disconnectBtn.textContent = practice ? t("conn.exitPractice") : t("conn.disconnect");
   }
 }
 
 function requireApConnection() {
   if (isApConnected()) return true;
-  toast("Connect to Archipelago to play", "warn");
+  toast(t("toast.connectToPlay"), "warn");
   return false;
 }
 
 function requirePlayable() {
   if (isPlayable()) return true;
-  toast("Connect to Archipelago or start Practice", "warn");
+  toast(t("toast.connectOrPractice"), "warn");
   return false;
+}
+
+function syncUiLanguageSelects() {
+  const lang = uiLanguage();
+  if (el.uiLangSelect) el.uiLangSelect.value = lang;
+  if (el.uiLangSelectActive) el.uiLangSelectActive.value = lang;
+}
+
+function onUiLanguageChanged(code) {
+  if (I18n?.setUiLanguage) I18n.setUiLanguage(code);
+  else if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
+  syncUiLanguageSelects();
+  if (state.status) updateHUD(state.status);
+  else {
+    updateConnectionPanel(null);
+    if (el.connBadge && !state.status) {
+      el.connBadge.textContent = t("badge.offline");
+      el.connBadge.className = "badge offline";
+    }
+  }
+  refreshSearchChrome();
+}
+
+function bindUiLanguageControls() {
+  if (I18n?.fillLanguageSelect) {
+    I18n.fillLanguageSelect(el.uiLangSelect);
+    I18n.fillLanguageSelect(el.uiLangSelectActive);
+  }
+  syncUiLanguageSelects();
+  const onChange = (e) => onUiLanguageChanged(e.target.value);
+  el.uiLangSelect?.addEventListener("change", onChange);
+  el.uiLangSelectActive?.addEventListener("change", onChange);
+  if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
+}
+
+function refreshSearchChrome() {
+  if (typeof renderSearchStatus === "function") {
+    try { renderSearchStatus(); } catch { /* not ready yet */ }
+  }
 }
 
 function normalizeTitle(title) {
@@ -412,7 +471,7 @@ async function fetchTargetSummary(title) {
   const summary = formatTargetSummary({
     description: page.description || "",
     extract: page.extract || "",
-  }) || "No short description available.";
+  }) || t("hud.noDescription");
   state.targetSummaryCache.set(key, summary);
   return summary;
 }
@@ -430,18 +489,18 @@ async function showTargetTooltip(title) {
   state.targetTooltipVisible = true;
   el.targetTooltip.classList.remove("hidden");
   el.targetTooltip.classList.add("loading");
-  el.targetTooltip.textContent = "Loading…";
+  el.targetTooltip.textContent = t("hud.loadingEllipsis");
   try {
     const summary = await fetchTargetSummary(title);
     if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
       return;
     }
     el.targetTooltip.classList.remove("loading");
-    el.targetTooltip.textContent = summary || "No short description available.";
+    el.targetTooltip.textContent = summary || t("hud.noDescription");
   } catch {
     if (!state.targetTooltipVisible) return;
     el.targetTooltip.classList.remove("loading");
-    el.targetTooltip.textContent = "Could not load description.";
+    el.targetTooltip.textContent = t("hud.descriptionFailed");
   }
 }
 
@@ -495,7 +554,7 @@ function updateRerollTargetControls(status) {
     return;
   }
   if (Number.isFinite(remaining)) {
-    el.rerollTargetMeta.textContent = `${Math.max(0, remaining)}/${max} left`;
+    el.rerollTargetMeta.textContent = t("hud.rerollLeft", { n: Math.max(0, remaining), max });
   } else {
     el.rerollTargetMeta.textContent = "";
   }
@@ -504,7 +563,7 @@ function updateRerollTargetControls(status) {
 async function rerollCurrentTarget() {
   if (!requirePlayable() || state.rerollBusy) return;
   if (!state.status?.can_reroll_target) {
-    toast("No target rerolls available right now", "warn", 4500);
+    toast(t("toast.noRerolls"), "warn", 4500);
     return;
   }
   state.rerollBusy = true;
@@ -512,9 +571,9 @@ async function rerollCurrentTarget() {
   try {
     const result = await api(`/api/session/${state.sessionId}/reroll-target`, "POST", {});
     if (result.status) updateHUD(result.status);
-    toast(`Target rerolled → ${result.new_target}`, "ok", 6500);
+    toast(t("toast.rerolled", { title: result.new_target }), "ok", 6500);
   } catch (err) {
-    toast(`Could not reroll target: ${err.message || err}`, "warn", 6500);
+    toast(t("toast.rerollFailed", { error: err.message || err }), "warn", 6500);
     try { await pollStatus(); } catch { /* ignore */ }
   } finally {
     state.rerollBusy = false;
@@ -574,14 +633,14 @@ async function applyDeathEffect(reasonText) {
   resetRoundVisits("");
   state.bombTitles = new Set();
   try {
-    toast(reasonText || "Death! Jumping to a random article…", "warn", 7000);
+    toast(reasonText || t("toast.deathJump"), "warn", 7000);
     const title = await fetchRandomWikiTitle();
     resetRoundVisits(title);
     await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
   } catch {
     // Still leave visits cleared; seed current page if we never left it.
     resetRoundVisits(state.currentTitle || "");
-    toast("Death effect failed to load a random page", "warn");
+    toast(t("toast.deathFailed"), "warn");
   } finally {
     state.handlingDeath = false;
   }
@@ -590,7 +649,7 @@ async function applyDeathEffect(reasonText) {
 function queueTrap(trapName) {
   if (trapName !== "Foggy Links" && trapName !== "Missing Links") return;
   state.trapQueue.push(trapName);
-  toast(`Trap: ${trapName} (next page)`, "warn", 6500);
+  toast(t("toast.trap", { name: trapName }), "warn", 6500);
 }
 
 function consumeTrapQueueForPage(title, status) {
@@ -697,14 +756,14 @@ function sanitizeSearchInput(raw) {
 
 function renderSearchStatus() {
   const letters = [...ownedSearchLetters()].sort();
-  el.searchLetters.textContent = `Letters: ${letters.length ? letters.join("") : "-"}`;
+  el.searchLetters.textContent = t("search.letters", { letters: letters.length ? letters.join("") : "-" });
 
   if (!state.status?.ctrl_f_unlocked) {
-    el.searchStatus.textContent = "Ctrl+F Lens required";
+    el.searchStatus.textContent = t("search.needLens");
   } else if (state.status?.searchsanity) {
-    el.searchStatus.textContent = "Letter-limited search";
+    el.searchStatus.textContent = t("search.letterLimited");
   } else {
-    el.searchStatus.textContent = "Search ready";
+    el.searchStatus.textContent = t("search.ready");
   }
 }
 
@@ -725,10 +784,10 @@ function makeIconNode({ id, title, svg, extraClass = "" }) {
 function ensureToolIcons() {
   if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "3") return;
   const tools = [
-    { id: "back", title: "Progressive Back", svg: TOOL_ICON_SVGS.back },
-    { id: "reroll", title: "Progressive Reroll", svg: TOOL_ICON_SVGS.reroll },
-    { id: "search", title: "Ctrl+F Lens", svg: TOOL_ICON_SVGS.search },
-    { id: "compass", title: "Wiki Compass", svg: TOOL_ICON_SVGS.compass },
+    { id: "back", title: t("tool.back"), svg: TOOL_ICON_SVGS.back },
+    { id: "reroll", title: t("tool.reroll"), svg: TOOL_ICON_SVGS.reroll },
+    { id: "search", title: t("tool.search"), svg: TOOL_ICON_SVGS.search },
+    { id: "compass", title: t("tool.compass"), svg: TOOL_ICON_SVGS.compass },
   ];
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
@@ -884,7 +943,9 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
       appendTrackSeg(trackEl, {
         state: run.state,
         overflowCount: overflow,
-        title: `${kind}s ${hiddenStart}–${hiddenEnd} (+${overflow} more like this)`,
+        title: t("track.moreLikeThis", {
+          kind, start: hiddenStart, end: hiddenEnd, overflow,
+        }),
       });
     };
     const appendIndividuals = () => {
@@ -930,14 +991,14 @@ function renderRoundsTrack(status) {
     items.push({
       state,
       current: !complete && i === current && i > completed,
-      label: `Round ${i}`,
+      label: `${t("track.kindRound")} ${i}`,
     });
   }
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
-  renderPlannedTrack(el.roundsTrack, roundsPlan.plan, "Round", roundsPlan.chipMinPx);
+  renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
   if (el.roundText) {
-    el.roundText.textContent = complete ? "Complete" : `${current}/${total}`;
+    el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
 }
 
@@ -958,7 +1019,9 @@ function renderFragmentsTrack(status) {
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
   if (el.goalText && showGoal) {
     const goal = status.goal_article || "...";
-    el.goalText.textContent = status.boss_completed ? `${goal} (Complete)` : goal;
+    el.goalText.textContent = status.boss_completed
+      ? `${goal} ${t("hud.goalCompleteSuffix")}`
+      : goal;
   }
   if (showGoal) return;
 
@@ -966,12 +1029,12 @@ function renderFragmentsTrack(status) {
   for (let i = 1; i <= required; i += 1) {
     items.push({
       state: i <= have ? "filled" : "empty",
-      label: `Fragment ${i}`,
+      label: `${t("track.kindFragment")} ${i}`,
     });
   }
   el.fragmentsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const fragPlan = buildTrackPlan(items, el.fragmentsTrack);
-  renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, "Fragment", fragPlan.chipMinPx);
+  renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, t("track.kindFragment"), fragPlan.chipMinPx);
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
 }
 
@@ -1001,7 +1064,7 @@ function renderToolIcons(status) {
   if (back) {
     setIconState(back, backMax > 0 ? "ok" : "locked");
     setToolBadge(back, backMax > 0 ? `${backLeft}/${backMax}` : "");
-    back.title = backMax > 0 ? `Progressive Back ${backLeft}/${backMax}` : "Progressive Back";
+    back.title = backMax > 0 ? `${t("tool.back")} ${backLeft}/${backMax}` : t("tool.back");
   }
 
   const rerollMax = Math.max(0, Number(status.target_rerolls_max) || 0);
@@ -1010,7 +1073,7 @@ function renderToolIcons(status) {
   if (reroll) {
     setIconState(reroll, rerollMax > 0 ? "ok" : "locked");
     setToolBadge(reroll, rerollMax > 0 ? `${rerollLeft}/${rerollMax}` : "");
-    reroll.title = rerollMax > 0 ? `Progressive Reroll ${rerollLeft}/${rerollMax}` : "Progressive Reroll";
+    reroll.title = rerollMax > 0 ? `${t("tool.reroll")} ${rerollLeft}/${rerollMax}` : t("tool.reroll");
   }
 
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
@@ -1030,7 +1093,7 @@ function renderLensIcons(status) {
   for (const lock of active) {
     const node = document.createElement("div");
     node.className = "item-icon";
-    node.title = lock.label;
+    node.title = t(lock.i18nKey);
     setIconState(node, status?.[lock.unlockedKey] ? "ok" : "locked");
     node.textContent = lock.glyph;
     el.lensIconsRow.appendChild(node);
@@ -1058,7 +1121,7 @@ function renderSanityUnlocks(status) {
       el.scrollIconsRow.innerHTML = "";
       const scroll = makeIconNode({
         id: "scroll",
-        title: "Progressive Scroll Speed",
+        title: t("tool.scroll"),
         svg: TOOL_ICON_SVGS.scroll,
       });
       const level = Number(status.scroll_speed_level) || 0;
@@ -1129,45 +1192,45 @@ function renderDifficultyIcons(status) {
 
   addDiffIcon({
     id: "searchsanity",
-    title: status.searchsanity ? "Searchsanity ON" : "Searchsanity off",
+    title: status.searchsanity ? t("diff.searchsanityOn") : t("diff.searchsanityOff"),
     svg: TOOL_ICON_SVGS.searchsanity,
     on: Boolean(status.searchsanity),
   });
   addDiffIcon({
     id: "scrollsanity",
-    title: status.scrollsanity ? "Scrollsanity ON" : "Scrollsanity off",
+    title: status.scrollsanity ? t("diff.scrollsanityOn") : t("diff.scrollsanityOff"),
     svg: TOOL_ICON_SVGS.scrollsanity,
     on: Boolean(status.scrollsanity),
   });
   addDiffIcon({
     id: "deaths",
-    title: status.deaths ? "Loop deaths ON" : "Loop deaths off",
+    title: status.deaths ? t("diff.deathsOn") : t("diff.deathsOff"),
     svg: TOOL_ICON_SVGS.deaths,
     on: Boolean(status.deaths),
   });
   addDiffIcon({
     id: "deathlink",
-    title: status.death_link ? "DeathLink ON" : "DeathLink off",
+    title: status.death_link ? t("diff.deathlinkOn") : t("diff.deathlinkOff"),
     svg: TOOL_ICON_SVGS.deathlink,
     on: Boolean(status.death_link),
   });
   addDiffIcon({
     id: "traplink",
-    title: status.trap_link ? "TrapLink ON" : "TrapLink off",
+    title: status.trap_link ? t("diff.traplinkOn") : t("diff.traplinkOff"),
     svg: TOOL_ICON_SVGS.traplink,
     on: Boolean(status.trap_link),
   });
 
   const bombDensity = Number(status.link_bomb_density) || 0;
   const bombCount = Number(status.link_bomb_count) || 0;
-  const bombLabel = BOMB_DENSITY_LABELS[bombDensity] || "few";
+  const bombDensityCss = bombDensityKey(bombDensity);
   const bombNode = makeIconNode({
     id: "bombs",
     title: bombsOn
-      ? `Link bombs ON (${bombLabel}, ~${bombCount}/page)`
-      : "Link bombs off",
+      ? t("diff.bombsOn", { density: bombDensityLabel(bombDensity), count: bombCount })
+      : t("diff.bombsOff"),
     svg: TOOL_ICON_SVGS.bombs,
-    extraClass: bombsOn ? `item-icon--bomb-${bombLabel}` : "",
+    extraClass: bombsOn ? `item-icon--bomb-${bombDensityCss}` : "",
   });
   setIconState(bombNode, bombsOn ? "ok" : "locked");
   if (!bombsOn) bombNode.classList.add("item-icon--dim");
@@ -1181,13 +1244,12 @@ function renderDifficultyIcons(status) {
   el.difficultyIconsRow.appendChild(bombNode);
 
   const trapType = Number(status.trap_type) || 0;
-  const trapTypeLabel = TRAP_TYPE_LABELS[trapType] || TRAP_TYPE_LABELS[0];
   const trapsOn = trapCount > 0;
   addDiffIcon({
     id: "traps",
     title: trapsOn
-      ? `Traps: ${trapCount}× (${trapTypeLabel})`
-      : "Traps off (0 in pool)",
+      ? t("diff.trapsOn", { count: trapCount, type: trapTypeLabel(trapType) })
+      : t("diff.trapsOff"),
     svg: TOOL_ICON_SVGS.traps,
     on: trapsOn,
     badge: trapsOn ? String(trapCount) : "",
@@ -1197,9 +1259,11 @@ function renderDifficultyIcons(status) {
 function formatBingoCompletionParts(bingoCompleted) {
   if (!Array.isArray(bingoCompleted) || !bingoCompleted.length) return [];
   return bingoCompleted.map((line) => {
-    const label = String(line?.label || "Bingo line").trim() || "Bingo line";
+    const label = String(line?.label || t("bingo.line")).trim() || t("bingo.line");
     const sent = String(line?.sent_text || "").trim();
-    return sent ? `${label} complete — ${sent}` : `${label} complete`;
+    return sent
+      ? t("bingo.lineCompleteSent", { label, sent })
+      : t("bingo.lineComplete", { label });
   });
 }
 
@@ -1435,13 +1499,15 @@ function renderBingoHud(status) {
 
     const label = document.createElement("p");
     label.className = "bingo-board-label";
-    label.textContent = complete ? `Board ${boardKey} · complete` : `Board ${boardKey}`;
+    label.textContent = complete
+      ? t("bingo.boardComplete", { n: boardKey })
+      : t("bingo.board", { n: boardKey });
     header.appendChild(label);
 
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "btn-quiet bingo-board-toggle";
-    toggle.textContent = collapsed ? "Show" : "Hide";
+    toggle.textContent = collapsed ? t("bingo.show") : t("bingo.hide");
     toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
     toggle.addEventListener("click", () => {
       setBingoBoardCollapsed(status, boardKey, !collapsed);
@@ -1467,11 +1533,15 @@ function renderBingoHud(status) {
 
   if (el.bingoMeta) {
     if (!unlocked) {
-      el.bingoMeta.textContent = "No boards unlocked";
+      el.bingoMeta.textContent = t("bingo.noBoards");
     } else if (unlocked === 1 && anySize) {
-      el.bingoMeta.textContent = `${anySize}×${anySize} · ${totalChecked}/${totalLines} lines`;
+      el.bingoMeta.textContent = t("bingo.metaGrid", {
+        n: anySize, checked: totalChecked, total: totalLines,
+      });
     } else if (unlocked > 1) {
-      el.bingoMeta.textContent = `${unlocked} boards · ${totalChecked}/${totalLines} lines`;
+      el.bingoMeta.textContent = t("bingo.metaBoards", {
+        boards: unlocked, checked: totalChecked, total: totalLines,
+      });
     } else {
       el.bingoMeta.textContent = "";
     }
@@ -1494,8 +1564,8 @@ function closeSearchOverlay() {
 
 function openSearchOverlay() {
   if (!canUseSearch()) {
-    if (!state.status?.ctrl_f_unlocked) toast("Ctrl+F Lens is locked", "warn");
-    else toast("Search is locked", "warn");
+    if (!state.status?.ctrl_f_unlocked) toast(t("toast.ctrlFLocked"), "warn");
+    else toast(t("toast.searchLocked"), "warn");
     return;
   }
   state.searchOpen = true;
@@ -1766,19 +1836,19 @@ function updateHUD(status) {
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
   syncRoundVisitTracking(status);
   if (status.practice) {
-    el.connBadge.textContent = "Practice";
+    el.connBadge.textContent = t("badge.practice");
     el.connBadge.className = "badge practice";
   } else if (status.connected_to_ap) {
-    el.connBadge.textContent = "Connected";
+    el.connBadge.textContent = t("badge.connected");
     el.connBadge.className = "badge online";
   } else {
-    el.connBadge.textContent = "Offline";
+    el.connBadge.textContent = t("badge.offline");
     el.connBadge.className = "badge offline";
   }
   updateConnectionPanel(status);
 
   if (wasConnected && !status.connected_to_ap && !status.practice) {
-    toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
+    toastSticky(t("toast.disconnectedBrowse"), "warn");
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
@@ -1788,12 +1858,12 @@ function updateHUD(status) {
   }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
-    toast("Connected to Archipelago", "ok", 4500);
+    toast(t("toast.connected"), "ok", 4500);
     // /connect returns before AP handshake finishes; restore once we are actually online.
     void restoreArticleView(true);
   }
   if (status.boss_completed) {
-    el.targetText.textContent = "GOAL COMPLETE";
+    el.targetText.textContent = t("hud.goalComplete");
     setTargetSummaryTitle("");
   } else {
     el.targetText.textContent = status.current_target || "...";
@@ -1804,7 +1874,11 @@ function updateHUD(status) {
   renderFragmentsTrack(status);
 
   el.clicksText.textContent = String(state.clicksUsed);
-  el.compassHint.textContent = status.compass_unlocked ? (status.warmer_colder || "Calibrating") : "Locked";
+  el.compassHint.textContent = status.compass_unlocked
+    ? (I18n?.localizeCompassHint
+      ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
+      : (status.warmer_colder || t("hud.calibrating")))
+    : t("hud.locked");
   renderSearchStatus();
   renderToolIcons(status);
   renderLensIcons(status);
@@ -1818,7 +1892,7 @@ function updateHUD(status) {
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
-    toast("GOAL COMPLETE! Seed finished.", "ok", 8000);
+    toast(t("toast.goalComplete"), "ok", 8000);
     state.announcedGoalComplete = true;
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
@@ -1853,9 +1927,9 @@ function renderLensStatus(status) {
   const parts = DISPLAY_LOCKS.map((lock) => {
     const unlocked = status?.[lock.unlockedKey];
     if (typeof unlocked !== "boolean") return null;
-    return `${lock.label}: ${unlocked ? "On" : "Off"}`;
+    return `${t(lock.i18nKey)}: ${unlocked ? t("lens.on") : t("lens.off")}`;
   }).filter(Boolean);
-  el.lensesItem.textContent = parts.length ? parts.join(" · ") : "Native wiki";
+  el.lensesItem.textContent = parts.length ? parts.join(" · ") : t("lens.native");
 }
 
 function setDebugQueryParam(enabled) {
@@ -1898,7 +1972,7 @@ function disableDebugDisplayMenu() {
 async function runDebugAction(action, payload = {}) {
   if (!state.sessionId) await ensureSession();
   if (!isApConnected()) {
-    toast("Connect to Archipelago before using debug", "warn");
+    toast(t("toast.debugNeedAp"), "warn");
     return null;
   }
   try {
@@ -2024,7 +2098,7 @@ function initDebugDisplayPanel() {
     debugBtn("Go", async () => {
       const title = pageInput.value.trim();
       if (!title) {
-        toast("Enter a Wikipedia page title", "warn", 3000);
+        toast(t("toast.enterTitle"), "warn", 3000);
         return;
       }
       await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
@@ -2072,7 +2146,7 @@ function initDebugDisplayPanel() {
   challenge.appendChild(debugRow([
     debugBtn("Clear visits", () => {
       resetRoundVisits(state.currentTitle || "");
-      toast("Visit tracking cleared", "ok", 3000);
+      toast(t("toast.visitsCleared"), "ok", 3000);
     }),
     debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
   ]));
@@ -2100,7 +2174,7 @@ function bindStuckHelper() {
         setDebugConsentOpen(true);
       } else {
         disableDebugDisplayMenu();
-        toast("Debug menu disabled", "warn", 3500);
+        toast(t("toast.debugDisabled"), "warn", 3500);
       }
     });
   }
@@ -2111,7 +2185,7 @@ function bindStuckHelper() {
         setDebugConsentOpen(true);
       }
       enableDebugDisplayMenu();
-      toast("Debug menu enabled", "ok", 4000);
+      toast(t("toast.debugEnabled"), "ok", 4000);
     });
   }
   if (debugDisplayEnabled) {
@@ -2128,7 +2202,7 @@ async function pollStatus() {
     updateHUD(data.status);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
-    el.connBadge.textContent = "Offline";
+    el.connBadge.textContent = t("badge.offline");
     el.connBadge.className = "badge offline";
   }
 }
@@ -2271,7 +2345,7 @@ function isBlockedWikiTitle(title) {
 }
 
 function toastBlockedWikiPage() {
-  toast("That type of page is not allowed in Wikipelago", "warn");
+  toast(t("toast.pageTypeBlocked"), "warn");
 }
 
 function processArticleLinks(root, options = {}) {
@@ -2460,7 +2534,8 @@ function scheduleWikiPrefetchFromHover(title) {
   }, WIKI_PREFETCH_HOVER_MS);
 }
 
-function setArticleLoadingVisible(visible, label = "Loading") {
+function setArticleLoadingVisible(visible, label = null) {
+  if (label == null) label = t("search.loading");
   if (!el.articleLoading) return;
   el.articleLoading.classList.toggle("hidden", !visible);
   el.articleLoading.setAttribute("aria-busy", visible ? "true" : "false");
@@ -2468,7 +2543,8 @@ function setArticleLoadingVisible(visible, label = "Loading") {
   if (el.articleLoadingText && visible) el.articleLoadingText.textContent = label;
 }
 
-function beginArticleLoading(label = "Loading") {
+function beginArticleLoading(label = null) {
+  if (label == null) label = t("search.loading");
   const token = ++state.articleLoadingToken;
   // Avoid a flash when hover-prefetch already filled the cache.
   const timer = setTimeout(() => {
@@ -2496,14 +2572,14 @@ async function openArticle(title, options = {}) {
     return;
   }
 
-  const endLoading = beginArticleLoading("Loading");
+  const endLoading = beginArticleLoading();
   let html;
   try {
     html = await fetchWikiHtml(title);
   } catch (err) {
     endLoading();
     const detail = err?.message ? ` (${err.message})` : "";
-    toast(`Could not open article: ${title}${detail}`, "warn");
+    toast(t("toast.openFailed", { title, detail }), "warn");
     return;
   }
 
@@ -2545,7 +2621,7 @@ async function openArticle(title, options = {}) {
 
     // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
     if (!isPlayable()) {
-      if (countAsClick && submitCheck) toast("Disconnected — reconnect to send checks", "warn");
+      if (countAsClick && submitCheck) toast(t("toast.disconnectedChecks"), "warn");
       return;
     }
 
@@ -2576,8 +2652,8 @@ async function openArticle(title, options = {}) {
       } else {
         toastBingoCompletions(result.bingo_completed);
       }
-      if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
-      if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
+      if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
+      if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
     } else {
       toastBingoCompletions(result.bingo_completed);
     }
@@ -2585,7 +2661,7 @@ async function openArticle(title, options = {}) {
   } catch (err) {
     endLoading();
     // Page is already visible; do not pretend the Wikipedia fetch failed.
-    toast(err?.message || "Connected page sync failed", "warn");
+    toast(err?.message || t("toast.syncFailed"), "warn");
   }
 }
 
@@ -2702,10 +2778,10 @@ el.connectBtn.addEventListener("click", async () => {
       slot_name: slotName,
       password: el.passwordInput.value,
     });
-    toast("Connecting to Archipelago...", "ok", 4500);
+    toast(t("toast.connecting"), "ok", 4500);
     const online = await waitForApConnection();
     if (!online) {
-      toastSticky(state.status?.last_error || "Could not connect to Archipelago", "warn");
+      toastSticky(state.status?.last_error || t("toast.connectFailed"), "warn");
       return;
     }
     const nextIdentity = progressIdentity();
@@ -2715,7 +2791,7 @@ el.connectBtn.addEventListener("click", async () => {
     state.resumeIdentity = nextIdentity;
     await restoreArticleView(true);
   } catch (err) {
-    toastSticky(err.message || "Connect failed", "warn");
+    toastSticky(err.message || t("toast.connectFailedShort"), "warn");
   }
 });
 
@@ -2724,7 +2800,7 @@ el.practiceBtn?.addEventListener("click", async () => {
     clearStickyConnectionError();
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/practice`, "POST", {
-      wikipedia_language: "en",
+      wikipedia_language: uiLanguage(),
     });
     if (result.status) updateHUD(result.status);
     else await pollStatus();
@@ -2738,7 +2814,7 @@ el.practiceBtn?.addEventListener("click", async () => {
       });
     }
   } catch (err) {
-    toastSticky(err.message || "Could not start Practice", "warn");
+    toastSticky(err.message || t("toast.practiceFailed"), "warn");
   }
 });
 
@@ -2749,9 +2825,9 @@ el.disconnectBtn?.addEventListener("click", async () => {
     const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
     if (result.status) updateHUD(result.status);
     else await pollStatus();
-    toast(leavingPractice ? "Left Practice" : "Disconnected from Archipelago", "warn", 4500);
+    toast(leavingPractice ? t("toast.leftPractice") : t("toast.disconnected"), "warn", 4500);
   } catch (err) {
-    toastSticky(err.message || "Disconnect failed", "warn");
+    toastSticky(err.message || t("toast.disconnectFailed"), "warn");
   }
 });
 
@@ -2771,14 +2847,14 @@ el.pageSearchInput.addEventListener("input", () => {
   const hits = applySearchHighlights(el.pageSearchInput.value.trim());
   renderSearchStatus();
   if (el.pageSearchInput.value.trim()) {
-    el.searchStatus.textContent = `${hits} match${hits === 1 ? "" : "es"}`;
+    el.searchStatus.textContent = t("search.matchCount", { n: hits });
   }
 });
 
 function backBlockedToast() {
   const max = Number(state.status?.back_depth_max) || 0;
-  if (max <= 0) toast("Progressive Back is locked", "warn");
-  else toast("No backs remaining this round", "warn");
+  if (max <= 0) toast(t("toast.backLocked"), "warn");
+  else toast(t("toast.noBacks"), "warn");
 }
 
 function canGoBackNow() {
@@ -2862,7 +2938,7 @@ window.addEventListener("popstate", async (e) => {
       await consumeBackCharge();
     } catch (err) {
       rePushCurrentHistory();
-      toast(`Could not use back: ${err.message || err}`, "warn");
+      toast(t("toast.backFailed", { error: err.message || err }), "warn");
       return;
     }
   }
@@ -2880,6 +2956,7 @@ if ("serviceWorker" in navigator) {
 
 ensureToolIcons();
 bindTargetTooltip();
+bindUiLanguageControls();
 bindStuckHelper();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;

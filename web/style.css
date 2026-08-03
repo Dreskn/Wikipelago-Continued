@@ -64,6 +64,19 @@ body {
 .badge.online { background: #163427; color: #a8ffd1; }
 .badge.practice { background: #1a2a3a; color: #9ec9ff; }
 
+.connection-lang-label {
+  display: block;
+  margin-top: 0;
+}
+#connectionSummary #uiLangSelectActive {
+  width: 100%;
+  margin: 4px 0 10px;
+  padding: 9px;
+  border-radius: 8px;
+  border: 1px solid #3a5068;
+  background: #0f1824;
+  color: var(--text);
+}
 .connection-actions {
   display: flex;
   gap: 8px;
@@ -538,7 +551,8 @@ button {
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }
 .card label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.86rem; }
-.card input {
+.card input,
+.card select {
   width: 100%; margin-top: 4px; padding: 9px;
   border-radius: 8px; border: 1px solid #3a5068;
   background: #0f1824; color: var(--text);
