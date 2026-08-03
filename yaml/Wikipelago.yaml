@@ -55,11 +55,13 @@ Wikipelago:
   # Grid size N (3–26); default 5 → 13 checks per board (N=26 = full A–Z×A–Z).
   # bingo_cards_start: boards unlocked at start (0 = all behind Progressive Bingo Card).
   # bingo_card_unlocks: Progressive Bingo Card items in the pool.
+  # bingo_stamp_unlocks: Progressive Bingo Stamp items (each stamps one empty cell on one board, once per seed).
   # Bingo on with start 0 and unlocks 0 is rejected (no boards).
   toggle_bingo_letterpairs: true
   bingo_letterpairs_grid: 5
   bingo_cards_start: 1
   bingo_card_unlocks: 2
+  bingo_stamp_unlocks: 2
 
   # =============================================================================
   # Wikipedia language & article pool

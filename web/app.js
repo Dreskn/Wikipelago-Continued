@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.03.15";
+const APP_VERSION = "2026.08.04.01";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -105,6 +105,8 @@ const state = {
   bingoStampSyncKey: "",
   bingoRemoteStampCount: 0,
   bingoUi: null,
+  bingoStampPickMode: false,
+  bingoStampBusy: false,
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -179,6 +181,10 @@ const el = {
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   bingoCard: document.getElementById("bingoCard"),
+  bingoStampControls: document.getElementById("bingoStampControls"),
+  bingoStampMeta: document.getElementById("bingoStampMeta"),
+  bingoStampBtn: document.getElementById("bingoStampBtn"),
+  bingoStampHint: document.getElementById("bingoStampHint"),
   bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
   lensesItem: document.getElementById("lensesItem"),
@@ -1342,7 +1348,7 @@ function mergeBingoStampMaps(...maps) {
   return out;
 }
 
-function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
+function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options = {}) {
   const n = board.length;
   const pairSet = new Set(normalizeBingoPairList(stampedPairs));
   const cellSet = new Set(
@@ -1351,6 +1357,9 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
       .map((cell) => `${Number(cell[0])},${Number(cell[1])}`)
   );
   const lineMap = lines && typeof lines === "object" ? lines : {};
+  const pickMode = Boolean(options.pickMode);
+  const boardKey = String(options.boardKey || "");
+  const onPick = typeof options.onPick === "function" ? options.onPick : null;
 
   const grid = document.createElement("div");
   grid.className = "bingo-grid";
@@ -1366,6 +1375,20 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
       const lineDone = bingoCellInCompletedLine(row, col, n, lineMap);
       if (lineDone) cell.classList.add("line-complete");
       else if (stamped) cell.classList.add("stamped");
+      if (pickMode && pair && !stamped && !lineDone && onPick) {
+        cell.classList.add("stampable");
+        cell.setAttribute("role", "button");
+        cell.tabIndex = 0;
+        cell.title = t("bingo.stampCell", { pair });
+        const pick = () => onPick(boardKey, row, col, pair);
+        cell.addEventListener("click", pick);
+        cell.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            pick();
+          }
+        });
+      }
       grid.appendChild(cell);
     }
   }
@@ -1443,6 +1466,51 @@ function applyBingoAutoHide(status, boardKey, complete) {
   return Boolean(prev.collapsed);
 }
 
+function bingoStampCharges(status) {
+  const max = Math.max(0, Number(status?.bingo_stamps_max) || 0);
+  const remaining = Math.max(0, Number(status?.bingo_stamps_remaining) || 0);
+  return { max, remaining };
+}
+
+function setBingoStampPickMode(enabled) {
+  state.bingoStampPickMode = Boolean(enabled);
+  renderBingoHud(state.status || {});
+}
+
+async function useBingoStampOnCell(boardKey, row, col, pair) {
+  if (state.bingoStampBusy) return;
+  if (!state.sessionId || !isPlayable()) {
+    toast(t("toast.connectToPlay"), "warn");
+    return;
+  }
+  if (!state.status?.bingo_storage_ready) {
+    toast(t("toast.stampNotReady"), "warn");
+    return;
+  }
+  state.bingoStampBusy = true;
+  try {
+    const result = await api(`/api/session/${state.sessionId}/bingo-stamp`, "POST", {
+      board: boardKey,
+      row,
+      col,
+    });
+    if (result.status) updateHUD(result.status);
+    state.bingoStampPickMode = false;
+    const stampedPair = String(result.pair || pair || "").toUpperCase();
+    toast(t("bingo.stampOk", { pair: stampedPair || "?" }), "ok");
+    toastBingoCompletions(result.bingo_completed);
+  } catch (err) {
+    const message = String(err?.message || err || "");
+    if (/no stamp charges/i.test(message)) toast(t("toast.stampNoCharges"), "warn");
+    else if (/storage not ready/i.test(message)) toast(t("toast.stampNotReady"), "warn");
+    else if (/already stamped|board locked|cell/i.test(message)) toast(t("toast.stampFailed"), "warn");
+    else toast(t("toast.stampFailed"), "warn");
+  } finally {
+    state.bingoStampBusy = false;
+    renderBingoHud(state.status || {});
+  }
+}
+
 function renderBingoHud(status) {
   if (!el.bingoCard || !el.bingoBoards) return;
   const enabled = Boolean(status?.bingo_letterpairs);
@@ -1450,7 +1518,10 @@ function renderBingoHud(status) {
   if (!enabled) {
     el.bingoBoards.innerHTML = "";
     if (el.bingoMeta) el.bingoMeta.textContent = "";
+    if (el.bingoStampControls) el.bingoStampControls.classList.add("hidden");
+    if (el.bingoStampHint) el.bingoStampHint.classList.add("hidden");
     state.bingoUi = null;
+    state.bingoStampPickMode = false;
     return;
   }
 
@@ -1469,6 +1540,36 @@ function renderBingoHud(status) {
   const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
   const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
   const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
+  const { max: stampMax, remaining: stampRemaining } = bingoStampCharges(status);
+  if (stampRemaining <= 0) state.bingoStampPickMode = false;
+  const pickMode = Boolean(state.bingoStampPickMode && stampRemaining > 0 && unlocked > 0);
+
+  if (el.bingoStampControls) {
+    const showStampUi = stampMax > 0;
+    el.bingoStampControls.classList.toggle("hidden", !showStampUi);
+    if (showStampUi) {
+      if (el.bingoStampMeta) {
+        el.bingoStampMeta.textContent = t("bingo.stamps", {
+          remaining: stampRemaining,
+          max: stampMax,
+        });
+      }
+      if (el.bingoStampBtn) {
+        el.bingoStampBtn.disabled = stampRemaining <= 0 || !unlocked || !status.bingo_storage_ready;
+        el.bingoStampBtn.textContent = pickMode ? t("bingo.cancelStamp") : t("bingo.useStamp");
+        el.bingoStampBtn.onclick = () => {
+          if (pickMode) setBingoStampPickMode(false);
+          else if (stampRemaining <= 0) toast(t("toast.stampNoCharges"), "warn");
+          else if (!status.bingo_storage_ready) toast(t("toast.stampNotReady"), "warn");
+          else setBingoStampPickMode(true);
+        };
+      }
+    }
+  }
+  if (el.bingoStampHint) {
+    el.bingoStampHint.classList.toggle("hidden", !pickMode);
+    if (pickMode) el.bingoStampHint.textContent = t("bingo.pickHint");
+  }
 
   el.bingoBoards.innerHTML = "";
   let totalChecked = 0;
@@ -1512,7 +1613,12 @@ function renderBingoHud(status) {
       board,
       stampedMap[boardKey] || [],
       cellsMap[boardKey] || [],
-      lines
+      lines,
+      {
+        boardKey,
+        pickMode: pickMode && !collapsed,
+        onPick: useBingoStampOnCell,
+      }
     );
     block.appendChild(grid);
     el.bingoBoards.appendChild(block);
@@ -2041,6 +2147,7 @@ function initDebugDisplayPanel() {
     debugBtn("Back", () => runDebugAction("grant_item", { item: "Progressive Back" })),
     debugBtn("Reroll", () => runDebugAction("grant_item", { item: "Progressive Reroll" })),
     debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
+    debugBtn("Bingo Stamp", () => runDebugAction("grant_item", { item: "Progressive Bingo Stamp" })),
     debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
     debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
     debugBtn("All tools", () => runDebugAction("grant_tools")),
@@ -2051,7 +2158,7 @@ function initDebugDisplayPanel() {
   const itemSelect = document.createElement("select");
   itemSelect.className = "debug-input";
   for (const name of [
-    "Progressive Back", "Progressive Reroll", "Progressive Bingo Card",
+    "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
     "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",

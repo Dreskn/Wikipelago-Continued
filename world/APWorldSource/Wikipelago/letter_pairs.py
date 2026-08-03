@@ -101,10 +101,11 @@ def bingo_slot_location_ids(
 ) -> dict[str, int]:
     ids: dict[str, int] = {}
     for index in range(1, grid_size + 1):
-        ids[f"row{index}"] = location_name_to_id[
+        # Underscore keys match bridge/web (row_1 / col_1).
+        ids[f"row_{index}"] = location_name_to_id[
             f"Letter Pair Bingo - Board {board} Row {index}"
         ]
-        ids[f"col{index}"] = location_name_to_id[
+        ids[f"col_{index}"] = location_name_to_id[
             f"Letter Pair Bingo - Board {board} Column {index}"
         ]
     ids["diag"] = location_name_to_id[f"Letter Pair Bingo - Board {board} Diagonal"]

@@ -10,7 +10,7 @@ There is no separate desktop client to install for players — use the [hosted w
 
 ## What does randomization do?
 
-Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, tools (Progressive Back, Progressive Reroll, Ctrl+F Lens, Wiki Compass), optional letter-pair bingo boards / Progressive Bingo Cards, optional lenses, and optional traps when enabled. Completing rounds sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
+Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, tools (Progressive Back, Progressive Reroll, Ctrl+F Lens, Wiki Compass), optional letter-pair bingo boards / Progressive Bingo Cards / Progressive Bingo Stamps, optional lenses, and optional traps when enabled. Completing rounds sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
 
 Optional **deaths** / **DeathLink** / **link bombs** and **Foggy Links** / **Missing Links** traps are off by default — see the [Options guide](options.md).
 
@@ -36,6 +36,7 @@ The goal article can be random from your enabled categories, or a fixed preset �
 - **Progressive Back** — browser back navigation (limited depth per round)
 - **Progressive Reroll** — raises per-round target reroll charges
 - **Progressive Bingo Card** — unlocks an extra letter-pair bingo board (when bingo is enabled)
+- **Progressive Bingo Stamp** — stamps one empty bingo cell on one unlocked board (once per seed; YAML `bingo_stamp_unlocks`)
 - **Ctrl+F Lens** — in-page search
 - **Wiki Compass** — warmer/colder hints toward the target
 - **Round Access** — unlocks more rounds

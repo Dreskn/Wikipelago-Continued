@@ -273,6 +273,11 @@ class WikipelagoWorld(World):
             return 0
         return max(0, int(self.options.bingo_card_unlocks.value))
 
+    def _bingo_stamp_unlocks(self) -> int:
+        if not self._bingo_enabled():
+            return 0
+        return max(0, int(self.options.bingo_stamp_unlocks.value))
+
     def _bingo_board_count(self) -> int:
         if not self._bingo_enabled():
             return 0
@@ -536,6 +541,7 @@ class WikipelagoWorld(World):
         back_unlocks = max(0, int(self.options.back_depth_unlocks.value))
         reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
         bingo_card_unlocks = self._bingo_card_unlocks()
+        bingo_stamp_unlocks = self._bingo_stamp_unlocks()
 
         mandatory_items = (
             fragment_pool_count
@@ -543,6 +549,7 @@ class WikipelagoWorld(World):
             + back_unlocks
             + reroll_unlocks
             + bingo_card_unlocks
+            + bingo_stamp_unlocks
             + round_access_count
             + search_letters_needed
             + scroll_upgrades_needed
@@ -570,6 +577,8 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Progressive Reroll"))
         for _ in range(bingo_card_unlocks):
             pool.append(self.create_item("Progressive Bingo Card"))
+        for _ in range(bingo_stamp_unlocks):
+            pool.append(self.create_item("Progressive Bingo Stamp"))
         if self.options.scrollsanity.value:
             for _ in range(SCROLL_SPEED_UPGRADES):
                 pool.append(self.create_item("Progressive Scroll Speed"))
@@ -660,6 +669,7 @@ class WikipelagoWorld(World):
         bingo_boards = list(getattr(self, "bingo_letterpairs_boards", []) or [])
         bingo_cards_start = self._bingo_cards_start()
         bingo_card_unlocks = self._bingo_card_unlocks()
+        bingo_stamp_unlocks = self._bingo_stamp_unlocks()
         back_depth_start = max(0, int(self.options.back_depth_start.value))
         back_depth_unlocks = max(0, int(self.options.back_depth_unlocks.value))
         target_rerolls_start = max(0, int(self.options.target_rerolls_start.value))
@@ -706,6 +716,7 @@ class WikipelagoWorld(World):
             "bingo_letterpairs_boards": bingo_boards if bingo_enabled else [],
             "bingo_cards_start": bingo_cards_start if bingo_enabled else 0,
             "bingo_card_unlocks": bingo_card_unlocks if bingo_enabled else 0,
+            "bingo_stamp_unlocks": bingo_stamp_unlocks if bingo_enabled else 0,
             "back_depth_start": back_depth_start,
             "back_depth_unlocks": back_depth_unlocks,
             "target_rerolls_start": target_rerolls_start,

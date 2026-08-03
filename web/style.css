@@ -386,6 +386,39 @@ button {
   overscroll-behavior: contain;
   padding-right: 2px;
 }
+.bingo-stamp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.bingo-stamp-controls.hidden {
+  display: none;
+}
+.bingo-stamp-meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.bingo-stamp-hint {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+}
+.bingo-stamp-hint.hidden {
+  display: none;
+}
+.bingo-cell.stampable {
+  cursor: pointer;
+  outline: 1px solid #6aa9ff;
+  outline-offset: -1px;
+  background: #1a3148;
+}
+.bingo-cell.stampable:hover {
+  background: #244866;
+  color: #dcecff;
+}
 .bingo-boards {
   display: flex;
   flex-direction: column;

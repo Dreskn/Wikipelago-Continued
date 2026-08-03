@@ -100,6 +100,7 @@ DEFAULT_ITEMS = {
     "Reference Lens": 1_870_016,
     "Progressive Reroll": 1_870_017,
     "Progressive Bingo Card": 1_870_018,
+    "Progressive Bingo Stamp": 1_870_019,
     "Foggy Links": 1_870_046,
     "Missing Links": 1_870_047,
 }
@@ -115,6 +116,7 @@ PROGRESSIVE_STACK_ITEMS = frozenset({
     "Progressive Back",
     "Progressive Reroll",
     "Progressive Bingo Card",
+    "Progressive Bingo Stamp",
     *TRAP_ITEM_NAMES,
 })
 
@@ -122,6 +124,7 @@ DEBUG_TOOL_ITEMS = (
     "Progressive Back",
     "Progressive Reroll",
     "Progressive Bingo Card",
+    "Progressive Bingo Stamp",
     "Wiki Compass",
     "Ctrl+F Lens",
 )
@@ -267,8 +270,10 @@ class SessionState:
     bingo_letterpairs_boards: list[list[list[str]]] = field(default_factory=list)
     bingo_cards_start: int = 0
     bingo_card_unlocks: int = 0
+    bingo_stamp_unlocks: int = 0
     bingo_letterpairs_location_ids: dict[str, dict[str, int]] = field(default_factory=dict)
     bingo_stamped_pairs: dict[str, set[str]] = field(default_factory=dict)
+    bingo_stamps_used: int = 0
     bingo_storage_ready: bool = False
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
@@ -366,6 +371,14 @@ class SessionState:
 
     def unlocked_bingo_board_keys(self) -> list[str]:
         return [str(index) for index in range(1, self.unlocked_bingo_boards() + 1)]
+
+    def bingo_stamps_max(self) -> int:
+        if not self.bingo_letterpairs:
+            return 0
+        return self.item_count("Progressive Bingo Stamp")
+
+    def bingo_stamps_remaining(self) -> int:
+        return max(0, self.bingo_stamps_max() - max(0, self.bingo_stamps_used))
 
     def back_depth_max(self) -> int:
         return max(0, self.back_depth_start) + self.item_count("Progressive Back")
@@ -528,6 +541,10 @@ class SessionState:
             "bingo_letterpairs_boards": self.bingo_letterpairs_boards,
             "bingo_cards_start": self.bingo_cards_start,
             "bingo_unlocked_boards": self.unlocked_bingo_boards(),
+            "bingo_stamp_unlocks": self.bingo_stamp_unlocks,
+            "bingo_stamps_max": self.bingo_stamps_max(),
+            "bingo_stamps_used": max(0, self.bingo_stamps_used),
+            "bingo_stamps_remaining": self.bingo_stamps_remaining(),
             "bingo_stamped_pairs": stamped_pairs,
             "bingo_stamped_cells": self.bingo_stamped_cells(),
             "bingo_lines_checked": self.bingo_lines_checked(),
@@ -645,8 +662,10 @@ class APConnection:
         self.state.bingo_letterpairs_boards = []
         self.state.bingo_cards_start = 0
         self.state.bingo_card_unlocks = 0
+        self.state.bingo_stamp_unlocks = 0
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
+        self.state.bingo_stamps_used = 0
         self.state.bingo_storage_ready = False
         self.state.location_round_ids = []
         self.state.location_grand_goal = None
@@ -699,8 +718,10 @@ class APConnection:
         self.state.bingo_letterpairs_boards = []
         self.state.bingo_cards_start = 0
         self.state.bingo_card_unlocks = 0
+        self.state.bingo_stamp_unlocks = 0
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
+        self.state.bingo_stamps_used = 0
         self.state.bingo_storage_ready = False
         self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
         self.state.target_rerolls_used = 0
@@ -996,6 +1017,8 @@ class APConnection:
         self.state.bingo_letterpairs_grid = int(slot_data.get("bingo_letterpairs_grid", 0) or 0)
         self.state.bingo_cards_start = int(slot_data.get("bingo_cards_start", 0) or 0)
         self.state.bingo_card_unlocks = int(slot_data.get("bingo_card_unlocks", 0) or 0)
+        self.state.bingo_stamp_unlocks = int(slot_data.get("bingo_stamp_unlocks", 0) or 0)
+        self.state.bingo_stamps_used = 0
         self.state.back_depth_start = int(slot_data.get("back_depth_start", 0) or 0)
         if "target_rerolls_start" in slot_data:
             self.state.target_rerolls_start = max(0, int(slot_data.get("target_rerolls_start") or 0))
@@ -1045,6 +1068,7 @@ class APConnection:
         if isinstance(bingo_ids_raw, dict):
             # New shape: {"1": {"row_1": id, ...}, ...}
             # Legacy flat: {"row_1": id, ...} → board "1"
+            # Also accept pre-homogenized row1/col1 keys from older apworlds.
             looks_nested = any(isinstance(value, dict) for value in bingo_ids_raw.values())
             if looks_nested:
                 for board_key, id_map in bingo_ids_raw.items():
@@ -1053,7 +1077,7 @@ class APConnection:
                     parsed: dict[str, int] = {}
                     for key, value in id_map.items():
                         try:
-                            parsed[str(key)] = int(value)
+                            parsed[self._normalize_bingo_line_key(key)] = int(value)
                         except Exception:
                             pass
                     if parsed:
@@ -1062,13 +1086,14 @@ class APConnection:
                 parsed = {}
                 for key, value in bingo_ids_raw.items():
                     try:
-                        parsed[str(key)] = int(value)
+                        parsed[self._normalize_bingo_line_key(key)] = int(value)
                     except Exception:
                         pass
                 if parsed:
                     bingo_ids["1"] = parsed
         self.state.bingo_letterpairs_location_ids = bingo_ids if self.state.bingo_letterpairs else {}
         self.state.bingo_stamped_pairs.clear()
+        self.state.bingo_stamps_used = 0
 
         item_ids = slot_data.get("item_ids")
         if isinstance(item_ids, dict):
@@ -1128,9 +1153,10 @@ class APConnection:
             if n == 0:
                 continue
             stamped = self.state.bingo_stamped_pairs.setdefault(board_key, set())
-            for key, loc_id in id_map.items():
+            for raw_key, loc_id in id_map.items():
                 if loc_id not in self.state.checked_locations:
                     continue
+                key = self._normalize_bingo_line_key(raw_key)
                 if key.startswith("row_"):
                     try:
                         row_index = int(key.split("_", 1)[1]) - 1
@@ -1394,6 +1420,47 @@ class APConnection:
                     changed = True
         return changed
 
+    @staticmethod
+    def _normalize_bingo_line_key(key: Any) -> str:
+        """Homogenize line keys to row_N / col_N (accepts legacy rowN / colN)."""
+        text = str(key or "").strip()
+        if text.startswith("row_") or text.startswith("col_"):
+            return text
+        if text.startswith("row") and text[3:].isdigit():
+            return f"row_{text[3:]}"
+        if text.startswith("col") and text[3:].isdigit():
+            return f"col_{text[3:]}"
+        return text
+
+    @staticmethod
+    def _parse_bingo_storage_payload(raw: Any) -> tuple[dict[str, list[Any]], int]:
+        """Return (boards_payload, stamps_used). Supports legacy flat board maps."""
+        stamps_used = 0
+        boards_payload: dict[str, list[Any]] = {}
+        if isinstance(raw, dict):
+            boards_raw = raw.get("boards")
+            if isinstance(boards_raw, dict):
+                for board_key, pairs in boards_raw.items():
+                    if isinstance(pairs, list):
+                        boards_payload[str(board_key)] = pairs
+                try:
+                    stamps_used = max(0, int(raw.get("stamps_used") or 0))
+                except Exception:
+                    stamps_used = 0
+            else:
+                for board_key, pairs in raw.items():
+                    if board_key == "stamps_used":
+                        try:
+                            stamps_used = max(0, int(pairs or 0))
+                        except Exception:
+                            pass
+                        continue
+                    if isinstance(pairs, list):
+                        boards_payload[str(board_key)] = pairs
+        elif isinstance(raw, list):
+            boards_payload = {"1": raw}
+        return boards_payload, stamps_used
+
     async def apply_bingo_visit(self, page_title: str) -> list[dict[str, Any]]:
         """Stamp letter-pair cells for this page; send newly completed bingo line checks."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
@@ -1488,30 +1555,24 @@ class APConnection:
             self.state.bingo_storage_ready = True
             return
         before = self._bingo_stamps_snapshot()
-        if isinstance(raw, dict):
-            for board_key, pairs in raw.items():
-                key = str(board_key)
-                board = self.state.bingo_board_for_key(key)
-                if not board:
-                    continue
-                on_board = {pair for row in board for pair in row}
-                stamped = self.state.bingo_stamped_pairs.setdefault(key, set())
-                for item in pairs or []:
-                    pair = str(item or "").strip().upper()
-                    if pair in on_board:
-                        stamped.add(pair)
-        elif isinstance(raw, list):
-            # Legacy flat list → board "1"
-            board = self.state.bingo_board_for_key("1")
+        before_used = max(0, self.state.bingo_stamps_used)
+        boards_payload, stamps_used = self._parse_bingo_storage_payload(raw)
+        for board_key, pairs in boards_payload.items():
+            key = str(board_key)
+            board = self.state.bingo_board_for_key(key)
+            if not board:
+                continue
             on_board = {pair for row in board for pair in row}
-            stamped = self.state.bingo_stamped_pairs.setdefault("1", set())
-            for item in raw:
+            stamped = self.state.bingo_stamped_pairs.setdefault(key, set())
+            for item in pairs or []:
                 pair = str(item or "").strip().upper()
                 if pair in on_board:
                     stamped.add(pair)
+        # Never lose a locally higher used count on a racing SetReply.
+        self.state.bingo_stamps_used = max(before_used, stamps_used)
         await self._flush_bingo_line_checks()
         after = self._bingo_stamps_snapshot()
-        changed = after != before
+        changed = after != before or self.state.bingo_stamps_used != before_used
         was_ready = self.state.bingo_storage_ready
         # Mark ready before any persist so gated writers can flush the unioned state.
         self.state.bingo_storage_ready = True
@@ -1520,7 +1581,7 @@ class APConnection:
         if source == "SetReply":
             if changed:
                 await self._persist_bingo_stamps(force=True)
-        elif changed or any(self.state.bingo_stamped_pairs.values()):
+        elif changed or any(self.state.bingo_stamped_pairs.values()) or self.state.bingo_stamps_used > 0:
             await self._persist_bingo_stamps(force=True)
         if changed or not was_ready:
             self._queue_event({"type": "bingo_stamps_updated", "source": source or "storage"})
@@ -1534,14 +1595,17 @@ class APConnection:
             return
         key = self._bingo_storage_key()
         value = {
-            board_key: sorted(pairs)
-            for board_key, pairs in self.state.bingo_stamped_pairs.items()
-            if pairs
+            "boards": {
+                board_key: sorted(pairs)
+                for board_key, pairs in self.state.bingo_stamped_pairs.items()
+                if pairs
+            },
+            "stamps_used": max(0, int(self.state.bingo_stamps_used)),
         }
         payload = [{
             "cmd": "Set",
             "key": key,
-            "default": {},
+            "default": {"boards": {}, "stamps_used": 0},
             "want_reply": True,
             "operations": [{
                 "operation": "replace",
@@ -1553,6 +1617,61 @@ class APConnection:
                 await self.ws.send(json.dumps(payload))
         except Exception as exc:
             LOG.info("Bingo DataStorage Set failed for %s: %s", key, exc)
+
+    async def use_bingo_stamp(self, board: Any, row: Any, col: Any) -> dict[str, Any]:
+        """Spend one Progressive Bingo Stamp to stamp a single unlocked empty cell."""
+        if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
+            return {"ok": False, "error": "bingo disabled", "status": self.state.to_status()}
+        if not self.state.connected_to_ap or self.ws is None:
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+        if not self.state.bingo_storage_ready:
+            return {"ok": False, "error": "bingo storage not ready", "status": self.state.to_status()}
+        if self.state.bingo_stamps_remaining() <= 0:
+            return {"ok": False, "error": "no stamp charges", "status": self.state.to_status()}
+
+        board_key = str(board).strip()
+        if board_key not in self.state.unlocked_bingo_board_keys():
+            return {"ok": False, "error": "board locked", "status": self.state.to_status()}
+        board_grid = self.state.bingo_board_for_key(board_key)
+        n = len(board_grid)
+        try:
+            row_index = int(row)
+            col_index = int(col)
+        except Exception:
+            return {"ok": False, "error": "invalid cell", "status": self.state.to_status()}
+        if row_index < 0 or col_index < 0 or row_index >= n or col_index >= n:
+            return {"ok": False, "error": "cell out of range", "status": self.state.to_status()}
+
+        pair = str(board_grid[row_index][col_index] or "").strip().upper()
+        if not pair:
+            return {"ok": False, "error": "empty cell", "status": self.state.to_status()}
+        stamped = self.state.bingo_stamped_pairs.setdefault(board_key, set())
+        if pair in stamped:
+            return {"ok": False, "error": "already stamped", "status": self.state.to_status()}
+
+        stamped.add(pair)
+        self.state.bingo_stamps_used = max(0, self.state.bingo_stamps_used) + 1
+        bingo_completed = await self._flush_bingo_line_checks()
+        await self._persist_bingo_stamps(force=True)
+        LOG.info(
+            "Bingo stamp used board=%s cell=%s,%s pair=%s used=%s/%s",
+            board_key,
+            row_index,
+            col_index,
+            pair,
+            self.state.bingo_stamps_used,
+            self.state.bingo_stamps_max(),
+        )
+        return {
+            "ok": True,
+            "stamped": True,
+            "board": board_key,
+            "row": row_index,
+            "col": col_index,
+            "pair": pair,
+            "bingo_completed": bingo_completed,
+            "status": self.state.to_status(),
+        }
 
     async def _flush_bingo_line_checks(self) -> list[dict[str, Any]]:
         pending: list[tuple[str, str, int]] = []
@@ -2484,6 +2603,25 @@ class App:
             "status": session.conn.state.to_status(),
         })
 
+    async def session_use_bingo_stamp(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        if not isinstance(data, dict):
+            data = {}
+        result = await session.conn.use_bingo_stamp(
+            data.get("board"),
+            data.get("row"),
+            data.get("col"),
+        )
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
     async def session_debug(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -2517,6 +2655,7 @@ class App:
         app.router.add_post("/api/session/{sid}/death", self.session_death)
         app.router.add_post("/api/session/{sid}/check", self.session_check)
         app.router.add_post("/api/session/{sid}/bingo-stamps", self.session_bingo_stamps)
+        app.router.add_post("/api/session/{sid}/bingo-stamp", self.session_use_bingo_stamp)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
         app.router.add_post("/api/session/{sid}/debug", self.session_debug)

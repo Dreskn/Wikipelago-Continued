@@ -338,6 +338,14 @@ class BingoCardUnlocks(Range):
     default = 2
 
 
+class BingoStampUnlocks(Range):
+    """Number of Progressive Bingo Stamp items in the pool (each stamps one empty cell on one unlocked board, once per game)."""
+    display_name = "Bingo Stamp Unlocks"
+    range_start = 0
+    range_end = 20
+    default = 2
+
+
 class BackDepthStart(Range):
     """Starting Back depth per round (0 = Back locked until Progressive Back items are found)."""
     display_name = "Back Depth Start"
@@ -421,6 +429,7 @@ class WikipelagoOptions(PerGameCommonOptions):
     bingo_letterpairs_grid: BingoLetterpairsGrid
     bingo_cards_start: BingoCardsStart
     bingo_card_unlocks: BingoCardUnlocks
+    bingo_stamp_unlocks: BingoStampUnlocks
     back_depth_start: BackDepthStart
     back_depth_unlocks: BackDepthUnlocks
     target_rerolls_start: TargetRerollsStart

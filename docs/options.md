@@ -32,7 +32,7 @@ Browser back is limited per round by `back_depth_start` (default **0**) plus **P
 
 ### Letter-pair bingo
 
-When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid`. Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles.
+When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid`. Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles. `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items — each stamps one empty cell on one unlocked board for the whole seed (not per round), and completing a line still sends the check.
 
 Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
 
