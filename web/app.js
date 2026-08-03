@@ -2649,10 +2649,28 @@ el.articleBody.addEventListener("click", async (e) => {
   openArticle(dest, { countAsClick: true });
 });
 
-el.articleBody.addEventListener("wheel", (e) => {
-  if (!state.status?.scrollsanity) return;
+function isEventInSidePanel(target) {
+  return Boolean(target?.closest?.(".side-panel"));
+}
+
+function applyArticleWheel(deltaY) {
+  if (!el.articleBody) return;
+  const factor = state.status?.scrollsanity ? scrollFactor() : 1;
+  el.articleBody.scrollTop += deltaY * factor;
+}
+
+// Route wheel scrolling to the article from anywhere except the side panel
+// (page chrome, empty margins, other monitors when the cursor is still over this window).
+window.addEventListener("wheel", (e) => {
+  if (isEventInSidePanel(e.target)) return;
+  if (!el.articleBody) return;
+
+  const overArticle = el.articleBody.contains(e.target);
+  // Let the article use native scrolling when scrollsanity is off.
+  if (overArticle && !state.status?.scrollsanity) return;
+
   e.preventDefault();
-  el.articleBody.scrollTop += e.deltaY * scrollFactor();
+  applyArticleWheel(e.deltaY);
 }, { passive: false });
 
 el.rerollTargetBtn?.addEventListener("click", () => {
