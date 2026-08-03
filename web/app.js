@@ -167,7 +167,11 @@ const el = {
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
+  stuckMoreBtn: document.getElementById("stuckMoreBtn"),
+  stuckMorePanel: document.getElementById("stuckMorePanel"),
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
+  debugConsentPanel: document.getElementById("debugConsentPanel"),
+  showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
 };
 
 function loadSavedConnection() {
@@ -1865,10 +1869,28 @@ function setDebugQueryParam(enabled) {
   window.history.replaceState(window.history.state, "", next);
 }
 
+function setStuckPanelOpen(open) {
+  if (!el.stuckPanel || !el.stuckToggleBtn) return;
+  el.stuckPanel.classList.toggle("hidden", !open);
+  el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function setStuckMoreOpen(open) {
+  if (!el.stuckMorePanel || !el.stuckMoreBtn) return;
+  el.stuckMorePanel.classList.toggle("hidden", !open);
+  el.stuckMoreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function setDebugConsentOpen(open) {
+  if (!el.debugConsentPanel) return;
+  el.debugConsentPanel.classList.toggle("hidden", !open);
+}
+
 function enableDebugDisplayMenu() {
   debugDisplayEnabled = true;
   setDebugQueryParam(true);
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
+  setDebugConsentOpen(true);
   initDebugDisplayPanel();
 }
 
@@ -1878,6 +1900,7 @@ function disableDebugDisplayMenu() {
   setDebugQueryParam(false);
   document.getElementById("debugMenuCard")?.remove();
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = false;
+  setDebugConsentOpen(false);
 }
 
 async function runDebugAction(action, payload = {}) {
@@ -2072,25 +2095,41 @@ function initDebugDisplayPanel() {
 function bindStuckHelper() {
   if (el.stuckToggleBtn && el.stuckPanel) {
     el.stuckToggleBtn.addEventListener("click", () => {
-      const open = el.stuckPanel.classList.toggle("hidden") === false;
-      el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      const open = el.stuckPanel.classList.contains("hidden");
+      setStuckPanelOpen(open);
     });
     el.stuckToggleBtn.setAttribute("aria-expanded", "false");
+  }
+  if (el.stuckMoreBtn && el.stuckMorePanel) {
+    el.stuckMoreBtn.addEventListener("click", () => {
+      const open = el.stuckMorePanel.classList.contains("hidden");
+      setStuckMoreOpen(open);
+    });
+    el.stuckMoreBtn.setAttribute("aria-expanded", "false");
   }
   if (el.enableDebugMenuChk) {
     el.enableDebugMenuChk.addEventListener("change", () => {
       if (el.enableDebugMenuChk.checked) {
-        enableDebugDisplayMenu();
-        toast("Debug menu enabled", "ok", 4000);
+        setDebugConsentOpen(true);
       } else {
         disableDebugDisplayMenu();
         toast("Debug menu disabled", "warn", 3500);
       }
     });
   }
+  if (el.showDebugMenuBtn) {
+    el.showDebugMenuBtn.addEventListener("click", () => {
+      if (!el.enableDebugMenuChk?.checked) {
+        if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
+        setDebugConsentOpen(true);
+      }
+      enableDebugDisplayMenu();
+      toast("Debug menu enabled", "ok", 4000);
+    });
+  }
   if (debugDisplayEnabled) {
-    if (el.stuckPanel) el.stuckPanel.classList.remove("hidden");
-    if (el.stuckToggleBtn) el.stuckToggleBtn.setAttribute("aria-expanded", "true");
+    setStuckPanelOpen(true);
+    setStuckMoreOpen(true);
     enableDebugDisplayMenu();
   }
 }

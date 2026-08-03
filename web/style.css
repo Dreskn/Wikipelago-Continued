@@ -466,7 +466,6 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: 4px;
   cursor: pointer;
   color: #8aa3bb;
 }
@@ -474,6 +473,11 @@ button {
   width: auto;
   margin: 0;
   accent-color: var(--accent);
+}
+.helper-warn {
+  color: #d4a15c;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }
