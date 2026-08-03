@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.04.01";
+const APP_VERSION = "2026.08.04.02";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -24,11 +24,85 @@ function wikipediaOrigin() {
   return `https://${wikipediaLanguage()}.wikipedia.org`;
 }
 
-/** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
+/**
+ * Non-article namespaces blocked for navigation (toast; never leave the SPA).
+ * Includes English + localized prefixes/aliases for en/fr/de/es/it/pt/nl/sv/pl.
+ * Matching uses the title segment before the first ":".
+ */
 const BLOCKED_WIKI_NAMESPACES = new Set([
-  "file", "category", "help", "template", "special", "portal", "talk", "user",
-  "wikipedia", "module", "book", "draft", "mediawiki",
+  // English / canonical
+  "file", "image", "category", "help", "template", "special", "portal", "portal talk",
+  "talk", "user", "user talk", "wikipedia", "wp", "project", "module", "book", "draft",
+  "mediawiki", "timedtext", "event",
+  // French
+  "spécial", "discussion", "discuter", "utilisateur", "utilisatrice",
+  "discussion utilisateur", "discussion utilisatrice",
+  "wikipédia", "fichier", "modèle", "aide", "catégorie", "portail", "discussion portail",
+  "projet", "référence",
+  // German
+  "spezial", "diskussion", "benutzer", "benutzerin", "benutzer diskussion",
+  "benutzerin diskussion", "bd", "datei", "bild", "vorlage", "hilfe", "kategorie",
+  "portal diskussion", "pd",
+  // Spanish
+  "especial", "discusión", "usuario", "usuaria", "usuario discusión", "usuaria discusión",
+  "archivo", "imagen", "plantilla", "ayuda", "categoría", "portal discusión",
+  // Italian
+  "speciale", "discussione", "utente", "discussioni utente", "immagine", "aiuto",
+  "categoria", "portale", "discussioni portale",
+  // Portuguese
+  "especial", "discussão", "usuário(a)", "usuário", "usuária", "utilizador",
+  "utilizador(a)", "utilizadora", "usuário(a) discussão", "usuário discussão",
+  "usuária discussão", "utilizador discussão", "utilizador(a) discussão",
+  "utilizadora discussão", "wikipédia", "ficheiro", "arquivo", "imagem",
+  "predefinição", "ajuda", "categoria", "portal discussão", "discussão portal",
+  // Dutch
+  "speciaal", "overleg", "gebruiker", "overleg gebruiker", "bestand", "afbeelding",
+  "sjabloon", "categorie", "portaal", "overleg portaal",
+  // Swedish
+  "användare", "användardiskussion", "fil", "mall", "hjälp", "kategori",
+  "portaldiskussion",
+  // Polish
+  "specjalna", "dyskusja", "wikipedysta", "wikipedystka", "dyskusja wikipedysty",
+  "dyskusja wikipedystki", "plik", "grafika", "szablon", "pomoc", "kategoria",
+  "dyskusja portalu",
 ]);
+
+/** Localized appendix section titles → CSS marker class (union across supported wikis). */
+const WIKI_SECTION_HEADINGS = {
+  "wiki-section-seealso": [
+    "see also",
+    "voir aussi", "articles connexes", "articles liés",
+    "siehe auch",
+    "véase también", "vease tambien",
+    "vedi anche", "voci correlate",
+    "ver também", "ver tambem", "artigos relacionados",
+    "zie ook",
+    "se även", "se aven",
+    "zobacz też", "zobacz tez", "zobacz także", "zobacz takze",
+  ],
+  "wiki-section-external": [
+    "external links", "external link",
+    "liens externes", "lien externe",
+    "weblinks", "weblink",
+    "enlaces externos", "enlace externo",
+    "collegamenti esterni", "collegamento esterno",
+    "ligações externas", "ligacoes externas", "links externos",
+    "externe links", "externe link",
+    "externa länkar", "externa lank",
+    "linki zewnętrzne", "linki zewnetrzne",
+  ],
+  "wiki-section-references": [
+    "references", "notes", "citations", "notes and references", "further reading", "bibliography",
+    "références", "notes et références", "notes et references", "bibliographie", "sources",
+    "einzelnachweise", "literatur", "anmerkungen", "referenzen", "belege",
+    "referencias", "notas", "bibliografía", "bibliografia",
+    "note", "riferimenti",
+    "referências",
+    "referenties", "noten", "voetnoten", "literatuur",
+    "referenser", "källor", "kallor", "noter", "litteratur",
+    "przypisy", "uwagi", "źródła", "zrodla", "przypisy i bibliografia",
+  ],
+};
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
@@ -2330,7 +2404,12 @@ function unwrapElement(node) {
 
 function headingLabel(node) {
   return String(node.textContent || "")
-    .replace(/\[\s*edit\s*\]/gi, "")
+    // Strip localized [edit] / [modifier] / … chrome if editsection markup remains.
+    .replace(/\[[^\]]{0,48}\]/g, (chunk) => (
+      /edit|modifier|bearbeiten|editar|modifica|bewerken|redigera|edytuj|código|code|quelle|quellen/i.test(chunk)
+        ? ""
+        : chunk
+    ))
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
@@ -2373,9 +2452,9 @@ function markNamedSections(root, names, className) {
 function prepareArticleHtml(root, options = {}) {
   sanitizeHtml(root);
   markLeadSection(root);
-  markNamedSections(root, ["see also"], "wiki-section-seealso");
-  markNamedSections(root, ["external links", "external link"], "wiki-section-external");
-  markNamedSections(root, ["references", "notes", "citations"], "wiki-section-references");
+  for (const [className, names] of Object.entries(WIKI_SECTION_HEADINGS)) {
+    markNamedSections(root, names, className);
+  }
   wrapTables(root);
   processArticleLinks(root, options);
   applyDisplayLocks();
