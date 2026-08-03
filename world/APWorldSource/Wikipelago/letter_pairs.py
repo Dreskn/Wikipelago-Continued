@@ -7,13 +7,15 @@ import string
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .article_pool import SUPPORTED_LANGS
+
 if TYPE_CHECKING:
     from random import Random
 
-WEIGHTS_PATH = Path(__file__).resolve().parent / "letter_pair_weights.json"
+WEIGHTS_DIR = Path(__file__).resolve().parent
 ALL_PAIRS = [a + b for a in string.ascii_uppercase for b in string.ascii_uppercase]
 
-_WEIGHTS_CACHE: dict[str, int] | None = None
+_WEIGHTS_CACHE: dict[str, dict[str, int]] = {}
 
 
 def letter_pair_from_title(title: str) -> str | None:
@@ -27,28 +29,49 @@ def letter_pair_from_title(title: str) -> str | None:
     return None
 
 
-def load_letter_pair_weights() -> dict[str, int]:
-    global _WEIGHTS_CACHE
-    if _WEIGHTS_CACHE is None:
-        raw: str | None = None
-        # Prefer package resources so zip/apworld installs still find the JSON.
-        try:
-            from importlib.resources import files
+def _weights_filename(lang: str) -> str:
+    return f"letter_pair_weights_{lang}.json"
 
-            raw = files(__package__).joinpath("letter_pair_weights.json").read_text(encoding="utf-8")
-        except Exception:
-            raw = None
-        if raw is None:
-            if not WEIGHTS_PATH.is_file():
-                raise FileNotFoundError(
-                    "letter_pair_weights.json is missing from the Wikipelago apworld. "
-                    "Rebuild with world/build_apworld.ps1 and reinstall the package "
-                    f"(expected next to letter_pairs.py: {WEIGHTS_PATH})."
-                )
-            raw = WEIGHTS_PATH.read_text(encoding="utf-8")
-        parsed = json.loads(raw)
-        _WEIGHTS_CACHE = {str(k).upper(): int(v) for k, v in parsed.items()}
-    return _WEIGHTS_CACHE
+
+def _read_weights_raw(lang: str) -> str | None:
+    name = _weights_filename(lang)
+    try:
+        from importlib.resources import files
+
+        return files(__package__).joinpath(name).read_text(encoding="utf-8")
+    except Exception:
+        path = WEIGHTS_DIR / name
+        if path.is_file():
+            return path.read_text(encoding="utf-8")
+    return None
+
+
+def load_letter_pair_weights(lang: str = "en") -> dict[str, int]:
+    """Load shipped title-pair frequencies for a Wikipedia language."""
+    code = (lang or "en").strip().lower()
+    if code not in SUPPORTED_LANGS:
+        code = "en"
+    cached = _WEIGHTS_CACHE.get(code)
+    if cached is not None:
+        return cached
+
+    raw = _read_weights_raw(code)
+    if raw is None and code != "en":
+        # Dev/partial packages: prefer generating over hard-failing mid-roll.
+        raw = _read_weights_raw("en")
+        if raw is not None:
+            code = "en"
+    if raw is None:
+        raise FileNotFoundError(
+            f"{_weights_filename(code)} is missing from the Wikipelago apworld. "
+            "Rebuild weights with world/build_letter_pair_weights.py --lang all, "
+            "then world/build_apworld.ps1 and reinstall the package "
+            f"(expected next to letter_pairs.py: {WEIGHTS_DIR / _weights_filename(code)})."
+        )
+    parsed = json.loads(raw)
+    weights = {str(k).upper(): int(v) for k, v in parsed.items()}
+    _WEIGHTS_CACHE[code] = weights
+    return weights
 
 
 def bingo_location_count(grid_size: int) -> int:
@@ -78,10 +101,10 @@ def bingo_slot_location_ids(
 ) -> dict[str, int]:
     ids: dict[str, int] = {}
     for index in range(1, grid_size + 1):
-        ids[f"row_{index}"] = location_name_to_id[
+        ids[f"row{index}"] = location_name_to_id[
             f"Letter Pair Bingo - Board {board} Row {index}"
         ]
-        ids[f"col_{index}"] = location_name_to_id[
+        ids[f"col{index}"] = location_name_to_id[
             f"Letter Pair Bingo - Board {board} Column {index}"
         ]
     ids["diag"] = location_name_to_id[f"Letter Pair Bingo - Board {board} Diagonal"]
@@ -123,11 +146,16 @@ def _weighted_sample_without_replacement(rng: Random, pairs: list[str], weights:
     return picked
 
 
-def build_letter_pair_bingo_board(rng: Random, grid_size: int) -> list[list[str]]:
+def build_letter_pair_bingo_board(
+    rng: Random,
+    grid_size: int,
+    lang: str = "en",
+) -> list[list[str]]:
     """Build an N×N board of uppercase letter pairs.
 
     N=26: sorted A–Z × A–Z (unweighted).
-    N=3..25: weighted sample without replacement from shipped frequencies, then shuffled into the grid.
+    N=3..25: weighted sample without replacement from that language's shipped
+    title-pair frequencies, then shuffled into the grid.
     """
     if grid_size < 3 or grid_size > 26:
         raise Exception(f"Wikipelago bingo_letterpairs_grid must be 3–26, got {grid_size}.")
@@ -135,7 +163,7 @@ def build_letter_pair_bingo_board(rng: Random, grid_size: int) -> list[list[str]
     if grid_size == 26:
         return [[f"{chr(65 + row)}{chr(65 + col)}" for col in range(26)] for row in range(26)]
 
-    weights = load_letter_pair_weights()
+    weights = load_letter_pair_weights(lang)
     pairs = list(ALL_PAIRS)
     weight_list = [int(weights.get(pair, 0)) for pair in pairs]
     needed = grid_size * grid_size

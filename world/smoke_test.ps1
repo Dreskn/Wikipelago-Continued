@@ -280,7 +280,13 @@ try {
     Assert-NoPattern $itemsPath '"Back Button"' 'Items table must not keep Back Button'
     Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'Board \{board\} Full Card' 'Bingo Full Card location must be board-prefixed'
     Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'def letter_pair_from_title' 'letter_pair_from_title helper is missing'
-    Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights.json") '"TH"' 'Shipped letter_pair_weights.json is missing TH'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights_en.json") '"TH"' 'Shipped letter_pair_weights_en.json is missing TH'
+    foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
+        $weightsFile = Join-Path $worldRoot "letter_pair_weights_$lang.json"
+        if (-not (Test-Path $weightsFile)) {
+            throw "Missing shipped letter-pair weights for language '$lang': $weightsFile"
+        }
+    }
     Assert-HasPattern $yamlPath 'bingo_cards_start:' 'YAML bingo_cards_start is missing'
     Assert-HasPattern $yamlPath 'back_depth_start:' 'YAML back_depth_start is missing'
     Assert-HasPattern $yamlPath 'target_rerolls_start:' 'YAML target_rerolls_start is missing'
@@ -368,11 +374,13 @@ try {
                     throw "Packaged APWorld file is not strict UTF-8: $($file.Name)"
                 }
             }
-            $packagedWeights = Join-Path $temp "Wikipelago\letter_pair_weights.json"
-            if (-not (Test-Path $packagedWeights)) {
-                throw "Packaged APWorld is missing letter_pair_weights.json"
+            foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
+                $packagedWeights = Join-Path $temp "Wikipelago\letter_pair_weights_$lang.json"
+                if (-not (Test-Path $packagedWeights)) {
+                    throw "Packaged APWorld is missing letter_pair_weights_$lang.json"
+                }
             }
-            Assert-HasPattern $packagedWeights '"TH"' 'Packaged letter_pair_weights.json is missing TH'
+            Assert-HasPattern (Join-Path $temp "Wikipelago\letter_pair_weights_en.json") '"TH"' 'Packaged letter_pair_weights_en.json is missing TH'
             $packagedInit = Join-Path $temp "Wikipelago\__init__.py"
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

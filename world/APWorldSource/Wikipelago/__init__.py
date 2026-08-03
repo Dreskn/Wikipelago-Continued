@@ -499,8 +499,9 @@ class WikipelagoWorld(World):
         if self._bingo_enabled():
             grid_size = self._bingo_grid_size()
             board_count = self._bingo_board_count()
+            wiki_lang = self._wikipedia_language()
             self.bingo_letterpairs_boards = [
-                build_letter_pair_bingo_board(self.random, grid_size)
+                build_letter_pair_bingo_board(self.random, grid_size, wiki_lang)
                 for _ in range(board_count)
             ]
         else:
