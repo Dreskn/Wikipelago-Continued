@@ -167,8 +167,6 @@ const el = {
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
-  stuckMoreBtn: document.getElementById("stuckMoreBtn"),
-  stuckMorePanel: document.getElementById("stuckMorePanel"),
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
   debugConsentPanel: document.getElementById("debugConsentPanel"),
   showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
@@ -1875,12 +1873,6 @@ function setStuckPanelOpen(open) {
   el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
-function setStuckMoreOpen(open) {
-  if (!el.stuckMorePanel || !el.stuckMoreBtn) return;
-  el.stuckMorePanel.classList.toggle("hidden", !open);
-  el.stuckMoreBtn.setAttribute("aria-expanded", open ? "true" : "false");
-}
-
 function setDebugConsentOpen(open) {
   if (!el.debugConsentPanel) return;
   el.debugConsentPanel.classList.toggle("hidden", !open);
@@ -1965,10 +1957,6 @@ function initDebugDisplayPanel() {
   card.id = "debugMenuCard";
   card.className = "card debug-menu-card";
   card.innerHTML = "<h2>Debug (AP)</h2>";
-  const warn = document.createElement("p");
-  warn.className = "debug-warn";
-  warn.textContent = "Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink. No auth in 0.4.";
-  card.appendChild(warn);
 
   const progress = debugSection("Progress");
   progress.appendChild(debugRow([
@@ -2100,13 +2088,6 @@ function bindStuckHelper() {
     });
     el.stuckToggleBtn.setAttribute("aria-expanded", "false");
   }
-  if (el.stuckMoreBtn && el.stuckMorePanel) {
-    el.stuckMoreBtn.addEventListener("click", () => {
-      const open = el.stuckMorePanel.classList.contains("hidden");
-      setStuckMoreOpen(open);
-    });
-    el.stuckMoreBtn.setAttribute("aria-expanded", "false");
-  }
   if (el.enableDebugMenuChk) {
     el.enableDebugMenuChk.addEventListener("change", () => {
       if (el.enableDebugMenuChk.checked) {
@@ -2129,7 +2110,6 @@ function bindStuckHelper() {
   }
   if (debugDisplayEnabled) {
     setStuckPanelOpen(true);
-    setStuckMoreOpen(true);
     enableDebugDisplayMenu();
   }
 }

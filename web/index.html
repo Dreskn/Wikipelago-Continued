@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260803-7" />
+  <link rel="stylesheet" href="/static/style.css?v=20260803-9" />
 </head>
 <body>
   <div class="layout">
@@ -139,20 +139,18 @@
               Try the
               <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer">Wiki path solver</a>
             </p>
-            <button type="button" id="stuckMoreBtn" class="helper-toggle">more</button>
-            <div id="stuckMorePanel" class="helper-panel hidden">
-              <p class="helper-line">
-                <label class="helper-debug-label">
-                  <input type="checkbox" id="enableDebugMenuChk" />
-                  Enable AP debug menu
-                </label>
+            <p class="helper-line">
+              <label class="helper-debug-label">
+                <input type="checkbox" id="enableDebugMenuChk" />
+                Enable AP debug menu
+              </label>
+            </p>
+            <div id="debugConsentPanel" class="helper-panel hidden">
+              <p class="helper-line helper-warn">
+                Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink.
+                You can accidentally break or goal your seed in one click. Are you sure you want to continue?
               </p>
-              <div id="debugConsentPanel" class="helper-panel hidden">
-                <p class="helper-line helper-warn">
-                  You can accidentally break or goal your seed in one click. Are you sure you want to continue?
-                </p>
-                <button type="button" id="showDebugMenuBtn" class="helper-toggle">Show Debug menu</button>
-              </div>
+              <button type="button" id="showDebugMenuBtn" class="helper-toggle">Show Debug menu</button>
             </div>
           </div>
         </div>
@@ -160,6 +158,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260803-7"></script>
+  <script src="/static/app.js?v=20260803-9"></script>
 </body>
 </html>
