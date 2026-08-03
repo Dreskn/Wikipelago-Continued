@@ -1,6 +1,6 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.6.0** (ZaWarudo; see `APWorldSource/archipelago.json` `world_version`).
+World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/archipelago.json` for Archipelago; marketing tag in `full_version`).
 
 The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
 

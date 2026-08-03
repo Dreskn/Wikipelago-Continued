@@ -65,7 +65,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **0.6.0** (`0.6.0-ZaWarudo` on `dev`) |
+| Wikipelago world (`apworld`) | **0.6.0-ZaWarudo!** (`world_version` **0.6.0**) |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above (always use the current deploy) |
 

@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "0.5.0-Bingo!"
+CLIENT_VERSION = "0.6.0-ZaWarudo!"
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
