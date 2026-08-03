@@ -1977,8 +1977,6 @@ function initDebugDisplayPanel() {
     debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
     debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
     debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
-  ]));
-  items.appendChild(debugRow([
     debugBtn("All tools", () => runDebugAction("grant_tools")),
     debugBtn("All lenses", () => runDebugAction("grant_lenses")),
     debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
@@ -2076,11 +2074,11 @@ function initDebugDisplayPanel() {
       resetRoundVisits(state.currentTitle || "");
       toast("Visit tracking cleared", "ok", 3000);
     }),
+    debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
   ]));
   challenge.appendChild(debugRow([
     debugBtn("Trigger Foggy", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
     debugBtn("Trigger Missing", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
-    debugBtn("Fake death here", () => runDebugAction("receive_death", { cause: "Debug death" })),
   ]));
   card.appendChild(challenge);
 
