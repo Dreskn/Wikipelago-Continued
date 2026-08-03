@@ -4,7 +4,7 @@ console.log("Wikipelago web version", APP_VERSION);
 /** Hover-prefetch: keep a few parsed pages ready for the next click. */
 const WIKI_PREFETCH_MAX_CACHE = 8;
 const WIKI_PREFETCH_CONCURRENCY = 2;
-const WIKI_PREFETCH_HOVER_MS = 140;
+const WIKI_PREFETCH_HOVER_MS = 200;
 
 function wikipediaLanguage() {
   const lang = String(state.status?.wikipedia_language || "en").trim().toLowerCase();
