@@ -74,7 +74,8 @@ const state = {
   sessionId: localStorage.getItem("wikipelago_session_id") || "",
   status: null,
   currentTitle: "",
-  baseArticleHtml: "",
+  /** Lazy DOM clone for Ctrl+F highlight restore (avoids serializing huge pages on every open). */
+  baseArticleClone: null,
   clicksUsed: 0,
   announcedGoalComplete: false,
   restoringArticle: false,
@@ -1484,15 +1485,24 @@ function openSearchOverlay() {
   el.pageSearchInput.select();
 }
 
+function ensureArticleSearchSnapshot() {
+  if (state.baseArticleClone || !el.articleBody) return;
+  state.baseArticleClone = el.articleBody.cloneNode(true);
+}
+
 function clearSearchHighlights() {
-  if (state.baseArticleHtml) {
-    el.articleBody.innerHTML = state.baseArticleHtml;
+  if (!state.baseArticleClone || !el.articleBody) return;
+  // Keep the stored snapshot pristine; restore from a fresh copy.
+  const restored = state.baseArticleClone.cloneNode(true);
+  el.articleBody.replaceChildren();
+  while (restored.firstChild) {
+    el.articleBody.appendChild(restored.firstChild);
   }
 }
 
 function applySearchHighlights(query) {
+  ensureArticleSearchSnapshot();
   clearSearchHighlights();
-  rewriteLinks(el.articleBody);
   if (!query) return 0;
 
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1551,7 +1561,7 @@ function storageKey(suffix) {
 function clearStickyArticleResume() {
   state.forceResumeStart = true;
   state.currentTitle = "";
-  state.baseArticleHtml = "";
+  state.baseArticleClone = null;
   state.targetSummaryCache.clear();
   hideTargetTooltip();
   const path = `${window.location.pathname}${window.location.search}`;
@@ -2264,10 +2274,6 @@ function processArticleLinks(root, options = {}) {
   if (playable) applyMissingToLinks(playable);
 }
 
-function rewriteLinks(root) {
-  processArticleLinks(root);
-}
-
 async function fetchWikiHtml(title) {
   const params = new URLSearchParams({
     action: "parse",
@@ -2330,7 +2336,8 @@ async function openArticle(title, options = {}) {
     } else if (!submitCheck) {
       state.roundVisitSet.add(normalizeTitle(title));
     }
-    state.baseArticleHtml = el.articleBody.innerHTML;
+    // Drop prior page snapshot; a new one is cloned lazily if Ctrl+F is used.
+    state.baseArticleClone = null;
     if (state.searchOpen && el.pageSearchInput.value) {
       const sanitized = sanitizeSearchInput(el.pageSearchInput.value);
       if (sanitized !== el.pageSearchInput.value) el.pageSearchInput.value = sanitized;
