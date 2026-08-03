@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260803-5" />
+  <link rel="stylesheet" href="/static/style.css?v=20260803-6" />
 </head>
 <body>
   <div class="layout">
@@ -33,7 +33,15 @@
             <span id="searchLetters">Letters: -</span>
           </div>
         </div>
-        <article id="articleBody" class="article-body"></article>
+        <div id="articleStage" class="article-stage">
+          <article id="articleBody" class="article-body"></article>
+          <div id="articleLoading" class="article-loading hidden" aria-live="polite" aria-busy="false">
+            <div class="article-loading-panel">
+              <div class="article-loading-spinner" aria-hidden="true"></div>
+              <p id="articleLoadingText" class="article-loading-text">Loading</p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <aside class="side-panel">
@@ -144,6 +152,6 @@
     </main>
   </div>
 
-  <script src="/static/app.js?v=20260803-5"></script>
+  <script src="/static/app.js?v=20260803-6"></script>
 </body>
 </html>

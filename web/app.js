@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.03.5";
+const APP_VERSION = "2026.08.03.6";
 console.log("Wikipelago web version", APP_VERSION);
 
 /** Hover-prefetch: keep a few parsed pages ready for the next click. */
@@ -111,13 +111,17 @@ const state = {
   wikiPrefetchHoverTimer: null,
   wikiPrefetchHoverTitle: "",
   wikiCacheLanguage: "",
+  articleLoadingToken: 0,
 };
 
 const el = {
   connBadge: document.getElementById("connBadge"),
   buildBadge: document.getElementById("buildBadge"),
   articleTitle: document.getElementById("articleTitle"),
+  articleStage: document.getElementById("articleStage"),
   articleBody: document.getElementById("articleBody"),
+  articleLoading: document.getElementById("articleLoading"),
+  articleLoadingText: document.getElementById("articleLoadingText"),
   searchOverlay: document.getElementById("searchOverlay"),
   pageSearchInput: document.getElementById("pageSearchInput"),
   closeSearchBtn: document.getElementById("closeSearchBtn"),
@@ -2431,6 +2435,26 @@ function scheduleWikiPrefetchFromHover(title) {
   }, WIKI_PREFETCH_HOVER_MS);
 }
 
+function setArticleLoadingVisible(visible, label = "Loading") {
+  if (!el.articleLoading) return;
+  el.articleLoading.classList.toggle("hidden", !visible);
+  el.articleLoading.setAttribute("aria-busy", visible ? "true" : "false");
+  if (el.articleStage) el.articleStage.classList.toggle("is-loading", visible);
+  if (el.articleLoadingText && visible) el.articleLoadingText.textContent = label;
+}
+
+function beginArticleLoading(label = "Loading") {
+  const token = ++state.articleLoadingToken;
+  // Avoid a flash when hover-prefetch already filled the cache.
+  const timer = setTimeout(() => {
+    if (token === state.articleLoadingToken) setArticleLoadingVisible(true, label);
+  }, 90);
+  return () => {
+    clearTimeout(timer);
+    if (token === state.articleLoadingToken) setArticleLoadingVisible(false);
+  };
+}
+
 async function openArticle(title, options = {}) {
   if (!title) return;
   // submitCheck defaults to countAsClick: only in-article wiki clicks may score.
@@ -2447,10 +2471,12 @@ async function openArticle(title, options = {}) {
     return;
   }
 
+  const endLoading = beginArticleLoading("Loading");
   let html;
   try {
     html = await fetchWikiHtml(title);
   } catch (err) {
+    endLoading();
     const detail = err?.message ? ` (${err.message})` : "";
     toast(`Could not open article: ${title}${detail}`, "warn");
     return;
@@ -2488,6 +2514,9 @@ async function openArticle(title, options = {}) {
     } else {
       history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
     }
+
+    // Show the page as soon as DOM work is done; bridge check can finish after.
+    endLoading();
 
     // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
     if (!isPlayable()) {
@@ -2529,6 +2558,7 @@ async function openArticle(title, options = {}) {
     }
     if (result.status) updateHUD(result.status);
   } catch (err) {
+    endLoading();
     // Page is already visible; do not pretend the Wikipedia fetch failed.
     toast(err?.message || "Connected page sync failed", "warn");
   }
