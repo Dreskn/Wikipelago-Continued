@@ -18,10 +18,9 @@ Wikipelago:
   # Main game
   # =============================================================================
   # progression_balancing: Archipelago 0–99; higher tends to place useful progression a bit earlier in the item sphere.
-  # check_count: how many Start → Target rounds (checks) are generated.
-  # required_fragments: Knowledge Fragments needed to open/finish the Grand Goal.
-  # additional_fragments_in_pool: extras in pool beyond required_fragments (goal still only needs required count).
-  # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access item unlocks this many more.
+  # check_count: how many Start → Target rounds (checks) are generated (10–999, default 40).
+  # required_fragments / additional_fragments_in_pool: 1–200 / 0–200.
+  # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access unlocks this many more (1–999).
   # random_goal_article: true = random goal from enabled categories; false = use goal_article_preset.
   progression_balancing: 50
   check_count: 40
@@ -53,8 +52,7 @@ Wikipelago:
   # =============================================================================
   # Stamp letter pairs from page titles; row / col / diag / full checks per board.
   # Grid size N (3–26); default 5 → 13 checks per board (N=26 = full A–Z×A–Z).
-  # bingo_cards_start: boards unlocked at start (0 = all behind Progressive Bingo Card).
-  # bingo_card_unlocks: Progressive Bingo Card items in the pool.
+  # bingo_cards_start / bingo_card_unlocks: 0–20 each (combined boards capped at 40).
   # bingo_stamp_unlocks: Progressive Bingo Stamp items (each stamps one empty cell on one board, once per seed).
   # Bingo on with start 0 and unlocks 0 is rejected (no boards).
   toggle_bingo_letterpairs: true
@@ -134,7 +132,7 @@ Wikipelago:
   # =============================================================================
   # Traps
   # =============================================================================
-  # trap_count: Foggy Links / Missing Links items in the pool
+  # trap_count: Foggy Links / Missing Links items in the pool (0–99)
   # trap_type: both | only_foggy_links | only_missing_links
   # trap_link: share traps with other Trap Link players (independent of count).
   trap_count: 0

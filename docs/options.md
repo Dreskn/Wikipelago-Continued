@@ -13,7 +13,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `check_count` | `25` | How many Start → Target rounds (checks) are generated for your slot. |
+| `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
 | `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
 | `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |

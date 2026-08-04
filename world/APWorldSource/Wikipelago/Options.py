@@ -4,20 +4,18 @@ from Options import Choice, PerGameCommonOptions, Range, Toggle
 
 
 class CheckCount(Range):
-    """Number of Start→Target rounds. Hard-capped by current article-pool size."""
+    """Number of Start→Target rounds. Generation still fails if the enabled article pool is too small."""
     display_name = "Round Count"
     range_start = 10
-    # Generation needs ~2 unique titles per round (strict no-repeat).
-    # With all categories enabled the usable pool supports at most this many rounds.
-    range_end = 793
-    default = 25
+    range_end = 999
+    default = 40
 
 
 class RequiredFragments(Range):
     """Knowledge Fragments needed to reveal and clear the Grand Goal."""
     display_name = "Required Fragments"
     range_start = 1
-    range_end = 793
+    range_end = 200
     default = 7
 
 
@@ -25,21 +23,21 @@ class AdditionalFragmentsInPool(Range):
     """Extra Knowledge Fragments placed in the item pool beyond required_fragments (goal still needs only the required count)."""
     display_name = "Additional Fragments In Pool"
     range_start = 0
-    range_end = 793
+    range_end = 200
     default = 2
 
 
 class StartRoundsUnlocked(Range):
     display_name = "Start Rounds Unlocked"
     range_start = 1
-    range_end = 100
+    range_end = 999
     default = 10
 
 
 class RoundsPerUnlock(Range):
     display_name = "Rounds Per Round Access"
     range_start = 1
-    range_end = 25
+    range_end = 999
     default = 5
 
 
@@ -289,7 +287,7 @@ class TrapCount(Range):
     """Number of trap items (Foggy Links / Missing Links) added to the pool before Footnote filler."""
     display_name = "Trap Count"
     range_start = 0
-    range_end = 793
+    range_end = 99
     default = 0
 
 
@@ -326,7 +324,7 @@ class BingoCardsStart(Range):
     """How many letter-pair bingo boards are unlocked from the start (0 = all boards locked behind Progressive Bingo Card)."""
     display_name = "Bingo Cards Start"
     range_start = 0
-    range_end = 5
+    range_end = 20
     default = 1
 
 
@@ -334,7 +332,7 @@ class BingoCardUnlocks(Range):
     """Number of Progressive Bingo Card items in the pool (extra boards beyond Bingo Cards Start)."""
     display_name = "Bingo Card Unlocks"
     range_start = 0
-    range_end = 5
+    range_end = 20
     default = 2
 
 

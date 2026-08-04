@@ -11,7 +11,7 @@ MAX_ROUNDS = 5000
 # After Grand Goal: per-board bingo lines (26 rows + 26 cols + 2 diags + full).
 BINGO_LP_OFFSET = LOCATION_OFFSET + MAX_ROUNDS + 2
 MAX_BINGO_GRID = 26
-MAX_BINGO_BOARDS = 10
+MAX_BINGO_BOARDS = 40
 BINGO_BOARD_STRIDE = 2 * MAX_BINGO_GRID + 3  # 55
 
 
