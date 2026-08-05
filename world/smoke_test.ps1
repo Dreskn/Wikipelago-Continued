@@ -291,6 +291,10 @@ try {
     Assert-NoPattern $itemsPath '"Back Button"' 'Items table must not keep Back Button'
     Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'Board \{board\} Full Card' 'Bingo Full Card location must be board-prefixed'
     Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'def letter_pair_from_title' 'letter_pair_from_title helper is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'SCRABBLE_LETTERS' 'Scrabble alphabet table is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'MAX_BINGO_GRID_SIZE = 20' 'Bingo grid max must be 20'
+    Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'MAX_BINGO_GRID = 20' 'Locations MAX_BINGO_GRID must be 20'
+    Assert-HasPattern (Join-Path $worldRoot "Options.py") 'Scrabble letter-pair frequencies \(3-20\)' 'BingoLetterpairsGrid docstring must mention Scrabble 3-20'
     Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights_en.json") '"TH"' 'Shipped letter_pair_weights_en.json is missing TH'
     foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
         $weightsFile = Join-Path $worldRoot "letter_pair_weights_$lang.json"
@@ -298,6 +302,11 @@ try {
             throw "Missing shipped letter-pair weights for language '$lang': $weightsFile"
         }
     }
+    & python (Join-Path $Root "test_letter_pairs.py")
+    if ($LASTEXITCODE -ne 0) {
+        throw "test_letter_pairs.py failed"
+    }
+    Write-Pass "Scrabble letter-pair extraction cases pass"
     Assert-HasPattern $yamlPath 'bingo_cards_start:' 'YAML bingo_cards_start is missing'
     Assert-HasPattern $yamlPath 'back_depth_start:' 'YAML back_depth_start is missing'
     Assert-HasPattern $yamlPath 'target_rerolls_start:' 'YAML target_rerolls_start is missing'

@@ -159,14 +159,56 @@ def normalize_title(title: str) -> str:
     return deaccented.casefold()
 
 
-def letter_pair_from_title(title: str) -> str | None:
-    """First two A–Z letters in title order (must match world bingo stamping)."""
+# Must match world/APWorldSource/Wikipelago/letter_pairs.py (Scrabble alphabets).
+_SCRABBLE_LETTERS: dict[str, str] = {
+    "en": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "fr": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "it": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "nl": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "es": "ABCDEFGHIJKLMNOPQRSTUVWXYZÑ",
+    "pt": "ABCDEFGHIJKLMNOPQRSTUVWXYZÇ",
+    "de": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ",
+    "sv": "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ",
+    "pl": "ABCDEFGHIJKLMNOPQRSTUVWXYZĄĆĘŁŃÓŚŹŻ",
+}
+
+
+def _bingo_alphabet(lang: str) -> str:
+    code = (lang or "en").strip().lower()
+    return _SCRABBLE_LETTERS.get(code, _SCRABBLE_LETTERS["en"])
+
+
+def _fold_bingo_base_latin(ch: str) -> str:
+    if ch in ("ß", "ẞ"):
+        return "SS"
+    decomposed = unicodedata.normalize("NFKD", ch)
+    out: list[str] = []
+    for part in decomposed:
+        if unicodedata.combining(part):
+            continue
+        if "A" <= part <= "Z" or "a" <= part <= "z":
+            out.append(part.upper())
+    return "".join(out)
+
+
+def letter_pair_from_title(title: str, lang: str = "en") -> str | None:
+    """First two Scrabble-aware bingo letters (must match world letter_pairs.py)."""
+    alphabet = set(_bingo_alphabet(lang))
     letters: list[str] = []
     for ch in title:
-        if "A" <= ch <= "Z" or "a" <= ch <= "z":
-            letters.append(ch.upper())
-            if len(letters) == 2:
-                return letters[0] + letters[1]
+        if not ch or ch.isspace():
+            continue
+        upper = ch.upper()
+        if upper in alphabet:
+            letters.append(upper)
+        elif ch in ("ß", "ẞ") or upper == "ẞ":
+            letters.extend(("S", "S"))
+        else:
+            for letter in _fold_bingo_base_latin(ch):
+                if letter in alphabet:
+                    letters.append(letter)
+        if len(letters) >= 2:
+            return letters[0] + letters[1]
     return None
 
 
@@ -1469,7 +1511,8 @@ class APConnection:
             return []
 
         before = self._bingo_stamps_snapshot()
-        pair = letter_pair_from_title(page_title)
+        wiki_lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        pair = letter_pair_from_title(page_title, wiki_lang)
         if pair:
             self._stamp_pair_on_unlocked_boards(pair)
 

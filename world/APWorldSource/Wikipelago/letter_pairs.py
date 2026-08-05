@@ -1,31 +1,102 @@
-"""Letter-pair bingo helpers: title key, shipped weights, board generation."""
+"""Letter-pair bingo helpers: title key, shipped weights, board generation.
+
+Letter extraction follows each language's Scrabble tile set
+(https://en.wikipedia.org/wiki/Scrabble_letter_distributions):
+distinct single-character tiles stay distinct; other diacritics fold to base
+Latin. German ß/ẞ expands to SS. Digraph tiles (CH/LL/RR/IJ) are not used.
+"""
 
 from __future__ import annotations
 
 import json
 import string
+import unicodedata
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-from .article_pool import SUPPORTED_LANGS
 
 if TYPE_CHECKING:
     from random import Random
 
 WEIGHTS_DIR = Path(__file__).resolve().parent
-ALL_PAIRS = [a + b for a in string.ascii_uppercase for b in string.ascii_uppercase]
+MAX_BINGO_GRID_SIZE = 20
+MIN_BINGO_GRID_SIZE = 3
+
+# Uppercase alphabets: A–Z plus Scrabble distinct letters for that language.
+# Order is A–Z first, then language extras (used for pair enumeration).
+_ASCII = string.ascii_uppercase
+SCRABBLE_LETTERS: dict[str, str] = {
+    "en": _ASCII,
+    "fr": _ASCII,
+    "it": _ASCII,
+    "nl": _ASCII,
+    "es": _ASCII + "Ñ",
+    "pt": _ASCII + "Ç",
+    "de": _ASCII + "ÄÖÜ",
+    "sv": _ASCII + "ÅÄÖ",
+    "pl": _ASCII + "ĄĆĘŁŃÓŚŹŻ",
+}
+SUPPORTED_LANGS = tuple(SCRABBLE_LETTERS.keys())
 
 _WEIGHTS_CACHE: dict[str, dict[str, int]] = {}
 
 
-def letter_pair_from_title(title: str) -> str | None:
-    """Return first two A–Z letters in title order, or None if fewer than two exist."""
-    letters: list[str] = []
+def bingo_alphabet(lang: str) -> str:
+    """Return the uppercase bingo alphabet for a Wikipedia language code."""
+    code = (lang or "en").strip().lower()
+    if code not in SCRABBLE_LETTERS:
+        code = "en"
+    return SCRABBLE_LETTERS[code]
+
+
+def all_pairs_for_lang(lang: str) -> list[str]:
+    """Every ordered letter-pair for this language's bingo alphabet."""
+    alphabet = bingo_alphabet(lang)
+    return [a + b for a in alphabet for b in alphabet]
+
+
+def _fold_base_latin(ch: str) -> str:
+    """Fold a non-Scrabble character toward base Latin (may be empty)."""
+    if ch in ("ß", "ẞ"):
+        return "SS"
+    decomposed = unicodedata.normalize("NFKD", ch)
+    out: list[str] = []
+    for part in decomposed:
+        if unicodedata.combining(part):
+            continue
+        if "A" <= part <= "Z" or "a" <= part <= "z":
+            out.append(part.upper())
+    return "".join(out)
+
+
+def iter_bingo_letters(title: str, lang: str = "en") -> Iterator[str]:
+    """Yield bingo letters from a title under the language's Scrabble rules."""
+    alphabet = set(bingo_alphabet(lang))
     for ch in title:
-        if "A" <= ch <= "Z" or "a" <= ch <= "z":
-            letters.append(ch.upper())
-            if len(letters) == 2:
-                return letters[0] + letters[1]
+        if not ch or ch.isspace():
+            continue
+        upper = ch.upper()
+        if upper in alphabet:
+            yield upper
+            continue
+        # German sharp S before generic fold (not in Scrabble alphabet).
+        if ch in ("ß", "ẞ") or upper == "ẞ":
+            yield "S"
+            yield "S"
+            continue
+        folded = _fold_base_latin(ch)
+        for letter in folded:
+            if letter in alphabet:
+                yield letter
+
+
+def letter_pair_from_title(title: str, lang: str = "en") -> str | None:
+    """Return first two bingo letters in title order, or None if fewer than two."""
+    letters: list[str] = []
+    for letter in iter_bingo_letters(title, lang):
+        letters.append(letter)
+        if len(letters) == 2:
+            return letters[0] + letters[1]
     return None
 
 
@@ -152,20 +223,15 @@ def build_letter_pair_bingo_board(
     grid_size: int,
     lang: str = "en",
 ) -> list[list[str]]:
-    """Build an N×N board of uppercase letter pairs.
-
-    N=26: sorted A–Z × A–Z (unweighted).
-    N=3..25: weighted sample without replacement from that language's shipped
-    title-pair frequencies, then shuffled into the grid.
-    """
-    if grid_size < 3 or grid_size > 26:
-        raise Exception(f"Wikipelago bingo_letterpairs_grid must be 3–26, got {grid_size}.")
-
-    if grid_size == 26:
-        return [[f"{chr(65 + row)}{chr(65 + col)}" for col in range(26)] for row in range(26)]
+    """Build an N×N board of uppercase letter pairs (weighted sample, N=3..20)."""
+    if grid_size < MIN_BINGO_GRID_SIZE or grid_size > MAX_BINGO_GRID_SIZE:
+        raise Exception(
+            f"Wikipelago bingo_letterpairs_grid must be "
+            f"{MIN_BINGO_GRID_SIZE}–{MAX_BINGO_GRID_SIZE}, got {grid_size}."
+        )
 
     weights = load_letter_pair_weights(lang)
-    pairs = list(ALL_PAIRS)
+    pairs = all_pairs_for_lang(lang)
     weight_list = [int(weights.get(pair, 0)) for pair in pairs]
     needed = grid_size * grid_size
     sampled = _weighted_sample_without_replacement(rng, pairs, weight_list, needed)

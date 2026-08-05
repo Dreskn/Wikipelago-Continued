@@ -51,7 +51,8 @@ Wikipelago:
   # Letter-pair bingo
   # =============================================================================
   # Stamp letter pairs from page titles; row / col / diag / full checks per board.
-  # Grid size N (3–26); default 5 → 13 checks per board (N=26 = full A–Z×A–Z).
+  # Grid size N (3–20); default 5 → weighted sample from that wiki’s Scrabble letter pairs.
+  # Letter pairs use Scrabble alphabets (e.g. pl keeps Ą/Ć/Ł…; fr folds é→E; de keeps Ä/Ö/Ü, ß→SS).
   # bingo_cards_start / bingo_card_unlocks: 0–20 each (combined boards capped at 40).
   # bingo_stamp_unlocks: Progressive Bingo Stamp items (each stamps one empty cell on one board, once per seed).
   # Bingo on with start 0 and unlocks 0 is rejected (no boards).

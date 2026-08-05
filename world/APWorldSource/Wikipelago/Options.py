@@ -313,10 +313,10 @@ class ToggleBingoLetterpairs(Toggle):
 
 
 class BingoLetterpairsGrid(Range):
-    """Bingo grid size N (N×N cells). N=26 is the full sorted A–Z×A–Z board; smaller sizes are weighted samples."""
+    """Bingo grid size N (N×N cells). Weighted sample from the slot language's Scrabble letter-pair frequencies (3-20)."""
     display_name = "Letter Pair Bingo Grid Size"
     range_start = 3
-    range_end = 26
+    range_end = 20
     default = 5
 
 

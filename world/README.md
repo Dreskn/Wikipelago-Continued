@@ -18,7 +18,7 @@ The build injects Archipelago packaging fields (`version` / `compatible_version`
 
 ### Letter-pair bingo weights (per language)
 
-Bingo boards sample pairs using title-frequency weights for the slot’s Wikipedia language. Rebuild after dump updates:
+Bingo boards sample pairs using title-frequency weights for the slot’s Wikipedia language. Pair extraction follows each language’s Scrabble alphabet (distinct tiles stay distinct; other diacritics fold; German `ß` → `SS`). Rebuild after dump updates or alphabet rule changes:
 
 ```powershell
 python .\build_letter_pair_weights.py --lang all

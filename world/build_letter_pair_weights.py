@@ -7,10 +7,11 @@ Supported languages match the shipped article pools:
 Source dumps (mainspace titles, includes redirects), one per language:
   https://dumps.wikimedia.org/{lang}wiki/latest/{lang}wiki-latest-all-titles-in-ns0.gz
 
-Letter-pair rule (must match in-game bingo stamping):
-  Scan the title left-to-right for A-Z letters only; take the first two.
-  Examples: The_Beatles -> TH, Dota_2 -> DO, 2001:_A_Space_Odyssey -> AS.
-  Titles that never yield two Latin letters are skipped.
+Letter-pair rule (must match in-game bingo stamping / letter_pairs.py):
+  Scrabble alphabets per language — distinct tiles stay distinct; other
+  diacritics fold to base Latin; German ß/ẞ → SS. Take the first two bingo
+  letters in title order.
+  Examples: The_Beatles -> TH, Électricité (fr) -> EL, Łódź (pl) -> ŁÓ.
 
 Usage:
   # All supported languages (download dumps if needed):
@@ -28,19 +29,29 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
-import string
 import sys
 import urllib.request
 from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
+WORLD_PKG = ROOT / "APWorldSource" / "Wikipelago"
 DEFAULT_CACHE = ROOT / "_cache"
-DEFAULT_OUT_DIR = ROOT / "APWorldSource" / "Wikipelago"
-USER_AGENT = "WikipelagoLetterPairWeights/1.1 (https://github.com/Dreskn/Wikipelago-Continued)"
+DEFAULT_OUT_DIR = WORLD_PKG
+USER_AGENT = "WikipelagoLetterPairWeights/1.2 (https://github.com/Dreskn/Wikipelago-Continued)"
 
-ALL_PAIRS = [a + b for a in string.ascii_uppercase for b in string.ascii_uppercase]
+# Load letter_pairs.py directly (avoid Wikipelago/__init__.py → Archipelago BaseClasses).
+import importlib.util
+
+_lp_path = WORLD_PKG / "letter_pairs.py"
+_lp_spec = importlib.util.spec_from_file_location("wikipelago_letter_pairs", _lp_path)
+if _lp_spec is None or _lp_spec.loader is None:
+    raise RuntimeError(f"Cannot load {_lp_path}")
+_lp = importlib.util.module_from_spec(_lp_spec)
+_lp_spec.loader.exec_module(_lp)
+all_pairs_for_lang = _lp.all_pairs_for_lang
+letter_pair_from_title = _lp.letter_pair_from_title
+SUPPORTED_LANGS = tuple(_lp.SUPPORTED_LANGS)
 
 
 def dump_url(lang: str) -> str:
@@ -53,17 +64,6 @@ def default_dump_path(lang: str) -> Path:
 
 def default_out_path(lang: str) -> Path:
     return DEFAULT_OUT_DIR / f"letter_pair_weights_{lang}.json"
-
-
-def letter_pair_from_title(title: str) -> str | None:
-    """Return first two A-Z letters in title, or None if fewer than two exist."""
-    letters: list[str] = []
-    for ch in title:
-        if "A" <= ch <= "Z" or "a" <= ch <= "z":
-            letters.append(ch.upper())
-            if len(letters) == 2:
-                return letters[0] + letters[1]
-    return None
 
 
 def title_from_dump_line(line: str) -> str:
@@ -91,7 +91,7 @@ def download_dump(url: str, dest: Path) -> None:
     print(f"Download complete ({dest.stat().st_size:,} bytes)")
 
 
-def count_pairs_from_dump(dump_path: Path) -> tuple[Counter[str], int, int]:
+def count_pairs_from_dump(dump_path: Path, lang: str) -> tuple[Counter[str], int, int]:
     counts: Counter[str] = Counter()
     total_lines = 0
     skipped = 0
@@ -102,7 +102,7 @@ def count_pairs_from_dump(dump_path: Path) -> tuple[Counter[str], int, int]:
             if not title:
                 skipped += 1
                 continue
-            pair = letter_pair_from_title(title)
+            pair = letter_pair_from_title(title, lang)
             if pair is None:
                 skipped += 1
                 continue
@@ -112,8 +112,8 @@ def count_pairs_from_dump(dump_path: Path) -> tuple[Counter[str], int, int]:
     return counts, total_lines, skipped
 
 
-def build_weights(counts: Counter[str]) -> dict[str, int]:
-    return {pair: int(counts.get(pair, 0)) for pair in ALL_PAIRS}
+def build_weights(counts: Counter[str], lang: str) -> dict[str, int]:
+    return {pair: int(counts.get(pair, 0)) for pair in all_pairs_for_lang(lang)}
 
 
 def build_one(
@@ -142,12 +142,13 @@ def build_one(
         print(f"[{lang}] Using existing dump: {dump} ({dump.stat().st_size:,} bytes)")
 
     print(f"[{lang}] Counting letter pairs…")
-    counts, total_lines, skipped = count_pairs_from_dump(dump)
-    weights = build_weights(counts)
+    counts, total_lines, skipped = count_pairs_from_dump(dump, lang)
+    weights = build_weights(counts, lang)
+    pair_space = len(weights)
     nonzero = sum(1 for v in weights.values() if v > 0)
     print(
         f"[{lang}] Done: {total_lines:,} dump lines, {skipped:,} skipped, "
-        f"{sum(weights.values()):,} counted, {nonzero}/676 pairs with weight > 0"
+        f"{sum(weights.values()):,} counted, {nonzero}/{pair_space} pairs with weight > 0"
     )
 
     out.parent.mkdir(parents=True, exist_ok=True)
