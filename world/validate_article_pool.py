@@ -264,29 +264,37 @@ def main() -> int:
         )
         return 2
 
+    def _safe_print(text: str) -> None:
+        # CI/Windows consoles may not be UTF-8; never crash on title dumps.
+        try:
+            print(text)
+        except UnicodeEncodeError:
+            encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+            print(text.encode(encoding, errors="replace").decode(encoding, errors="replace"))
+
     lang_reports: list[dict] = []
     failed = False
     for lang in langs:
         report = validate_lang(lang)
         lang_reports.append(report)
         summary = report["summary"]
-        print(f"\n=== Wikipelago article pool validation ({lang}) ===")
-        print(f"pool_file:       {report['pool_file']}")
-        print(f"pool_size:       {summary['pool_size']}")
-        print(f"unique_titles:   {summary['unique_titles']}")
-        print(f"ok:              {summary['ok']}")
-        print(f"missing:         {summary['missing']}")
-        print(f"disambiguation:  {summary['disambiguation']}")
-        print(f"redirect_ok:     {summary['redirect_ok']}")
-        print(f"duplicates:      {summary['duplicates']}")
-        if report["missing"]:
-            print("missing titles:", ", ".join(report["missing"][:20]))
-        if report["disambiguation"]:
-            print("disambiguation titles:", ", ".join(report["disambiguation"][:20]))
-        if report["duplicates"]:
-            print("duplicate titles:", ", ".join(list(report["duplicates"])[:20]))
         if report["missing"] or report["disambiguation"] or report["duplicates"]:
             failed = True
+        _safe_print(f"\n=== Wikipelago article pool validation ({lang}) ===")
+        _safe_print(f"pool_file:       {report['pool_file']}")
+        _safe_print(f"pool_size:       {summary['pool_size']}")
+        _safe_print(f"unique_titles:   {summary['unique_titles']}")
+        _safe_print(f"ok:              {summary['ok']}")
+        _safe_print(f"missing:         {summary['missing']}")
+        _safe_print(f"disambiguation:  {summary['disambiguation']}")
+        _safe_print(f"redirect_ok:     {summary['redirect_ok']}")
+        _safe_print(f"duplicates:      {summary['duplicates']}")
+        if report["missing"]:
+            _safe_print("missing titles: " + ", ".join(report["missing"][:20]))
+        if report["disambiguation"]:
+            _safe_print("disambiguation titles: " + ", ".join(report["disambiguation"][:20]))
+        if report["duplicates"]:
+            _safe_print("duplicate titles: " + ", ".join(list(report["duplicates"])[:20]))
 
     out = {
         "langs": langs,
@@ -296,7 +304,7 @@ def main() -> int:
         json.dumps(out, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-    print(f"\nReport written to: {REPORT_PATH}")
+    _safe_print(f"\nReport written to: {REPORT_PATH}")
 
     if args.strict and failed:
         return 1
