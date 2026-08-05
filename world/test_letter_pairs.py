@@ -9,7 +9,7 @@ import unicodedata
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-LP_PATH = ROOT / "APWorldSource" / "Wikipelago" / "letter_pairs.py"
+LP_PATH = ROOT / "APWorldSource" / "wikipelago" / "letter_pairs.py"
 BRIDGE_PATH = ROOT.parent / "bridge" / "bridge.py"
 
 CASES = [

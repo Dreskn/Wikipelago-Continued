@@ -8,7 +8,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ANNOTATED = HERE / "annotated"
-OUT_DIR = HERE.parent / "APWorldSource" / "Wikipelago" / "data"
+OUT_DIR = HERE.parent / "APWorldSource" / "wikipelago" / "data"
 
 
 def export_lang(src: Path) -> dict:

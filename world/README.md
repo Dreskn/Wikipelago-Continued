@@ -26,7 +26,7 @@ Bingo boards sample pairs using title-frequency weights for the slot’s Wikiped
 python .\build_letter_pair_weights.py --lang all
 ```
 
-This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/` if needed, then writes `APWorldSource/Wikipelago/letter_pair_weights_{lang}.json` for `en, fr, de, es, it, pt, nl, sv, pl`.
+This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/` if needed, then writes `APWorldSource/wikipelago/letter_pair_weights_{lang}.json` for `en, fr, de, es, it, pt, nl, sv, pl`.
 
 ### Optional / experimental pool builder
 
