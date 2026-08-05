@@ -2,7 +2,7 @@ APWorld source lives in `APWorldSource`.
 
 World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/wikipelago/archipelago.json` for Archipelago; marketing tag in `full_version`).
 
-The live runtime article pool is `APWorldSource/wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
+The live runtime article pools are `APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 
 Build APWorld:
 
@@ -30,7 +30,7 @@ This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/
 
 ### Optional / experimental pool builder
 
-`build_article_pool.ps1` / `build_article_pool.py` can build a broader JSON pool for experiments. They are not required for a normal release; the packaged world ships with `entertainment_articles.py` as the pool.
+`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. CI validates the English runtime pool with `python world/validate_article_pool.py --strict` (use `--lang all` locally for every language).
 
 ```powershell
 # Build to 5,000 titles (keeps existing and expands)

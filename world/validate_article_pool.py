@@ -1,5 +1,5 @@
 ﻿#!/usr/bin/env python3
-"""Validate Wikipelago entertainment article pool against English Wikipedia."""
+"""Validate shipped Wikipelago article pools (data/pool_*.json) against Wikipedia."""
 
 from __future__ import annotations
 
@@ -15,18 +15,42 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 APWORLD = ROOT / "APWorldSource" / "wikipelago"
-sys.path.insert(0, str(APWORLD))
+DATA_DIR = APWORLD / "data"
+SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 
-from entertainment_articles import ENTERTAINMENT_ARTICLE_POOL  # noqa: E402
-
-API_URL = "https://en.wikipedia.org/w/api.php"
-USER_AGENT = "WikipelagoPoolValidator/1.0 (https://github.com/Dreskn/Wikipelago-Continued)"
+USER_AGENT = "WikipelagoPoolValidator/1.1 (https://github.com/Dreskn/Wikipelago-Continued)"
 BATCH_SIZE = 50
 SLEEP_SECONDS = 0.1
 REPORT_PATH = ROOT / "pool_validation_report.json"
 
 
-def query_batch(titles: list[str]) -> dict:
+def load_pool_titles(lang: str) -> list[str]:
+    """Titles from the runtime pool JSON used by the apworld."""
+    code = (lang or "en").strip().lower()
+    if code not in SUPPORTED_LANGS:
+        raise ValueError(
+            f"Unsupported language '{lang}'. Supported: {', '.join(SUPPORTED_LANGS)}"
+        )
+    path = DATA_DIR / f"pool_{code}.json"
+    if not path.is_file():
+        raise FileNotFoundError(f"Missing runtime article pool: {path}")
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    titles: list[str] = []
+    for entry in payload.get("entries") or []:
+        title = str(entry.get("title") or "").strip()
+        if title:
+            titles.append(title)
+    if not titles:
+        raise RuntimeError(f"Pool for '{code}' is empty: {path}")
+    return titles
+
+
+def wiki_api_url(lang: str) -> str:
+    code = (lang or "en").strip().lower() or "en"
+    return f"https://{code}.wikipedia.org/w/api.php"
+
+
+def query_batch(lang: str, titles: list[str]) -> dict:
     params = {
         "action": "query",
         "format": "json",
@@ -35,7 +59,7 @@ def query_batch(titles: list[str]) -> dict:
         "ppprop": "disambiguation",
         "titles": "|".join(titles),
     }
-    url = f"{API_URL}?{urllib.parse.urlencode(params)}"
+    url = f"{wiki_api_url(lang)}?{urllib.parse.urlencode(params)}"
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=60) as resp:
         return json.loads(resp.read().decode("utf-8"))
@@ -104,11 +128,6 @@ def classify_batch(titles: list[str], data: dict) -> dict[str, dict]:
             }
             continue
 
-        redirected = final_title != original and (
-            original in from_to
-            or any(n["from"] == original for n in normalized)
-            or resolve(original) != original
-        )
         # More reliable: check if we followed a redirect (not just normalization)
         followed_redirect = False
         cur = original
@@ -141,19 +160,8 @@ def classify_batch(titles: list[str], data: dict) -> dict[str, dict]:
     return results
 
 
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Exit non-zero if any missing, disambiguation, or duplicate titles are found.",
-    )
-    args = parser.parse_args()
-
-    pool = [
-        entry[0] if isinstance(entry, (list, tuple)) else entry
-        for entry in ENTERTAINMENT_ARTICLE_POOL
-    ]
+def validate_lang(lang: str) -> dict:
+    pool = load_pool_titles(lang)
     counts = Counter(pool)
     duplicates = {t: c for t, c in sorted(counts.items()) if c > 1}
 
@@ -161,13 +169,14 @@ def main() -> int:
     unique_titles = list(dict.fromkeys(pool))
 
     classifications: dict[str, dict] = {}
+    total_batches = (len(unique_titles) + BATCH_SIZE - 1) // BATCH_SIZE
     for i in range(0, len(unique_titles), BATCH_SIZE):
         batch = unique_titles[i : i + BATCH_SIZE]
         attempt = 0
         while True:
             attempt += 1
             try:
-                data = query_batch(batch)
+                data = query_batch(lang, batch)
                 break
             except urllib.error.HTTPError as e:
                 if e.code in (429, 503) and attempt < 5:
@@ -182,8 +191,7 @@ def main() -> int:
         batch_results = classify_batch(batch, data)
         classifications.update(batch_results)
         print(
-            f"Batch {i // BATCH_SIZE + 1}/{(len(unique_titles) + BATCH_SIZE - 1) // BATCH_SIZE}: "
-            f"{len(batch)} titles",
+            f"[{lang}] Batch {i // BATCH_SIZE + 1}/{total_batches}: {len(batch)} titles",
             flush=True,
         )
         time.sleep(SLEEP_SECONDS)
@@ -207,7 +215,9 @@ def main() -> int:
                 {"title": title, "canonical": info["canonical"]}
             )
 
-    report = {
+    return {
+        "lang": lang,
+        "pool_file": str(DATA_DIR / f"pool_{lang}.json"),
         "summary": {
             "pool_size": len(pool),
             "unique_titles": len(unique_titles),
@@ -216,38 +226,79 @@ def main() -> int:
             "disambiguation": len(disambiguation),
             "redirect_ok": len(redirect_ok),
             "duplicates": len(duplicates),
-            "all_ok": ok_count,
         },
         "missing": missing,
         "disambiguation": disambiguation,
         "redirect_ok": redirect_ok,
         "duplicates": duplicates,
-        "all_ok": ok_count,
     }
 
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--lang",
+        default="en",
+        help=(
+            "Wikipedia language pool to validate (default: en). "
+            f"One of: {', '.join(SUPPORTED_LANGS)}, or 'all'."
+        ),
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit non-zero if any missing, disambiguation, or duplicate titles are found.",
+    )
+    args = parser.parse_args()
+
+    lang_arg = (args.lang or "en").strip().lower()
+    if lang_arg == "all":
+        langs = list(SUPPORTED_LANGS)
+    elif lang_arg in SUPPORTED_LANGS:
+        langs = [lang_arg]
+    else:
+        print(
+            f"Unsupported --lang '{args.lang}'. "
+            f"Use one of: {', '.join(SUPPORTED_LANGS)}, or 'all'.",
+            file=sys.stderr,
+        )
+        return 2
+
+    lang_reports: list[dict] = []
+    failed = False
+    for lang in langs:
+        report = validate_lang(lang)
+        lang_reports.append(report)
+        summary = report["summary"]
+        print(f"\n=== Wikipelago article pool validation ({lang}) ===")
+        print(f"pool_file:       {report['pool_file']}")
+        print(f"pool_size:       {summary['pool_size']}")
+        print(f"unique_titles:   {summary['unique_titles']}")
+        print(f"ok:              {summary['ok']}")
+        print(f"missing:         {summary['missing']}")
+        print(f"disambiguation:  {summary['disambiguation']}")
+        print(f"redirect_ok:     {summary['redirect_ok']}")
+        print(f"duplicates:      {summary['duplicates']}")
+        if report["missing"]:
+            print("missing titles:", ", ".join(report["missing"][:20]))
+        if report["disambiguation"]:
+            print("disambiguation titles:", ", ".join(report["disambiguation"][:20]))
+        if report["duplicates"]:
+            print("duplicate titles:", ", ".join(list(report["duplicates"])[:20]))
+        if report["missing"] or report["disambiguation"] or report["duplicates"]:
+            failed = True
+
+    out = {
+        "langs": langs,
+        "reports": lang_reports,
+    }
     REPORT_PATH.write_text(
-        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+        json.dumps(out, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
-
-    print("\n=== Wikipelago article pool validation ===")
-    print(f"pool_size:       {report['summary']['pool_size']}")
-    print(f"unique_titles:   {report['summary']['unique_titles']}")
-    print(f"ok:              {ok_count}")
-    print(f"missing:         {len(missing)}")
-    print(f"disambiguation:  {len(disambiguation)}")
-    print(f"redirect_ok:     {len(redirect_ok)}")
-    print(f"duplicates:      {len(duplicates)}")
-    print(f"all_ok:          {ok_count}")
-    if missing:
-        print("missing titles:", ", ".join(missing[:20]))
-    if disambiguation:
-        print("disambiguation titles:", ", ".join(disambiguation[:20]))
-    if duplicates:
-        print("duplicate titles:", ", ".join(list(duplicates)[:20]))
     print(f"\nReport written to: {REPORT_PATH}")
 
-    if args.strict and (missing or disambiguation or duplicates):
+    if args.strict and failed:
         return 1
     return 0
 

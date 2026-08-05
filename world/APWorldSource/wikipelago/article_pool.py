@@ -30,7 +30,7 @@ def _read_pool_json(code: str) -> str:
     raise FileNotFoundError(
         f"Missing article pool for language '{code}'. "
         "Rebuild with world/build_apworld.ps1 and reinstall "
-        f"Wikipelago.apworld (expected package resource data/pool_{code}.json)."
+        f"wikipelago.apworld (expected package resource data/pool_{code}.json)."
     )
 
 
