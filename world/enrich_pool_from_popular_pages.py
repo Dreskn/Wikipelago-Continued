@@ -22,8 +22,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-POOL_PATH = ROOT / "APWorldSource" / "Wikipelago" / "entertainment_articles.py"
-OPTIONS_PATH = ROOT / "APWorldSource" / "Wikipelago" / "Options.py"
+POOL_PATH = ROOT / "APWorldSource" / "wikipelago" / "entertainment_articles.py"
+OPTIONS_PATH = ROOT / "APWorldSource" / "wikipelago" / "Options.py"
 REPORT_PATH = ROOT / "pool_enrichment_report.json"
 
 API = "https://en.wikipedia.org/w/api.php"

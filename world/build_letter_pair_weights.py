@@ -33,7 +33,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DUMP = ROOT / "_cache" / "enwiki-latest-all-titles-in-ns0.gz"
-DEFAULT_OUT = ROOT / "APWorldSource" / "Wikipelago" / "letter_pair_weights.json"
+DEFAULT_OUT = ROOT / "APWorldSource" / "wikipelago" / "letter_pair_weights.json"
 DUMP_URL = "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz"
 USER_AGENT = "WikipelagoLetterPairWeights/1.0 (https://github.com/Dreskn/Wikipelago-Continued)"
 
