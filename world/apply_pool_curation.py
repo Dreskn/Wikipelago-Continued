@@ -7,8 +7,8 @@ import re
 from collections import Counter
 from pathlib import Path
 
-POOL_PATH = Path(__file__).resolve().parent / "APWorldSource" / "Wikipelago" / "entertainment_articles.py"
-OPTIONS_PATH = Path(__file__).resolve().parent / "APWorldSource" / "Wikipelago" / "Options.py"
+POOL_PATH = Path(__file__).resolve().parent / "APWorldSource" / "wikipelago" / "entertainment_articles.py"
+OPTIONS_PATH = Path(__file__).resolve().parent / "APWorldSource" / "wikipelago" / "Options.py"
 
 # title -> new category (or None to delete)
 MOVES: dict[str, str | None] = {
