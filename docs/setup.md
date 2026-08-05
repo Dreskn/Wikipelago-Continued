@@ -5,7 +5,7 @@
 ### Host / organizer (generates the seed)
 
 - [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) **0.6.7** or compatible
-- `Wikipelago.apworld` from this repo’s [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)
+- `wikipelago.apworld` from this repo’s [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)
 - Player YAML files (template also on Releases, or [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml))
 
 ### Players
@@ -18,7 +18,7 @@ Players do **not** need to install the apworld unless they also generate or host
 
 ## Install the apworld (host)
 
-1. Download `Wikipelago.apworld` from [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases).
+1. Download `wikipelago.apworld` from [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases).
 2. Install it either way:
    - Double-click the `.apworld` so the Archipelago Launcher installs it, **or**
    - Place it in your Archipelago `custom_worlds` folder.
@@ -65,7 +65,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **0.5.0-Bingo!** |
+| Wikipelago world (`apworld`) | **0.5.1-Bingo!** |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above (always use the current deploy) |
 

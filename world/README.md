@@ -1,8 +1,8 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.5.0-Bingo!** (see `APWorldSource/archipelago.json`).
+World package version: **0.5.1-Bingo!** (`world_version` **0.5.1** in `APWorldSource/wikipelago/archipelago.json`).
 
-The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
+The live runtime article pool is `APWorldSource/wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
 
 Build APWorld:
 
@@ -12,7 +12,9 @@ Build APWorld:
 
 Output:
 
-`APWorld\Wikipelago.apworld`
+`APWorld\wikipelago.apworld`
+
+The zip is lowercase (`wikipelago.apworld` → inner folder `wikipelago/` with `archipelago.json` inside), per Archipelago’s apworld spec.
 
 ### Optional / experimental pool builder
 
