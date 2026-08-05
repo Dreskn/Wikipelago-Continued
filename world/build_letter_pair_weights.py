@@ -35,7 +35,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-WORLD_PKG = ROOT / "APWorldSource" / "Wikipelago"
+WORLD_PKG = ROOT / "APWorldSource" / "wikipelago"
 DEFAULT_CACHE = ROOT / "_cache"
 DEFAULT_OUT_DIR = WORLD_PKG
 USER_AGENT = "WikipelagoLetterPairWeights/1.2 (https://github.com/Dreskn/Wikipelago-Continued)"

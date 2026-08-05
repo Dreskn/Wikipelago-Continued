@@ -1,15 +1,16 @@
-﻿param(
+param(
     [string]$Root = (Split-Path -Parent $MyInvocation.MyCommand.Path)
 )
 
 # APContainer packaging scheme version for Archipelago 0.6.7 (worlds/Files.py container_version).
 $ContainerVersion = 7
+$PackageName = "wikipelago"   # zip basename + inner folder (must match, lowercase)
 
 $src = Join-Path $Root "APWorldSource"
 $outDir = Join-Path $Root "APWorld"
-$apPath = Join-Path $outDir "Wikipelago.apworld"
-$worldDir = Join-Path $src "Wikipelago"
-$manifestPath = Join-Path $src "archipelago.json"
+$apPath = Join-Path $outDir "$PackageName.apworld"
+$worldDir = Join-Path $src $PackageName
+$manifestPath = Join-Path $worldDir "archipelago.json"
 $supportedLangs = @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 $weightsPaths = @(
     foreach ($lang in $supportedLangs) {
@@ -22,17 +23,19 @@ if (!(Test-Path $outDir)) {
     New-Item -ItemType Directory -Path $outDir | Out-Null
 }
 
+if (!(Test-Path $worldDir)) {
+    throw "Missing world folder: $worldDir"
+}
 foreach ($weightsPath in $weightsPaths) {
     if (!(Test-Path $weightsPath)) {
-        throw "Missing required $weightsPath — run: python world/build_letter_pair_weights.py --lang all"
+        throw "Missing required $weightsPath - run: python world/build_letter_pair_weights.py --lang all"
     }
 }
-
 if (!(Test-Path $manifestPath)) {
-    throw "Missing required $manifestPath"
+    throw "Missing required $manifestPath (should live inside $PackageName/)"
 }
 
-# Keep packaging clean: never ship bytecode caches.
+# Never ship bytecode caches.
 Get-ChildItem -Path $worldDir -Recurse -Directory -Filter "__pycache__" -ErrorAction SilentlyContinue |
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
@@ -65,17 +68,21 @@ $zip = [System.IO.Compression.ZipFile]::Open(
     [System.IO.Compression.ZipArchiveMode]::Create
 )
 try {
+    # Manifest INSIDE the world folder (not zip root).
     [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
         $zip,
         $packagedManifestPath,
-        "archipelago.json",
+        "$PackageName/archipelago.json",
         [System.IO.Compression.CompressionLevel]::Optimal
     )
 
     Get-ChildItem -Path $worldDir -Recurse -File | ForEach-Object {
         $rel = $_.FullName.Substring($worldDir.Length).TrimStart("\", "/")
         if ($rel -match '(^|[\\/])__pycache__([\\/]|$)') { return }
-        $entryName = ("Wikipelago/" + ($rel -replace "\\", "/"))
+        # Don't zip the source manifest twice; packaged copy already has version fields.
+        if (($rel -replace "\\", "/") -eq "archipelago.json") { return }
+
+        $entryName = ("$PackageName/" + ($rel -replace "\\", "/"))
         [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
             $zip,
             $_.FullName,
@@ -93,23 +100,26 @@ $zip = [System.IO.Compression.ZipFile]::OpenRead($apPath)
 try {
     $names = @($zip.Entries | ForEach-Object { ($_.FullName -replace "\\", "/").TrimStart("/") })
     $required = @(
-        "archipelago.json",
-        "Wikipelago/__init__.py",
-        "Wikipelago/article_pool.py",
-        "Wikipelago/data/pool_en.json",
-        "Wikipelago/letter_pairs.py"
+        "$PackageName/archipelago.json",
+        "$PackageName/__init__.py",
+        "$PackageName/article_pool.py",
+        "$PackageName/data/pool_en.json",
+        "$PackageName/letter_pairs.py"
     ) + @(
         foreach ($lang in $supportedLangs) {
-            "Wikipelago/letter_pair_weights_$lang.json"
+            "$PackageName/letter_pair_weights_$lang.json"
         }
     )
     foreach ($need in $required) {
         if ($names -notcontains $need) {
-            throw "Built apworld is missing required entry: $need (found: $($names -join ', '))"
+            throw "Built apworld is missing required entry: $need`nFound:`n$($names -join "`n")"
         }
     }
+    if ($names -contains "archipelago.json") {
+        throw "Manifest must not be at zip root; expected $PackageName/archipelago.json"
+    }
 
-    $manifestEntry = $zip.GetEntry("archipelago.json")
+    $manifestEntry = $zip.GetEntry("$PackageName/archipelago.json")
     $reader = New-Object System.IO.StreamReader($manifestEntry.Open())
     try {
         $packaged = $reader.ReadToEnd() | ConvertFrom-Json
@@ -126,7 +136,7 @@ try {
     if ([int]$packaged.version -ne $ContainerVersion -or [int]$packaged.compatible_version -ne $ContainerVersion) {
         throw "Unexpected container version in packaged manifest: version=$($packaged.version) compatible_version=$($packaged.compatible_version)"
     }
-    Write-Host "Packaged world_version=$($packaged.world_version) container=$($packaged.version)"
+    Write-Host "Packaged game=$($packaged.game) world_version=$($packaged.world_version) container=$($packaged.version)"
 }
 finally {
     $zip.Dispose()

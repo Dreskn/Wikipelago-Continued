@@ -1,8 +1,8 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/archipelago.json` for Archipelago; marketing tag in `full_version`).
+World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/wikipelago/archipelago.json` for Archipelago; marketing tag in `full_version`).
 
-The live runtime article pool is `APWorldSource/Wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
+The live runtime article pool is `APWorldSource/wikipelago/entertainment_articles.py`: a curated list of `(Wikipedia title, category)` tuples. Generation uses those explicit category tags (not keyword guessing).
 
 Build APWorld:
 
@@ -12,7 +12,9 @@ Build APWorld:
 
 Output:
 
-`APWorld\Wikipelago.apworld`
+`APWorld\wikipelago.apworld`
+
+The zip is lowercase (`wikipelago.apworld` → inner folder `wikipelago/` with `archipelago.json` inside), per Archipelago’s apworld spec.
 
 The build injects Archipelago packaging fields (`version` / `compatible_version`) into the packaged `archipelago.json`. Without those, AP 0.6.7+ treats the world as `0.0.0` and YAML `requires.game.Wikipelago` fails.
 

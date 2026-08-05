@@ -6,7 +6,7 @@ import ast
 from collections import Counter
 from pathlib import Path
 
-POOL_PATH = Path(__file__).resolve().parent / "APWorldSource" / "Wikipelago" / "entertainment_articles.py"
+POOL_PATH = Path(__file__).resolve().parent / "APWorldSource" / "wikipelago" / "entertainment_articles.py"
 
 # title -> new category (or None to delete)
 MOVES: dict[str, str | None] = {

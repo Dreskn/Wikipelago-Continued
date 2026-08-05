@@ -37,7 +37,7 @@ function Assert-HasPattern([string]$Path, [string]$Pattern, [string]$Message) {
 }
 
 $srcRoot = Join-Path $Root "APWorldSource"
-$worldRoot = Join-Path $srcRoot "Wikipelago"
+$worldRoot = Join-Path $srcRoot "wikipelago"
 $repoRoot = Split-Path -Parent $Root
 $bridgePath = [System.IO.Path]::Combine($repoRoot, "bridge", "bridge.py")
 $webAppPath = [System.IO.Path]::Combine($repoRoot, "web", "app.js")
@@ -45,7 +45,7 @@ $webIndexPath = [System.IO.Path]::Combine($repoRoot, "web", "index.html")
 $webManifestPath = [System.IO.Path]::Combine($repoRoot, "web", "manifest.webmanifest")
 $webServiceWorkerPath = [System.IO.Path]::Combine($repoRoot, "web", "service-worker.js")
 $yamlPath = [System.IO.Path]::Combine($repoRoot, "yaml", "Wikipelago.yaml")
-$apworldPath = [System.IO.Path]::Combine($Root, "APWorld", "Wikipelago.apworld")
+$apworldPath = [System.IO.Path]::Combine($Root, "APWorld", "wikipelago.apworld")
 
 if ($BuildApworld) {
     & (Join-Path $Root "build_apworld.ps1") -Root $Root
@@ -54,7 +54,7 @@ if ($BuildApworld) {
 $failures = New-Object System.Collections.Generic.List[string]
 
 try {
-    if (-not (Test-Path $worldRoot)) { throw "Missing APWorldSource\Wikipelago folder" }
+    if (-not (Test-Path $worldRoot)) { throw "Missing APWorldSource\wikipelago folder" }
     Write-Pass "Found world source folder"
 } catch {
     $failures.Add($_.Exception.Message)
@@ -388,20 +388,26 @@ try {
         New-Item -ItemType Directory -Path $temp | Out-Null
         try {
             [System.IO.Compression.ZipFile]::ExtractToDirectory($apworldPath, $temp)
-            $packagedPy = Get-ChildItem -Path (Join-Path $temp "Wikipelago") -Filter *.py -File
+            $packagedPy = Get-ChildItem -Path (Join-Path $temp "wikipelago") -Filter *.py -File
             foreach ($file in $packagedPy) {
                 if (-not (Test-StrictUtf8File $file.FullName)) {
                     throw "Packaged APWorld file is not strict UTF-8: $($file.Name)"
                 }
             }
             foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
-                $packagedWeights = Join-Path $temp "Wikipelago\letter_pair_weights_$lang.json"
+                $packagedWeights = Join-Path $temp "wikipelago\letter_pair_weights_$lang.json"
                 if (-not (Test-Path $packagedWeights)) {
                     throw "Packaged APWorld is missing letter_pair_weights_$lang.json"
                 }
             }
-            Assert-HasPattern (Join-Path $temp "Wikipelago\letter_pair_weights_en.json") '"TH"' 'Packaged letter_pair_weights_en.json is missing TH'
-            $packagedInit = Join-Path $temp "Wikipelago\__init__.py"
+            Assert-HasPattern (Join-Path $temp "wikipelago\letter_pair_weights_en.json") '"TH"' 'Packaged letter_pair_weights_en.json is missing TH'
+            $packagedInit = Join-Path $temp "wikipelago\__init__.py"
+            $packagedManifest = Join-Path $temp "wikipelago\archipelago.json"
+            if (-not (Test-Path $packagedManifest)) {
+                throw "Packaged apworld missing wikipelago/archipelago.json"
+            }
+            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.6\.0"' 'Packaged world_version should be 0.6.0'
+
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"
         } finally {

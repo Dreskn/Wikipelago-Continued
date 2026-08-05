@@ -14,7 +14,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-APWORLD = ROOT / "APWorldSource" / "Wikipelago"
+APWORLD = ROOT / "APWorldSource" / "wikipelago"
 sys.path.insert(0, str(APWORLD))
 
 from entertainment_articles import ENTERTAINMENT_ARTICLE_POOL  # noqa: E402

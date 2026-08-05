@@ -159,7 +159,7 @@ def normalize_title(title: str) -> str:
     return deaccented.casefold()
 
 
-# Must match world/APWorldSource/Wikipelago/letter_pairs.py (Scrabble alphabets).
+# Must match world/APWorldSource/wikipelago/letter_pairs.py (Scrabble alphabets).
 _SCRABBLE_LETTERS: dict[str, str] = {
     "en": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
     "fr": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -238,7 +238,7 @@ TITLE_ALIASES: dict[str, set[str]] = {
 }
 
 PRACTICE_POOL_DIR = (
-    Path(__file__).resolve().parent.parent / "world" / "APWorldSource" / "Wikipelago" / "data"
+    Path(__file__).resolve().parent.parent / "world" / "APWorldSource" / "wikipelago" / "data"
 )
 PRACTICE_SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 _PRACTICE_POOL_CACHE: dict[str, list[str]] = {}
