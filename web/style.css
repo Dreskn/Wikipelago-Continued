@@ -622,7 +622,7 @@ button {
   left: auto;
   bottom: calc(100% + 8px);
   z-index: 40;
-  width: min(280px, 100%);
+  width: min(320px, 75vw);
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #3a5068;
