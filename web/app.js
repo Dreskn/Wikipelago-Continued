@@ -560,20 +560,49 @@ async function fetchTargetSummary(title) {
   return summary;
 }
 
+function positionTargetTooltip() {
+  if (!el.targetTooltip || !el.targetHover || el.targetTooltip.classList.contains("hidden")) return;
+  const anchor = el.targetHover.getBoundingClientRect();
+  const tip = el.targetTooltip;
+  const margin = 8;
+  const width = Math.min(tip.offsetWidth || 320, window.innerWidth - margin * 2);
+  let left = anchor.left;
+  left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+
+  // Prefer above the target; flip below if there isn't enough room.
+  tip.style.left = `${left}px`;
+  tip.style.top = "0px";
+  tip.style.right = "auto";
+  tip.style.bottom = "auto";
+  const tipHeight = tip.offsetHeight || 0;
+  let top = anchor.top - tipHeight - margin;
+  if (top < margin) {
+    top = Math.min(anchor.bottom + margin, window.innerHeight - tipHeight - margin);
+    top = Math.max(margin, top);
+  }
+  tip.style.top = `${top}px`;
+}
+
 function hideTargetTooltip() {
   state.targetTooltipVisible = false;
   if (!el.targetTooltip) return;
   el.targetTooltip.classList.add("hidden");
   el.targetTooltip.classList.remove("loading");
   el.targetTooltip.textContent = "";
+  el.targetTooltip.style.left = "";
+  el.targetTooltip.style.top = "";
 }
 
 async function showTargetTooltip(title) {
   if (!el.targetTooltip || !title) return;
   state.targetTooltipVisible = true;
+  if (el.targetTooltip.parentElement !== document.body) {
+    document.body.appendChild(el.targetTooltip);
+  }
   el.targetTooltip.classList.remove("hidden");
   el.targetTooltip.classList.add("loading");
   el.targetTooltip.textContent = t("hud.loadingEllipsis");
+  positionTargetTooltip();
   try {
     const summary = await fetchTargetSummary(title);
     if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
@@ -581,15 +610,20 @@ async function showTargetTooltip(title) {
     }
     el.targetTooltip.classList.remove("loading");
     el.targetTooltip.textContent = summary || t("hud.noDescription");
+    positionTargetTooltip();
   } catch {
     if (!state.targetTooltipVisible) return;
     el.targetTooltip.classList.remove("loading");
     el.targetTooltip.textContent = t("hud.descriptionFailed");
+    positionTargetTooltip();
   }
 }
 
 function bindTargetTooltip() {
   if (!el.targetHover || !el.targetTooltip) return;
+  if (el.targetTooltip.parentElement !== document.body) {
+    document.body.appendChild(el.targetTooltip);
+  }
   el.targetHover.addEventListener("mouseenter", () => {
     const title = state.targetSummaryTitle;
     if (!title) return;
@@ -606,6 +640,13 @@ function bindTargetTooltip() {
   el.targetHover.addEventListener("focusout", () => {
     hideTargetTooltip();
   });
+  window.addEventListener("resize", () => {
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  });
+  // Side panel scroll would otherwise leave a stale fixed position.
+  document.querySelector(".side-panel")?.addEventListener("scroll", () => {
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  }, { passive: true });
 }
 
 function setTargetSummaryTitle(title) {

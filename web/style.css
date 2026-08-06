@@ -617,12 +617,13 @@ button {
   cursor: help;
 }
 .target-tooltip {
-  position: absolute;
-  right: 0;
-  left: auto;
-  bottom: calc(100% + 8px);
-  z-index: 40;
+  /* Fixed + body host so side-panel overflow cannot clip it. */
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1400;
   width: min(320px, 75vw);
+  max-width: calc(100vw - 16px);
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #3a5068;
