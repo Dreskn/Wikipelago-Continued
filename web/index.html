@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260804-2" />
+  <link rel="stylesheet" href="/static/style.css?v=20260806-1" />
 </head>
 <body>
   <div class="layout">
@@ -166,7 +166,25 @@
     </main>
   </div>
 
-  <script src="/static/i18n.js?v=20260804-2"></script>
-  <script src="/static/app.js?v=20260804-2"></script>
+  <div id="bingoOverlay" class="bingo-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bingoOverlayTitle">
+    <button type="button" class="bingo-overlay-backdrop" id="bingoOverlayBackdrop" aria-label="Close" data-i18n-aria="bingo.closeOverlay"></button>
+    <div class="bingo-overlay-panel">
+      <header class="bingo-overlay-header">
+        <h2 id="bingoOverlayTitle">Bingo</h2>
+        <div class="bingo-overlay-zoom">
+          <button type="button" id="bingoZoomOut" class="btn-quiet" aria-label="Zoom out" data-i18n-aria="bingo.zoomOut">−</button>
+          <button type="button" id="bingoZoomReset" class="btn-quiet" aria-label="Reset zoom" data-i18n-aria="bingo.zoomReset">100%</button>
+          <button type="button" id="bingoZoomIn" class="btn-quiet" aria-label="Zoom in" data-i18n-aria="bingo.zoomIn">+</button>
+        </div>
+        <button type="button" id="bingoOverlayClose" class="btn-quiet" aria-label="Close" data-i18n-aria="bingo.closeOverlay">✕</button>
+      </header>
+      <div id="bingoOverlayStage" class="bingo-overlay-stage">
+        <div id="bingoOverlayWorld" class="bingo-overlay-world"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/i18n.js?v=20260806-1"></script>
+  <script src="/static/app.js?v=20260806-1"></script>
 </body>
 </html>

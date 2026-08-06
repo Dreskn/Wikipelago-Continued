@@ -181,6 +181,9 @@ const state = {
   bingoUi: null,
   bingoStampPickMode: false,
   bingoStampBusy: false,
+  /** Expanded bingo board overlay: { boardKey, zoom, panX, panY }. */
+  bingoOverlay: null,
+  bingoOverlayDrag: null,
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -261,6 +264,15 @@ const el = {
   bingoStampHint: document.getElementById("bingoStampHint"),
   bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
+  bingoOverlay: document.getElementById("bingoOverlay"),
+  bingoOverlayBackdrop: document.getElementById("bingoOverlayBackdrop"),
+  bingoOverlayTitle: document.getElementById("bingoOverlayTitle"),
+  bingoOverlayClose: document.getElementById("bingoOverlayClose"),
+  bingoOverlayStage: document.getElementById("bingoOverlayStage"),
+  bingoOverlayWorld: document.getElementById("bingoOverlayWorld"),
+  bingoZoomIn: document.getElementById("bingoZoomIn"),
+  bingoZoomOut: document.getElementById("bingoZoomOut"),
+  bingoZoomReset: document.getElementById("bingoZoomReset"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
@@ -1422,6 +1434,15 @@ function mergeBingoStampMaps(...maps) {
   return out;
 }
 
+/** Minimum readable cell size (px) before a sidebar board becomes a scaled preview. */
+const BINGO_MIN_SIDE_CELL_PX = 18;
+/** Preferred max board width in the sidebar for small grids (~10.5rem). */
+const BINGO_SIDE_PREF_MAX_PX = 168;
+/** Base cell size (px) for the expanded overlay board before user zoom. */
+const BINGO_OVERLAY_CELL_PX = 36;
+const BINGO_ZOOM_MIN = 0.4;
+const BINGO_ZOOM_MAX = 4;
+
 function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options = {}) {
   const n = board.length;
   const pairSet = new Set(normalizeBingoPairList(stampedPairs));
@@ -1434,6 +1455,7 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
   const pickMode = Boolean(options.pickMode);
   const boardKey = String(options.boardKey || "");
   const onPick = typeof options.onPick === "function" ? options.onPick : null;
+  const stopStampBubble = Boolean(options.stopStampBubble);
 
   const grid = document.createElement("div");
   grid.className = "bingo-grid";
@@ -1454,12 +1476,15 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
         cell.setAttribute("role", "button");
         cell.tabIndex = 0;
         cell.title = t("bingo.stampCell", { pair });
-        const pick = () => onPick(boardKey, row, col, pair);
+        const pick = (event) => {
+          if (stopStampBubble && event) event.stopPropagation();
+          onPick(boardKey, row, col, pair);
+        };
         cell.addEventListener("click", pick);
         cell.addEventListener("keydown", (event) => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            pick();
+            pick(event);
           }
         });
       }
@@ -1467,6 +1492,233 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
     }
   }
   return { grid, n, lines: lineMap };
+}
+
+function bingoSidebarAvailWidth() {
+  const host = el.bingoBoards;
+  if (!host) return 280;
+  const width = host.clientWidth;
+  if (width > 40) return width;
+  // Fallback before first layout: side column minus card padding.
+  return 330 - 24;
+}
+
+function sizeBingoGrid(grid, n, cellPx) {
+  const size = Math.max(1, n) * cellPx;
+  grid.style.width = `${size}px`;
+  grid.style.setProperty("--bingo-cell", `${cellPx}px`);
+  grid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
+}
+
+function applyBingoSidebarFit(viewport, grid, n, boardKey) {
+  const avail = bingoSidebarAvailWidth();
+  const readableWidth = Math.max(n, 1) * BINGO_MIN_SIDE_CELL_PX;
+  if (readableWidth <= avail + 0.5) {
+    const width = Math.min(avail, Math.max(BINGO_SIDE_PREF_MAX_PX, readableWidth));
+    sizeBingoGrid(grid, n, width / Math.max(n, 1));
+    viewport.appendChild(grid);
+    return;
+  }
+
+  // Board wider than the side panel: keep a readable natural size, scale to fit.
+  sizeBingoGrid(grid, n, BINGO_MIN_SIDE_CELL_PX);
+  const natural = readableWidth;
+  const scale = avail / natural;
+  const scaler = document.createElement("div");
+  scaler.className = "bingo-preview-scale";
+  scaler.style.width = `${natural}px`;
+  scaler.style.transform = `scale(${scale})`;
+  scaler.appendChild(grid);
+
+  viewport.classList.add("is-compact");
+  viewport.style.height = `${natural * scale}px`;
+  viewport.title = t("bingo.expandHint");
+  viewport.setAttribute("role", "button");
+  viewport.tabIndex = 0;
+  viewport.setAttribute("aria-label", t("bingo.expandHint"));
+
+  const badge = document.createElement("span");
+  badge.className = "bingo-preview-badge";
+  badge.textContent = t("bingo.expand");
+
+  const open = (event) => {
+    if (event?.target?.closest?.(".bingo-cell.stampable")) return;
+    openBingoOverlay(boardKey);
+  };
+  viewport.addEventListener("click", open);
+  viewport.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open(event);
+    }
+  });
+
+  viewport.appendChild(scaler);
+  viewport.appendChild(badge);
+}
+
+function applyBingoOverlayTransform() {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlayWorld) return;
+  const { zoom, panX, panY } = overlay;
+  el.bingoOverlayWorld.style.transform =
+    `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
+  if (el.bingoZoomReset) {
+    el.bingoZoomReset.textContent = `${Math.round(zoom * 100)}%`;
+  }
+}
+
+function setBingoOverlayZoom(nextZoom, originX = null, originY = null) {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlayStage) return;
+  const prev = overlay.zoom;
+  const zoom = Math.max(BINGO_ZOOM_MIN, Math.min(BINGO_ZOOM_MAX, nextZoom));
+  if (originX != null && originY != null && prev > 0) {
+    const rect = el.bingoOverlayStage.getBoundingClientRect();
+    const cx = originX - rect.left - rect.width / 2;
+    const cy = originY - rect.top - rect.height / 2;
+    const ratio = zoom / prev;
+    overlay.panX = cx - (cx - overlay.panX) * ratio;
+    overlay.panY = cy - (cy - overlay.panY) * ratio;
+  }
+  overlay.zoom = zoom;
+  applyBingoOverlayTransform();
+}
+
+function closeBingoOverlay() {
+  state.bingoOverlay = null;
+  state.bingoOverlayDrag = null;
+  if (el.bingoOverlayWorld) el.bingoOverlayWorld.innerHTML = "";
+  if (el.bingoOverlay) el.bingoOverlay.classList.add("hidden");
+  if (el.bingoOverlayStage) el.bingoOverlayStage.classList.remove("is-panning");
+}
+
+function refreshBingoOverlayContent() {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlay || !el.bingoOverlayWorld) return;
+  const status = state.status || {};
+  if (!status.bingo_letterpairs) {
+    closeBingoOverlay();
+    return;
+  }
+  const boards = bingoBoardsFromStatus(status);
+  const boardIndex = Math.max(0, Number(overlay.boardKey) - 1);
+  const board = boards[boardIndex];
+  if (!board || !board.length) {
+    closeBingoOverlay();
+    return;
+  }
+  const unlockedRaw = Number(status.bingo_unlocked_boards);
+  const unlocked = Number.isFinite(unlockedRaw)
+    ? Math.max(0, Math.min(boards.length, unlockedRaw))
+    : boards.length;
+  if (boardIndex >= unlocked) {
+    closeBingoOverlay();
+    return;
+  }
+
+  const boardKey = String(overlay.boardKey);
+  const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
+  const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
+  const { remaining: stampRemaining } = bingoStampCharges(status);
+  const pickMode = Boolean(state.bingoStampPickMode && stampRemaining > 0);
+
+  const { grid, n } = renderBingoBoardGrid(
+    board,
+    stampedMap[boardKey] || [],
+    cellsMap[boardKey] || [],
+    linesMap[boardKey] || {},
+    {
+      boardKey,
+      pickMode,
+      onPick: useBingoStampOnCell,
+      stopStampBubble: true,
+    }
+  );
+  sizeBingoGrid(grid, n, BINGO_OVERLAY_CELL_PX);
+  el.bingoOverlayWorld.replaceChildren(grid);
+  if (el.bingoOverlayTitle) {
+    const complete = isBingoBoardFullyComplete(linesMap[boardKey] || {});
+    el.bingoOverlayTitle.textContent = complete
+      ? t("bingo.boardComplete", { n: boardKey })
+      : t("bingo.board", { n: boardKey });
+  }
+  applyBingoOverlayTransform();
+  el.bingoOverlay.classList.remove("hidden");
+}
+
+function openBingoOverlay(boardKey) {
+  const key = String(boardKey || "").trim();
+  if (!key) return;
+  const prev = state.bingoOverlay;
+  state.bingoOverlay = {
+    boardKey: key,
+    zoom: prev && prev.boardKey === key ? prev.zoom : 1,
+    panX: prev && prev.boardKey === key ? prev.panX : 0,
+    panY: prev && prev.boardKey === key ? prev.panY : 0,
+  };
+  refreshBingoOverlayContent();
+}
+
+function bindBingoOverlayUi() {
+  if (!el.bingoOverlay) return;
+  const close = () => closeBingoOverlay();
+  el.bingoOverlayClose?.addEventListener("click", close);
+  el.bingoOverlayBackdrop?.addEventListener("click", close);
+  el.bingoZoomIn?.addEventListener("click", () => setBingoOverlayZoom((state.bingoOverlay?.zoom || 1) * 1.2));
+  el.bingoZoomOut?.addEventListener("click", () => setBingoOverlayZoom((state.bingoOverlay?.zoom || 1) / 1.2));
+  el.bingoZoomReset?.addEventListener("click", () => {
+    if (!state.bingoOverlay) return;
+    state.bingoOverlay.zoom = 1;
+    state.bingoOverlay.panX = 0;
+    state.bingoOverlay.panY = 0;
+    applyBingoOverlayTransform();
+  });
+
+  el.bingoOverlayStage?.addEventListener("wheel", (event) => {
+    if (!state.bingoOverlay) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+    setBingoOverlayZoom((state.bingoOverlay.zoom || 1) * factor, event.clientX, event.clientY);
+  }, { passive: false });
+
+  el.bingoOverlayStage?.addEventListener("pointerdown", (event) => {
+    if (!state.bingoOverlay) return;
+    if (event.target.closest(".bingo-cell.stampable")) return;
+    if (event.button != null && event.button !== 0) return;
+    state.bingoOverlayDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originPanX: state.bingoOverlay.panX,
+      originPanY: state.bingoOverlay.panY,
+    };
+    el.bingoOverlayStage.classList.add("is-panning");
+    try { el.bingoOverlayStage.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
+  });
+  el.bingoOverlayStage?.addEventListener("pointermove", (event) => {
+    const drag = state.bingoOverlayDrag;
+    if (!drag || drag.pointerId !== event.pointerId || !state.bingoOverlay) return;
+    state.bingoOverlay.panX = drag.originPanX + (event.clientX - drag.startX);
+    state.bingoOverlay.panY = drag.originPanY + (event.clientY - drag.startY);
+    applyBingoOverlayTransform();
+  });
+  const endDrag = (event) => {
+    const drag = state.bingoOverlayDrag;
+    if (!drag || (event && drag.pointerId !== event.pointerId)) return;
+    state.bingoOverlayDrag = null;
+    el.bingoOverlayStage?.classList.remove("is-panning");
+  };
+  el.bingoOverlayStage?.addEventListener("pointerup", endDrag);
+  el.bingoOverlayStage?.addEventListener("pointercancel", endDrag);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.bingoOverlay) {
+      event.preventDefault();
+      closeBingoOverlay();
+    }
+  });
 }
 
 function bingoUiStorageKey(status) {
@@ -1596,6 +1848,7 @@ function renderBingoHud(status) {
     if (el.bingoStampHint) el.bingoStampHint.classList.add("hidden");
     state.bingoUi = null;
     state.bingoStampPickMode = false;
+    closeBingoOverlay();
     return;
   }
 
@@ -1692,10 +1945,15 @@ function renderBingoHud(status) {
         boardKey,
         pickMode: pickMode && !collapsed,
         onPick: useBingoStampOnCell,
+        stopStampBubble: true,
       }
     );
-    block.appendChild(grid);
+    const viewport = document.createElement("div");
+    viewport.className = "bingo-board-viewport";
+    block.appendChild(viewport);
     el.bingoBoards.appendChild(block);
+    if (!collapsed) applyBingoSidebarFit(viewport, grid, n, boardKey);
+    else viewport.appendChild(grid);
 
     anySize = Math.max(anySize, n);
     const lineKeys = Object.keys(lineMap);
@@ -1718,6 +1976,8 @@ function renderBingoHud(status) {
       el.bingoMeta.textContent = "";
     }
   }
+
+  if (state.bingoOverlay) refreshBingoOverlayContent();
 }
 
 function scrollLevel() {
@@ -2765,6 +3025,7 @@ async function openArticle(title, options = {}) {
     state.currentTitle = title;
     el.articleTitle.textContent = title;
     el.articleBody.innerHTML = html;
+    el.articleBody.scrollTop = 0;
     consumeTrapQueueForPage(title, state.status);
     prepareArticleHtml(el.articleBody, {
       foggy: state.activeFoggy,
@@ -3135,6 +3396,7 @@ if ("serviceWorker" in navigator) {
 ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
+bindBingoOverlayUi();
 bindStuckHelper();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;

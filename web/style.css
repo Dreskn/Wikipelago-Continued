@@ -446,13 +446,46 @@ button {
   font-size: 0.72rem;
   padding: 2px 8px;
 }
-.bingo-board-block.collapsed .bingo-grid {
+.bingo-board-block.collapsed .bingo-board-viewport {
   display: none;
+}
+.bingo-board-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+.bingo-board-viewport.is-compact {
+  cursor: zoom-in;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.bingo-board-viewport.is-compact:focus-visible {
+  outline: 2px solid #6aa9ff;
+  outline-offset: 2px;
+}
+.bingo-preview-scale {
+  transform-origin: top left;
+  will-change: transform;
+}
+.bingo-preview-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #6a5420;
+  background: rgba(58, 47, 20, 0.92);
+  color: #ffd789;
+  font-size: 0.68rem;
+  font-weight: 700;
+  pointer-events: none;
 }
 .bingo-grid {
   display: grid;
   gap: 0;
   width: min(100%, 10.5rem);
+  --bingo-cell: 1.35rem;
   border-top: 1px solid #3a5068;
   border-left: 1px solid #3a5068;
   background: #3a5068;
@@ -468,11 +501,93 @@ button {
   padding: 0;
   background: #14202e;
   color: var(--text);
-  font-size: clamp(0.48rem, 1.35vw, 0.62rem);
+  font-size: calc(var(--bingo-cell) * 0.42);
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
   user-select: none;
+}
+.bingo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.bingo-overlay.hidden {
+  display: none;
+}
+.bingo-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 10, 16, 0.72);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.bingo-overlay-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(96vw, 920px);
+  height: min(92dvh, 860px);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border: 1px solid #3a5068;
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.bingo-overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid #29384a;
+}
+.bingo-overlay-header h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1rem;
+}
+.bingo-overlay-zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.bingo-overlay-zoom .btn-quiet {
+  min-width: 2rem;
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.bingo-overlay-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background:
+    radial-gradient(circle at 20% 0%, #122132 0%, transparent 45%),
+    #0b1016;
+}
+.bingo-overlay-stage.is-panning {
+  cursor: grabbing;
+}
+.bingo-overlay-world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+  will-change: transform;
+}
+.bingo-overlay-world .bingo-grid {
+  width: auto;
 }
 .bingo-cell.stamped {
   background: #243246;
