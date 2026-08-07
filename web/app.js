@@ -2757,6 +2757,7 @@ function prepareArticleHtml(root, options = {}) {
     markNamedSections(root, names, className);
   }
   wrapTables(root);
+  refreshArticleScrollHosts(root);
   processArticleLinks(root, options);
   applyDisplayLocks();
 }
@@ -2773,23 +2774,41 @@ function neutralizeTableChromeColors(el) {
   el.style.removeProperty("color");
 }
 
+function isNestedWikiTable(table) {
+  return Boolean(table?.parentElement?.closest("table"));
+}
+
 function wrapTables(root) {
   root.querySelectorAll("table").forEach((table) => {
-    table.removeAttribute("width");
-    if (table.style) {
-      table.style.removeProperty("width");
-      table.style.removeProperty("min-width");
-      table.style.removeProperty("max-width");
+    const nested = isNestedWikiTable(table);
+    // Nested layout tables keep intrinsic sizing; only top-level wraps scroll.
+    if (!nested) {
+      table.removeAttribute("width");
+      if (table.style) {
+        table.style.removeProperty("width");
+        table.style.removeProperty("min-width");
+        table.style.removeProperty("max-width");
+      }
     }
     neutralizeTableChromeColors(table);
     table
       .querySelectorAll("caption, colgroup, col, thead, tbody, tfoot, tr, th, td")
       .forEach(neutralizeTableChromeColors);
+    if (nested) return;
     if (table.parentElement?.classList.contains("table-scroll")) return;
     const wrap = document.createElement("div");
     wrap.className = "table-scroll";
     table.replaceWith(wrap);
     wrap.appendChild(table);
+  });
+}
+
+function refreshArticleScrollHosts(root = el.articleBody) {
+  if (!root) return;
+  // Avoid overflow:auto scrollports unless the table is actually wider than the article.
+  root.querySelectorAll(".table-scroll").forEach((wrap) => {
+    wrap.classList.remove("is-scrollable-x");
+    wrap.classList.toggle("is-scrollable-x", wrap.scrollWidth > wrap.clientWidth + 1);
   });
 }
 
@@ -3169,6 +3188,11 @@ el.articleBody.addEventListener("pointerover", (e) => {
   scheduleWikiPrefetchFromHover(a.dataset.title || "");
 });
 
+el.articleBody.addEventListener("load", (e) => {
+  const tag = String(e.target?.tagName || "");
+  if (tag === "IMG" || tag === "VIDEO") refreshArticleScrollHosts();
+}, true);
+
 el.articleBody.addEventListener("click", async (e) => {
   const blocked = e.target.closest("a[data-blocked-ns]");
   if (blocked) {
@@ -3215,19 +3239,31 @@ function applyArticleWheel(deltaY) {
   el.articleBody.scrollTop += deltaY * factor;
 }
 
-// Route wheel scrolling to the article from anywhere except the side panel
-// (page chrome, empty margins, other monitors when the cursor is still over this window).
+// One scroll path: always drive #articleBody ourselves (except side panel / bingo overlay).
+// Native scrolling over nested overflow:auto hosts was latching the wheel at mid-page.
 window.addEventListener("wheel", (e) => {
   if (isEventInSidePanel(e.target)) return;
+  if (e.target?.closest?.("#bingoOverlay")) return;
   if (!el.articleBody) return;
 
-  const overArticle = el.articleBody.contains(e.target);
-  // Let the article use native scrolling when scrollsanity is off.
-  if (overArticle && !state.status?.scrollsanity) return;
+  const nest = e.target?.closest?.(".table-scroll.is-scrollable-x");
+  if (
+    nest
+    && el.articleBody.contains(nest)
+    && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))
+  ) {
+    e.preventDefault();
+    nest.scrollLeft += e.shiftKey ? e.deltaY : e.deltaX;
+    return;
+  }
 
   e.preventDefault();
   applyArticleWheel(e.deltaY);
 }, { passive: false });
+
+window.addEventListener("resize", () => {
+  refreshArticleScrollHosts();
+}, { passive: true });
 
 el.rerollTargetBtn?.addEventListener("click", () => {
   rerollCurrentTarget();

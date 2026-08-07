@@ -184,7 +184,8 @@ button {
 .article-body {
   flex: 1 1 auto;
   min-height: 0;
-  overflow-x: hidden;
+  /* clip (not hidden): avoids forcing overflow-y:auto on descendants via CSS overflow rules. */
+  overflow-x: clip;
   overflow-y: auto;
   background: #0d1621;
   border-radius: 10px;
@@ -444,19 +445,25 @@ button {
 .article-body .mw-parser-output {
   max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
+  /* Do not create a nested Y scrollport inside #articleBody. */
+  overflow: visible;
 }
 .article-body .table-scroll {
   display: block;
   width: fit-content;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  /* Only become an X scrollport when .is-scrollable-x is set (content actually wider). */
+  overflow-x: clip;
+  overflow-y: visible;
+  overscroll-behavior: contain;
   margin: 12px 0;
   border: 1px solid #395068;
   border-radius: 8px;
   background: #101a26;
   -webkit-overflow-scrolling: touch;
+}
+.article-body .table-scroll.is-scrollable-x {
+  overflow-x: auto;
 }
 .article-body table {
   display: table;
