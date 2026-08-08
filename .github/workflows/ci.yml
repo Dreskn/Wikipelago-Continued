@@ -12,9 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Run smoke tests
+      - name: Run smoke tests (build + verify apworld)
         shell: pwsh
-        run: ./world/smoke_test.ps1
+        run: ./world/smoke_test.ps1 -BuildApworld
 
   pool-validate:
     name: Pool validate
@@ -28,5 +28,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Validate article pool against Wikipedia
-        run: python world/validate_article_pool.py --strict
+      - name: Validate article pools against Wikipedia (all languages)
+        run: python world/validate_article_pool.py --lang all --strict

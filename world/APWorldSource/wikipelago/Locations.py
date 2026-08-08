@@ -7,7 +7,7 @@ class WikipelagoLocationData:
 
 
 LOCATION_OFFSET = 1_880_000
-MAX_ROUNDS = 5000
+MAX_ROUNDS = 999
 # After Grand Goal: per-board bingo lines (20 rows + 20 cols + 2 diags + full).
 BINGO_LP_OFFSET = LOCATION_OFFSET + MAX_ROUNDS + 2
 MAX_BINGO_GRID = 20

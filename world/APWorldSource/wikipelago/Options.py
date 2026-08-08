@@ -207,7 +207,7 @@ class IncludeFamousPeople(Toggle):
 class IncludeMiscellaneous(Toggle):
     """Catch-all pages that matched no other category (or have no Wikidata entity)."""
     display_name = "Include Miscellaneous"
-    default = 0
+    default = 1
 
 
 class IncludeAnimals(Toggle):

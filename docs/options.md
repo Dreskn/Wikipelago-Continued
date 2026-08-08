@@ -111,7 +111,7 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `include_famous_people` | `true` |
 | `include_animals` | `true` |
 | `include_biology_medicine` | `true` |
-| `include_miscellaneous` | `false` |
+| `include_miscellaneous` | `true` |
 
 `board_games` was removed in 0.6. Leave at least one category enabled.
 

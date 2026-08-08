@@ -81,6 +81,8 @@ try {
         if ($rel -match '(^|[\\/])__pycache__([\\/]|$)') { return }
         # Don't zip the source manifest twice; packaged copy already has version fields.
         if (($rel -replace "\\", "/") -eq "archipelago.json") { return }
+        # Legacy curated list — unused by runtime; keep in repo for tooling only.
+        if (($rel -replace "\\", "/") -eq "entertainment_articles.py") { return }
 
         $entryName = ("$PackageName/" + ($rel -replace "\\", "/"))
         [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
@@ -117,6 +119,9 @@ try {
     }
     if ($names -contains "archipelago.json") {
         throw "Manifest must not be at zip root; expected $PackageName/archipelago.json"
+    }
+    if ($names -contains "$PackageName/entertainment_articles.py") {
+        throw "Built apworld must not ship legacy entertainment_articles.py"
     }
 
     $manifestEntry = $zip.GetEntry("$PackageName/archipelago.json")

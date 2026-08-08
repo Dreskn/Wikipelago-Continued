@@ -13,6 +13,8 @@ function uiLanguage() {
 const WIKI_PREFETCH_MAX_CACHE = 8;
 const WIKI_PREFETCH_CONCURRENCY = 2;
 const WIKI_PREFETCH_HOVER_MS = 200;
+/** After a longer hover, DOM-prepare the prefetched HTML so open skips the heavy pass. */
+const WIKI_PREPARE_HOVER_MS = 800;
 
 /** Wikipedia edition for article fetches (AP slot language, or practice pool language). */
 function wikipediaLanguage() {
@@ -203,10 +205,16 @@ const state = {
   wikiHtmlCache: new Map(),
   /** lang::title → in-flight fetch Promise */
   wikiHtmlInflight: new Map(),
+  /** lang::title → detached Element with prepared children (LRU). */
+  wikiPreparedCache: new Map(),
+  /** lang::title → in-flight prepare Promise */
+  wikiPrepareInflight: new Map(),
   wikiPrefetchQueue: [],
   wikiPrefetchActive: 0,
   wikiPrefetchHoverTimer: null,
   wikiPrefetchHoverTitle: "",
+  wikiPrepareHoverTimer: null,
+  wikiPrepareHoverTitle: "",
   wikiCacheLanguage: "",
   articleLoadingToken: 0,
 };
@@ -2751,6 +2759,7 @@ function markNamedSections(root, names, className) {
 }
 
 function prepareArticleHtml(root, options = {}) {
+  const { foggy = false, missing = false, applyLocks = true } = options;
   sanitizeHtml(root);
   markLeadSection(root);
   for (const [className, names] of Object.entries(WIKI_SECTION_HEADINGS)) {
@@ -2758,8 +2767,9 @@ function prepareArticleHtml(root, options = {}) {
   }
   wrapTables(root);
   refreshArticleScrollHosts(root);
-  processArticleLinks(root, options);
-  applyDisplayLocks();
+  processArticleLinks(root, { foggy, missing });
+  // Locks toggle classes on the live article body — skip for detached pre-prepare roots.
+  if (applyLocks) applyDisplayLocks();
 }
 
 function neutralizeTableChromeColors(el) {
@@ -2897,12 +2907,19 @@ function wikiHtmlCacheKey(title) {
 function clearWikiHtmlCache() {
   state.wikiHtmlCache.clear();
   state.wikiHtmlInflight.clear();
+  state.wikiPreparedCache.clear();
+  state.wikiPrepareInflight.clear();
   state.wikiPrefetchQueue = [];
   state.wikiPrefetchActive = 0;
   state.wikiPrefetchHoverTitle = "";
+  state.wikiPrepareHoverTitle = "";
   if (state.wikiPrefetchHoverTimer) {
     clearTimeout(state.wikiPrefetchHoverTimer);
     state.wikiPrefetchHoverTimer = null;
+  }
+  if (state.wikiPrepareHoverTimer) {
+    clearTimeout(state.wikiPrepareHoverTimer);
+    state.wikiPrepareHoverTimer = null;
   }
   state.wikiCacheLanguage = wikipediaLanguage();
 }
@@ -3032,6 +3049,75 @@ function scheduleWikiPrefetchFromHover(title) {
   }, WIKI_PREFETCH_HOVER_MS);
 }
 
+function storeWikiPreparedCache(title, root) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  if (state.wikiPreparedCache.has(key)) state.wikiPreparedCache.delete(key);
+  state.wikiPreparedCache.set(key, root);
+  while (state.wikiPreparedCache.size > WIKI_PREFETCH_MAX_CACHE) {
+    const oldest = state.wikiPreparedCache.keys().next().value;
+    state.wikiPreparedCache.delete(oldest);
+  }
+}
+
+function takeWikiPreparedCache(title) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  const hit = state.wikiPreparedCache.get(key);
+  if (!hit) return null;
+  state.wikiPreparedCache.delete(key);
+  return hit;
+}
+
+function idleYield(timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => resolve(), { timeout: timeoutMs });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+async function prepareWikiHtml(title) {
+  const clean = String(title || "").trim();
+  if (!clean || isBlockedWikiTitle(clean)) return;
+  if (normalizeTitle(clean) === normalizeTitle(state.currentTitle)) return;
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(clean);
+  if (state.wikiPreparedCache.has(key) || state.wikiPrepareInflight.has(key)) return;
+
+  const inflight = (async () => {
+    try {
+      const html = await fetchWikiHtml(clean);
+      await idleYield();
+      // Hover target may have changed; still finish prepare for LRU usefulness.
+      const root = document.createElement("div");
+      root.innerHTML = html;
+      prepareArticleHtml(root, { foggy: false, missing: false, applyLocks: false });
+      storeWikiPreparedCache(clean, root);
+    } catch {
+      /* ignore prepare failures — open will fall back to normal path */
+    } finally {
+      state.wikiPrepareInflight.delete(key);
+    }
+  })();
+  state.wikiPrepareInflight.set(key, inflight);
+  await inflight;
+}
+
+function scheduleWikiPrepareFromHover(title) {
+  const clean = String(title || "").trim();
+  if (!clean) return;
+  if (state.wikiPrepareHoverTitle === clean && state.wikiPrepareHoverTimer) return;
+  state.wikiPrepareHoverTitle = clean;
+  if (state.wikiPrepareHoverTimer) clearTimeout(state.wikiPrepareHoverTimer);
+  state.wikiPrepareHoverTimer = setTimeout(() => {
+    state.wikiPrepareHoverTimer = null;
+    void prepareWikiHtml(clean);
+  }, WIKI_PREPARE_HOVER_MS);
+}
+
 function setArticleLoadingVisible(visible, label = null) {
   if (label == null) label = t("search.loading");
   if (!el.articleLoading) return;
@@ -3071,26 +3157,44 @@ async function openArticle(title, options = {}) {
   }
 
   const endLoading = beginArticleLoading();
-  let html;
-  try {
-    html = await fetchWikiHtml(title);
-  } catch (err) {
-    endLoading();
-    const detail = err?.message ? ` (${err.message})` : "";
-    toast(t("toast.openFailed", { title, detail }), "warn");
-    return;
+  const prepareKey = wikiHtmlCacheKey(title);
+  const prepareWait = state.wikiPrepareInflight.get(prepareKey);
+  if (prepareWait) {
+    try { await prepareWait; } catch { /* fall through */ }
   }
 
   try {
     state.currentTitle = title;
     el.articleTitle.textContent = title;
-    el.articleBody.innerHTML = html;
     el.articleBody.scrollTop = 0;
     consumeTrapQueueForPage(title, state.status);
-    prepareArticleHtml(el.articleBody, {
-      foggy: state.activeFoggy,
-      missing: state.activeMissing,
-    });
+
+    const prepared = takeWikiPreparedCache(title);
+    if (prepared) {
+      el.articleBody.replaceChildren(...prepared.childNodes);
+      // Re-apply current fog/missing on the live tree (pre-prepare used neutral flags).
+      processArticleLinks(el.articleBody, {
+        foggy: state.activeFoggy,
+        missing: state.activeMissing,
+      });
+      applyDisplayLocks();
+      refreshArticleScrollHosts(el.articleBody);
+    } else {
+      let html;
+      try {
+        html = await fetchWikiHtml(title);
+      } catch (err) {
+        endLoading();
+        const detail = err?.message ? ` (${err.message})` : "";
+        toast(t("toast.openFailed", { title, detail }), "warn");
+        return;
+      }
+      el.articleBody.innerHTML = html;
+      prepareArticleHtml(el.articleBody, {
+        foggy: state.activeFoggy,
+        missing: state.activeMissing,
+      });
+    }
     armBombsOnPage(el.articleBody, state.status);
     if (countAsClick || !state.roundVisitSet.size) {
       state.roundVisitSet.add(normalizeTitle(title));
@@ -3185,7 +3289,9 @@ el.articleBody.addEventListener("pointerover", (e) => {
   // Only fire when entering the link (not bubbling across children repeatedly).
   const related = e.relatedTarget;
   if (related && a.contains(related)) return;
-  scheduleWikiPrefetchFromHover(a.dataset.title || "");
+  const dest = a.dataset.title || "";
+  scheduleWikiPrefetchFromHover(dest);
+  scheduleWikiPrepareFromHover(dest);
 });
 
 el.articleBody.addEventListener("load", (e) => {
