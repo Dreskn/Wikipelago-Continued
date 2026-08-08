@@ -18,9 +18,13 @@ APWORLD = ROOT / "APWorldSource" / "wikipelago"
 DATA_DIR = APWORLD / "data"
 SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 
-USER_AGENT = "WikipelagoPoolValidator/1.1 (https://github.com/Dreskn/Wikipelago-Continued)"
-BATCH_SIZE = 50
-SLEEP_SECONDS = 0.1
+USER_AGENT = "WikipelagoPoolValidator/1.2 (https://github.com/Dreskn/Wikipelago-Continued)"
+# Gentler pacing for --lang all in CI (Wikipedia rate-limits aggressive clients).
+BATCH_SIZE = 40
+SLEEP_SECONDS = 0.35
+MAX_RETRIES = 10
+BACKOFF_BASE_SECONDS = 2.0
+BACKOFF_MAX_SECONDS = 120.0
 REPORT_PATH = ROOT / "pool_validation_report.json"
 
 
@@ -50,6 +54,18 @@ def wiki_api_url(lang: str) -> str:
     return f"https://{code}.wikipedia.org/w/api.php"
 
 
+def _retry_after_seconds(error: urllib.error.HTTPError, attempt: int) -> float:
+    """Backoff delay: honor Retry-After when present, else exponential with cap."""
+    header = error.headers.get("Retry-After") if error.headers else None
+    if header:
+        try:
+            return min(BACKOFF_MAX_SECONDS, max(1.0, float(header)))
+        except ValueError:
+            pass
+    # attempt 1 → 2s, 2 → 4s, 3 → 8s, … capped
+    return min(BACKOFF_MAX_SECONDS, BACKOFF_BASE_SECONDS * (2 ** (attempt - 1)))
+
+
 def query_batch(lang: str, titles: list[str]) -> dict:
     params = {
         "action": "query",
@@ -60,9 +76,37 @@ def query_batch(lang: str, titles: list[str]) -> dict:
         "titles": "|".join(titles),
     }
     url = f"{wiki_api_url(lang)}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    last_error: BaseException | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            last_error = e
+            retryable = e.code == 429 or 500 <= e.code < 600
+            if not retryable or attempt >= MAX_RETRIES:
+                raise
+            delay = _retry_after_seconds(e, attempt)
+            print(
+                f"[{lang}] HTTP {e.code} on batch ({attempt}/{MAX_RETRIES}); "
+                f"sleeping {delay:.1f}s",
+                flush=True,
+            )
+            time.sleep(delay)
+        except urllib.error.URLError as e:
+            last_error = e
+            if attempt >= MAX_RETRIES:
+                raise
+            delay = min(BACKOFF_MAX_SECONDS, BACKOFF_BASE_SECONDS * (2 ** (attempt - 1)))
+            print(
+                f"[{lang}] network error on batch ({attempt}/{MAX_RETRIES}): {e.reason!r}; "
+                f"sleeping {delay:.1f}s",
+                flush=True,
+            )
+            time.sleep(delay)
+    assert last_error is not None
+    raise last_error
 
 
 def is_disambiguation(page: dict) -> bool:
@@ -172,22 +216,7 @@ def validate_lang(lang: str) -> dict:
     total_batches = (len(unique_titles) + BATCH_SIZE - 1) // BATCH_SIZE
     for i in range(0, len(unique_titles), BATCH_SIZE):
         batch = unique_titles[i : i + BATCH_SIZE]
-        attempt = 0
-        while True:
-            attempt += 1
-            try:
-                data = query_batch(lang, batch)
-                break
-            except urllib.error.HTTPError as e:
-                if e.code in (429, 503) and attempt < 5:
-                    time.sleep(1.0 * attempt)
-                    continue
-                raise
-            except urllib.error.URLError:
-                if attempt < 5:
-                    time.sleep(1.0 * attempt)
-                    continue
-                raise
+        data = query_batch(lang, batch)
         batch_results = classify_batch(batch, data)
         classifications.update(batch_results)
         print(
