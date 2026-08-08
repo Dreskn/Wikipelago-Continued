@@ -1,7 +1,7 @@
 {
   "lang": "en",
   "source": "pool_annotated_en.json",
-  "count": 11180,
+  "count": 11179,
   "entries": [
     {
       "title": "Wikipedia",
@@ -41239,13 +41239,6 @@
       "title": "MV Hondius hantavirus outbreak",
       "tags": [
         "science_space"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ma (film)",
-      "tags": [
-        "movies"
       ],
       "sensitive": false
     },

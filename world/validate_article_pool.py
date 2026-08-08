@@ -204,6 +204,32 @@ def classify_batch(titles: list[str], data: dict) -> dict[str, dict]:
     return results
 
 
+def pool_path(lang: str) -> Path:
+    return DATA_DIR / f"pool_{lang}.json"
+
+
+def apply_removals(lang: str, titles_to_remove: set[str]) -> dict:
+    """Drop missing/disambiguation titles from the runtime pool JSON. Returns stats."""
+    path = pool_path(lang)
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    entries = payload.get("entries") or []
+    before = len(entries)
+    kept = [
+        entry
+        for entry in entries
+        if str(entry.get("title") or "").strip() not in titles_to_remove
+    ]
+    removed = before - len(kept)
+    if removed:
+        payload["entries"] = kept
+        payload["count"] = len(kept)
+        path.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+    return {"before": before, "after": len(kept), "removed": removed}
+
+
 def validate_lang(lang: str) -> dict:
     pool = load_pool_titles(lang)
     counts = Counter(pool)
@@ -246,7 +272,7 @@ def validate_lang(lang: str) -> dict:
 
     return {
         "lang": lang,
-        "pool_file": str(DATA_DIR / f"pool_{lang}.json"),
+        "pool_file": str(pool_path(lang)),
         "summary": {
             "pool_size": len(pool),
             "unique_titles": len(unique_titles),
@@ -278,6 +304,23 @@ def main() -> int:
         action="store_true",
         help="Exit non-zero if any missing, disambiguation, or duplicate titles are found.",
     )
+    parser.add_argument(
+        "--apply-removals",
+        action="store_true",
+        help=(
+            "After validation, rewrite each pool JSON by removing titles classified "
+            "as missing or disambiguation. Does not remove redirect_ok titles."
+        ),
+    )
+    parser.add_argument(
+        "--from-report",
+        type=Path,
+        default=None,
+        help=(
+            "Skip live Wikipedia queries; apply removals (and/or re-check --strict) "
+            "from an existing pool_validation_report.json."
+        ),
+    )
     args = parser.parse_args()
 
     lang_arg = (args.lang or "en").strip().lower()
@@ -303,9 +346,26 @@ def main() -> int:
 
     lang_reports: list[dict] = []
     failed = False
-    for lang in langs:
-        report = validate_lang(lang)
-        lang_reports.append(report)
+
+    if args.from_report is not None:
+        report_path = args.from_report
+        if not report_path.is_file():
+            print(f"Report not found: {report_path}", file=sys.stderr)
+            return 2
+        cached = json.loads(report_path.read_text(encoding="utf-8"))
+        by_lang = {r["lang"]: r for r in cached.get("reports") or []}
+        for lang in langs:
+            if lang not in by_lang:
+                print(f"No report entry for lang={lang}", file=sys.stderr)
+                return 2
+            lang_reports.append(by_lang[lang])
+    else:
+        for lang in langs:
+            report = validate_lang(lang)
+            lang_reports.append(report)
+
+    for report in lang_reports:
+        lang = report["lang"]
         summary = report["summary"]
         if report["missing"] or report["disambiguation"] or report["duplicates"]:
             failed = True
@@ -325,6 +385,14 @@ def main() -> int:
         if report["duplicates"]:
             _safe_print("duplicate titles: " + ", ".join(list(report["duplicates"])[:20]))
 
+        if args.apply_removals:
+            drop = set(report["missing"]) | set(report["disambiguation"])
+            stats = apply_removals(lang, drop)
+            _safe_print(
+                f"applied removals: {stats['removed']} "
+                f"({stats['before']} -> {stats['after']})"
+            )
+
     out = {
         "langs": langs,
         "reports": lang_reports,
@@ -335,8 +403,14 @@ def main() -> int:
     )
     _safe_print(f"\nReport written to: {REPORT_PATH}")
 
-    if args.strict and failed:
+    if args.strict and failed and not args.apply_removals:
         return 1
+    # After applying removals, pools should be clean; caller may re-validate.
+    if args.strict and failed and args.apply_removals:
+        _safe_print(
+            "Removals applied; re-run without --apply-removals to confirm --strict."
+        )
+        return 0
     return 0
 
 
