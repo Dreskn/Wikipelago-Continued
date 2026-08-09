@@ -6,7 +6,7 @@ Wikipelago is a custom Archipelago world inspired by wiki racing.
 You play in a browser: each check is a **round** with a **Start** article and a **Target** article.
 Click Wikipedia links to reach the target; when you do, that location is checked in Archipelago.
 
-There is no separate desktop client to install for players — use the [hosted web client](https://wikipelago-contd.onrender.com/).
+There is no separate desktop client to install for players — use the [hosted web client](https://wikipelago.dreskn.fr/).
 
 ## What does randomization do?
 

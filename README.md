@@ -15,7 +15,7 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 
 ## Play
 
-Live web client: https://wikipelago-contd.onrender.com/
+Live web client: https://wikipelago.dreskn.fr/
 
 Recommended Archipelago version: **0.6.7**  
 World version: **0.6.0-ZaWarudo!**

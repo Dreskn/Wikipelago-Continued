@@ -11,7 +11,7 @@
 ### Players
 
 - A modern browser
-- The live web client: https://wikipelago-contd.onrender.com/
+- The live web client: https://wikipelago.dreskn.fr/
 - Room address + port, slot name, and password (if the room uses one)
 
 Players do **not** need to install the apworld unless they also generate or host.
@@ -43,13 +43,13 @@ Players do **not** need to install the apworld unless they also generate or host
    - server address + port (example: `archipelago.gg:PORT`)
    - slot name
    - password (if any)
-   - web client URL: https://wikipelago-contd.onrender.com/
+   - web client URL: https://wikipelago.dreskn.fr/
 
 For general Archipelago generation help, see the [official setup tutorial](https://archipelago.gg/tutorial/Archipelago/setup/en).
 
 ## Connect and play (player)
 
-1. Open https://wikipelago-contd.onrender.com/
+1. Open https://wikipelago.dreskn.fr/
 2. Enter server, slot name, and password (if used).
 3. Click connect.
 4. Play available rounds: Start → Target by clicking Wikipedia links.
