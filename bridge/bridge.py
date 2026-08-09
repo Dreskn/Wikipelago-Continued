@@ -147,7 +147,7 @@ DEBUG_OPTION_BOOLS = (
     "scrollsanity",
 )
 
-SESSION_TTL_SECONDS = 60 * 60 * 6
+SESSION_TTL_SECONDS = 60 * 60
 # Transient AP drops: retry a few times, then stop and surface last_error.
 # ConnectionRefused (bad password/slot) never retries.
 MAX_AP_CONNECT_ATTEMPTS = 3
