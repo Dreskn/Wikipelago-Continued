@@ -11,15 +11,34 @@
 }
 
 * { box-sizing: border-box; }
+html, body {
+  height: 100%;
+}
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, sans-serif;
   background: radial-gradient(circle at 20% 0%, #122132 0%, var(--bg) 45%);
   color: var(--text);
+  overflow: hidden;
 }
 
-.layout { max-width: 1400px; margin: 0 auto; padding: 16px; }
-.topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.layout {
+  max-width: 1400px;
+  height: 100%;
+  max-height: 100dvh;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
 .topbar-brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .topbar h1 { margin: 0; }
 .build-badge {
@@ -43,21 +62,75 @@ body {
 .badge { padding: 6px 10px; border-radius: 999px; font-weight: 700; }
 .badge.offline { background: #3a2026; color: #ffccd3; }
 .badge.online { background: #163427; color: #a8ffd1; }
+.badge.practice { background: #1a2a3a; color: #9ec9ff; }
 
-.main-grid { display: grid; grid-template-columns: 1fr 330px; gap: 16px; margin-top: 14px; }
+.topbar-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.topbar-lang {
+  width: auto;
+  min-width: 7.5rem;
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #3a5068;
+  background: #0f1824;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.topbar-lang:hover {
+  border-color: #54708c;
+}
+.connection-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+.connection-actions #connectBtn {
+  flex: 1 1 auto;
+}
+.connection-actions #practiceBtn {
+  flex: 0 0 auto;
+}
+
+.main-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 330px;
+  gap: 16px;
+  margin-top: 14px;
+  align-items: stretch;
+}
 .article-panel, .card {
   background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
   border: 1px solid #29384a;
   border-radius: 14px;
 }
 
-.article-panel { padding: 12px; min-height: 78vh; min-width: 0; }
+.article-panel {
+  padding: 12px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 .search-overlay {
-  margin: 8px 0 10px;
+  margin: 0 0 10px;
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #395068;
   background: #0e1620;
+  flex: 0 0 auto;
 }
 .search-row { display: flex; gap: 8px; }
 .search-row input {
@@ -94,16 +167,87 @@ button {
   font-weight: 700;
   cursor: pointer;
 }
-.article-title { margin: 12px 0 8px; font-size: 1.2rem; font-weight: 800; }
+.article-title {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.article-stage {
+  position: relative;
+  min-width: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .article-body {
-  max-height: calc(78vh - 90px);
-  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* clip (not hidden): avoids forcing overflow-y:auto on descendants via CSS overflow rules. */
+  overflow-x: clip;
   overflow-y: auto;
   background: #0d1621;
   border-radius: 10px;
   border: 1px solid #314358;
   padding: 12px;
   min-width: 0;
+  transition: filter 160ms ease, opacity 160ms ease;
+}
+.article-stage.is-loading .article-body {
+  filter: blur(2.5px) saturate(0.85);
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+.article-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: rgba(8, 14, 22, 0.42);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+}
+.article-loading.hidden { display: none; }
+.article-loading-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(27, 38, 51, 0.92) 0%, rgba(13, 22, 33, 0.94) 100%);
+  border: 1px solid rgba(64, 196, 255, 0.28);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+.article-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(159, 178, 199, 0.22);
+  border-top-color: var(--accent);
+  border-right-color: rgba(64, 196, 255, 0.55);
+  animation: article-loading-spin 0.75s linear infinite;
+}
+.article-loading-text {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  animation: article-loading-pulse 1.2s ease-in-out infinite;
+}
+@keyframes article-loading-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes article-loading-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 .article-body a { color: #8dd9ff; text-decoration: underline; cursor: pointer; }
 .article-body img,
@@ -120,6 +264,130 @@ button {
 }
 .article-body .mw-editsection { display: none !important; }
 .article-body .wiki-section-external { display: none !important; }
+
+/*
+ * French Wikipedia climate bar chart (.diag-climat).
+ * Wiki ships this via TemplateStyles; we strip <style>, so the layout lives here.
+ * Dark palette matches our article chrome (wiki night-theme equivalents).
+ */
+.article-body .mw-parser-output .diag-climat {
+  box-sizing: border-box;
+  margin: 1em auto;
+  max-width: 40em;
+  /* Room for precip scale labels that sit at right:100% of each month zone. */
+  padding: 0.6em 0.8em 0.9em 2.6em;
+  border: 1px solid #444;
+  border-radius: 6px;
+  background: #1a1a1a;
+  color: #ddd;
+  overflow: visible;
+}
+.article-body .mw-parser-output .diag-climat-titre {
+  text-align: center;
+  font-weight: bold;
+  font-size: 0.95em;
+  margin-bottom: 0.4em;
+}
+.article-body .mw-parser-output .diag-climat-barres {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+}
+.article-body .mw-parser-output .diag-climat-separator {
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  height: 1px;
+  background: #555;
+  z-index: 3;
+}
+.article-body .mw-parser-output .diag-climat-mois {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+.article-body .mw-parser-output .diag-climat-zone {
+  position: relative;
+  width: 100%;
+  height: 11em;
+  overflow: visible;
+}
+.article-body .mw-parser-output .diag-climat-barre-prec {
+  position: absolute;
+  bottom: 0;
+  left: 12%;
+  width: 76%;
+  background: linear-gradient(to top, #00838f, #4dd0e1);
+  border-radius: 2px 2px 0 0;
+  opacity: 0.7;
+  min-height: 1px;
+  z-index: 0;
+}
+.article-body .mw-parser-output .diag-climat-barre-temp {
+  position: absolute;
+  left: 22%;
+  width: 56%;
+  background: linear-gradient(to top, #fd7865, #e53935);
+  border-radius: 3px;
+  min-height: 2px;
+  z-index: 1;
+}
+.article-body .mw-parser-output .diag-climat-val-tmax,
+.article-body .mw-parser-output .diag-climat-val-tmin,
+.article-body .mw-parser-output .diag-climat-val-prec {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.72em;
+  line-height: 1;
+  white-space: nowrap;
+  z-index: 2;
+}
+.article-body .mw-parser-output .diag-climat-val-tmax {
+  color: #fd7865;
+  font-weight: bold;
+}
+.article-body .mw-parser-output .diag-climat-val-tmin {
+  color: #4dd0e1;
+  font-weight: bold;
+}
+.article-body .mw-parser-output .diag-climat-val-prec {
+  bottom: -1.2em;
+  color: #aaa;
+}
+.article-body .mw-parser-output .diag-climat-label {
+  margin-top: 1.4em;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #ccc;
+  line-height: 1;
+}
+.article-body .mw-parser-output .diag-climat-label abbr {
+  text-decoration: none;
+  border-bottom: none;
+}
+.article-body .mw-parser-output .diag-climat-legende {
+  text-align: center;
+  margin-top: 0.3em;
+  padding-top: 0.3em;
+  border-top: 1px solid #444;
+  font-size: 0.82em;
+  color: #999;
+}
+.article-body .mw-parser-output .diag-climat-leg-tmax { color: #fd7865; }
+.article-body .mw-parser-output .diag-climat-leg-tmin { color: #4dd0e1; }
+.article-body .mw-parser-output .diag-climat-leg-prec { color: #4dd0e1; }
+/* Inline precip-scale ticks (border + "N mm" label) from the template markup. */
+.article-body .mw-parser-output .diag-climat-zone > div[style*="border-top"] {
+  border-top-color: rgba(170, 170, 170, 0.4) !important;
+}
+.article-body .mw-parser-output .diag-climat-zone > div[style*="border-top"] > span {
+  color: #aaa;
+}
 
 /* Display lenses: hide locked wiki chrome until the matching Lens item arrives */
 .article-body.lock-tables .table-scroll:has(> table:not(.infobox):not(.infobox_v2):not(.navbox):not(.vertical-navbox)),
@@ -177,19 +445,25 @@ button {
 .article-body .mw-parser-output {
   max-width: 100%;
   min-width: 0;
-  overflow-x: hidden;
+  /* Do not create a nested Y scrollport inside #articleBody. */
+  overflow: visible;
 }
 .article-body .table-scroll {
   display: block;
   width: fit-content;
   max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  /* Only become an X scrollport when .is-scrollable-x is set (content actually wider). */
+  overflow-x: clip;
+  overflow-y: visible;
+  overscroll-behavior: contain;
   margin: 12px 0;
   border: 1px solid #395068;
   border-radius: 8px;
   background: #101a26;
   -webkit-overflow-scrolling: touch;
+}
+.article-body .table-scroll.is-scrollable-x {
+  overflow-x: auto;
 }
 .article-body table {
   display: table;
@@ -232,7 +506,50 @@ button {
   padding: 0 1px;
 }
 
-.side-panel { display: flex; flex-direction: column; gap: 12px; }
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+.bingo-stamp-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+.bingo-stamp-controls.hidden {
+  display: none;
+}
+.bingo-stamp-meta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.bingo-stamp-hint {
+  margin: 0 0 8px;
+  font-size: 0.75rem;
+}
+.bingo-stamp-hint.hidden {
+  display: none;
+}
+.bingo-cell.stampable {
+  cursor: pointer;
+  outline: 1px solid #6aa9ff;
+  outline-offset: -1px;
+  background: #1a3148;
+}
+.bingo-cell.stampable:hover {
+  background: #244866;
+  color: #dcecff;
+}
 .bingo-boards {
   display: flex;
   flex-direction: column;
@@ -260,13 +577,46 @@ button {
   font-size: 0.72rem;
   padding: 2px 8px;
 }
-.bingo-board-block.collapsed .bingo-grid {
+.bingo-board-block.collapsed .bingo-board-viewport {
   display: none;
+}
+.bingo-board-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+.bingo-board-viewport.is-compact {
+  cursor: zoom-in;
+  overflow: hidden;
+  border-radius: 4px;
+}
+.bingo-board-viewport.is-compact:focus-visible {
+  outline: 2px solid #6aa9ff;
+  outline-offset: 2px;
+}
+.bingo-preview-scale {
+  transform-origin: top left;
+  will-change: transform;
+}
+.bingo-preview-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  z-index: 1;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid #6a5420;
+  background: rgba(58, 47, 20, 0.92);
+  color: #ffd789;
+  font-size: 0.68rem;
+  font-weight: 700;
+  pointer-events: none;
 }
 .bingo-grid {
   display: grid;
   gap: 0;
   width: min(100%, 10.5rem);
+  --bingo-cell: 1.35rem;
   border-top: 1px solid #3a5068;
   border-left: 1px solid #3a5068;
   background: #3a5068;
@@ -282,11 +632,93 @@ button {
   padding: 0;
   background: #14202e;
   color: var(--text);
-  font-size: clamp(0.48rem, 1.35vw, 0.62rem);
+  font-size: calc(var(--bingo-cell) * 0.42);
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1;
   user-select: none;
+}
+.bingo-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.bingo-overlay.hidden {
+  display: none;
+}
+.bingo-overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 10, 16, 0.72);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.bingo-overlay-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  width: min(96vw, 920px);
+  height: min(92dvh, 860px);
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border: 1px solid #3a5068;
+  border-radius: 14px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.bingo-overlay-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 10px 12px;
+  border-bottom: 1px solid #29384a;
+}
+.bingo-overlay-header h2 {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 1rem;
+}
+.bingo-overlay-zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.bingo-overlay-zoom .btn-quiet {
+  min-width: 2rem;
+  padding: 4px 8px;
+  font-variant-numeric: tabular-nums;
+}
+.bingo-overlay-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  background:
+    radial-gradient(circle at 20% 0%, #122132 0%, transparent 45%),
+    #0b1016;
+}
+.bingo-overlay-stage.is-panning {
+  cursor: grabbing;
+}
+.bingo-overlay-world {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+  will-change: transform;
+}
+.bingo-overlay-world .bingo-grid {
+  width: auto;
 }
 .bingo-cell.stamped {
   background: #243246;
@@ -316,11 +748,13 @@ button {
   cursor: help;
 }
 .target-tooltip {
-  position: absolute;
+  /* Fixed + body host so side-panel overflow cannot clip it. */
+  position: fixed;
   left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 40;
+  top: 0;
+  z-index: 1400;
   width: min(320px, 75vw);
+  max-width: calc(100vw - 16px);
   padding: 8px 10px;
   border-radius: 8px;
   border: 1px solid #3a5068;
@@ -392,7 +826,6 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-left: 4px;
   cursor: pointer;
   color: #8aa3bb;
 }
@@ -401,10 +834,16 @@ button {
   margin: 0;
   accent-color: var(--accent);
 }
+.helper-warn {
+  color: #d4a15c;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }
 .card label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.86rem; }
-.card input {
+.card input,
+.card select {
   width: 100%; margin-top: 4px; padding: 9px;
   border-radius: 8px; border: 1px solid #3a5068;
   background: #0f1824; color: var(--text);
@@ -670,11 +1109,48 @@ button {
 }
 .debug-lens-list { display: flex; flex-direction: column; gap: 6px; }
 .debug-lens-row { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--text); font-size: 0.86rem; cursor: pointer; }
+/* Override .card label/input rules so toggles stay checkbox + text on one line. */
+.debug-menu-card .debug-lens-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.debug-menu-card .debug-lens-row input {
+  width: auto;
+  margin: 0;
+  flex: 0 0 auto;
+}
 
 .hidden { display: none; }
 
 @media (max-width: 1000px) {
-  .main-grid { grid-template-columns: 1fr; }
-  .article-panel { min-height: 62vh; }
-  .article-body { max-height: 50vh; }
+  body { overflow: auto; }
+  .layout {
+    height: auto;
+    max-height: none;
+  }
+  .main-grid {
+    grid-template-columns: 1fr;
+    flex: none;
+    height: auto;
+  }
+  .article-panel {
+    height: auto;
+    min-height: 62vh;
+  }
+  .article-body {
+    flex: none;
+    max-height: 50vh;
+  }
+  .side-panel {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
 }

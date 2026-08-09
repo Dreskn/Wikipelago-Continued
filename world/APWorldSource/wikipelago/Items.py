@@ -30,6 +30,7 @@ item_table: dict[str, WikipelagoItemData] = {
     "Reference Lens": WikipelagoItemData(ITEM_OFFSET + 16, ItemClassification.useful),
     "Progressive Reroll": WikipelagoItemData(ITEM_OFFSET + 17, ItemClassification.useful),
     "Progressive Bingo Card": WikipelagoItemData(ITEM_OFFSET + 18, ItemClassification.progression),
+    "Progressive Bingo Stamp": WikipelagoItemData(ITEM_OFFSET + 19, ItemClassification.useful),
     "Foggy Links": WikipelagoItemData(ITEM_OFFSET + 46, ItemClassification.trap),
     "Missing Links": WikipelagoItemData(ITEM_OFFSET + 47, ItemClassification.trap),
 }

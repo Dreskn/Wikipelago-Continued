@@ -113,6 +113,11 @@ try {
     Assert-HasPattern $yamlToCheck 'death_link:\s*(true|false)' 'YAML template is missing death_link'
     Assert-HasPattern $yamlToCheck 'link_bombs:\s*(true|false)' 'YAML template is missing link_bombs'
     Assert-HasPattern $yamlToCheck 'link_bomb_density:\s*(few|more|insane)' 'YAML template is missing link_bomb_density'
+    Assert-HasPattern $yamlToCheck '^requires:\s*$' 'YAML template is missing requires block'
+    Assert-HasPattern $yamlToCheck '^\s*version:\s*0\.6\.7\s*$' 'YAML template is missing requires.version 0.6.7'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*0\.6\.0\s*$' 'YAML template is missing requires.game.Wikipelago 0.6.0'
+    Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
+    Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
     Assert-HasPattern $yamlToCheck 'trap_type:\s*(both|only_foggy_links|only_missing_links)' 'YAML template is missing trap_type'
     Assert-HasPattern $yamlToCheck 'trap_link:\s*(true|false)' 'YAML template is missing trap_link'
@@ -128,16 +133,21 @@ try {
     $initPath = Join-Path $worldRoot "__init__.py"
     $optionsPath = Join-Path $worldRoot "Options.py"
     $itemsPath = Join-Path $worldRoot "Items.py"
-    $entertainmentPath = Join-Path $worldRoot "entertainment_articles.py"
+    $articlePoolPath = Join-Path $worldRoot "article_pool.py"
+    $poolEnPath = Join-Path $worldRoot "data\pool_en.json"
 
     Assert-NoPattern $initPath '`r`n' 'Literal backtick newline text regression found in __init__.py'
     Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
-    Assert-NoPattern $entertainmentPath '\bPokemon\b' 'Plain Pokemon title found in entertainment article pool'
-    Assert-NoPattern $entertainmentPath 'La La Land \(film\)' 'Old La La Land redirect title still present'
-    Assert-NoPattern $entertainmentPath '\(''Her \(film\)''' 'Old Her redirect title still present'
-    Assert-NoPattern $entertainmentPath 'Clue \(board game\)' 'Old Clue redirect title still present'
-    Assert-HasPattern $entertainmentPath 'ENTERTAINMENT_ARTICLE_POOL: list\[tuple\[str, str\]\]' 'Tagged (title, category) pool type annotation missing'
+    Assert-NoPattern $optionsPath 'include_board_games' 'board_games category should be removed in 0.6'
+    Assert-HasPattern $articlePoolPath 'def load_article_pool' 'article_pool.load_article_pool missing'
+    if (-not (Test-Path -LiteralPath $poolEnPath)) {
+        throw "EN multi-tag pool data/pool_en.json missing [$poolEnPath]"
+    }
+    Assert-HasPattern $optionsPath 'class WikipediaLanguage' 'WikipediaLanguage option is missing'
+    Assert-HasPattern $optionsPath 'class IncludeSensitivePages' 'IncludeSensitivePages option is missing'
+    Assert-HasPattern $optionsPath 'class IncludeFamousPeople' 'IncludeFamousPeople option is missing'
     Assert-HasPattern $initPath 'first_start = picks\[0\]' 'Random first-round start selection is missing'
+    Assert-HasPattern $initPath '_entry_matches' 'Multi-tag pool filter helper is missing'
     Assert-HasPattern $optionsPath 'class Searchsanity' 'Searchsanity option is missing'
     Assert-HasPattern $optionsPath 'class Scrollsanity' 'Scrollsanity option is missing'
     Assert-HasPattern $optionsPath 'class SearchStartingLetters' 'Search Starting Letters option is missing'
@@ -163,6 +173,8 @@ try {
     Assert-HasPattern $optionsPath 'class Deaths' 'Deaths option is missing'
     Assert-HasPattern $optionsPath 'class DeathLink' 'DeathLink option is missing'
     Assert-HasPattern $optionsPath 'class LinkBombs' 'LinkBombs option is missing'
+    Assert-HasPattern $optionsPath 'class RequiredFragments' 'RequiredFragments option is missing'
+    Assert-HasPattern $optionsPath 'class AdditionalFragmentsInPool' 'AdditionalFragmentsInPool option is missing'
     Assert-HasPattern $optionsPath 'class TrapCount' 'TrapCount option is missing'
     Assert-HasPattern $optionsPath 'class TrapType' 'TrapType option is missing'
     Assert-HasPattern $optionsPath 'class TrapLink' 'TrapLink option is missing'
@@ -184,6 +196,9 @@ try {
     Assert-HasPattern $webAppPath 'function toastBingoCompletions' 'Web bingo toast helper is missing'
     Assert-HasPattern $webAppPath 'bingo_letterpairs_boards' 'Web multi-board bingo status handling is missing'
     Assert-HasPattern $webAppPath 'use-back' 'Web Progressive Back use-back call is missing'
+    Assert-HasPattern $webAppPath 'portail' 'Web blocked namespaces must include French Portail'
+    Assert-HasPattern $webAppPath 'liens externes' 'Web section headings must include French Liens externes'
+    Assert-HasPattern $webAppPath 'WIKI_SECTION_HEADINGS' 'Web multilingual section heading map is missing'
     Assert-HasPattern $webAppPath 'can_go_back' 'Web can_go_back gating is missing'
     Assert-HasPattern $webAppPath 'data-tool="reroll"' 'Web Progressive Reroll tool icon is missing'
     Assert-HasPattern $webAppPath 'line-complete' 'Web bingo completed-line styling hook is missing'
@@ -208,8 +223,12 @@ try {
     Assert-HasPattern $bridgePath '/disconnect' 'Bridge disconnect route is missing'
     Assert-HasPattern $webAppPath 'updateConnectionPanel' 'Web connection panel collapse helper is missing'
     Assert-HasPattern $webAppPath 'disconnectBtn' 'Web disconnect button wiring is missing'
+    Assert-HasPattern $webAppPath 'isPracticeMode' 'Web practice mode helper is missing'
+    Assert-HasPattern $webAppPath 'isPlayable' 'Web isPlayable helper is missing'
+    Assert-HasPattern $webAppPath '/practice' 'Web practice API call is missing'
     Assert-HasPattern $webIndexPath 'id="connectionSummary"' 'Web connection summary markup is missing'
     Assert-HasPattern $webIndexPath 'id="disconnectBtn"' 'Web disconnect button markup is missing'
+    Assert-HasPattern $webIndexPath 'id="practiceBtn"' 'Web practice button markup is missing'
     Assert-HasPattern $webAppPath 'syncBingoStampsToBridge' 'Web bingo stamp sync helper is missing'
     Assert-HasPattern $webAppPath 'bingoStampStorageKey' 'Web bingo stamp storage key helper is missing'
     Assert-HasPattern $webIndexPath 'id="bingoCard"' 'Web bingo card markup is missing'
@@ -225,6 +244,9 @@ try {
     Assert-HasPattern $bridgePath 'Progressive Back' 'Bridge Progressive Back item is missing'
     Assert-HasPattern $bridgePath 'Progressive Reroll' 'Bridge Progressive Reroll item is missing'
     Assert-HasPattern $bridgePath 'Progressive Bingo Card' 'Bridge Progressive Bingo Card item is missing'
+    Assert-HasPattern $bridgePath 'Progressive Bingo Stamp' 'Bridge Progressive Bingo Stamp item is missing'
+    Assert-HasPattern $bridgePath 'bingo-stamp' 'Bridge bingo-stamp route is missing'
+    Assert-HasPattern $bridgePath 'use_bingo_stamp' 'Bridge use_bingo_stamp handler is missing'
     Assert-HasPattern $bridgePath 'bingo_letterpairs_boards' 'Bridge multi-board bingo status is missing'
     Assert-HasPattern $bridgePath 'unlocked_bingo_boards' 'Bridge unlocked_bingo_boards helper is missing'
     Assert-HasPattern $bridgePath 'async def ensure_goal_status_if_complete' 'Bridge ensure_goal_status_if_complete is missing'
@@ -236,7 +258,7 @@ try {
     Assert-HasPattern $initPath 'used_titles = \{first_start, \*targets, self\.goal_article\}' 'World must keep Grand Goal out of round targets'
     Assert-HasPattern $bridgePath 'goal_article_title' 'Bridge must store slot_data goal_article separately'
     Assert-HasPattern $bridgePath '"rounds_completed"' 'Bridge status rounds_completed is missing'
-    Assert-HasPattern $bridgePath 'if self\.round_index >= self\.check_count:' 'Bridge must allow reroll on the final normal round'
+    Assert-HasPattern $bridgePath 'round_index >= self\.check_count:' 'Bridge must allow reroll on the final normal round'
     Assert-NoPattern $bridgePath 'cannot reroll the Grand Goal round' 'Bridge must not treat the final round as an unrerollable Goal round'
     Assert-NoPattern $bridgePath 'round_pairs\[-1\]\["target"\] = goal_title' 'Bridge must not overwrite final round target with Grand Goal'
     Assert-NoPattern $webAppPath 'Goal round' 'Web must not label the final round as Goal round'
@@ -252,21 +274,46 @@ try {
     Assert-HasPattern $initPath '"target_rerolls_start"' 'World slot_data target_rerolls_start is missing'
     Assert-HasPattern $initPath 'build_letter_pair_bingo_board' 'Letter-pair bingo board builder wiring is missing'
     Assert-HasPattern $initPath 'free_locations = round_count \+ bingo_count' 'Bingo free_locations padding math is missing'
+    Assert-HasPattern $initPath 'additional_fragments_in_pool' 'World additional fragments pool wiring is missing'
+    Assert-HasPattern $initPath 'fragment_pool_count' 'World fragment_pool_count wiring is missing'
     Assert-HasPattern $initPath 'Progressive Back' 'World Progressive Back item pool wiring is missing'
     Assert-HasPattern $initPath 'Progressive Reroll' 'World Progressive Reroll item pool wiring is missing'
     Assert-HasPattern $initPath 'Progressive Bingo Card' 'World Progressive Bingo Card item pool wiring is missing'
+    Assert-HasPattern $initPath 'Progressive Bingo Stamp' 'World Progressive Bingo Stamp item pool wiring is missing'
+    Assert-HasPattern $initPath '"bingo_stamp_unlocks"' 'World slot_data bingo_stamp_unlocks is missing'
     Assert-NoPattern $initPath '"Back Button"' 'World must not still pool the old Back Button item'
     Assert-HasPattern $itemsPath '"Progressive Back"' 'Items table Progressive Back is missing'
     Assert-HasPattern $itemsPath '"Progressive Reroll"' 'Items table Progressive Reroll is missing'
     Assert-HasPattern $itemsPath '"Progressive Bingo Card"' 'Items table Progressive Bingo Card is missing'
+    Assert-HasPattern $itemsPath '"Progressive Bingo Stamp"' 'Items table Progressive Bingo Stamp is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'row_\{index\}"' 'Bingo slot location ids must use row_N keys'
+    Assert-HasPattern $webAppPath 'bingo-stamp' 'Web bingo stamp API client is missing'
     Assert-NoPattern $itemsPath '"Back Button"' 'Items table must not keep Back Button'
     Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'Board \{board\} Full Card' 'Bingo Full Card location must be board-prefixed'
     Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'def letter_pair_from_title' 'letter_pair_from_title helper is missing'
-    Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights.json") '"TH"' 'Shipped letter_pair_weights.json is missing TH'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'SCRABBLE_LETTERS' 'Scrabble alphabet table is missing'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pairs.py") 'MAX_BINGO_GRID_SIZE = 20' 'Bingo grid max must be 20'
+    Assert-HasPattern (Join-Path $worldRoot "Locations.py") 'MAX_BINGO_GRID = 20' 'Locations MAX_BINGO_GRID must be 20'
+    Assert-HasPattern (Join-Path $worldRoot "Options.py") 'Scrabble letter-pair frequencies \(3-20\)' 'BingoLetterpairsGrid docstring must mention Scrabble 3-20'
+    Assert-HasPattern (Join-Path $worldRoot "letter_pair_weights_en.json") '"TH"' 'Shipped letter_pair_weights_en.json is missing TH'
+    foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
+        $weightsFile = Join-Path $worldRoot "letter_pair_weights_$lang.json"
+        if (-not (Test-Path $weightsFile)) {
+            throw "Missing shipped letter-pair weights for language '$lang': $weightsFile"
+        }
+    }
+    & python (Join-Path $Root "test_letter_pairs.py")
+    if ($LASTEXITCODE -ne 0) {
+        throw "test_letter_pairs.py failed"
+    }
+    Write-Pass "Scrabble letter-pair extraction cases pass"
     Assert-HasPattern $yamlPath 'bingo_cards_start:' 'YAML bingo_cards_start is missing'
     Assert-HasPattern $yamlPath 'back_depth_start:' 'YAML back_depth_start is missing'
     Assert-HasPattern $yamlPath 'target_rerolls_start:' 'YAML target_rerolls_start is missing'
     Assert-HasPattern $bridgePath '"trap_count"' 'Bridge status trap_count is missing'
+    Assert-HasPattern $bridgePath 'start_practice' 'Bridge practice mode start helper is missing'
+    Assert-HasPattern $bridgePath '/api/session/\{sid\}/practice' 'Bridge practice route is missing'
+    Assert-HasPattern $bridgePath 'load_practice_titles' 'Bridge practice pool loader is missing'
     Assert-HasPattern $bridgePath 'letter_pair_from_title' 'Bridge letter_pair_from_title helper is missing'
     Assert-HasPattern $bridgePath 'apply_bingo_visit' 'Bridge bingo visit helper is missing'
     Assert-HasPattern $bridgePath 'bingo_letterpairs_boards' 'Bridge multi-board bingo status is missing'
@@ -347,17 +394,20 @@ try {
                     throw "Packaged APWorld file is not strict UTF-8: $($file.Name)"
                 }
             }
-            $packagedWeights = Join-Path $temp "wikipelago\letter_pair_weights.json"
-            if (-not (Test-Path $packagedWeights)) {
-                throw "Packaged APWorld is missing letter_pair_weights.json"
+            foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
+                $packagedWeights = Join-Path $temp "wikipelago\letter_pair_weights_$lang.json"
+                if (-not (Test-Path $packagedWeights)) {
+                    throw "Packaged APWorld is missing letter_pair_weights_$lang.json"
+                }
             }
-            Assert-HasPattern $packagedWeights '"TH"' 'Packaged letter_pair_weights.json is missing TH'
+            Assert-HasPattern (Join-Path $temp "wikipelago\letter_pair_weights_en.json") '"TH"' 'Packaged letter_pair_weights_en.json is missing TH'
             $packagedInit = Join-Path $temp "wikipelago\__init__.py"
             $packagedManifest = Join-Path $temp "wikipelago\archipelago.json"
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.5\.1"' 'Packaged world_version should be 0.5.1'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.6\.0"' 'Packaged world_version should be 0.6.0'
+
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"
         } finally {

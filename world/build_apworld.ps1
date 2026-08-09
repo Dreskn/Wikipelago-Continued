@@ -2,7 +2,7 @@ param(
     [string]$Root = (Split-Path -Parent $MyInvocation.MyCommand.Path)
 )
 
-# APContainer packaging scheme version for Archipelago 0.6.7 (worlds/Files.py).
+# APContainer packaging scheme version for Archipelago 0.6.7 (worlds/Files.py container_version).
 $ContainerVersion = 7
 $PackageName = "wikipelago"   # zip basename + inner folder (must match, lowercase)
 
@@ -11,7 +11,12 @@ $outDir = Join-Path $Root "APWorld"
 $apPath = Join-Path $outDir "$PackageName.apworld"
 $worldDir = Join-Path $src $PackageName
 $manifestPath = Join-Path $worldDir "archipelago.json"
-$weightsPath = Join-Path $worldDir "letter_pair_weights.json"
+$supportedLangs = @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
+$weightsPaths = @(
+    foreach ($lang in $supportedLangs) {
+        Join-Path $worldDir "letter_pair_weights_$lang.json"
+    }
+)
 $stagingDir = Join-Path $Root "_apworld_build"
 
 if (!(Test-Path $outDir)) {
@@ -21,11 +26,13 @@ if (!(Test-Path $outDir)) {
 if (!(Test-Path $worldDir)) {
     throw "Missing world folder: $worldDir"
 }
+foreach ($weightsPath in $weightsPaths) {
+    if (!(Test-Path $weightsPath)) {
+        throw "Missing required $weightsPath - run: python world/build_letter_pair_weights.py --lang all"
+    }
+}
 if (!(Test-Path $manifestPath)) {
     throw "Missing required $manifestPath (should live inside $PackageName/)"
-}
-if (!(Test-Path $weightsPath)) {
-    throw "Missing required $weightsPath — run world/build_letter_pair_weights.py before packaging."
 }
 
 # Never ship bytecode caches.
@@ -35,7 +42,7 @@ Get-ChildItem -Path $worldDir -Recurse -Directory -Filter "__pycache__" -ErrorAc
 if (Test-Path $stagingDir) { Remove-Item $stagingDir -Recurse -Force }
 New-Item -ItemType Directory -Path $stagingDir | Out-Null
 
-# Source manifest stays free of packaging fields; inject only into the built copy.
+# Source manifest stays free of packaging fields; inject them only into the built apworld.
 $manifestObj = Get-Content -Raw -Path $manifestPath | ConvertFrom-Json
 $manifestHash = [ordered]@{}
 foreach ($prop in $manifestObj.PSObject.Properties) {
@@ -74,6 +81,8 @@ try {
         if ($rel -match '(^|[\\/])__pycache__([\\/]|$)') { return }
         # Don't zip the source manifest twice; packaged copy already has version fields.
         if (($rel -replace "\\", "/") -eq "archipelago.json") { return }
+        # Legacy curated list — unused by runtime; keep in repo for tooling only.
+        if (($rel -replace "\\", "/") -eq "entertainment_articles.py") { return }
 
         $entryName = ("$PackageName/" + ($rel -replace "\\", "/"))
         [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
@@ -88,16 +97,22 @@ finally {
     $zip.Dispose()
 }
 
-# Verify.
+# Verify required entries and packaging fields.
 $zip = [System.IO.Compression.ZipFile]::OpenRead($apPath)
 try {
     $names = @($zip.Entries | ForEach-Object { ($_.FullName -replace "\\", "/").TrimStart("/") })
-    foreach ($need in @(
+    $required = @(
         "$PackageName/archipelago.json",
         "$PackageName/__init__.py",
-        "$PackageName/letter_pairs.py",
-        "$PackageName/letter_pair_weights.json"
-    )) {
+        "$PackageName/article_pool.py",
+        "$PackageName/data/pool_en.json",
+        "$PackageName/letter_pairs.py"
+    ) + @(
+        foreach ($lang in $supportedLangs) {
+            "$PackageName/letter_pair_weights_$lang.json"
+        }
+    )
+    foreach ($need in $required) {
         if ($names -notcontains $need) {
             throw "Built apworld is missing required entry: $need`nFound:`n$($names -join "`n")"
         }
@@ -105,11 +120,18 @@ try {
     if ($names -contains "archipelago.json") {
         throw "Manifest must not be at zip root; expected $PackageName/archipelago.json"
     }
+    if ($names -contains "$PackageName/entertainment_articles.py") {
+        throw "Built apworld must not ship legacy entertainment_articles.py"
+    }
 
     $manifestEntry = $zip.GetEntry("$PackageName/archipelago.json")
     $reader = New-Object System.IO.StreamReader($manifestEntry.Open())
-    try { $packaged = $reader.ReadToEnd() | ConvertFrom-Json }
-    finally { $reader.Close() }
+    try {
+        $packaged = $reader.ReadToEnd() | ConvertFrom-Json
+    }
+    finally {
+        $reader.Close()
+    }
 
     foreach ($key in @("game", "world_version", "version", "compatible_version")) {
         if (-not $packaged.PSObject.Properties[$key]) {
@@ -117,7 +139,7 @@ try {
         }
     }
     if ([int]$packaged.version -ne $ContainerVersion -or [int]$packaged.compatible_version -ne $ContainerVersion) {
-        throw "Unexpected container version: version=$($packaged.version) compatible_version=$($packaged.compatible_version)"
+        throw "Unexpected container version in packaged manifest: version=$($packaged.version) compatible_version=$($packaged.compatible_version)"
     }
     Write-Host "Packaged game=$($packaged.game) world_version=$($packaged.world_version) container=$($packaged.version)"
 }

@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import ast
-import re
 from collections import Counter
 from pathlib import Path
 
 POOL_PATH = Path(__file__).resolve().parent / "APWorldSource" / "wikipelago" / "entertainment_articles.py"
-OPTIONS_PATH = Path(__file__).resolve().parent / "APWorldSource" / "wikipelago" / "Options.py"
 
 # title -> new category (or None to delete)
 MOVES: dict[str, str | None] = {
@@ -178,29 +176,6 @@ def write_pool(entries: list[tuple[str, str]]) -> None:
     POOL_PATH.write_text("\n".join(lines), encoding="utf-8")
 
 
-def update_range_end(usable: int) -> int:
-    cap = usable // 2
-    text = OPTIONS_PATH.read_text(encoding="utf-8")
-    text2, n1 = re.subn(
-        r"(class CheckCount\(Range\):.*?range_end = )\d+",
-        rf"\g<1>{cap}",
-        text,
-        count=1,
-        flags=re.S,
-    )
-    text3, n2 = re.subn(
-        r"(class RequiredFragments\(Range\):.*?range_end = )\d+",
-        rf"\g<1>{cap}",
-        text2,
-        count=1,
-        flags=re.S,
-    )
-    if n1 != 1 or n2 != 1:
-        raise RuntimeError(f"Failed to patch Options range_end (n1={n1}, n2={n2})")
-    OPTIONS_PATH.write_text(text3, encoding="utf-8")
-    return cap
-
-
 def main() -> None:
     pool = load_pool()
     by_title: dict[str, str] = {t: c for t, c in pool}
@@ -293,7 +268,6 @@ def main() -> None:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from enrich_pool_from_popular_pages import passes_skip_filters
 
-    usable = sum(1 for t, c in out if passes_skip_filters(t) or c == "music")
     # Music titles with (album)/(song) may fail filters until __init__ is updated;
     # count all music as intending usable after filter fix
     usable = sum(
@@ -301,11 +275,9 @@ def main() -> None:
         for t, c in out
         if c == "music" or passes_skip_filters(t)
     )
-    # Avoid double-count: music that already passes is fine
-    range_end = update_range_end(usable)
 
     counts = Counter(c for _, c in out)
-    print(f"pool={len(out)} usable≈{usable} range_end={range_end}")
+    print(f"pool={len(out)} usable≈{usable}")
     print("counts:", dict(sorted(counts.items())))
     print(f"removed ({len(removed)}):", removed)
     print(f"moved ({len(moved)}):")

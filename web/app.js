@@ -1,11 +1,110 @@
-const APP_VERSION = "2026.07.28.3";
+const APP_VERSION = "2026.08.04.02";
 console.log("Wikipelago web version", APP_VERSION);
 
-/** Non-article namespaces blocked for navigation (toast; never leave the SPA). */
+const I18n = window.WikipelagoI18n;
+function t(key, vars) {
+  return I18n?.t ? I18n.t(key, vars) : key;
+}
+function uiLanguage() {
+  return I18n?.uiLanguage ? I18n.uiLanguage() : "en";
+}
+
+/** Hover-prefetch: keep a few parsed pages ready for the next click. */
+const WIKI_PREFETCH_MAX_CACHE = 8;
+const WIKI_PREFETCH_CONCURRENCY = 2;
+const WIKI_PREFETCH_HOVER_MS = 200;
+/** After a longer hover, DOM-prepare the prefetched HTML so open skips the heavy pass. */
+const WIKI_PREPARE_HOVER_MS = 800;
+
+/** Wikipedia edition for article fetches (AP slot language, or practice pool language). */
+function wikipediaLanguage() {
+  const lang = String(state.status?.wikipedia_language || "en").trim().toLowerCase();
+  return lang || "en";
+}
+
+function wikipediaOrigin() {
+  return `https://${wikipediaLanguage()}.wikipedia.org`;
+}
+
+/**
+ * Non-article namespaces blocked for navigation (toast; never leave the SPA).
+ * Includes English + localized prefixes/aliases for en/fr/de/es/it/pt/nl/sv/pl.
+ * Matching uses the title segment before the first ":".
+ */
 const BLOCKED_WIKI_NAMESPACES = new Set([
-  "file", "category", "help", "template", "special", "portal", "talk", "user",
-  "wikipedia", "module", "book", "draft", "mediawiki",
+  // English / canonical
+  "file", "image", "category", "help", "template", "special", "portal", "portal talk",
+  "talk", "user", "user talk", "wikipedia", "wp", "project", "module", "book", "draft",
+  "mediawiki", "timedtext", "event",
+  // French
+  "spécial", "discussion", "discuter", "utilisateur", "utilisatrice",
+  "discussion utilisateur", "discussion utilisatrice",
+  "wikipédia", "fichier", "modèle", "aide", "catégorie", "portail", "discussion portail",
+  "projet", "référence",
+  // German
+  "spezial", "diskussion", "benutzer", "benutzerin", "benutzer diskussion",
+  "benutzerin diskussion", "bd", "datei", "bild", "vorlage", "hilfe", "kategorie",
+  "portal diskussion", "pd",
+  // Spanish
+  "especial", "discusión", "usuario", "usuaria", "usuario discusión", "usuaria discusión",
+  "archivo", "imagen", "plantilla", "ayuda", "categoría", "portal discusión",
+  // Italian
+  "speciale", "discussione", "utente", "discussioni utente", "immagine", "aiuto",
+  "categoria", "portale", "discussioni portale",
+  // Portuguese
+  "especial", "discussão", "usuário(a)", "usuário", "usuária", "utilizador",
+  "utilizador(a)", "utilizadora", "usuário(a) discussão", "usuário discussão",
+  "usuária discussão", "utilizador discussão", "utilizador(a) discussão",
+  "utilizadora discussão", "wikipédia", "ficheiro", "arquivo", "imagem",
+  "predefinição", "ajuda", "categoria", "portal discussão", "discussão portal",
+  // Dutch
+  "speciaal", "overleg", "gebruiker", "overleg gebruiker", "bestand", "afbeelding",
+  "sjabloon", "categorie", "portaal", "overleg portaal",
+  // Swedish
+  "användare", "användardiskussion", "fil", "mall", "hjälp", "kategori",
+  "portaldiskussion",
+  // Polish
+  "specjalna", "dyskusja", "wikipedysta", "wikipedystka", "dyskusja wikipedysty",
+  "dyskusja wikipedystki", "plik", "grafika", "szablon", "pomoc", "kategoria",
+  "dyskusja portalu",
 ]);
+
+/** Localized appendix section titles → CSS marker class (union across supported wikis). */
+const WIKI_SECTION_HEADINGS = {
+  "wiki-section-seealso": [
+    "see also",
+    "voir aussi", "articles connexes", "articles liés",
+    "siehe auch",
+    "véase también", "vease tambien",
+    "vedi anche", "voci correlate",
+    "ver também", "ver tambem", "artigos relacionados",
+    "zie ook",
+    "se även", "se aven",
+    "zobacz też", "zobacz tez", "zobacz także", "zobacz takze",
+  ],
+  "wiki-section-external": [
+    "external links", "external link",
+    "liens externes", "lien externe",
+    "weblinks", "weblink",
+    "enlaces externos", "enlace externo",
+    "collegamenti esterni", "collegamento esterno",
+    "ligações externas", "ligacoes externas", "links externos",
+    "externe links", "externe link",
+    "externa länkar", "externa lank",
+    "linki zewnętrzne", "linki zewnetrzne",
+  ],
+  "wiki-section-references": [
+    "references", "notes", "citations", "notes and references", "further reading", "bibliography",
+    "références", "notes et références", "notes et references", "bibliographie", "sources",
+    "einzelnachweise", "literatur", "anmerkungen", "referenzen", "belege",
+    "referencias", "notas", "bibliografía", "bibliografia",
+    "note", "riferimenti",
+    "referências",
+    "referenties", "noten", "voetnoten", "literatuur",
+    "referenser", "källor", "kallor", "noter", "litteratur",
+    "przypisy", "uwagi", "źródła", "zrodla", "przypisy i bibliografia",
+  ],
+};
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
@@ -16,14 +115,14 @@ const TRACK_EMPHASIS_MIN_PX = 28;
 const TRACK_PAD_X_PX = 4;
 
 const DISPLAY_LOCKS = [
-  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", label: "Tables", glyph: "Tbl" },
-  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", label: "Pictures", glyph: "Pic" },
-  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", label: "Lead", glyph: "Led" },
-  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", label: "Infoboxes", glyph: "Inf" },
-  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", label: "Contents", glyph: "Toc" },
-  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", label: "Navboxes", glyph: "Nav" },
-  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", label: "Hatnotes", glyph: "Hat" },
-  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", label: "References", glyph: "Ref" },
+  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyph: "Tbl" },
+  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyph: "Pic" },
+  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyph: "Led" },
+  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyph: "Inf" },
+  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyph: "Toc" },
+  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyph: "Nav" },
+  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyph: "Hat" },
+  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
 ];
 
 const TOOL_ICON_SVGS = {
@@ -41,17 +140,26 @@ const TOOL_ICON_SVGS = {
   traps: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5zm0 9L4.5 7.8 12 4.1l7.5 3.7L12 11zm0 2.2L4 9.5V17l8 4 8-4V9.5l-8 3.7z"/></svg>',
 };
 
-const TRAP_TYPE_LABELS = {
-  0: "Foggy + Missing Links",
-  1: "Foggy Links only",
-  2: "Missing Links only",
-};
+function trapTypeLabel(trapType) {
+  const key = {
+    0: "diff.trapType.both",
+    1: "diff.trapType.foggy",
+    2: "diff.trapType.missing",
+  }[Number(trapType) || 0] || "diff.trapType.both";
+  return t(key);
+}
 
-const BOMB_DENSITY_LABELS = {
-  0: "few",
-  1: "more",
-  2: "insane",
-};
+function bombDensityKey(density) {
+  return {
+    0: "few",
+    1: "more",
+    2: "insane",
+  }[Number(density) || 0] || "few";
+}
+
+function bombDensityLabel(density) {
+  return t(`diff.density.${bombDensityKey(density)}`);
+}
 
 let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
 let debugPanelReady = false;
@@ -65,13 +173,19 @@ const state = {
   sessionId: localStorage.getItem("wikipelago_session_id") || "",
   status: null,
   currentTitle: "",
-  baseArticleHtml: "",
+  /** Lazy DOM clone for Ctrl+F highlight restore (avoids serializing huge pages on every open). */
+  baseArticleClone: null,
   clicksUsed: 0,
   announcedGoalComplete: false,
   restoringArticle: false,
   bingoStampSyncKey: "",
   bingoRemoteStampCount: 0,
   bingoUi: null,
+  bingoStampPickMode: false,
+  bingoStampBusy: false,
+  /** Expanded bingo board overlay: { boardKey, zoom, panX, panY }. */
+  bingoOverlay: null,
+  bingoOverlayDrag: null,
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
@@ -84,13 +198,35 @@ const state = {
   activeMissing: false,
   bombTitles: new Set(),
   handlingDeath: false,
+  /** After slot/language switch, open current_start instead of sticky hash/last_page. */
+  forceResumeStart: false,
+  resumeIdentity: "",
+  /** lang::title → { html } (LRU via Map insertion order). */
+  wikiHtmlCache: new Map(),
+  /** lang::title → in-flight fetch Promise */
+  wikiHtmlInflight: new Map(),
+  /** lang::title → detached Element with prepared children (LRU). */
+  wikiPreparedCache: new Map(),
+  /** lang::title → in-flight prepare Promise */
+  wikiPrepareInflight: new Map(),
+  wikiPrefetchQueue: [],
+  wikiPrefetchActive: 0,
+  wikiPrefetchHoverTimer: null,
+  wikiPrefetchHoverTitle: "",
+  wikiPrepareHoverTimer: null,
+  wikiPrepareHoverTitle: "",
+  wikiCacheLanguage: "",
+  articleLoadingToken: 0,
 };
 
 const el = {
   connBadge: document.getElementById("connBadge"),
   buildBadge: document.getElementById("buildBadge"),
   articleTitle: document.getElementById("articleTitle"),
+  articleStage: document.getElementById("articleStage"),
   articleBody: document.getElementById("articleBody"),
+  articleLoading: document.getElementById("articleLoading"),
+  articleLoadingText: document.getElementById("articleLoadingText"),
   searchOverlay: document.getElementById("searchOverlay"),
   pageSearchInput: document.getElementById("pageSearchInput"),
   closeSearchBtn: document.getElementById("closeSearchBtn"),
@@ -100,10 +236,13 @@ const el = {
   slotInput: document.getElementById("slotInput"),
   passwordInput: document.getElementById("passwordInput"),
   connectBtn: document.getElementById("connectBtn"),
+  practiceBtn: document.getElementById("practiceBtn"),
   disconnectBtn: document.getElementById("disconnectBtn"),
   connectionForm: document.getElementById("connectionForm"),
   connectionSummary: document.getElementById("connectionSummary"),
+  connectionSummaryLabel: document.getElementById("connectionSummaryLabel"),
   connectedServerText: document.getElementById("connectedServerText"),
+  roundsBlock: document.getElementById("roundsBlock"),
   roundText: document.getElementById("roundText"),
   roundsTrack: document.getElementById("roundsTrack"),
   targetText: document.getElementById("targetText"),
@@ -127,13 +266,29 @@ const el = {
   difficultyCard: document.getElementById("difficultyCard"),
   difficultyIconsRow: document.getElementById("difficultyIconsRow"),
   bingoCard: document.getElementById("bingoCard"),
+  bingoStampControls: document.getElementById("bingoStampControls"),
+  bingoStampMeta: document.getElementById("bingoStampMeta"),
+  bingoStampBtn: document.getElementById("bingoStampBtn"),
+  bingoStampHint: document.getElementById("bingoStampHint"),
   bingoBoards: document.getElementById("bingoBoards"),
   bingoMeta: document.getElementById("bingoMeta"),
+  bingoOverlay: document.getElementById("bingoOverlay"),
+  bingoOverlayBackdrop: document.getElementById("bingoOverlayBackdrop"),
+  bingoOverlayTitle: document.getElementById("bingoOverlayTitle"),
+  bingoOverlayClose: document.getElementById("bingoOverlayClose"),
+  bingoOverlayStage: document.getElementById("bingoOverlayStage"),
+  bingoOverlayWorld: document.getElementById("bingoOverlayWorld"),
+  bingoZoomIn: document.getElementById("bingoZoomIn"),
+  bingoZoomOut: document.getElementById("bingoZoomOut"),
+  bingoZoomReset: document.getElementById("bingoZoomReset"),
   lensesItem: document.getElementById("lensesItem"),
   toast: document.getElementById("toast"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
+  debugConsentPanel: document.getElementById("debugConsentPanel"),
+  showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
+  uiLangSelect: document.getElementById("uiLangSelect"),
 };
 
 function loadSavedConnection() {
@@ -233,7 +388,7 @@ async function loadBuildBadge() {
       applyBuildBadge(embedded);
       return;
     }
-    el.buildBadge.textContent = "unknown";
+    el.buildBadge.textContent = t("build.unknown");
     el.buildBadge.title = `Could not load build info (${err})`;
   }
 }
@@ -279,22 +434,76 @@ function isApConnected() {
   return state.status?.connected_to_ap === true;
 }
 
+function isPracticeMode() {
+  return state.status?.practice === true;
+}
+
+function isPlayable() {
+  return isApConnected() || isPracticeMode();
+}
+
 function updateConnectionPanel(status) {
   const connected = Boolean(status?.connected_to_ap);
-  if (el.connectionForm) el.connectionForm.classList.toggle("hidden", connected);
-  if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !connected);
-  if (el.connectedServerText) {
-    el.connectedServerText.textContent = connected
-      ? (status.ap_server || el.serverInput?.value?.trim() || "—")
-      : "-";
+  const practice = Boolean(status?.practice);
+  const active = connected || practice;
+  if (el.connectionForm) el.connectionForm.classList.toggle("hidden", active);
+  if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !active);
+  if (el.connectionSummaryLabel) {
+    el.connectionSummaryLabel.textContent = practice ? t("conn.modeLabel") : t("conn.serverLabel");
   }
-  if (el.disconnectBtn) el.disconnectBtn.disabled = !connected;
+  if (el.connectedServerText) {
+    if (practice) el.connectedServerText.textContent = t("conn.practiceMode");
+    else if (connected) el.connectedServerText.textContent = status.ap_server || el.serverInput?.value?.trim() || "—";
+    else el.connectedServerText.textContent = "-";
+  }
+  if (el.disconnectBtn) {
+    el.disconnectBtn.disabled = !active;
+    el.disconnectBtn.textContent = practice ? t("conn.exitPractice") : t("conn.disconnect");
+  }
 }
 
 function requireApConnection() {
   if (isApConnected()) return true;
-  toast("Connect to Archipelago to play", "warn");
+  toast(t("toast.connectToPlay"), "warn");
   return false;
+}
+
+function requirePlayable() {
+  if (isPlayable()) return true;
+  toast(t("toast.connectOrPractice"), "warn");
+  return false;
+}
+
+function syncUiLanguageSelect() {
+  if (el.uiLangSelect) el.uiLangSelect.value = uiLanguage();
+}
+
+function onUiLanguageChanged(code) {
+  if (I18n?.setUiLanguage) I18n.setUiLanguage(code);
+  else if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
+  syncUiLanguageSelect();
+  if (state.status) updateHUD(state.status);
+  else {
+    updateConnectionPanel(null);
+    if (el.connBadge && !state.status) {
+      el.connBadge.textContent = t("badge.offline");
+      el.connBadge.className = "badge offline";
+    }
+  }
+  refreshSearchChrome();
+}
+
+function bindUiLanguageControls() {
+  if (I18n?.fillLanguageSelect) I18n.fillLanguageSelect(el.uiLangSelect);
+  syncUiLanguageSelect();
+  el.uiLangSelect?.addEventListener("change", (e) => onUiLanguageChanged(e.target.value));
+  if (I18n?.applyStaticI18n) I18n.applyStaticI18n();
+}
+
+function refreshSearchChrome() {
+  if (typeof renderSearchStatus === "function") {
+    try { renderSearchStatus(); } catch { /* not ready yet */ }
+  }
 }
 
 function normalizeTitle(title) {
@@ -328,17 +537,58 @@ function formatTargetSummary(data) {
 }
 
 async function fetchTargetSummary(title) {
-  const key = normalizeTitle(title);
-  if (!key || key === "..." || key === "goal complete") return "";
+  const norm = normalizeTitle(title);
+  if (!norm || norm === "..." || norm === "goal complete") return "";
+  const lang = wikipediaLanguage();
+  const key = `${lang}:${norm}`;
   if (state.targetSummaryCache.has(key)) return state.targetSummaryCache.get(key);
 
-  const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, "_"))}`;
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  // Prefer action API (same CORS path as article parse; works for all language wikis).
+  const params = new URLSearchParams({
+    action: "query",
+    format: "json",
+    formatversion: "2",
+    origin: "*",
+    redirects: "1",
+    prop: "extracts|description",
+    exintro: "1",
+    explaintext: "1",
+    titles: title,
+  });
+  const res = await fetch(`${wikipediaOrigin()}/w/api.php?${params}`);
   if (!res.ok) throw new Error(`summary HTTP ${res.status}`);
-  const data = await res.json();
-  const summary = formatTargetSummary(data) || "No short description available.";
+  const payload = await res.json();
+  const page = payload?.query?.pages?.[0];
+  if (!page || page.missing) throw new Error("summary missing");
+  const summary = formatTargetSummary({
+    description: page.description || "",
+    extract: page.extract || "",
+  }) || t("hud.noDescription");
   state.targetSummaryCache.set(key, summary);
   return summary;
+}
+
+function positionTargetTooltip() {
+  if (!el.targetTooltip || !el.targetHover || el.targetTooltip.classList.contains("hidden")) return;
+  const anchor = el.targetHover.getBoundingClientRect();
+  const tip = el.targetTooltip;
+  const margin = 8;
+  const width = Math.min(tip.offsetWidth || 320, window.innerWidth - margin * 2);
+  let left = anchor.left;
+  left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+
+  // Prefer above the target; flip below if there isn't enough room.
+  tip.style.left = `${left}px`;
+  tip.style.top = "0px";
+  tip.style.right = "auto";
+  tip.style.bottom = "auto";
+  const tipHeight = tip.offsetHeight || 0;
+  let top = anchor.top - tipHeight - margin;
+  if (top < margin) {
+    top = Math.min(anchor.bottom + margin, window.innerHeight - tipHeight - margin);
+    top = Math.max(margin, top);
+  }
+  tip.style.top = `${top}px`;
 }
 
 function hideTargetTooltip() {
@@ -347,30 +597,41 @@ function hideTargetTooltip() {
   el.targetTooltip.classList.add("hidden");
   el.targetTooltip.classList.remove("loading");
   el.targetTooltip.textContent = "";
+  el.targetTooltip.style.left = "";
+  el.targetTooltip.style.top = "";
 }
 
 async function showTargetTooltip(title) {
   if (!el.targetTooltip || !title) return;
   state.targetTooltipVisible = true;
+  if (el.targetTooltip.parentElement !== document.body) {
+    document.body.appendChild(el.targetTooltip);
+  }
   el.targetTooltip.classList.remove("hidden");
   el.targetTooltip.classList.add("loading");
-  el.targetTooltip.textContent = "Loading…";
+  el.targetTooltip.textContent = t("hud.loadingEllipsis");
+  positionTargetTooltip();
   try {
     const summary = await fetchTargetSummary(title);
     if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
       return;
     }
     el.targetTooltip.classList.remove("loading");
-    el.targetTooltip.textContent = summary || "No short description available.";
+    el.targetTooltip.textContent = summary || t("hud.noDescription");
+    positionTargetTooltip();
   } catch {
     if (!state.targetTooltipVisible) return;
     el.targetTooltip.classList.remove("loading");
-    el.targetTooltip.textContent = "Could not load description.";
+    el.targetTooltip.textContent = t("hud.descriptionFailed");
+    positionTargetTooltip();
   }
 }
 
 function bindTargetTooltip() {
   if (!el.targetHover || !el.targetTooltip) return;
+  if (el.targetTooltip.parentElement !== document.body) {
+    document.body.appendChild(el.targetTooltip);
+  }
   el.targetHover.addEventListener("mouseenter", () => {
     const title = state.targetSummaryTitle;
     if (!title) return;
@@ -387,6 +648,13 @@ function bindTargetTooltip() {
   el.targetHover.addEventListener("focusout", () => {
     hideTargetTooltip();
   });
+  window.addEventListener("resize", () => {
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  });
+  // Side panel scroll would otherwise leave a stale fixed position.
+  document.querySelector(".side-panel")?.addEventListener("scroll", () => {
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  }, { passive: true });
 }
 
 function setTargetSummaryTitle(title) {
@@ -411,23 +679,24 @@ function updateRerollTargetControls(status) {
   if (!el.rerollTargetBtn || !el.rerollTargetMeta) return;
   const max = Number(status?.target_rerolls_max) || 3;
   const remaining = Number(status?.target_rerolls_remaining);
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
   const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
   el.rerollTargetBtn.disabled = !canReroll;
-  if (status?.boss_completed || !status?.connected_to_ap) {
+  if (status?.boss_completed || !playable) {
     el.rerollTargetMeta.textContent = "";
     return;
   }
   if (Number.isFinite(remaining)) {
-    el.rerollTargetMeta.textContent = `${Math.max(0, remaining)}/${max} left`;
+    el.rerollTargetMeta.textContent = t("hud.rerollLeft", { n: Math.max(0, remaining), max });
   } else {
     el.rerollTargetMeta.textContent = "";
   }
 }
 
 async function rerollCurrentTarget() {
-  if (!requireApConnection() || state.rerollBusy) return;
+  if (!requirePlayable() || state.rerollBusy) return;
   if (!state.status?.can_reroll_target) {
-    toast("No target rerolls available right now", "warn", 4500);
+    toast(t("toast.noRerolls"), "warn", 4500);
     return;
   }
   state.rerollBusy = true;
@@ -435,9 +704,9 @@ async function rerollCurrentTarget() {
   try {
     const result = await api(`/api/session/${state.sessionId}/reroll-target`, "POST", {});
     if (result.status) updateHUD(result.status);
-    toast(`Target rerolled → ${result.new_target}`, "ok", 6500);
+    toast(t("toast.rerolled", { title: result.new_target }), "ok", 6500);
   } catch (err) {
-    toast(`Could not reroll target: ${err.message || err}`, "warn", 6500);
+    toast(t("toast.rerollFailed", { error: err.message || err }), "warn", 6500);
     try { await pollStatus(); } catch { /* ignore */ }
   } finally {
     state.rerollBusy = false;
@@ -472,7 +741,7 @@ function titlesMatch(a, b) {
 }
 
 async function fetchRandomWikiTitle() {
-  const url = "https://en.wikipedia.org/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*";
+  const url = `${wikipediaOrigin()}/w/api.php?action=query&list=random&rnnamespace=0&rnlimit=1&format=json&origin=*`;
   const res = await fetch(url);
   const data = await res.json();
   const title = data?.query?.random?.[0]?.title;
@@ -497,14 +766,14 @@ async function applyDeathEffect(reasonText) {
   resetRoundVisits("");
   state.bombTitles = new Set();
   try {
-    toast(reasonText || "Death! Jumping to a random article…", "warn", 7000);
+    toast(reasonText || t("toast.deathJump"), "warn", 7000);
     const title = await fetchRandomWikiTitle();
     resetRoundVisits(title);
     await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
   } catch {
     // Still leave visits cleared; seed current page if we never left it.
     resetRoundVisits(state.currentTitle || "");
-    toast("Death effect failed to load a random page", "warn");
+    toast(t("toast.deathFailed"), "warn");
   } finally {
     state.handlingDeath = false;
   }
@@ -513,7 +782,7 @@ async function applyDeathEffect(reasonText) {
 function queueTrap(trapName) {
   if (trapName !== "Foggy Links" && trapName !== "Missing Links") return;
   state.trapQueue.push(trapName);
-  toast(`Trap: ${trapName} (next page)`, "warn", 6500);
+  toast(t("toast.trap", { name: trapName }), "warn", 6500);
 }
 
 function consumeTrapQueueForPage(title, status) {
@@ -527,16 +796,8 @@ function consumeTrapQueueForPage(title, status) {
   state.activeMissing = queued.includes("Missing Links");
 }
 
-function applyFoggyLinks(root) {
-  root.querySelectorAll("a[data-title]").forEach((a) => {
-    a.textContent = "[Link]";
-    a.title = "";
-  });
-}
-
-function applyMissingLinks(root) {
-  const links = [...root.querySelectorAll("a[data-title]")];
-  if (links.length <= 1) return;
+function applyMissingToLinks(links) {
+  if (!Array.isArray(links) || links.length <= 1) return;
   const removeCount = Math.max(1, Math.min(links.length - 1, Math.floor(links.length * 0.3)));
   for (let i = links.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -544,6 +805,7 @@ function applyMissingLinks(root) {
   }
   for (let i = 0; i < removeCount; i += 1) {
     const a = links[i];
+    if (!a?.isConnected) continue;
     const span = document.createElement("span");
     span.textContent = a.textContent;
     span.className = "missing-link";
@@ -627,14 +889,14 @@ function sanitizeSearchInput(raw) {
 
 function renderSearchStatus() {
   const letters = [...ownedSearchLetters()].sort();
-  el.searchLetters.textContent = `Letters: ${letters.length ? letters.join("") : "-"}`;
+  el.searchLetters.textContent = t("search.letters", { letters: letters.length ? letters.join("") : "-" });
 
   if (!state.status?.ctrl_f_unlocked) {
-    el.searchStatus.textContent = "Ctrl+F Lens required";
+    el.searchStatus.textContent = t("search.needLens");
   } else if (state.status?.searchsanity) {
-    el.searchStatus.textContent = "Letter-limited search";
+    el.searchStatus.textContent = t("search.letterLimited");
   } else {
-    el.searchStatus.textContent = "Search ready";
+    el.searchStatus.textContent = t("search.ready");
   }
 }
 
@@ -655,10 +917,10 @@ function makeIconNode({ id, title, svg, extraClass = "" }) {
 function ensureToolIcons() {
   if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "3") return;
   const tools = [
-    { id: "back", title: "Progressive Back", svg: TOOL_ICON_SVGS.back },
-    { id: "reroll", title: "Progressive Reroll", svg: TOOL_ICON_SVGS.reroll },
-    { id: "search", title: "Ctrl+F Lens", svg: TOOL_ICON_SVGS.search },
-    { id: "compass", title: "Wiki Compass", svg: TOOL_ICON_SVGS.compass },
+    { id: "back", title: t("tool.back"), svg: TOOL_ICON_SVGS.back },
+    { id: "reroll", title: t("tool.reroll"), svg: TOOL_ICON_SVGS.reroll },
+    { id: "search", title: t("tool.search"), svg: TOOL_ICON_SVGS.search },
+    { id: "compass", title: t("tool.compass"), svg: TOOL_ICON_SVGS.compass },
   ];
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
@@ -814,7 +1076,9 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
       appendTrackSeg(trackEl, {
         state: run.state,
         overflowCount: overflow,
-        title: `${kind}s ${hiddenStart}–${hiddenEnd} (+${overflow} more like this)`,
+        title: t("track.moreLikeThis", {
+          kind, start: hiddenStart, end: hiddenEnd, overflow,
+        }),
       });
     };
     const appendIndividuals = () => {
@@ -840,6 +1104,13 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
 
 function renderRoundsTrack(status) {
   if (!el.roundsTrack) return;
+  if (status?.practice) {
+    if (el.roundsBlock) el.roundsBlock.classList.add("hidden");
+    el.roundsTrack.innerHTML = "";
+    if (el.roundText) el.roundText.textContent = "";
+    return;
+  }
+  if (el.roundsBlock) el.roundsBlock.classList.remove("hidden");
   const total = Math.max(0, Number(status.check_count) || 0);
   const current = Math.max(1, Number(status.round) || 1);
   const completed = Math.max(0, Number(status.rounds_completed) || 0);
@@ -853,19 +1124,26 @@ function renderRoundsTrack(status) {
     items.push({
       state,
       current: !complete && i === current && i > completed,
-      label: `Round ${i}`,
+      label: `${t("track.kindRound")} ${i}`,
     });
   }
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
-  renderPlannedTrack(el.roundsTrack, roundsPlan.plan, "Round", roundsPlan.chipMinPx);
+  renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
   if (el.roundText) {
-    el.roundText.textContent = complete ? "Complete" : `${current}/${total}`;
+    el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
 }
 
 function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
+  if (status?.practice) {
+    if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
+    if (el.goalRow) el.goalRow.classList.add("hidden");
+    el.fragmentsTrack.innerHTML = "";
+    if (el.fragmentsText) el.fragmentsText.textContent = "";
+    return;
+  }
   const required = Math.max(0, Number(status.required_fragments) || 0);
   const have = Math.max(0, Math.min(required, Number(status.fragments) || 0));
   // Grand Goal replaces the fragment bar once enough fragments are unlocked.
@@ -874,7 +1152,9 @@ function renderFragmentsTrack(status) {
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
   if (el.goalText && showGoal) {
     const goal = status.goal_article || "...";
-    el.goalText.textContent = status.boss_completed ? `${goal} (Complete)` : goal;
+    el.goalText.textContent = status.boss_completed
+      ? `${goal} ${t("hud.goalCompleteSuffix")}`
+      : goal;
   }
   if (showGoal) return;
 
@@ -882,12 +1162,12 @@ function renderFragmentsTrack(status) {
   for (let i = 1; i <= required; i += 1) {
     items.push({
       state: i <= have ? "filled" : "empty",
-      label: `Fragment ${i}`,
+      label: `${t("track.kindFragment")} ${i}`,
     });
   }
   el.fragmentsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const fragPlan = buildTrackPlan(items, el.fragmentsTrack);
-  renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, "Fragment", fragPlan.chipMinPx);
+  renderPlannedTrack(el.fragmentsTrack, fragPlan.plan, t("track.kindFragment"), fragPlan.chipMinPx);
   if (el.fragmentsText) el.fragmentsText.textContent = `${have}/${required}`;
 }
 
@@ -917,7 +1197,7 @@ function renderToolIcons(status) {
   if (back) {
     setIconState(back, backMax > 0 ? "ok" : "locked");
     setToolBadge(back, backMax > 0 ? `${backLeft}/${backMax}` : "");
-    back.title = backMax > 0 ? `Progressive Back ${backLeft}/${backMax}` : "Progressive Back";
+    back.title = backMax > 0 ? `${t("tool.back")} ${backLeft}/${backMax}` : t("tool.back");
   }
 
   const rerollMax = Math.max(0, Number(status.target_rerolls_max) || 0);
@@ -926,7 +1206,7 @@ function renderToolIcons(status) {
   if (reroll) {
     setIconState(reroll, rerollMax > 0 ? "ok" : "locked");
     setToolBadge(reroll, rerollMax > 0 ? `${rerollLeft}/${rerollMax}` : "");
-    reroll.title = rerollMax > 0 ? `Progressive Reroll ${rerollLeft}/${rerollMax}` : "Progressive Reroll";
+    reroll.title = rerollMax > 0 ? `${t("tool.reroll")} ${rerollLeft}/${rerollMax}` : t("tool.reroll");
   }
 
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
@@ -946,7 +1226,7 @@ function renderLensIcons(status) {
   for (const lock of active) {
     const node = document.createElement("div");
     node.className = "item-icon";
-    node.title = lock.label;
+    node.title = t(lock.i18nKey);
     setIconState(node, status?.[lock.unlockedKey] ? "ok" : "locked");
     node.textContent = lock.glyph;
     el.lensIconsRow.appendChild(node);
@@ -974,7 +1254,7 @@ function renderSanityUnlocks(status) {
       el.scrollIconsRow.innerHTML = "";
       const scroll = makeIconNode({
         id: "scroll",
-        title: "Progressive Scroll Speed",
+        title: t("tool.scroll"),
         svg: TOOL_ICON_SVGS.scroll,
       });
       const level = Number(status.scroll_speed_level) || 0;
@@ -1045,45 +1325,45 @@ function renderDifficultyIcons(status) {
 
   addDiffIcon({
     id: "searchsanity",
-    title: status.searchsanity ? "Searchsanity ON" : "Searchsanity off",
+    title: status.searchsanity ? t("diff.searchsanityOn") : t("diff.searchsanityOff"),
     svg: TOOL_ICON_SVGS.searchsanity,
     on: Boolean(status.searchsanity),
   });
   addDiffIcon({
     id: "scrollsanity",
-    title: status.scrollsanity ? "Scrollsanity ON" : "Scrollsanity off",
+    title: status.scrollsanity ? t("diff.scrollsanityOn") : t("diff.scrollsanityOff"),
     svg: TOOL_ICON_SVGS.scrollsanity,
     on: Boolean(status.scrollsanity),
   });
   addDiffIcon({
     id: "deaths",
-    title: status.deaths ? "Loop deaths ON" : "Loop deaths off",
+    title: status.deaths ? t("diff.deathsOn") : t("diff.deathsOff"),
     svg: TOOL_ICON_SVGS.deaths,
     on: Boolean(status.deaths),
   });
   addDiffIcon({
     id: "deathlink",
-    title: status.death_link ? "DeathLink ON" : "DeathLink off",
+    title: status.death_link ? t("diff.deathlinkOn") : t("diff.deathlinkOff"),
     svg: TOOL_ICON_SVGS.deathlink,
     on: Boolean(status.death_link),
   });
   addDiffIcon({
     id: "traplink",
-    title: status.trap_link ? "TrapLink ON" : "TrapLink off",
+    title: status.trap_link ? t("diff.traplinkOn") : t("diff.traplinkOff"),
     svg: TOOL_ICON_SVGS.traplink,
     on: Boolean(status.trap_link),
   });
 
   const bombDensity = Number(status.link_bomb_density) || 0;
   const bombCount = Number(status.link_bomb_count) || 0;
-  const bombLabel = BOMB_DENSITY_LABELS[bombDensity] || "few";
+  const bombDensityCss = bombDensityKey(bombDensity);
   const bombNode = makeIconNode({
     id: "bombs",
     title: bombsOn
-      ? `Link bombs ON (${bombLabel}, ~${bombCount}/page)`
-      : "Link bombs off",
+      ? t("diff.bombsOn", { density: bombDensityLabel(bombDensity), count: bombCount })
+      : t("diff.bombsOff"),
     svg: TOOL_ICON_SVGS.bombs,
-    extraClass: bombsOn ? `item-icon--bomb-${bombLabel}` : "",
+    extraClass: bombsOn ? `item-icon--bomb-${bombDensityCss}` : "",
   });
   setIconState(bombNode, bombsOn ? "ok" : "locked");
   if (!bombsOn) bombNode.classList.add("item-icon--dim");
@@ -1097,13 +1377,12 @@ function renderDifficultyIcons(status) {
   el.difficultyIconsRow.appendChild(bombNode);
 
   const trapType = Number(status.trap_type) || 0;
-  const trapTypeLabel = TRAP_TYPE_LABELS[trapType] || TRAP_TYPE_LABELS[0];
   const trapsOn = trapCount > 0;
   addDiffIcon({
     id: "traps",
     title: trapsOn
-      ? `Traps: ${trapCount}× (${trapTypeLabel})`
-      : "Traps off (0 in pool)",
+      ? t("diff.trapsOn", { count: trapCount, type: trapTypeLabel(trapType) })
+      : t("diff.trapsOff"),
     svg: TOOL_ICON_SVGS.traps,
     on: trapsOn,
     badge: trapsOn ? String(trapCount) : "",
@@ -1113,9 +1392,11 @@ function renderDifficultyIcons(status) {
 function formatBingoCompletionParts(bingoCompleted) {
   if (!Array.isArray(bingoCompleted) || !bingoCompleted.length) return [];
   return bingoCompleted.map((line) => {
-    const label = String(line?.label || "Bingo line").trim() || "Bingo line";
+    const label = String(line?.label || t("bingo.line")).trim() || t("bingo.line");
     const sent = String(line?.sent_text || "").trim();
-    return sent ? `${label} complete — ${sent}` : `${label} complete`;
+    return sent
+      ? t("bingo.lineCompleteSent", { label, sent })
+      : t("bingo.lineComplete", { label });
   });
 }
 
@@ -1202,7 +1483,16 @@ function mergeBingoStampMaps(...maps) {
   return out;
 }
 
-function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
+/** Minimum readable cell size (px) before a sidebar board becomes a scaled preview. */
+const BINGO_MIN_SIDE_CELL_PX = 18;
+/** Preferred max board width in the sidebar for small grids (~10.5rem). */
+const BINGO_SIDE_PREF_MAX_PX = 168;
+/** Base cell size (px) for the expanded overlay board before user zoom. */
+const BINGO_OVERLAY_CELL_PX = 36;
+const BINGO_ZOOM_MIN = 0.4;
+const BINGO_ZOOM_MAX = 4;
+
+function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options = {}) {
   const n = board.length;
   const pairSet = new Set(normalizeBingoPairList(stampedPairs));
   const cellSet = new Set(
@@ -1211,6 +1501,10 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
       .map((cell) => `${Number(cell[0])},${Number(cell[1])}`)
   );
   const lineMap = lines && typeof lines === "object" ? lines : {};
+  const pickMode = Boolean(options.pickMode);
+  const boardKey = String(options.boardKey || "");
+  const onPick = typeof options.onPick === "function" ? options.onPick : null;
+  const stopStampBubble = Boolean(options.stopStampBubble);
 
   const grid = document.createElement("div");
   grid.className = "bingo-grid";
@@ -1226,10 +1520,254 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines) {
       const lineDone = bingoCellInCompletedLine(row, col, n, lineMap);
       if (lineDone) cell.classList.add("line-complete");
       else if (stamped) cell.classList.add("stamped");
+      if (pickMode && pair && !stamped && !lineDone && onPick) {
+        cell.classList.add("stampable");
+        cell.setAttribute("role", "button");
+        cell.tabIndex = 0;
+        cell.title = t("bingo.stampCell", { pair });
+        const pick = (event) => {
+          if (stopStampBubble && event) event.stopPropagation();
+          onPick(boardKey, row, col, pair);
+        };
+        cell.addEventListener("click", pick);
+        cell.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            pick(event);
+          }
+        });
+      }
       grid.appendChild(cell);
     }
   }
   return { grid, n, lines: lineMap };
+}
+
+function bingoSidebarAvailWidth() {
+  const host = el.bingoBoards;
+  if (!host) return 280;
+  const width = host.clientWidth;
+  if (width > 40) return width;
+  // Fallback before first layout: side column minus card padding.
+  return 330 - 24;
+}
+
+function sizeBingoGrid(grid, n, cellPx) {
+  const size = Math.max(1, n) * cellPx;
+  grid.style.width = `${size}px`;
+  grid.style.setProperty("--bingo-cell", `${cellPx}px`);
+  grid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
+}
+
+function applyBingoSidebarFit(viewport, grid, n, boardKey) {
+  const avail = bingoSidebarAvailWidth();
+  const readableWidth = Math.max(n, 1) * BINGO_MIN_SIDE_CELL_PX;
+  if (readableWidth <= avail + 0.5) {
+    const width = Math.min(avail, Math.max(BINGO_SIDE_PREF_MAX_PX, readableWidth));
+    sizeBingoGrid(grid, n, width / Math.max(n, 1));
+    viewport.appendChild(grid);
+    return;
+  }
+
+  // Board wider than the side panel: keep a readable natural size, scale to fit.
+  sizeBingoGrid(grid, n, BINGO_MIN_SIDE_CELL_PX);
+  const natural = readableWidth;
+  const scale = avail / natural;
+  const scaler = document.createElement("div");
+  scaler.className = "bingo-preview-scale";
+  scaler.style.width = `${natural}px`;
+  scaler.style.transform = `scale(${scale})`;
+  scaler.appendChild(grid);
+
+  viewport.classList.add("is-compact");
+  viewport.style.height = `${natural * scale}px`;
+  viewport.title = t("bingo.expandHint");
+  viewport.setAttribute("role", "button");
+  viewport.tabIndex = 0;
+  viewport.setAttribute("aria-label", t("bingo.expandHint"));
+
+  const badge = document.createElement("span");
+  badge.className = "bingo-preview-badge";
+  badge.textContent = t("bingo.expand");
+
+  const open = (event) => {
+    if (event?.target?.closest?.(".bingo-cell.stampable")) return;
+    openBingoOverlay(boardKey);
+  };
+  viewport.addEventListener("click", open);
+  viewport.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      open(event);
+    }
+  });
+
+  viewport.appendChild(scaler);
+  viewport.appendChild(badge);
+}
+
+function applyBingoOverlayTransform() {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlayWorld) return;
+  const { zoom, panX, panY } = overlay;
+  el.bingoOverlayWorld.style.transform =
+    `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
+  if (el.bingoZoomReset) {
+    el.bingoZoomReset.textContent = `${Math.round(zoom * 100)}%`;
+  }
+}
+
+function setBingoOverlayZoom(nextZoom, originX = null, originY = null) {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlayStage) return;
+  const prev = overlay.zoom;
+  const zoom = Math.max(BINGO_ZOOM_MIN, Math.min(BINGO_ZOOM_MAX, nextZoom));
+  if (originX != null && originY != null && prev > 0) {
+    const rect = el.bingoOverlayStage.getBoundingClientRect();
+    const cx = originX - rect.left - rect.width / 2;
+    const cy = originY - rect.top - rect.height / 2;
+    const ratio = zoom / prev;
+    overlay.panX = cx - (cx - overlay.panX) * ratio;
+    overlay.panY = cy - (cy - overlay.panY) * ratio;
+  }
+  overlay.zoom = zoom;
+  applyBingoOverlayTransform();
+}
+
+function closeBingoOverlay() {
+  state.bingoOverlay = null;
+  state.bingoOverlayDrag = null;
+  if (el.bingoOverlayWorld) el.bingoOverlayWorld.innerHTML = "";
+  if (el.bingoOverlay) el.bingoOverlay.classList.add("hidden");
+  if (el.bingoOverlayStage) el.bingoOverlayStage.classList.remove("is-panning");
+}
+
+function refreshBingoOverlayContent() {
+  const overlay = state.bingoOverlay;
+  if (!overlay || !el.bingoOverlay || !el.bingoOverlayWorld) return;
+  const status = state.status || {};
+  if (!status.bingo_letterpairs) {
+    closeBingoOverlay();
+    return;
+  }
+  const boards = bingoBoardsFromStatus(status);
+  const boardIndex = Math.max(0, Number(overlay.boardKey) - 1);
+  const board = boards[boardIndex];
+  if (!board || !board.length) {
+    closeBingoOverlay();
+    return;
+  }
+  const unlockedRaw = Number(status.bingo_unlocked_boards);
+  const unlocked = Number.isFinite(unlockedRaw)
+    ? Math.max(0, Math.min(boards.length, unlockedRaw))
+    : boards.length;
+  if (boardIndex >= unlocked) {
+    closeBingoOverlay();
+    return;
+  }
+
+  const boardKey = String(overlay.boardKey);
+  const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
+  const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
+  const { remaining: stampRemaining } = bingoStampCharges(status);
+  const pickMode = Boolean(state.bingoStampPickMode && stampRemaining > 0);
+
+  const { grid, n } = renderBingoBoardGrid(
+    board,
+    stampedMap[boardKey] || [],
+    cellsMap[boardKey] || [],
+    linesMap[boardKey] || {},
+    {
+      boardKey,
+      pickMode,
+      onPick: useBingoStampOnCell,
+      stopStampBubble: true,
+    }
+  );
+  sizeBingoGrid(grid, n, BINGO_OVERLAY_CELL_PX);
+  el.bingoOverlayWorld.replaceChildren(grid);
+  if (el.bingoOverlayTitle) {
+    const complete = isBingoBoardFullyComplete(linesMap[boardKey] || {});
+    el.bingoOverlayTitle.textContent = complete
+      ? t("bingo.boardComplete", { n: boardKey })
+      : t("bingo.board", { n: boardKey });
+  }
+  applyBingoOverlayTransform();
+  el.bingoOverlay.classList.remove("hidden");
+}
+
+function openBingoOverlay(boardKey) {
+  const key = String(boardKey || "").trim();
+  if (!key) return;
+  const prev = state.bingoOverlay;
+  state.bingoOverlay = {
+    boardKey: key,
+    zoom: prev && prev.boardKey === key ? prev.zoom : 1,
+    panX: prev && prev.boardKey === key ? prev.panX : 0,
+    panY: prev && prev.boardKey === key ? prev.panY : 0,
+  };
+  refreshBingoOverlayContent();
+}
+
+function bindBingoOverlayUi() {
+  if (!el.bingoOverlay) return;
+  const close = () => closeBingoOverlay();
+  el.bingoOverlayClose?.addEventListener("click", close);
+  el.bingoOverlayBackdrop?.addEventListener("click", close);
+  el.bingoZoomIn?.addEventListener("click", () => setBingoOverlayZoom((state.bingoOverlay?.zoom || 1) * 1.2));
+  el.bingoZoomOut?.addEventListener("click", () => setBingoOverlayZoom((state.bingoOverlay?.zoom || 1) / 1.2));
+  el.bingoZoomReset?.addEventListener("click", () => {
+    if (!state.bingoOverlay) return;
+    state.bingoOverlay.zoom = 1;
+    state.bingoOverlay.panX = 0;
+    state.bingoOverlay.panY = 0;
+    applyBingoOverlayTransform();
+  });
+
+  el.bingoOverlayStage?.addEventListener("wheel", (event) => {
+    if (!state.bingoOverlay) return;
+    event.preventDefault();
+    const factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+    setBingoOverlayZoom((state.bingoOverlay.zoom || 1) * factor, event.clientX, event.clientY);
+  }, { passive: false });
+
+  el.bingoOverlayStage?.addEventListener("pointerdown", (event) => {
+    if (!state.bingoOverlay) return;
+    if (event.target.closest(".bingo-cell.stampable")) return;
+    if (event.button != null && event.button !== 0) return;
+    state.bingoOverlayDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originPanX: state.bingoOverlay.panX,
+      originPanY: state.bingoOverlay.panY,
+    };
+    el.bingoOverlayStage.classList.add("is-panning");
+    try { el.bingoOverlayStage.setPointerCapture(event.pointerId); } catch (_) { /* ignore */ }
+  });
+  el.bingoOverlayStage?.addEventListener("pointermove", (event) => {
+    const drag = state.bingoOverlayDrag;
+    if (!drag || drag.pointerId !== event.pointerId || !state.bingoOverlay) return;
+    state.bingoOverlay.panX = drag.originPanX + (event.clientX - drag.startX);
+    state.bingoOverlay.panY = drag.originPanY + (event.clientY - drag.startY);
+    applyBingoOverlayTransform();
+  });
+  const endDrag = (event) => {
+    const drag = state.bingoOverlayDrag;
+    if (!drag || (event && drag.pointerId !== event.pointerId)) return;
+    state.bingoOverlayDrag = null;
+    el.bingoOverlayStage?.classList.remove("is-panning");
+  };
+  el.bingoOverlayStage?.addEventListener("pointerup", endDrag);
+  el.bingoOverlayStage?.addEventListener("pointercancel", endDrag);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.bingoOverlay) {
+      event.preventDefault();
+      closeBingoOverlay();
+    }
+  });
 }
 
 function bingoUiStorageKey(status) {
@@ -1303,6 +1841,51 @@ function applyBingoAutoHide(status, boardKey, complete) {
   return Boolean(prev.collapsed);
 }
 
+function bingoStampCharges(status) {
+  const max = Math.max(0, Number(status?.bingo_stamps_max) || 0);
+  const remaining = Math.max(0, Number(status?.bingo_stamps_remaining) || 0);
+  return { max, remaining };
+}
+
+function setBingoStampPickMode(enabled) {
+  state.bingoStampPickMode = Boolean(enabled);
+  renderBingoHud(state.status || {});
+}
+
+async function useBingoStampOnCell(boardKey, row, col, pair) {
+  if (state.bingoStampBusy) return;
+  if (!state.sessionId || !isPlayable()) {
+    toast(t("toast.connectToPlay"), "warn");
+    return;
+  }
+  if (!state.status?.bingo_storage_ready) {
+    toast(t("toast.stampNotReady"), "warn");
+    return;
+  }
+  state.bingoStampBusy = true;
+  try {
+    const result = await api(`/api/session/${state.sessionId}/bingo-stamp`, "POST", {
+      board: boardKey,
+      row,
+      col,
+    });
+    if (result.status) updateHUD(result.status);
+    state.bingoStampPickMode = false;
+    const stampedPair = String(result.pair || pair || "").toUpperCase();
+    toast(t("bingo.stampOk", { pair: stampedPair || "?" }), "ok");
+    toastBingoCompletions(result.bingo_completed);
+  } catch (err) {
+    const message = String(err?.message || err || "");
+    if (/no stamp charges/i.test(message)) toast(t("toast.stampNoCharges"), "warn");
+    else if (/storage not ready/i.test(message)) toast(t("toast.stampNotReady"), "warn");
+    else if (/already stamped|board locked|cell/i.test(message)) toast(t("toast.stampFailed"), "warn");
+    else toast(t("toast.stampFailed"), "warn");
+  } finally {
+    state.bingoStampBusy = false;
+    renderBingoHud(state.status || {});
+  }
+}
+
 function renderBingoHud(status) {
   if (!el.bingoCard || !el.bingoBoards) return;
   const enabled = Boolean(status?.bingo_letterpairs);
@@ -1310,7 +1893,11 @@ function renderBingoHud(status) {
   if (!enabled) {
     el.bingoBoards.innerHTML = "";
     if (el.bingoMeta) el.bingoMeta.textContent = "";
+    if (el.bingoStampControls) el.bingoStampControls.classList.add("hidden");
+    if (el.bingoStampHint) el.bingoStampHint.classList.add("hidden");
     state.bingoUi = null;
+    state.bingoStampPickMode = false;
+    closeBingoOverlay();
     return;
   }
 
@@ -1329,6 +1916,36 @@ function renderBingoHud(status) {
   const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
   const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
   const linesMap = normalizeBingoLinesChecked(status.bingo_lines_checked);
+  const { max: stampMax, remaining: stampRemaining } = bingoStampCharges(status);
+  if (stampRemaining <= 0) state.bingoStampPickMode = false;
+  const pickMode = Boolean(state.bingoStampPickMode && stampRemaining > 0 && unlocked > 0);
+
+  if (el.bingoStampControls) {
+    const showStampUi = stampMax > 0;
+    el.bingoStampControls.classList.toggle("hidden", !showStampUi);
+    if (showStampUi) {
+      if (el.bingoStampMeta) {
+        el.bingoStampMeta.textContent = t("bingo.stamps", {
+          remaining: stampRemaining,
+          max: stampMax,
+        });
+      }
+      if (el.bingoStampBtn) {
+        el.bingoStampBtn.disabled = stampRemaining <= 0 || !unlocked || !status.bingo_storage_ready;
+        el.bingoStampBtn.textContent = pickMode ? t("bingo.cancelStamp") : t("bingo.useStamp");
+        el.bingoStampBtn.onclick = () => {
+          if (pickMode) setBingoStampPickMode(false);
+          else if (stampRemaining <= 0) toast(t("toast.stampNoCharges"), "warn");
+          else if (!status.bingo_storage_ready) toast(t("toast.stampNotReady"), "warn");
+          else setBingoStampPickMode(true);
+        };
+      }
+    }
+  }
+  if (el.bingoStampHint) {
+    el.bingoStampHint.classList.toggle("hidden", !pickMode);
+    if (pickMode) el.bingoStampHint.textContent = t("bingo.pickHint");
+  }
 
   el.bingoBoards.innerHTML = "";
   let totalChecked = 0;
@@ -1351,13 +1968,15 @@ function renderBingoHud(status) {
 
     const label = document.createElement("p");
     label.className = "bingo-board-label";
-    label.textContent = complete ? `Board ${boardKey} · complete` : `Board ${boardKey}`;
+    label.textContent = complete
+      ? t("bingo.boardComplete", { n: boardKey })
+      : t("bingo.board", { n: boardKey });
     header.appendChild(label);
 
     const toggle = document.createElement("button");
     toggle.type = "button";
     toggle.className = "btn-quiet bingo-board-toggle";
-    toggle.textContent = collapsed ? "Show" : "Hide";
+    toggle.textContent = collapsed ? t("bingo.show") : t("bingo.hide");
     toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
     toggle.addEventListener("click", () => {
       setBingoBoardCollapsed(status, boardKey, !collapsed);
@@ -1370,10 +1989,20 @@ function renderBingoHud(status) {
       board,
       stampedMap[boardKey] || [],
       cellsMap[boardKey] || [],
-      lines
+      lines,
+      {
+        boardKey,
+        pickMode: pickMode && !collapsed,
+        onPick: useBingoStampOnCell,
+        stopStampBubble: true,
+      }
     );
-    block.appendChild(grid);
+    const viewport = document.createElement("div");
+    viewport.className = "bingo-board-viewport";
+    block.appendChild(viewport);
     el.bingoBoards.appendChild(block);
+    if (!collapsed) applyBingoSidebarFit(viewport, grid, n, boardKey);
+    else viewport.appendChild(grid);
 
     anySize = Math.max(anySize, n);
     const lineKeys = Object.keys(lineMap);
@@ -1383,15 +2012,21 @@ function renderBingoHud(status) {
 
   if (el.bingoMeta) {
     if (!unlocked) {
-      el.bingoMeta.textContent = "No boards unlocked";
+      el.bingoMeta.textContent = t("bingo.noBoards");
     } else if (unlocked === 1 && anySize) {
-      el.bingoMeta.textContent = `${anySize}×${anySize} · ${totalChecked}/${totalLines} lines`;
+      el.bingoMeta.textContent = t("bingo.metaGrid", {
+        n: anySize, checked: totalChecked, total: totalLines,
+      });
     } else if (unlocked > 1) {
-      el.bingoMeta.textContent = `${unlocked} boards · ${totalChecked}/${totalLines} lines`;
+      el.bingoMeta.textContent = t("bingo.metaBoards", {
+        boards: unlocked, checked: totalChecked, total: totalLines,
+      });
     } else {
       el.bingoMeta.textContent = "";
     }
   }
+
+  if (state.bingoOverlay) refreshBingoOverlayContent();
 }
 
 function scrollLevel() {
@@ -1410,8 +2045,8 @@ function closeSearchOverlay() {
 
 function openSearchOverlay() {
   if (!canUseSearch()) {
-    if (!state.status?.ctrl_f_unlocked) toast("Ctrl+F Lens is locked", "warn");
-    else toast("Search is locked", "warn");
+    if (!state.status?.ctrl_f_unlocked) toast(t("toast.ctrlFLocked"), "warn");
+    else toast(t("toast.searchLocked"), "warn");
     return;
   }
   state.searchOpen = true;
@@ -1421,15 +2056,24 @@ function openSearchOverlay() {
   el.pageSearchInput.select();
 }
 
+function ensureArticleSearchSnapshot() {
+  if (state.baseArticleClone || !el.articleBody) return;
+  state.baseArticleClone = el.articleBody.cloneNode(true);
+}
+
 function clearSearchHighlights() {
-  if (state.baseArticleHtml) {
-    el.articleBody.innerHTML = state.baseArticleHtml;
+  if (!state.baseArticleClone || !el.articleBody) return;
+  // Keep the stored snapshot pristine; restore from a fresh copy.
+  const restored = state.baseArticleClone.cloneNode(true);
+  el.articleBody.replaceChildren();
+  while (restored.firstChild) {
+    el.articleBody.appendChild(restored.firstChild);
   }
 }
 
 function applySearchHighlights(query) {
+  ensureArticleSearchSnapshot();
   clearSearchHighlights();
-  rewriteLinks(el.articleBody);
   if (!query) return 0;
 
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1473,8 +2117,27 @@ function applySearchHighlights(query) {
   return count;
 }
 
+function progressIdentity() {
+  const server = String(state.status?.ap_server || el.serverInput?.value || "").trim().toLowerCase();
+  const slot = String(state.status?.slot_name || el.slotInput?.value || "").trim().toLowerCase();
+  const lang = wikipediaLanguage();
+  if (server && slot) return `${server}::${slot}::${lang}`;
+  return `session::${state.sessionId || "pending"}::${lang}`;
+}
+
 function storageKey(suffix) {
-  return `wikipelago_${suffix}_${state.sessionId || "pending"}`;
+  return `wikipelago_${suffix}_${progressIdentity()}`;
+}
+
+function clearStickyArticleResume() {
+  state.forceResumeStart = true;
+  state.currentTitle = "";
+  state.baseArticleClone = null;
+  clearWikiHtmlCache();
+  state.targetSummaryCache.clear();
+  hideTargetTooltip();
+  const path = `${window.location.pathname}${window.location.search}`;
+  history.replaceState({ title: "" }, "", path);
 }
 
 function bingoStampStorageKey(status) {
@@ -1592,6 +2255,10 @@ function loadSavedClicks() {
 }
 
 function preferredResumeTitle() {
+  if (state.forceResumeStart) {
+    state.forceResumeStart = false;
+    return state.status?.current_start || "";
+  }
   const hashTitle = decodeURIComponent((window.location.hash || "").replace(/^#/, "")).trim();
   if (hashTitle) return hashTitle;
   if (state.status?.last_page) return state.status.last_page;
@@ -1600,6 +2267,18 @@ function preferredResumeTitle() {
   if (savedTitle) return savedTitle;
   // Wait for AP round data — never invent a hard-coded default article.
   return "";
+}
+
+function noteResumeIdentityFromStatus(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  const lang = String(status?.wikipedia_language || "en").trim().toLowerCase() || "en";
+  if (!server || !slot) return;
+  const identity = `${server}::${slot}::${lang}`;
+  if (state.resumeIdentity && state.resumeIdentity !== identity) {
+    clearStickyArticleResume();
+  }
+  state.resumeIdentity = identity;
 }
 
 async function api(path, method = "GET", body = null, retryOnInvalidSession = true) {
@@ -1632,27 +2311,40 @@ async function ensureSession() {
 function updateHUD(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
+  const wasPractice = state.status?.practice === true;
+  noteResumeIdentityFromStatus(status);
   state.status = status;
   state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
   syncRoundVisitTracking(status);
-  el.connBadge.textContent = status.connected_to_ap ? "Connected" : "Offline";
-  el.connBadge.className = status.connected_to_ap ? "badge online" : "badge offline";
+  if (status.practice) {
+    el.connBadge.textContent = t("badge.practice");
+    el.connBadge.className = "badge practice";
+  } else if (status.connected_to_ap) {
+    el.connBadge.textContent = t("badge.connected");
+    el.connBadge.className = "badge online";
+  } else {
+    el.connBadge.textContent = t("badge.offline");
+    el.connBadge.className = "badge offline";
+  }
   updateConnectionPanel(status);
 
-  if (wasConnected && !status.connected_to_ap) {
-    toastSticky("Disconnected. Browsing only until you reconnect.", "warn");
+  if (wasConnected && !status.connected_to_ap && !status.practice) {
+    toastSticky(t("toast.disconnectedBrowse"), "warn");
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
   }
+  if (wasPractice && !status.practice && !status.connected_to_ap) {
+    clearStickyConnectionError();
+  }
   if (!wasConnected && status.connected_to_ap) {
     clearStickyConnectionError();
-    toast("Connected to Archipelago", "ok", 4500);
+    toast(t("toast.connected"), "ok", 4500);
     // /connect returns before AP handshake finishes; restore once we are actually online.
     void restoreArticleView(true);
   }
   if (status.boss_completed) {
-    el.targetText.textContent = "GOAL COMPLETE";
+    el.targetText.textContent = t("hud.goalComplete");
     setTargetSummaryTitle("");
   } else {
     el.targetText.textContent = status.current_target || "...";
@@ -1663,7 +2355,11 @@ function updateHUD(status) {
   renderFragmentsTrack(status);
 
   el.clicksText.textContent = String(state.clicksUsed);
-  el.compassHint.textContent = status.compass_unlocked ? (status.warmer_colder || "Calibrating") : "Locked";
+  el.compassHint.textContent = status.compass_unlocked
+    ? (I18n?.localizeCompassHint
+      ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
+      : (status.warmer_colder || t("hud.calibrating")))
+    : t("hud.locked");
   renderSearchStatus();
   renderToolIcons(status);
   renderLensIcons(status);
@@ -1677,7 +2373,7 @@ function updateHUD(status) {
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
-    toast("GOAL COMPLETE! Seed finished.", "ok", 8000);
+    toast(t("toast.goalComplete"), "ok", 8000);
     state.announcedGoalComplete = true;
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
@@ -1712,9 +2408,9 @@ function renderLensStatus(status) {
   const parts = DISPLAY_LOCKS.map((lock) => {
     const unlocked = status?.[lock.unlockedKey];
     if (typeof unlocked !== "boolean") return null;
-    return `${lock.label}: ${unlocked ? "On" : "Off"}`;
+    return `${t(lock.i18nKey)}: ${unlocked ? t("lens.on") : t("lens.off")}`;
   }).filter(Boolean);
-  el.lensesItem.textContent = parts.length ? parts.join(" · ") : "Native wiki";
+  el.lensesItem.textContent = parts.length ? parts.join(" · ") : t("lens.native");
 }
 
 function setDebugQueryParam(enabled) {
@@ -1726,10 +2422,22 @@ function setDebugQueryParam(enabled) {
   window.history.replaceState(window.history.state, "", next);
 }
 
+function setStuckPanelOpen(open) {
+  if (!el.stuckPanel || !el.stuckToggleBtn) return;
+  el.stuckPanel.classList.toggle("hidden", !open);
+  el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function setDebugConsentOpen(open) {
+  if (!el.debugConsentPanel) return;
+  el.debugConsentPanel.classList.toggle("hidden", !open);
+}
+
 function enableDebugDisplayMenu() {
   debugDisplayEnabled = true;
   setDebugQueryParam(true);
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
+  setDebugConsentOpen(true);
   initDebugDisplayPanel();
 }
 
@@ -1739,12 +2447,13 @@ function disableDebugDisplayMenu() {
   setDebugQueryParam(false);
   document.getElementById("debugMenuCard")?.remove();
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = false;
+  setDebugConsentOpen(false);
 }
 
 async function runDebugAction(action, payload = {}) {
   if (!state.sessionId) await ensureSession();
   if (!isApConnected()) {
-    toast("Connect to Archipelago before using debug", "warn");
+    toast(t("toast.debugNeedAp"), "warn");
     return null;
   }
   try {
@@ -1803,10 +2512,6 @@ function initDebugDisplayPanel() {
   card.id = "debugMenuCard";
   card.className = "card debug-menu-card";
   card.innerHTML = "<h2>Debug (AP)</h2>";
-  const warn = document.createElement("p");
-  warn.className = "debug-warn";
-  warn.textContent = "Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink. No auth in 0.4.";
-  card.appendChild(warn);
 
   const progress = debugSection("Progress");
   progress.appendChild(debugRow([
@@ -1820,22 +2525,29 @@ function initDebugDisplayPanel() {
   ]));
   card.appendChild(progress);
 
-  const items = debugSection("Items / sanities");
+  const items = debugSection("Unlock items");
   items.appendChild(debugRow([
-    debugBtn("Tools", () => runDebugAction("grant_tools")),
-    debugBtn("Lenses", () => runDebugAction("grant_lenses")),
+    debugBtn("Back", () => runDebugAction("grant_item", { item: "Progressive Back" })),
+    debugBtn("Reroll", () => runDebugAction("grant_item", { item: "Progressive Reroll" })),
+    debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
+    debugBtn("Bingo Stamp", () => runDebugAction("grant_item", { item: "Progressive Bingo Stamp" })),
+    debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
+    debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
+    debugBtn("All tools", () => runDebugAction("grant_tools")),
+    debugBtn("All lenses", () => runDebugAction("grant_lenses")),
     debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
     debugBtn("Max scroll", () => runDebugAction("grant_scroll")),
   ]));
   const itemSelect = document.createElement("select");
   itemSelect.className = "debug-input";
   for (const name of [
-    "Progressive Back", "Progressive Reroll", "Progressive Bingo Card",
-    "Wiki Compass", "Ctrl+F Lens",
+    "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
+    "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
-    "Knowledge Fragment", "Round Access", "Progressive Scroll Speed",
+    "Knowledge Fragment", "Round Access", "Footnote",
     "Foggy Links", "Missing Links",
+    ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => `Search Letter ${letter}`),
   ]) {
     const opt = document.createElement("option");
     opt.value = name;
@@ -1844,16 +2556,12 @@ function initDebugDisplayPanel() {
   }
   items.appendChild(debugRow([
     itemSelect,
-    debugBtn("Grant", () => runDebugAction("grant_item", { item: itemSelect.value })),
+    debugBtn("Grant +1", () => runDebugAction("grant_item", { item: itemSelect.value })),
   ]));
   card.appendChild(items);
 
   const travel = debugSection("Travel");
   travel.appendChild(debugRow([
-    debugBtn("Start", async () => {
-      const title = state.status?.current_start;
-      if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
-    }),
     debugBtn("Target", async () => {
       const title = state.status?.current_target;
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
@@ -1863,23 +2571,24 @@ function initDebugDisplayPanel() {
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
-  const targetInput = document.createElement("input");
-  targetInput.type = "text";
-  targetInput.className = "debug-input debug-input-wide";
-  targetInput.placeholder = "Set target title…";
+  const pageInput = document.createElement("input");
+  pageInput.type = "text";
+  pageInput.className = "debug-input debug-input-wide";
+  pageInput.placeholder = "Teleport to page title…";
   travel.appendChild(debugRow([
-    targetInput,
-    debugBtn("Set target", () => runDebugAction("set_target", { title: targetInput.value.trim() })),
-  ]));
-  travel.appendChild(debugRow([
-    debugBtn("Clear visits", () => {
-      resetRoundVisits(state.currentTitle || "");
-      toast("Visit tracking cleared", "ok", 3000);
+    pageInput,
+    debugBtn("Go", async () => {
+      const title = pageInput.value.trim();
+      if (!title) {
+        toast(t("toast.enterTitle"), "warn", 3000);
+        return;
+      }
+      await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
   card.appendChild(travel);
 
-  const challenge = debugSection("Challenge toggles");
+  const challenge = debugSection("Challenges");
   const optGrid = document.createElement("div");
   optGrid.className = "debug-opt-grid";
   for (const [key, label] of [
@@ -1917,12 +2626,15 @@ function initDebugDisplayPanel() {
   });
   challenge.appendChild(debugRow([density]));
   challenge.appendChild(debugRow([
-    debugBtn("Foggy trap", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
-    debugBtn("Missing trap", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+    debugBtn("Clear visits", () => {
+      resetRoundVisits(state.currentTitle || "");
+      toast(t("toast.visitsCleared"), "ok", 3000);
+    }),
+    debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
   ]));
   challenge.appendChild(debugRow([
-    debugBtn("Send DeathLink", () => runDebugAction("send_death_link", { cause: "Debug DeathLink" })),
-    debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
+    debugBtn("Trigger Foggy", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
+    debugBtn("Trigger Missing", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
   ]));
   card.appendChild(challenge);
 
@@ -1933,25 +2645,33 @@ function initDebugDisplayPanel() {
 function bindStuckHelper() {
   if (el.stuckToggleBtn && el.stuckPanel) {
     el.stuckToggleBtn.addEventListener("click", () => {
-      const open = el.stuckPanel.classList.toggle("hidden") === false;
-      el.stuckToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+      const open = el.stuckPanel.classList.contains("hidden");
+      setStuckPanelOpen(open);
     });
     el.stuckToggleBtn.setAttribute("aria-expanded", "false");
   }
   if (el.enableDebugMenuChk) {
     el.enableDebugMenuChk.addEventListener("change", () => {
       if (el.enableDebugMenuChk.checked) {
-        enableDebugDisplayMenu();
-        toast("Debug menu enabled", "ok", 4000);
+        setDebugConsentOpen(true);
       } else {
         disableDebugDisplayMenu();
-        toast("Debug menu disabled", "warn", 3500);
+        toast(t("toast.debugDisabled"), "warn", 3500);
       }
     });
   }
+  if (el.showDebugMenuBtn) {
+    el.showDebugMenuBtn.addEventListener("click", () => {
+      if (!el.enableDebugMenuChk?.checked) {
+        if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
+        setDebugConsentOpen(true);
+      }
+      enableDebugDisplayMenu();
+      toast(t("toast.debugEnabled"), "ok", 4000);
+    });
+  }
   if (debugDisplayEnabled) {
-    if (el.stuckPanel) el.stuckPanel.classList.remove("hidden");
-    if (el.stuckToggleBtn) el.stuckToggleBtn.setAttribute("aria-expanded", "true");
+    setStuckPanelOpen(true);
     enableDebugDisplayMenu();
   }
 }
@@ -1964,7 +2684,7 @@ async function pollStatus() {
     updateHUD(data.status);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
-    el.connBadge.textContent = "Offline";
+    el.connBadge.textContent = t("badge.offline");
     el.connBadge.className = "badge offline";
   }
 }
@@ -1991,15 +2711,14 @@ function unwrapElement(node) {
   node.remove();
 }
 
-function stripExternalLinks(root) {
-  root.querySelectorAll("a[href]").forEach((a) => {
-    if (isExternalHref(a.getAttribute("href"))) unwrapElement(a);
-  });
-}
-
 function headingLabel(node) {
   return String(node.textContent || "")
-    .replace(/\[\s*edit\s*\]/gi, "")
+    // Strip localized [edit] / [modifier] / … chrome if editsection markup remains.
+    .replace(/\[[^\]]{0,48}\]/g, (chunk) => (
+      /edit|modifier|bearbeiten|editar|modifica|bewerken|redigera|edytuj|código|code|quelle|quellen/i.test(chunk)
+        ? ""
+        : chunk
+    ))
     .replace(/\s+/g, " ")
     .trim()
     .toLowerCase();
@@ -2039,16 +2758,18 @@ function markNamedSections(root, names, className) {
   }
 }
 
-function prepareArticleHtml(root) {
+function prepareArticleHtml(root, options = {}) {
+  const { foggy = false, missing = false, applyLocks = true } = options;
   sanitizeHtml(root);
-  stripExternalLinks(root);
   markLeadSection(root);
-  markNamedSections(root, ["see also"], "wiki-section-seealso");
-  markNamedSections(root, ["external links", "external link"], "wiki-section-external");
-  markNamedSections(root, ["references", "notes", "citations"], "wiki-section-references");
+  for (const [className, names] of Object.entries(WIKI_SECTION_HEADINGS)) {
+    markNamedSections(root, names, className);
+  }
   wrapTables(root);
-  rewriteLinks(root);
-  applyDisplayLocks();
+  refreshArticleScrollHosts(root);
+  processArticleLinks(root, { foggy, missing });
+  // Locks toggle classes on the live article body — skip for detached pre-prepare roots.
+  if (applyLocks) applyDisplayLocks();
 }
 
 function neutralizeTableChromeColors(el) {
@@ -2063,23 +2784,41 @@ function neutralizeTableChromeColors(el) {
   el.style.removeProperty("color");
 }
 
+function isNestedWikiTable(table) {
+  return Boolean(table?.parentElement?.closest("table"));
+}
+
 function wrapTables(root) {
   root.querySelectorAll("table").forEach((table) => {
-    table.removeAttribute("width");
-    if (table.style) {
-      table.style.removeProperty("width");
-      table.style.removeProperty("min-width");
-      table.style.removeProperty("max-width");
+    const nested = isNestedWikiTable(table);
+    // Nested layout tables keep intrinsic sizing; only top-level wraps scroll.
+    if (!nested) {
+      table.removeAttribute("width");
+      if (table.style) {
+        table.style.removeProperty("width");
+        table.style.removeProperty("min-width");
+        table.style.removeProperty("max-width");
+      }
     }
     neutralizeTableChromeColors(table);
     table
       .querySelectorAll("caption, colgroup, col, thead, tbody, tfoot, tr, th, td")
       .forEach(neutralizeTableChromeColors);
+    if (nested) return;
     if (table.parentElement?.classList.contains("table-scroll")) return;
     const wrap = document.createElement("div");
     wrap.className = "table-scroll";
     table.replaceWith(wrap);
     wrap.appendChild(table);
+  });
+}
+
+function refreshArticleScrollHosts(root = el.articleBody) {
+  if (!root) return;
+  // Avoid overflow:auto scrollports unless the table is actually wider than the article.
+  root.querySelectorAll(".table-scroll").forEach((wrap) => {
+    wrap.classList.remove("is-scrollable-x");
+    wrap.classList.toggle("is-scrollable-x", wrap.scrollWidth > wrap.clientWidth + 1);
   });
 }
 
@@ -2114,10 +2853,15 @@ function isBlockedWikiTitle(title) {
 }
 
 function toastBlockedWikiPage() {
-  toast("That type of page is not allowed in Wikipelago", "warn");
+  toast(t("toast.pageTypeBlocked"), "warn");
 }
 
-function rewriteLinks(root) {
+function processArticleLinks(root, options = {}) {
+  // One pass: strip externals, rewrite /wiki links, optional foggy/missing traps.
+  const foggy = Boolean(options.foggy);
+  const missing = Boolean(options.missing);
+  const playable = missing ? [] : null;
+
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
     if (isExternalHref(href)) {
@@ -2146,15 +2890,254 @@ function rewriteLinks(root) {
     }
     a.removeAttribute("data-blocked-ns");
     a.dataset.title = title;
+    if (foggy) {
+      a.textContent = "[Link]";
+      a.title = "";
+    }
+    if (playable) playable.push(a);
   });
+
+  if (playable) applyMissingToLinks(playable);
+}
+
+function wikiHtmlCacheKey(title) {
+  return `${wikipediaLanguage()}::${normalizeTitle(title)}`;
+}
+
+function clearWikiHtmlCache() {
+  state.wikiHtmlCache.clear();
+  state.wikiHtmlInflight.clear();
+  state.wikiPreparedCache.clear();
+  state.wikiPrepareInflight.clear();
+  state.wikiPrefetchQueue = [];
+  state.wikiPrefetchActive = 0;
+  state.wikiPrefetchHoverTitle = "";
+  state.wikiPrepareHoverTitle = "";
+  if (state.wikiPrefetchHoverTimer) {
+    clearTimeout(state.wikiPrefetchHoverTimer);
+    state.wikiPrefetchHoverTimer = null;
+  }
+  if (state.wikiPrepareHoverTimer) {
+    clearTimeout(state.wikiPrepareHoverTimer);
+    state.wikiPrepareHoverTimer = null;
+  }
+  state.wikiCacheLanguage = wikipediaLanguage();
+}
+
+function ensureWikiHtmlCacheLanguage() {
+  const lang = wikipediaLanguage();
+  if (state.wikiCacheLanguage && state.wikiCacheLanguage !== lang) {
+    clearWikiHtmlCache();
+    return;
+  }
+  if (!state.wikiCacheLanguage) state.wikiCacheLanguage = lang;
+}
+
+function storeWikiHtmlCache(title, html) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
+  state.wikiHtmlCache.set(key, { html: String(html || "") });
+  while (state.wikiHtmlCache.size > WIKI_PREFETCH_MAX_CACHE) {
+    const oldest = state.wikiHtmlCache.keys().next().value;
+    state.wikiHtmlCache.delete(oldest);
+  }
+}
+
+function takeWikiHtmlCache(title) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  const hit = state.wikiHtmlCache.get(key);
+  if (!hit) return null;
+  // Refresh LRU order.
+  state.wikiHtmlCache.delete(key);
+  state.wikiHtmlCache.set(key, hit);
+  return hit.html;
+}
+
+async function fetchWikiHtmlUncached(title) {
+  const params = new URLSearchParams({
+    action: "parse",
+    page: title,
+    prop: "text",
+    formatversion: "2",
+    format: "json",
+    origin: "*",
+    redirects: "true",
+  });
+  const url = `${wikipediaOrigin()}/w/api.php?${params}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${wikipediaLanguage()})`);
+  const data = await res.json();
+  if (data?.error) {
+    const info = data.error.info || data.error.code || "Article unavailable";
+    throw new Error(`${info} [${wikipediaLanguage()}]`);
+  }
+  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${wikipediaLanguage()}]`);
+  return data.parse.text;
 }
 
 async function fetchWikiHtml(title) {
-  const url = `https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text&formatversion=2&format=json&origin=*`;
-  const res = await fetch(url);
-  const data = await res.json();
-  if (!data.parse || !data.parse.text) throw new Error("Article unavailable");
-  return data.parse.text;
+  ensureWikiHtmlCacheLanguage();
+  const cached = takeWikiHtmlCache(title);
+  if (cached != null) return cached;
+
+  const key = wikiHtmlCacheKey(title);
+  let inflight = state.wikiHtmlInflight.get(key);
+  if (!inflight) {
+    inflight = (async () => {
+      try {
+        const html = await fetchWikiHtmlUncached(title);
+        storeWikiHtmlCache(title, html);
+        return html;
+      } finally {
+        state.wikiHtmlInflight.delete(key);
+      }
+    })();
+    state.wikiHtmlInflight.set(key, inflight);
+  }
+  return inflight;
+}
+
+function pumpWikiPrefetchQueue() {
+  while (
+    state.wikiPrefetchActive < WIKI_PREFETCH_CONCURRENCY
+    && state.wikiPrefetchQueue.length
+  ) {
+    const title = state.wikiPrefetchQueue.shift();
+    if (!title || isBlockedWikiTitle(title)) continue;
+    if (normalizeTitle(title) === normalizeTitle(state.currentTitle)) continue;
+    const key = wikiHtmlCacheKey(title);
+    if (state.wikiHtmlCache.has(key) || state.wikiHtmlInflight.has(key)) continue;
+    state.wikiPrefetchActive += 1;
+    fetchWikiHtml(title)
+      .catch(() => {})
+      .finally(() => {
+        state.wikiPrefetchActive = Math.max(0, state.wikiPrefetchActive - 1);
+        pumpWikiPrefetchQueue();
+      });
+  }
+}
+
+function prefetchWikiHtml(title) {
+  const clean = String(title || "").trim();
+  if (!clean || isBlockedWikiTitle(clean)) return;
+  if (normalizeTitle(clean) === normalizeTitle(state.currentTitle)) return;
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(clean);
+  if (state.wikiHtmlCache.has(key) || state.wikiHtmlInflight.has(key)) return;
+  if (state.wikiPrefetchQueue.some((queued) => normalizeTitle(queued) === normalizeTitle(clean))) {
+    return;
+  }
+  state.wikiPrefetchQueue.push(clean);
+  // Bound queue so rapid hover doesn't pile up stale titles.
+  while (state.wikiPrefetchQueue.length > WIKI_PREFETCH_MAX_CACHE) {
+    state.wikiPrefetchQueue.shift();
+  }
+  pumpWikiPrefetchQueue();
+}
+
+function scheduleWikiPrefetchFromHover(title) {
+  const clean = String(title || "").trim();
+  if (!clean) return;
+  if (state.wikiPrefetchHoverTitle === clean && state.wikiPrefetchHoverTimer) return;
+  state.wikiPrefetchHoverTitle = clean;
+  if (state.wikiPrefetchHoverTimer) clearTimeout(state.wikiPrefetchHoverTimer);
+  state.wikiPrefetchHoverTimer = setTimeout(() => {
+    state.wikiPrefetchHoverTimer = null;
+    prefetchWikiHtml(clean);
+  }, WIKI_PREFETCH_HOVER_MS);
+}
+
+function storeWikiPreparedCache(title, root) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  if (state.wikiPreparedCache.has(key)) state.wikiPreparedCache.delete(key);
+  state.wikiPreparedCache.set(key, root);
+  while (state.wikiPreparedCache.size > WIKI_PREFETCH_MAX_CACHE) {
+    const oldest = state.wikiPreparedCache.keys().next().value;
+    state.wikiPreparedCache.delete(oldest);
+  }
+}
+
+function takeWikiPreparedCache(title) {
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(title);
+  const hit = state.wikiPreparedCache.get(key);
+  if (!hit) return null;
+  state.wikiPreparedCache.delete(key);
+  return hit;
+}
+
+function idleYield(timeoutMs = 2000) {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === "function") {
+      requestIdleCallback(() => resolve(), { timeout: timeoutMs });
+    } else {
+      setTimeout(resolve, 0);
+    }
+  });
+}
+
+async function prepareWikiHtml(title) {
+  const clean = String(title || "").trim();
+  if (!clean || isBlockedWikiTitle(clean)) return;
+  if (normalizeTitle(clean) === normalizeTitle(state.currentTitle)) return;
+  ensureWikiHtmlCacheLanguage();
+  const key = wikiHtmlCacheKey(clean);
+  if (state.wikiPreparedCache.has(key) || state.wikiPrepareInflight.has(key)) return;
+
+  const inflight = (async () => {
+    try {
+      const html = await fetchWikiHtml(clean);
+      await idleYield();
+      // Hover target may have changed; still finish prepare for LRU usefulness.
+      const root = document.createElement("div");
+      root.innerHTML = html;
+      prepareArticleHtml(root, { foggy: false, missing: false, applyLocks: false });
+      storeWikiPreparedCache(clean, root);
+    } catch {
+      /* ignore prepare failures — open will fall back to normal path */
+    } finally {
+      state.wikiPrepareInflight.delete(key);
+    }
+  })();
+  state.wikiPrepareInflight.set(key, inflight);
+  await inflight;
+}
+
+function scheduleWikiPrepareFromHover(title) {
+  const clean = String(title || "").trim();
+  if (!clean) return;
+  if (state.wikiPrepareHoverTitle === clean && state.wikiPrepareHoverTimer) return;
+  state.wikiPrepareHoverTitle = clean;
+  if (state.wikiPrepareHoverTimer) clearTimeout(state.wikiPrepareHoverTimer);
+  state.wikiPrepareHoverTimer = setTimeout(() => {
+    state.wikiPrepareHoverTimer = null;
+    void prepareWikiHtml(clean);
+  }, WIKI_PREPARE_HOVER_MS);
+}
+
+function setArticleLoadingVisible(visible, label = null) {
+  if (label == null) label = t("search.loading");
+  if (!el.articleLoading) return;
+  el.articleLoading.classList.toggle("hidden", !visible);
+  el.articleLoading.setAttribute("aria-busy", visible ? "true" : "false");
+  if (el.articleStage) el.articleStage.classList.toggle("is-loading", visible);
+  if (el.articleLoadingText && visible) el.articleLoadingText.textContent = label;
+}
+
+function beginArticleLoading(label = null) {
+  if (label == null) label = t("search.loading");
+  const token = ++state.articleLoadingToken;
+  // Avoid a flash when hover-prefetch already filled the cache.
+  const timer = setTimeout(() => {
+    if (token === state.articleLoadingToken) setArticleLoadingVisible(true, label);
+  }, 90);
+  return () => {
+    clearTimeout(timer);
+    if (token === state.articleLoadingToken) setArticleLoadingVisible(false);
+  };
 }
 
 async function openArticle(title, options = {}) {
@@ -2167,28 +3150,59 @@ async function openArticle(title, options = {}) {
     replaceHistory = false,
     requireConnection = false,
   } = options;
-  if (requireConnection && !requireApConnection()) return;
+  if (requireConnection && !requirePlayable()) return;
   if (isBlockedWikiTitle(title)) {
     toastBlockedWikiPage();
     return;
   }
 
+  const endLoading = beginArticleLoading();
+  const prepareKey = wikiHtmlCacheKey(title);
+  const prepareWait = state.wikiPrepareInflight.get(prepareKey);
+  if (prepareWait) {
+    try { await prepareWait; } catch { /* fall through */ }
+  }
+
   try {
-    const html = await fetchWikiHtml(title);
     state.currentTitle = title;
     el.articleTitle.textContent = title;
-    el.articleBody.innerHTML = html;
-    prepareArticleHtml(el.articleBody);
+    el.articleBody.scrollTop = 0;
     consumeTrapQueueForPage(title, state.status);
-    if (state.activeFoggy) applyFoggyLinks(el.articleBody);
-    if (state.activeMissing) applyMissingLinks(el.articleBody);
+
+    const prepared = takeWikiPreparedCache(title);
+    if (prepared) {
+      el.articleBody.replaceChildren(...prepared.childNodes);
+      // Re-apply current fog/missing on the live tree (pre-prepare used neutral flags).
+      processArticleLinks(el.articleBody, {
+        foggy: state.activeFoggy,
+        missing: state.activeMissing,
+      });
+      applyDisplayLocks();
+      refreshArticleScrollHosts(el.articleBody);
+    } else {
+      let html;
+      try {
+        html = await fetchWikiHtml(title);
+      } catch (err) {
+        endLoading();
+        const detail = err?.message ? ` (${err.message})` : "";
+        toast(t("toast.openFailed", { title, detail }), "warn");
+        return;
+      }
+      el.articleBody.innerHTML = html;
+      prepareArticleHtml(el.articleBody, {
+        foggy: state.activeFoggy,
+        missing: state.activeMissing,
+      });
+    }
     armBombsOnPage(el.articleBody, state.status);
     if (countAsClick || !state.roundVisitSet.size) {
       state.roundVisitSet.add(normalizeTitle(title));
     } else if (!submitCheck) {
       state.roundVisitSet.add(normalizeTitle(title));
     }
-    state.baseArticleHtml = el.articleBody.innerHTML;
+    // Drop prior page snapshot; a new one is cloned lazily if Ctrl+F is used.
+    state.baseArticleClone = null;
     if (state.searchOpen && el.pageSearchInput.value) {
       const sanitized = sanitizeSearchInput(el.pageSearchInput.value);
       if (sanitized !== el.pageSearchInput.value) el.pageSearchInput.value = sanitized;
@@ -2205,9 +3219,12 @@ async function openArticle(title, options = {}) {
       history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
     }
 
-    // Always visit/stamp when connected. Only intentional wiki clicks score rounds.
-    if (!isApConnected()) {
-      if (countAsClick && submitCheck) toast("Disconnected — reconnect to send checks", "warn");
+    // Show the page as soon as DOM work is done; bridge check can finish after.
+    endLoading();
+
+    // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
+    if (!isPlayable()) {
+      if (countAsClick && submitCheck) toast(t("toast.disconnectedChecks"), "warn");
       return;
     }
 
@@ -2219,6 +3236,15 @@ async function openArticle(title, options = {}) {
     });
 
     if (submitCheck) {
+      if (result.matched && (result.status?.practice || result.practice_rolled)) {
+        // Unlimited practice: new target only — stay on this page (AP-style chaining).
+        if (result.status) updateHUD(result.status);
+        resetRoundVisits(title);
+        state.clicksUsed = Number(result.status?.clicks_used) || 0;
+        el.clicksText.textContent = String(state.clicksUsed);
+        saveLocalProgress();
+        return;
+      }
       if (result.matched) {
         let msg = `Target hit: ${result.target}`;
         if (result.sent_text) msg += ` — ${result.sent_text}`;
@@ -2229,19 +3255,21 @@ async function openArticle(title, options = {}) {
       } else {
         toastBingoCompletions(result.bingo_completed);
       }
-      if (result.locked) toast("Round locked. Find Round Access items.", "warn", 6500);
-      if (result.not_connected) toast("Disconnected — reconnect to send checks", "warn", 6500);
+      if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
+      if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
     } else {
       toastBingoCompletions(result.bingo_completed);
     }
     if (result.status) updateHUD(result.status);
-  } catch {
-    toast(`Could not open article: ${title}`, "warn");
+  } catch (err) {
+    endLoading();
+    // Page is already visible; do not pretend the Wikipedia fetch failed.
+    toast(err?.message || t("toast.syncFailed"), "warn");
   }
 }
 
 async function restoreArticleView(force = false) {
-  if (!state.status || !isApConnected()) return;
+  if (!state.status || !isPlayable()) return;
   if (state.handlingDeath) return;
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
@@ -2254,6 +3282,22 @@ async function restoreArticleView(force = false) {
     state.restoringArticle = false;
   }
 }
+
+el.articleBody.addEventListener("pointerover", (e) => {
+  const a = e.target.closest?.("a[data-title]");
+  if (!a || !el.articleBody.contains(a)) return;
+  // Only fire when entering the link (not bubbling across children repeatedly).
+  const related = e.relatedTarget;
+  if (related && a.contains(related)) return;
+  const dest = a.dataset.title || "";
+  scheduleWikiPrefetchFromHover(dest);
+  scheduleWikiPrepareFromHover(dest);
+});
+
+el.articleBody.addEventListener("load", (e) => {
+  const tag = String(e.target?.tagName || "");
+  if (tag === "IMG" || tag === "VIDEO") refreshArticleScrollHosts();
+}, true);
 
 el.articleBody.addEventListener("click", async (e) => {
   const blocked = e.target.closest("a[data-blocked-ns]");
@@ -2291,11 +3335,41 @@ el.articleBody.addEventListener("click", async (e) => {
   openArticle(dest, { countAsClick: true });
 });
 
-el.articleBody.addEventListener("wheel", (e) => {
-  if (!state.status?.scrollsanity) return;
+function isEventInSidePanel(target) {
+  return Boolean(target?.closest?.(".side-panel"));
+}
+
+function applyArticleWheel(deltaY) {
+  if (!el.articleBody) return;
+  const factor = state.status?.scrollsanity ? scrollFactor() : 1;
+  el.articleBody.scrollTop += deltaY * factor;
+}
+
+// One scroll path: always drive #articleBody ourselves (except side panel / bingo overlay).
+// Native scrolling over nested overflow:auto hosts was latching the wheel at mid-page.
+window.addEventListener("wheel", (e) => {
+  if (isEventInSidePanel(e.target)) return;
+  if (e.target?.closest?.("#bingoOverlay")) return;
+  if (!el.articleBody) return;
+
+  const nest = e.target?.closest?.(".table-scroll.is-scrollable-x");
+  if (
+    nest
+    && el.articleBody.contains(nest)
+    && (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY))
+  ) {
+    e.preventDefault();
+    nest.scrollLeft += e.shiftKey ? e.deltaY : e.deltaX;
+    return;
+  }
+
   e.preventDefault();
-  el.articleBody.scrollTop += e.deltaY * scrollFactor();
+  applyArticleWheel(e.deltaY);
 }, { passive: false });
+
+window.addEventListener("resize", () => {
+  refreshArticleScrollHosts();
+}, { passive: true });
 
 el.rerollTargetBtn?.addEventListener("click", () => {
   rerollCurrentTarget();
@@ -2317,6 +3391,7 @@ el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
     const slotName = el.slotInput.value.trim();
+    const prevIdentity = state.resumeIdentity;
     saveConnection(server, slotName);
     clearStickyConnectionError();
     await ensureSession();
@@ -2325,27 +3400,56 @@ el.connectBtn.addEventListener("click", async () => {
       slot_name: slotName,
       password: el.passwordInput.value,
     });
-    toast("Connecting to Archipelago...", "ok", 4500);
+    toast(t("toast.connecting"), "ok", 4500);
     const online = await waitForApConnection();
     if (!online) {
-      toastSticky(state.status?.last_error || "Could not connect to Archipelago", "warn");
+      toastSticky(state.status?.last_error || t("toast.connectFailed"), "warn");
       return;
     }
+    const nextIdentity = progressIdentity();
+    if (prevIdentity && prevIdentity !== nextIdentity) {
+      clearStickyArticleResume();
+    }
+    state.resumeIdentity = nextIdentity;
     await restoreArticleView(true);
   } catch (err) {
-    toastSticky(err.message || "Connect failed", "warn");
+    toastSticky(err.message || t("toast.connectFailedShort"), "warn");
+  }
+});
+
+el.practiceBtn?.addEventListener("click", async () => {
+  try {
+    clearStickyConnectionError();
+    await ensureSession();
+    const result = await api(`/api/session/${state.sessionId}/practice`, "POST", {
+      wikipedia_language: uiLanguage(),
+    });
+    if (result.status) updateHUD(result.status);
+    else await pollStatus();
+    const start = state.status?.current_start;
+    if (start) {
+      await openArticle(start, {
+        replaceHistory: true,
+        countAsClick: false,
+        submitCheck: false,
+        requireConnection: true,
+      });
+    }
+  } catch (err) {
+    toastSticky(err.message || t("toast.practiceFailed"), "warn");
   }
 });
 
 el.disconnectBtn?.addEventListener("click", async () => {
   try {
+    const leavingPractice = isPracticeMode();
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
     if (result.status) updateHUD(result.status);
     else await pollStatus();
-    toast("Disconnected from Archipelago", "warn", 4500);
+    toast(leavingPractice ? t("toast.leftPractice") : t("toast.disconnected"), "warn", 4500);
   } catch (err) {
-    toastSticky(err.message || "Disconnect failed", "warn");
+    toastSticky(err.message || t("toast.disconnectFailed"), "warn");
   }
 });
 
@@ -2365,14 +3469,14 @@ el.pageSearchInput.addEventListener("input", () => {
   const hits = applySearchHighlights(el.pageSearchInput.value.trim());
   renderSearchStatus();
   if (el.pageSearchInput.value.trim()) {
-    el.searchStatus.textContent = `${hits} match${hits === 1 ? "" : "es"}`;
+    el.searchStatus.textContent = t("search.matchCount", { n: hits });
   }
 });
 
 function backBlockedToast() {
   const max = Number(state.status?.back_depth_max) || 0;
-  if (max <= 0) toast("Progressive Back is locked", "warn");
-  else toast("No backs remaining this round", "warn");
+  if (max <= 0) toast(t("toast.backLocked"), "warn");
+  else toast(t("toast.noBacks"), "warn");
 }
 
 function canGoBackNow() {
@@ -2456,7 +3560,7 @@ window.addEventListener("popstate", async (e) => {
       await consumeBackCharge();
     } catch (err) {
       rePushCurrentHistory();
-      toast(`Could not use back: ${err.message || err}`, "warn");
+      toast(t("toast.backFailed", { error: err.message || err }), "warn");
       return;
     }
   }
@@ -2474,6 +3578,8 @@ if ("serviceWorker" in navigator) {
 
 ensureToolIcons();
 bindTargetTooltip();
+bindUiLanguageControls();
+bindBingoOverlayUi();
 bindStuckHelper();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;
@@ -2495,5 +3601,5 @@ setInterval(pollStatus, 1500);
   await loadBuildBadge();
   await ensureSession();
   await pollStatus();
-  if (isApConnected()) await restoreArticleView(true);
+  if (isPlayable()) await restoreArticleView(true);
 })();

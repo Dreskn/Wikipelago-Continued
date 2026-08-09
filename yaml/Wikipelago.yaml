@@ -1,101 +1,76 @@
 # Player YAML template for Wikipelago.
 # Copy this file into your Archipelago Players folder and change `name` if you need a different slot name.
 
-name: wikipelago
+name: MadWikiRacer
 game: Wikipelago
 description: Default Wikipelago player template
 
+# Fail generation if the host Archipelago / Wikipelago apworld is too old for this
+# template (avoids silent ignores of newer options like progressive tools).
+requires:
+  version: 0.6.7
+  game:
+    Wikipelago: 0.6.0
+
 Wikipelago:
-  # Archipelago progression balancing (0-99). Higher values tend to place
-  # useful progression items a bit earlier in the item sphere.
+
+  # =============================================================================
+  # Main game
+  # =============================================================================
+  # progression_balancing: Archipelago 0–99; higher tends to place useful progression a bit earlier in the item sphere.
+  # check_count: how many Start → Target rounds (checks) are generated (10–999, default 40).
+  # required_fragments / additional_fragments_in_pool: 1–200 / 0–200.
+  # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access unlocks this many more (1–999).
+  # random_goal_article: true = random goal from enabled categories; false = use goal_article_preset.
   progression_balancing: 50
-
-  # How many round checks are generated for this player (Start → Target races).
   check_count: 40
-
-  # Knowledge Fragments required to open/finish the Grand Goal.
   required_fragments: 7
-
-  # How many rounds are playable immediately at the start of the seed.
+  additional_fragments_in_pool: 2
   start_rounds_unlocked: 10
-
-  # Each Round Access item unlocks this many additional rounds.
   rounds_per_unlock: 5
-
-  # If true, the Grand Goal article is chosen randomly from enabled categories.
-  # If false, goal_article_preset below is used instead.
   random_goal_article: true
-
-  # Used only when random_goal_article is false.
-  # Valid values:
-  #   minecraft
-  #   the_legend_of_zelda
-  #   dark_souls
-  #   elden_ring
-  #   super_mario_bros
-  #   pokemon_red_and_blue
-  #   chess
-  #   catan
-  #   the_dark_knight
-  #   star_wars_film
-  #   lord_of_the_rings_fellowship
-  #   the_matrix
-  #   avatar_the_last_airbender
-  #   breaking_bad
-  #   stranger_things
-  #   game_of_thrones
-  #   the_simpsons
-  #   spongebob_squarepants
-  #   super_smash_bros_ultimate
-  #   halo_combat_evolved
+  # Used only when random_goal_article is false. Valid values:
+  #   minecraft | the_legend_of_zelda | dark_souls | elden_ring | super_mario_bros | pokemon_red_and_blue | chess | catan
+  #   the_dark_knight | star_wars_film | lord_of_the_rings_fellowship | the_matrix | avatar_the_last_airbender | breaking_bad | stranger_things
+  #   game_of_thrones | the_simpsons | spongebob_squarepants | super_smash_bros_ultimate | halo_combat_evolved
   goal_article_preset: dark_souls
 
-  # --- Sanities (off by default) ---
+  # =============================================================================
+  # Progressive tools — Back & target rerolls
+  # =============================================================================
+  # Each system has a starting value plus Progressive items in the pool.
+  # back_depth_*: browser Back depth (per round; 0 = locked until Progressive Back).
+  # target_reroll_*: target page rerolls available each round.
+  # Ranges are 0–5 for all four options.
+  back_depth_start: 0
+  back_depth_unlocks: 3
+  target_rerolls_start: 1
+  target_reroll_unlocks: 2
 
-  # If true, Ctrl+F search is limited to letters you have unlocked.
-  searchsanity: false
+  # =============================================================================
+  # Letter-pair bingo
+  # =============================================================================
+  # Stamp letter pairs from page titles; row / col / diag / full checks per board.
+  # Grid size N (3–20); default 5 → weighted sample from that wiki’s Scrabble letter pairs.
+  # Letter pairs use Scrabble alphabets (e.g. pl keeps Ą/Ć/Ł…; fr folds é→E; de keeps Ä/Ö/Ü, ß→SS).
+  # bingo_cards_start / bingo_card_unlocks: 0–20 each (combined boards capped at 40).
+  # bingo_stamp_unlocks: Progressive Bingo Stamp items (each stamps one empty cell on one board, once per seed).
+  # Bingo on with start 0 and unlocks 0 is rejected (no boards).
+  toggle_bingo_letterpairs: true
+  bingo_letterpairs_grid: 5
+  bingo_cards_start: 1
+  bingo_card_unlocks: 2
+  bingo_stamp_unlocks: 2
 
-  # Starting search letters when searchsanity is on.
-  # Valid values: none | all_vowels | etaoi | raise
-  search_starting_letters: none
-
-  # If true, scrolling starts slow and needs Scroll Speed upgrades.
-  scrollsanity: false
-
-  # --- Display Lenses (off by default = normal Wikipedia look) ---
-  # When true, that page element stays hidden until its Lens item is received.
-  # Warning: enabling these (even individually) can make progression much harder,
-  # and stacking several can increase difficulty exponentially.
-  #
-  # Hide wiki tables until Table Lens.
-  randomize_tables: false
-
-  # Hide images/galleries until Picture Lens.
-  randomize_pictures: false
-
-  # Hide the lead/intro paragraphs until Lead Lens.
-  randomize_incipit: false
-
-  # Hide infoboxes until Infobox Lens.
-  randomize_infoboxes: false
-
-  # Hide the table of contents until Contents Lens.
-  randomize_toc: false
-
-  # Hide navboxes and See also until Navbox Lens.
-  randomize_navboxes: false
-
-  # Hide hatnotes until Hatnote Lens.
-  randomize_hatnotes: false
-
-  # Hide footnotes/references until Reference Lens.
-  randomize_references: false
-
-  # --- Article categories ---
-  # Turn categories on/off to shape which articles can appear in rounds.
-
+  # =============================================================================
+  # Wikipedia language & article pool
+  # =============================================================================
+  # wikipedia_language: native titles + page fetches for this slot.
+  #   Valid: en | fr | de | es | it | pt | nl | sv | pl
+  wikipedia_language: en
+  # Categories use multi-tag OR: a title is kept if any of its tags intersects
+  # an enabled category. Turn categories on/off to shape the round article pool.
   include_video_games: true
-  include_board_games: true
   include_movies: true
   include_tv_shows: true
   include_anime_manga: true
@@ -108,57 +83,59 @@ Wikipelago:
   include_art_literature: true
   include_mythology_folklore: true
   include_music: true
+  include_politics: true
+  include_famous_people: true
+  include_animals: true
+  include_biology_medicine: true
+  include_miscellaneous: true
+  # When false, sensitive pages (porn, terrorism, violent/sexual crime, illicit
+  # drugs) are excluded even if they match an enabled category.
+  include_sensitive_pages: false
 
-  # --- Deaths / DeathLink / bombs (off by default = peaceful) ---
+  # =============================================================================
+  # Sanities (off by default)
+  # =============================================================================
+  # searchsanity: Ctrl+F limited to unlocked Search Letter items.
+  # search_starting_letters: starting letters when searchsanity is on
+  #   (none | all_vowels | etaoi | raise).
+  # scrollsanity: scrolling starts slow; needs Progressive Scroll Speed upgrades.
+  searchsanity: false
+  search_starting_letters: none
+  scrollsanity: false
 
-  # Local loop-death: revisiting a page already visited this round jumps to a random article.
+  # =============================================================================
+  # Display lenses (off by default = normal Wikipedia look)
+  # =============================================================================
+  # When true, that page element stays hidden until its Lens item is received.
+  # Enabling these (even individually) can make progression MUCH harder; stacking
+  # several can increase difficulty exponentially or make progression impossible.
+  randomize_tables: false
+  randomize_pictures: false
+  randomize_incipit: false
+  randomize_infoboxes: false
+  randomize_toc: false
+  randomize_navboxes: false
+  randomize_hatnotes: false
+  randomize_references: false
+
+  # =============================================================================
+  # Deaths, DeathLink & link bombs (off by default = peaceful)
+  # =============================================================================
+  # deaths: revisiting a page already visited this round = death → random jump (local).
+  # death_link: full Archipelago DeathLink (send and receive).
+  # link_bombs: hidden bomb links on pages (requires deaths); hitting one = death.
+  # link_bomb_density: few | more | insane (only when link_bombs is on).
   deaths: false
-
-  # Full Archipelago DeathLink (send and receive).
   death_link: false
-
-  # Hidden bomb links on each page (requires deaths). Hitting one causes a death.
   link_bombs: false
-
-  # Bomb density when link_bombs is on: few | more | insane
   link_bomb_density: few
 
-  # --- Traps ---
-
-  # Number of Foggy Links / Missing Links trap items (mandatory pool load; can fail generation if too high).
+  # =============================================================================
+  # Traps
+  # =============================================================================
+  # trap_count: Foggy Links / Missing Links items in the pool (0–99)
+  # trap_type: both | only_foggy_links | only_missing_links
+  # trap_link: share traps with other Trap Link players (independent of count).
   trap_count: 0
-
-  # Which traps to generate / accept from Trap Link: both | only_foggy_links | only_missing_links
   trap_type: both
-
-  # Share traps with other Trap Link players (independent of trap_count).
   trap_link: false
-
-  # --- Letter-pair bingo (on by default) ---
-
-  # Bingo board(s): stamp letter pairs from page titles; row/col/diag/full checks per board.
-  toggle_bingo_letterpairs: true
-
-  # Grid size N (3–26). Default 5 → 13 checks per board. N=26 is the full sorted A–Z×A–Z board.
-  bingo_letterpairs_grid: 5
-
-  # Boards unlocked from the start (0–5). 0 = all boards locked behind Progressive Bingo Card.
-  # Bingo on with start 0 and unlocks 0 is rejected (no boards).
-  bingo_cards_start: 1
-
-  # Progressive Bingo Card items in the pool (0–5). Default 2 → three boards total with start 1.
-  bingo_card_unlocks: 2
-
-  # --- Progressive Back / Reroll ---
-
-  # Starting Back depth per round (0–5). 0 = Back locked until Progressive Back items are found.
-  back_depth_start: 0
-
-  # Progressive Back items in the pool (0–5). Each raises per-round Back depth by 1.
-  back_depth_unlocks: 3
-
-  # Starting target rerolls available each round (0–5).
-  target_rerolls_start: 1
-
-  # Progressive Reroll items in the pool (0–5). Each raises per-round reroll max by 1.
-  target_reroll_unlocks: 2

@@ -11,7 +11,7 @@ from .Items import TRAP_ITEM_NAMES, item_table
 from .Locations import MAX_BINGO_BOARDS, location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
-from .entertainment_articles import ENTERTAINMENT_ARTICLE_POOL
+from .article_pool import SUPPORTED_LANGS, load_article_pool
 from .letter_pairs import (
     bingo_location_count,
     bingo_location_names,
@@ -19,9 +19,16 @@ from .letter_pairs import (
     build_letter_pair_bingo_board,
 )
 
-# Explicit category tags from the curated pool (preferred over keyword inference).
-ARTICLE_TOPIC_BY_TITLE: dict[str, str] = {
-    title: topic for title, topic in ENTERTAINMENT_ARTICLE_POOL
+WIKIPEDIA_LANG_BY_OPTION: dict[int, str] = {
+    0: "en",
+    1: "fr",
+    2: "de",
+    3: "es",
+    4: "it",
+    5: "pt",
+    6: "nl",
+    7: "sv",
+    8: "pl",
 }
 
 BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
@@ -31,16 +38,7 @@ BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
     "revolver",
     "machine gun",
     "submachine gun",
-    # Avoid bare "gun"/"song"/"album" — false-positives and music pages.
-    # Music (song)/(album)/(single) pages are allowed; other junk still blocked below.
     "discography",
-    "president",
-    "prime minister",
-    "king of",
-    "queen of",
-    "emperor",
-    "sultan",
-    "chancellor",
     "chemistry",
     "chemical",
     "compound",
@@ -62,31 +60,12 @@ BANNED_TITLE_SUFFIXES: tuple[str, ...] = (
     "(computer)",
 )
 
-BANNED_EXACT_TITLES: set[str] = {
-    "George Washington",
-    "Abraham Lincoln",
-    "Theodore Roosevelt",
-    "Franklin D. Roosevelt",
-    "John F. Kennedy",
-    "Winston Churchill",
-    "Napoleon",
-    "Julius Caesar",
-    "Cleopatra",
-    "Genghis Khan",
-    "Alexander the Great",
-}
-
 TOPIC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "video_games": (
         "video game", "minecraft", "fortnite", "roblox", "legend of zelda", "Pokémon", "dark souls",
         "elden ring", "halo", "mario", "baldur's gate", "stardew valley", "hollow knight", "celeste",
         "among us", "tetris", "call of duty", "resident evil", "final fantasy", "metroid", "portal",
         "god of war", "mass effect", "bioshock", "terraria", "balatro", "slay the spire",
-    ),
-    "board_games": (
-        "board game", "card game", "chess", "checkers", "catan", "monopoly", "mahjong", "scrabble",
-        "go (game)", "dungeons & dragons", "risk (game)", "ticket to ride (board game)",
-        "carcassonne (board game)",
     ),
     "movies": (
         "(film)", " film", "movie", "star wars", "the dark knight", "the matrix", "lord of the rings",
@@ -168,10 +147,10 @@ EXACT_TITLE_TOPICS: dict[str, str] = {
     "one piece": "anime_manga",
     "death note": "anime_manga",
     "attack on titan": "anime_manga",
-    "chess": "board_games",
-    "checkers": "board_games",
-    "catan": "board_games",
-    "go": "board_games",
+    "chess": "miscellaneous",
+    "checkers": "miscellaneous",
+    "catan": "miscellaneous",
+    "go": "miscellaneous",
     "minecraft": "video_games",
     "fortnite": "video_games",
     "roblox": "video_games",
@@ -227,8 +206,8 @@ def _preset_goal_topic(option_value: int) -> str:
         3: "video_games",
         4: "video_games",
         5: "video_games",
-        6: "board_games",
-        7: "board_games",
+        6: "miscellaneous",
+        7: "miscellaneous",
         8: "movies",
         9: "movies",
         10: "movies",
@@ -294,6 +273,11 @@ class WikipelagoWorld(World):
             return 0
         return max(0, int(self.options.bingo_card_unlocks.value))
 
+    def _bingo_stamp_unlocks(self) -> int:
+        if not self._bingo_enabled():
+            return 0
+        return max(0, int(self.options.bingo_stamp_unlocks.value))
+
     def _bingo_board_count(self) -> int:
         if not self._bingo_enabled():
             return 0
@@ -332,9 +316,7 @@ class WikipelagoWorld(World):
     @staticmethod
     def _looks_common_knowledge(title: str) -> bool:
         lowered = title.lower().strip()
-        if title in BANNED_EXACT_TITLES:
-            return False
-        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ", "category:", "template:", "help:", "portal:")):
+        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ", "category:", "template:", "help:", "portal:", "wikipedia:")):
             return False
         if any(keyword in lowered for keyword in BANNED_TITLE_KEYWORDS):
             return False
@@ -342,26 +324,19 @@ class WikipelagoWorld(World):
             return False
         if any(ch in title for ch in ('"', "$", "%", "@", "#")):
             return False
-        # Colons are normal in Wikipedia titles (e.g. "The Elder Scrolls V: Skyrim").
-        # Namespace-style titles are already rejected by the startswith checks above.
-        if title.count(",") > 1:
+        if title.count(",") > 2:
             return False
-        if re.search(r"^\d", title):
-            return False
-        # Allow music disambiguators; still block pure disambiguation/magazine/journal pages.
         if re.search(r"\(disambiguation|magazine|journal\)$", lowered):
             return False
-        if len(title.split()) > 6:
-            return False
-        if re.search(r"[A-Za-z].*\d.*\d.*\d", title):
+        if len(title.split()) > 12:
             return False
         return True
 
+    def _wikipedia_language(self) -> str:
+        return WIKIPEDIA_LANG_BY_OPTION.get(int(self.options.wikipedia_language.value), "en")
+
     def _infer_topic(self, title: str) -> str | None:
-        # Prefer explicit pool tags; fall back to heuristics for presets.
-        tagged = ARTICLE_TOPIC_BY_TITLE.get(title)
-        if tagged:
-            return tagged
+        """Fallback topic for goal presets not found in the annotated pool."""
         lowered = title.lower().strip()
         exact_match = EXACT_TITLE_TOPICS.get(lowered)
         if exact_match:
@@ -372,21 +347,17 @@ class WikipelagoWorld(World):
             return "tv_shows"
         if "(video game)" in lowered:
             return "video_games"
-        if "(board game)" in lowered:
-            return "board_games"
         if re.search(r"\((song|album|single|band|musician|rapper|singer)\)$", lowered):
             return "music"
         for topic, keywords in TOPIC_KEYWORDS.items():
             if any(keyword in lowered for keyword in keywords):
                 return topic
-        return None
+        return "miscellaneous"
 
     def _selected_topics(self) -> set[str]:
         selected: set[str] = set()
         if self.options.include_video_games.value:
             selected.add("video_games")
-        if self.options.include_board_games.value:
-            selected.add("board_games")
         if self.options.include_movies.value:
             selected.add("movies")
         if self.options.include_tv_shows.value:
@@ -411,10 +382,25 @@ class WikipelagoWorld(World):
             selected.add("mythology_folklore")
         if self.options.include_music.value:
             selected.add("music")
+        if self.options.include_politics.value:
+            selected.add("politics")
+        if self.options.include_famous_people.value:
+            selected.add("famous_people")
+        if self.options.include_miscellaneous.value:
+            selected.add("miscellaneous")
+        if self.options.include_animals.value:
+            selected.add("animals")
+        if self.options.include_biology_medicine.value:
+            selected.add("biology_medicine")
         return selected
 
-    def _filter_pool_by_topics(self, pool: list[str], selected_topics: set[str]) -> list[str]:
-        return [title for title in pool if self._infer_topic(title) in selected_topics]
+    def _entry_matches(self, entry: dict, selected_topics: set[str], include_sensitive: bool) -> bool:
+        tags = set(entry.get("tags") or ())
+        if not (tags & selected_topics):
+            return False
+        if entry.get("sensitive") and not include_sensitive:
+            return False
+        return True
 
     def _search_starting_letters(self) -> set[str]:
         return set(SEARCH_STARTING_LETTERS.get(self.options.search_starting_letters.value, set()))
@@ -445,17 +431,23 @@ class WikipelagoWorld(World):
         if not selected_topics:
             raise Exception(
                 "Wikipelago requires at least one enabled category. "
-                "Enable one or more category toggles in your YAML (games/movies/shows/anime/sports/science/tech/history/geography/food/art/mythology/music)."
+                "Enable one or more include_* toggles in your YAML."
             )
 
-        pool = list(dict.fromkeys(title for title, _topic in ENTERTAINMENT_ARTICLE_POOL))
+        lang = self._wikipedia_language()
+        if lang not in SUPPORTED_LANGS:
+            raise Exception(f"Wikipelago unsupported wikipedia_language: {lang}")
+        include_sensitive = bool(self.options.include_sensitive_pages.value)
+        article_entries = load_article_pool(lang)
         filtered_pool = [
-            title for title in pool
-            if self._is_reasonable_title(title)
-            and self._looks_common_knowledge(title)
-            and self._infer_topic(title) is not None
+            entry["title"]
+            for entry in article_entries
+            if self._is_reasonable_title(entry["title"])
+            and self._looks_common_knowledge(entry["title"])
+            and self._entry_matches(entry, selected_topics, include_sensitive)
         ]
-        filtered_pool = self._filter_pool_by_topics(filtered_pool, selected_topics)
+        # Preserve order, drop dupes.
+        filtered_pool = list(dict.fromkeys(filtered_pool))
 
         # Unique titles: opening start + one target per round + separate Grand Goal article.
         needed_total = max(3, round_count + 2)
@@ -512,8 +504,9 @@ class WikipelagoWorld(World):
         if self._bingo_enabled():
             grid_size = self._bingo_grid_size()
             board_count = self._bingo_board_count()
+            wiki_lang = self._wikipedia_language()
             self.bingo_letterpairs_boards = [
-                build_letter_pair_bingo_board(self.random, grid_size)
+                build_letter_pair_bingo_board(self.random, grid_size, wiki_lang)
                 for _ in range(board_count)
             ]
         else:
@@ -535,6 +528,8 @@ class WikipelagoWorld(World):
         bingo_count = self._bingo_check_count()
         free_locations = round_count + bingo_count
         required_fragments = min(self.options.required_fragments.value, round_count)
+        additional_fragments = max(0, int(self.options.additional_fragments_in_pool.value))
+        fragment_pool_count = required_fragments + additional_fragments
         start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
         per_unlock = max(1, self.options.rounds_per_unlock.value)
         early_open = start_unlocked
@@ -546,13 +541,15 @@ class WikipelagoWorld(World):
         back_unlocks = max(0, int(self.options.back_depth_unlocks.value))
         reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
         bingo_card_unlocks = self._bingo_card_unlocks()
+        bingo_stamp_unlocks = self._bingo_stamp_unlocks()
 
         mandatory_items = (
-            required_fragments
+            fragment_pool_count
             + 2  # Wiki Compass + Ctrl+F Lens
             + back_unlocks
             + reroll_unlocks
             + bingo_card_unlocks
+            + bingo_stamp_unlocks
             + round_access_count
             + search_letters_needed
             + scroll_upgrades_needed
@@ -564,12 +561,13 @@ class WikipelagoWorld(World):
                 "Wikipelago item math invalid: required progression items exceed free locations. "
                 f"mandatory={mandatory_items}, free_locations={free_locations} "
                 f"(rounds={round_count}, bingo={bingo_count}). "
-                "Lower required_fragments, trap_count, unlock counts, reduce sanity/display unlock load, "
-                "or lower round access pressure (increase start_rounds_unlocked / rounds_per_unlock)."
+                "Lower required_fragments, additional_fragments_in_pool, trap_count, unlock counts, "
+                "reduce sanity/display unlock load, or lower round access pressure "
+                "(increase start_rounds_unlocked / rounds_per_unlock)."
             )
 
         pool: list[WikipelagoItem] = []
-        for _ in range(required_fragments):
+        for _ in range(fragment_pool_count):
             pool.append(self.create_item("Knowledge Fragment"))
         for _ in range(back_unlocks):
             pool.append(self.create_item("Progressive Back"))
@@ -579,6 +577,8 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Progressive Reroll"))
         for _ in range(bingo_card_unlocks):
             pool.append(self.create_item("Progressive Bingo Card"))
+        for _ in range(bingo_stamp_unlocks):
+            pool.append(self.create_item("Progressive Bingo Stamp"))
         if self.options.scrollsanity.value:
             for _ in range(SCROLL_SPEED_UPGRADES):
                 pool.append(self.create_item("Progressive Scroll Speed"))
@@ -669,6 +669,7 @@ class WikipelagoWorld(World):
         bingo_boards = list(getattr(self, "bingo_letterpairs_boards", []) or [])
         bingo_cards_start = self._bingo_cards_start()
         bingo_card_unlocks = self._bingo_card_unlocks()
+        bingo_stamp_unlocks = self._bingo_stamp_unlocks()
         back_depth_start = max(0, int(self.options.back_depth_start.value))
         back_depth_unlocks = max(0, int(self.options.back_depth_unlocks.value))
         target_rerolls_start = max(0, int(self.options.target_rerolls_start.value))
@@ -687,6 +688,7 @@ class WikipelagoWorld(World):
             "required_fragments": required_fragments,
             "start_rounds_unlocked": start_unlocked,
             "rounds_per_unlock": per_unlock,
+            "wikipedia_language": self._wikipedia_language(),
             "goal_article": self.goal_article,
             "round_pairs": self.round_pairs,
             "reroll_pool": list(getattr(self, "reroll_pool", [])),
@@ -714,6 +716,7 @@ class WikipelagoWorld(World):
             "bingo_letterpairs_boards": bingo_boards if bingo_enabled else [],
             "bingo_cards_start": bingo_cards_start if bingo_enabled else 0,
             "bingo_card_unlocks": bingo_card_unlocks if bingo_enabled else 0,
+            "bingo_stamp_unlocks": bingo_stamp_unlocks if bingo_enabled else 0,
             "back_depth_start": back_depth_start,
             "back_depth_unlocks": back_depth_unlocks,
             "target_rerolls_start": target_rerolls_start,

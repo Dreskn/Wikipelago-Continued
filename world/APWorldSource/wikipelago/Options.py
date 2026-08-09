@@ -4,33 +4,40 @@ from Options import Choice, PerGameCommonOptions, Range, Toggle
 
 
 class CheckCount(Range):
-    """Number of Start→Target rounds. Hard-capped by current article-pool size."""
+    """Number of Start→Target rounds. Generation still fails if the enabled article pool is too small."""
     display_name = "Round Count"
     range_start = 10
-    # Generation needs ~2 unique titles per round (strict no-repeat).
-    # With all categories enabled the usable pool supports at most this many rounds.
-    range_end = 793
-    default = 25
+    range_end = 999
+    default = 40
 
 
 class RequiredFragments(Range):
+    """Knowledge Fragments needed to reveal and clear the Grand Goal."""
     display_name = "Required Fragments"
     range_start = 1
-    range_end = 793
-    default = 5
+    range_end = 200
+    default = 7
+
+
+class AdditionalFragmentsInPool(Range):
+    """Extra Knowledge Fragments placed in the item pool beyond required_fragments (goal still needs only the required count)."""
+    display_name = "Additional Fragments In Pool"
+    range_start = 0
+    range_end = 200
+    default = 2
 
 
 class StartRoundsUnlocked(Range):
     display_name = "Start Rounds Unlocked"
     range_start = 1
-    range_end = 100
+    range_end = 999
     default = 10
 
 
 class RoundsPerUnlock(Range):
     display_name = "Rounds Per Round Access"
     range_start = 1
-    range_end = 25
+    range_end = 999
     default = 5
 
 
@@ -107,13 +114,23 @@ class SearchStartingLetters(Choice):
     default = 0
 
 
+class WikipediaLanguage(Choice):
+    """Wikipedia language edition for article titles and page fetches (one per slot)."""
+    display_name = "Wikipedia Language"
+    option_en = 0
+    option_fr = 1
+    option_de = 2
+    option_es = 3
+    option_it = 4
+    option_pt = 5
+    option_nl = 6
+    option_sv = 7
+    option_pl = 8
+    default = 0
+
+
 class IncludeVideoGames(Toggle):
     display_name = "Include Video Games"
-    default = 1
-
-
-class IncludeBoardGames(Toggle):
-    display_name = "Include Board Games"
     default = 1
 
 
@@ -177,7 +194,44 @@ class IncludeMusic(Toggle):
     default = 1
 
 
+class IncludePolitics(Toggle):
+    display_name = "Include Politics"
+    default = 1
+
+
+class IncludeFamousPeople(Toggle):
+    display_name = "Include Famous People"
+    default = 1
+
+
+class IncludeMiscellaneous(Toggle):
+    """Catch-all pages that matched no other category (or have no Wikidata entity)."""
+    display_name = "Include Miscellaneous"
+    default = 1
+
+
+class IncludeAnimals(Toggle):
+    display_name = "Include Animals"
+    default = 1
+
+
+class IncludeBiologyMedicine(Toggle):
+    display_name = "Include Biology and Medicine"
+    default = 1
+
+
+class IncludeSensitivePages(Toggle):
+    """
+    When off (default), pages flagged sensitive (porn, terrorism, violent/sexual crime,
+    illicit drugs) are excluded even if they match an enabled category.
+    When on, those pages may appear if they also match an enabled category.
+    """
+    display_name = "Include Sensitive Pages"
+    default = 0
+
+
 class GoalArticlePreset(Choice):
+    """Deprecated: prefer random_goal_article. Kept for existing YAMLs."""
     display_name = "Goal Article Preset (used when random goal is off)"
     option_minecraft = 0
     option_the_legend_of_zelda = 1
@@ -233,7 +287,7 @@ class TrapCount(Range):
     """Number of trap items (Foggy Links / Missing Links) added to the pool before Footnote filler."""
     display_name = "Trap Count"
     range_start = 0
-    range_end = 793
+    range_end = 99
     default = 0
 
 
@@ -259,10 +313,10 @@ class ToggleBingoLetterpairs(Toggle):
 
 
 class BingoLetterpairsGrid(Range):
-    """Bingo grid size N (N×N cells). N=26 is the full sorted A–Z×A–Z board; smaller sizes are weighted samples."""
+    """Bingo grid size N (N×N cells). Weighted sample from the slot language's Scrabble letter-pair frequencies (3-20)."""
     display_name = "Letter Pair Bingo Grid Size"
     range_start = 3
-    range_end = 26
+    range_end = 20
     default = 5
 
 
@@ -270,7 +324,7 @@ class BingoCardsStart(Range):
     """How many letter-pair bingo boards are unlocked from the start (0 = all boards locked behind Progressive Bingo Card)."""
     display_name = "Bingo Cards Start"
     range_start = 0
-    range_end = 5
+    range_end = 20
     default = 1
 
 
@@ -278,7 +332,15 @@ class BingoCardUnlocks(Range):
     """Number of Progressive Bingo Card items in the pool (extra boards beyond Bingo Cards Start)."""
     display_name = "Bingo Card Unlocks"
     range_start = 0
-    range_end = 5
+    range_end = 20
+    default = 2
+
+
+class BingoStampUnlocks(Range):
+    """Number of Progressive Bingo Stamp items in the pool (each stamps one empty cell on one unlocked board, once per game)."""
+    display_name = "Bingo Stamp Unlocks"
+    range_start = 0
+    range_end = 20
     default = 2
 
 
@@ -318,6 +380,7 @@ class TargetRerollUnlocks(Range):
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
     required_fragments: RequiredFragments
+    additional_fragments_in_pool: AdditionalFragmentsInPool
     start_rounds_unlocked: StartRoundsUnlocked
     rounds_per_unlock: RoundsPerUnlock
     random_goal_article: RandomGoalArticle
@@ -332,8 +395,8 @@ class WikipelagoOptions(PerGameCommonOptions):
     randomize_hatnotes: RandomizeHatnotes
     randomize_references: RandomizeReferences
     search_starting_letters: SearchStartingLetters
+    wikipedia_language: WikipediaLanguage
     include_video_games: IncludeVideoGames
-    include_board_games: IncludeBoardGames
     include_movies: IncludeMovies
     include_tv_shows: IncludeTVShows
     include_anime_manga: IncludeAnimeManga
@@ -346,6 +409,12 @@ class WikipelagoOptions(PerGameCommonOptions):
     include_art_literature: IncludeArtLiterature
     include_mythology_folklore: IncludeMythologyFolklore
     include_music: IncludeMusic
+    include_politics: IncludePolitics
+    include_famous_people: IncludeFamousPeople
+    include_miscellaneous: IncludeMiscellaneous
+    include_animals: IncludeAnimals
+    include_biology_medicine: IncludeBiologyMedicine
+    include_sensitive_pages: IncludeSensitivePages
     goal_article_preset: GoalArticlePreset
     deaths: Deaths
     death_link: DeathLink
@@ -358,6 +427,7 @@ class WikipelagoOptions(PerGameCommonOptions):
     bingo_letterpairs_grid: BingoLetterpairsGrid
     bingo_cards_start: BingoCardsStart
     bingo_card_unlocks: BingoCardUnlocks
+    bingo_stamp_unlocks: BingoStampUnlocks
     back_depth_start: BackDepthStart
     back_depth_unlocks: BackDepthUnlocks
     target_rerolls_start: TargetRerollsStart

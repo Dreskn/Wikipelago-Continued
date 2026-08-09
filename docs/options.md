@@ -13,8 +13,9 @@ After installing the apworld, you can generate a fresh template from the Archipe
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `check_count` | `25` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `5` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
+| `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
+| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
+| `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
 | `progression_balancing` | `50` | Standard Archipelago balancing (0–99). Higher tends to place useful progression a bit earlier. |
@@ -31,7 +32,7 @@ Browser back is limited per round by `back_depth_start` (default **0**) plus **P
 
 ### Letter-pair bingo
 
-When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid`. Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles.
+When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles using each wiki’s **Scrabble letter set** (distinct tiles stay distinct; other accents fold to base Latin; German `ß` → `SS`). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items — each stamps one empty cell on one unlocked board for the whole seed (not per round), and completing a line still sends the check.
 
 Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
 
@@ -81,14 +82,19 @@ When **true**, that part stays hidden until you receive the matching **Lens** it
 
 ---
 
+## Wikipedia language
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `wikipedia_language` | `en` | One of `en`, `fr`, `de`, `es`, `it`, `pt`, `nl`, `sv`, `pl`. Native titles for that wiki; bridge/web fetch `{lang}.wikipedia.org`. |
+
 ## Article categories
 
-Each `include_*` toggle shapes which articles can appear in rounds and (when random) the Grand Goal pool.
+Each `include_*` toggle shapes which articles can appear in rounds and (when random) the Grand Goal pool. Titles are **multi-tag**: kept if **any** tag intersects an enabled category (**OR**).
 
 | Option | Default |
 | --- | --- |
 | `include_video_games` | `true` |
-| `include_board_games` | `true` |
 | `include_movies` | `true` |
 | `include_tv_shows` | `true` |
 | `include_anime_manga` | `true` |
@@ -101,8 +107,19 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `include_art_literature` | `true` |
 | `include_mythology_folklore` | `true` |
 | `include_music` | `true` |
+| `include_politics` | `true` |
+| `include_famous_people` | `true` |
+| `include_animals` | `true` |
+| `include_biology_medicine` | `true` |
+| `include_miscellaneous` | `true` |
 
-Turn categories off to shrink or theme the pool (for example movies + TV only). Leave at least one category enabled.
+`board_games` was removed in 0.6. Leave at least one category enabled.
+
+## Sensitive pages
+
+| Option | Default | Notes |
+| --- | --- | --- |
+| `include_sensitive_pages` | `false` | Not a category. When off, pages flagged sensitive (porn, terrorism, violent/sexual crime, illicit drugs) are excluded even if they match an enabled category. When on, they may appear if they also match an enabled category. |
 
 ---
 
