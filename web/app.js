@@ -3576,11 +3576,20 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+function showMigrateBannerIfNeeded() {
+  const banner = document.getElementById("migrateBanner");
+  if (!banner) return;
+  if (window.location.hostname.endsWith("onrender.com")) {
+    banner.classList.remove("hidden");
+  }
+}
+
 ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
 bindBingoOverlayUi();
 bindStuckHelper();
+showMigrateBannerIfNeeded();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;
   const rerenderTracks = () => {

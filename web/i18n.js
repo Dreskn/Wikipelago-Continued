@@ -19,6 +19,7 @@
   const STRINGS = {
     en: {
       "meta.description": "Play Wikipedia racing rounds connected to Archipelago.",
+      "migrate.renderBanner": "This Render URL is outdated. Open the game at <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a> instead.",
       "badge.offline": "Offline",
       "badge.connected": "Connected",
       "badge.practice": "Practice",
@@ -198,6 +199,7 @@
   STRINGS.fr = {
     ...STRINGS.en,
     "meta.description": "Jouez à des courses Wikipedia connectées à Archipelago.",
+    "migrate.renderBanner": "Cette adresse Render n'est plus à jour. Ouvrez le jeu sur <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Hors ligne",
     "badge.connected": "Connecté",
     "badge.practice": "Entraînement",
@@ -350,6 +352,7 @@
   STRINGS.de = {
     ...STRINGS.en,
     "meta.description": "Spiele Wikipedia-Rennrunden verbunden mit Archipelago.",
+    "migrate.renderBanner": "Diese Render-Adresse ist veraltet. Öffne das Spiel unter <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Verbunden",
     "badge.practice": "Übung",
@@ -502,6 +505,7 @@
   STRINGS.es = {
     ...STRINGS.en,
     "meta.description": "Juega rondas de carreras en Wikipedia conectadas a Archipelago.",
+    "migrate.renderBanner": "Esta dirección de Render ya no está actualizada. Abre el juego en <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Desconectado",
     "badge.connected": "Conectado",
     "badge.practice": "Práctica",
@@ -654,6 +658,7 @@
   STRINGS.it = {
     ...STRINGS.en,
     "meta.description": "Gioca a round di corsa su Wikipedia collegati ad Archipelago.",
+    "migrate.renderBanner": "Questo indirizzo Render non è più aggiornato. Apri il gioco su <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Connesso",
     "badge.practice": "Allenamento",
@@ -803,6 +808,7 @@
   STRINGS.pt = {
     ...STRINGS.en,
     "meta.description": "Jogue corridas na Wikipedia ligadas ao Archipelago.",
+    "migrate.renderBanner": "Este endereço Render está desatualizado. Abra o jogo em <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Conectado",
     "badge.practice": "Prática",
@@ -952,6 +958,7 @@
   STRINGS.nl = {
     ...STRINGS.en,
     "meta.description": "Speel Wikipedia-race rondes verbonden met Archipelago.",
+    "migrate.renderBanner": "Dit Render-adres is verouderd. Open het spel op <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Verbonden",
     "badge.practice": "Oefenen",
@@ -1101,6 +1108,7 @@
   STRINGS.sv = {
     ...STRINGS.en,
     "meta.description": "Spela Wikipedia-racingrundor kopplade till Archipelago.",
+    "migrate.renderBanner": "Den här Render-adressen är inaktuell. Öppna spelet på <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Ansluten",
     "badge.practice": "Övning",
@@ -1250,6 +1258,7 @@
   STRINGS.pl = {
     ...STRINGS.en,
     "meta.description": "Graj w wyścigi na Wikipedii połączone z Archipelago.",
+    "migrate.renderBanner": "Ten adres Render jest nieaktualny. Otwórz grę na <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Połączono",
     "badge.practice": "Trening",
