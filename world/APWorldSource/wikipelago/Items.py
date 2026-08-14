@@ -33,6 +33,7 @@ item_table: dict[str, WikipelagoItemData] = {
     "Progressive Bingo Stamp": WikipelagoItemData(ITEM_OFFSET + 19, ItemClassification.useful),
     "Foggy Links": WikipelagoItemData(ITEM_OFFSET + 46, ItemClassification.trap),
     "Missing Links": WikipelagoItemData(ITEM_OFFSET + 47, ItemClassification.trap),
+    "Branch Key": WikipelagoItemData(ITEM_OFFSET + 48, ItemClassification.progression),
 }
 
 for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ", start=20):

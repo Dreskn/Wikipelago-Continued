@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.04.02";
+const APP_VERSION = "2026.08.14.01";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -130,6 +130,7 @@ const TOOL_ICON_SVGS = {
   reroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.1A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>',
   search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
   compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
+  key: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4A5.5 5.5 0 0 0 9 9.5c0 .7.14 1.37.39 2L3 17.9V21h3.1l1.2-1.2 1.2 1.2 2.1-2.1-1.2-1.2 1.2-1.2 1.2 1.2 1.4-1.4-.9-.9 5.1-5.1c.63.25 1.3.39 2 .39A5.5 5.5 0 0 0 14.5 4zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>',
   scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
   searchsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10v2H4V6zm0 5h16v2H4v-2zm0 5h12v2H4v-2z"/></svg>',
   scrollsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
@@ -189,6 +190,10 @@ const state = {
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
+  roundVisitPath: "",
+  journeyFilter: "all",
+  journeyOpen: false,
+  announcedJourneyCredits: false,
   rerollBusy: false,
   targetSummaryCache: new Map(),
   targetSummaryTitle: "",
@@ -253,6 +258,16 @@ const el = {
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
+  journeyBtn: document.getElementById("journeyBtn"),
+  pathSwitcher: document.getElementById("pathSwitcher"),
+  crossroadBadge: document.getElementById("crossroadBadge"),
+  journeyOverlay: document.getElementById("journeyOverlay"),
+  journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
+  journeyOverlayTitle: document.getElementById("journeyOverlayTitle"),
+  journeyOverlayClose: document.getElementById("journeyOverlayClose"),
+  journeyFilter: document.getElementById("journeyFilter"),
+  journeyTimeline: document.getElementById("journeyTimeline"),
+  journeyHeatmap: document.getElementById("journeyHeatmap"),
   fragmentsBlock: document.getElementById("fragmentsBlock"),
   fragmentsText: document.getElementById("fragmentsText"),
   fragmentsTrack: document.getElementById("fragmentsTrack"),
@@ -728,12 +743,242 @@ function resetRoundVisits(seedTitle = "") {
 }
 
 function syncRoundVisitTracking(status) {
-  const roundNum = Number(status?.round) || 0;
-  if (roundNum !== state.roundVisitRound) {
+  const path = activePathInfo(status);
+  const roundNum = Number(path?.round) || Number(status?.round) || 0;
+  const pathId = String(status?.active_path || "main");
+  if (roundNum !== state.roundVisitRound || pathId !== state.roundVisitPath) {
     state.roundVisitRound = roundNum;
+    state.roundVisitPath = pathId;
     // Seed with this round's start only. currentTitle may still be the previous target.
     resetRoundVisits(status?.current_start || "");
   }
+}
+
+function formatThemeTag(tag) {
+  const raw = String(tag || "").trim();
+  return raw ? raw.replace(/_/g, " ") : "";
+}
+
+function activePathInfo(status) {
+  const paths = Array.isArray(status?.paths) ? status.paths : [];
+  return paths.find((item) => item && item.current) || null;
+}
+
+function pathLabel(path) {
+  if (!path) return t("path.main");
+  if (path.id === "main") return t("path.main");
+  const theme = formatThemeTag(path.theme_tag || path.label || "");
+  return theme || t("path.branch", { theme: path.label || path.id });
+}
+
+function renderPathSwitcher(status) {
+  if (!el.pathSwitcher) return;
+  const paths = Array.isArray(status?.paths) ? status.paths : [];
+  const show = !status?.practice && paths.some((path) => path && path.id && path.id !== "main");
+  el.pathSwitcher.classList.toggle("hidden", !show);
+  if (!show) {
+    el.pathSwitcher.innerHTML = "";
+    return;
+  }
+  el.pathSwitcher.innerHTML = "";
+  for (const path of paths) {
+    if (!path?.id) continue;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "path-chip";
+    btn.classList.toggle("current", Boolean(path.current));
+    btn.classList.toggle("unlocked", Boolean(path.unlocked));
+    btn.classList.toggle("locked", !path.unlocked);
+    btn.disabled = !path.unlocked;
+    const done = Number(path.completed) || 0;
+    const total = Number(path.length) || 0;
+    btn.textContent = `${pathLabel(path)} ${done}/${total}`;
+    btn.title = pathLabel(path);
+    btn.addEventListener("click", () => {
+      if (path.current || !path.unlocked) return;
+      void switchPath(path.id);
+    });
+    el.pathSwitcher.appendChild(btn);
+  }
+}
+
+function renderCrossroadBadge(status) {
+  if (!el.crossroadBadge) return;
+  const info = status?.revealed_crossroad;
+  if (!info || status?.practice) {
+    el.crossroadBadge.classList.add("hidden");
+    el.crossroadBadge.textContent = "";
+    return;
+  }
+  const branch = (Array.isArray(status.paths) ? status.paths : []).find(
+    (path) => path && path.id === `branch:${info.branch_id}`
+  );
+  const theme = formatThemeTag(branch?.theme_tag || branch?.label || "");
+  el.crossroadBadge.classList.remove("hidden");
+  el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
+  if (info.unlocked) {
+    el.crossroadBadge.textContent = t("crossroad.unlocked", { theme: theme || t("path.main") });
+  } else if (Number(status.branch_key_count) > 0) {
+    el.crossroadBadge.textContent = t("crossroad.ready", { theme: theme || t("path.main") });
+  } else {
+    el.crossroadBadge.textContent = t("crossroad.needKey");
+  }
+}
+
+async function switchPath(pathId) {
+  if (!state.sessionId) return;
+  try {
+    const result = await api(`/api/session/${state.sessionId}/switch-path`, "POST", { path: pathId });
+    if (result.status) updateHUD(result.status);
+    const title = result.resume_title || result.status?.current_start || "";
+    if (title) {
+      resetRoundVisits(title);
+      await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }
+  } catch (err) {
+    const message = err?.message || err;
+    if (String(message).toLowerCase().includes("locked")) toast(t("toast.pathLocked"), "warn");
+    else toast(t("toast.pathSwitchFailed", { error: message }), "warn", 6500);
+  }
+}
+
+function journeyKindLabel(kind) {
+  const key = `journey.kind.${kind}`;
+  const label = t(key);
+  return label === key ? kind : label;
+}
+
+function renderJourneyView(payload, filter) {
+  const events = Array.isArray(payload?.events) ? payload.events : [];
+  const paths = Array.isArray(payload?.paths) ? payload.paths : [];
+  const selected = filter || "all";
+  const filtered = selected === "all"
+    ? events
+    : events.filter((event) => String(event?.path || "main") === selected);
+
+  if (el.journeyFilter) {
+    const previous = el.journeyFilter.value || selected;
+    el.journeyFilter.innerHTML = "";
+    const allOpt = document.createElement("option");
+    allOpt.value = "all";
+    allOpt.textContent = t("journey.filterAll");
+    el.journeyFilter.appendChild(allOpt);
+    for (const path of paths) {
+      if (!path?.id) continue;
+      const opt = document.createElement("option");
+      opt.value = path.id;
+      opt.textContent = pathLabel(path);
+      el.journeyFilter.appendChild(opt);
+    }
+    el.journeyFilter.value = [...el.journeyFilter.options].some((opt) => opt.value === previous)
+      ? previous
+      : "all";
+  }
+
+  if (el.journeyTimeline) {
+    el.journeyTimeline.innerHTML = "";
+    if (!filtered.length) {
+      const empty = document.createElement("p");
+      empty.className = "journey-empty";
+      empty.textContent = t("journey.empty");
+      el.journeyTimeline.appendChild(empty);
+    } else {
+      for (const event of filtered) {
+        const li = document.createElement("li");
+        const when = document.createElement("span");
+        const stamp = Number(event?.t) || 0;
+        when.textContent = stamp ? new Date(stamp).toLocaleTimeString() : "";
+        const kind = document.createElement("span");
+        kind.className = "journey-kind";
+        kind.textContent = journeyKindLabel(event?.kind);
+        const title = document.createElement("span");
+        title.textContent = event?.title || "";
+        li.appendChild(when);
+        li.appendChild(kind);
+        li.appendChild(title);
+        el.journeyTimeline.appendChild(li);
+      }
+    }
+  }
+
+  if (el.journeyHeatmap) {
+    el.journeyHeatmap.innerHTML = "";
+    const counts = {};
+    if (selected === "all" && payload?.visit_counts && typeof payload.visit_counts === "object") {
+      for (const [title, count] of Object.entries(payload.visit_counts)) {
+        counts[title] = Number(count) || 0;
+      }
+    } else {
+      for (const event of filtered) {
+        if (event?.kind !== "nav" || !event.title) continue;
+        counts[event.title] = (counts[event.title] || 0) + 1;
+      }
+    }
+    const rows = Object.entries(counts)
+      .filter(([, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 40);
+    if (!rows.length) {
+      const empty = document.createElement("p");
+      empty.className = "journey-empty";
+      empty.textContent = t("journey.empty");
+      el.journeyHeatmap.appendChild(empty);
+    } else {
+      const max = Math.max(...rows.map(([, count]) => count), 1);
+      for (const [title, count] of rows) {
+        const row = document.createElement("div");
+        row.className = "journey-heat-row";
+        const name = document.createElement("span");
+        name.textContent = title;
+        const n = document.createElement("span");
+        n.textContent = String(count);
+        const bar = document.createElement("div");
+        bar.className = "journey-heat-bar";
+        const fill = document.createElement("span");
+        fill.style.width = `${Math.max(8, (count / max) * 100)}%`;
+        bar.appendChild(fill);
+        row.appendChild(name);
+        row.appendChild(n);
+        row.appendChild(bar);
+        el.journeyHeatmap.appendChild(row);
+      }
+    }
+  }
+}
+
+async function openJourneyOverlay({ credits = false } = {}) {
+  if (!el.journeyOverlay || !state.sessionId) return;
+  state.journeyOpen = true;
+  el.journeyOverlay.classList.remove("hidden");
+  if (el.journeyOverlayTitle) {
+    el.journeyOverlayTitle.textContent = credits ? t("journey.credits") : t("journey.title");
+  }
+  try {
+    const payload = await api(`/api/session/${state.sessionId}/journey`);
+    renderJourneyView(payload, state.journeyFilter || "all");
+  } catch {
+    renderJourneyView({ events: [], visit_counts: {}, paths: [] }, "all");
+  }
+}
+
+function closeJourneyOverlay() {
+  state.journeyOpen = false;
+  el.journeyOverlay?.classList.add("hidden");
+}
+
+function bindJourneyOverlayUi() {
+  el.journeyBtn?.addEventListener("click", () => {
+    void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
+  });
+  el.journeyOverlayClose?.addEventListener("click", closeJourneyOverlay);
+  el.journeyOverlayBackdrop?.addEventListener("click", closeJourneyOverlay);
+  el.journeyFilter?.addEventListener("change", () => {
+    state.journeyFilter = el.journeyFilter.value || "all";
+    if (!state.journeyOpen || !state.sessionId) return;
+    void api(`/api/session/${state.sessionId}/journey`)
+      .then((payload) => renderJourneyView(payload, state.journeyFilter))
+      .catch(() => {});
+  });
 }
 
 function titlesMatch(a, b) {
@@ -769,7 +1014,7 @@ async function applyDeathEffect(reasonText) {
     toast(reasonText || t("toast.deathJump"), "warn", 7000);
     const title = await fetchRandomWikiTitle();
     resetRoundVisits(title);
-    await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true, travelKind: "death" });
   } catch {
     // Still leave visits cleared; seed current page if we never left it.
     resetRoundVisits(state.currentTitle || "");
@@ -915,16 +1160,17 @@ function makeIconNode({ id, title, svg, extraClass = "" }) {
 }
 
 function ensureToolIcons() {
-  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "3") return;
+  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "4") return;
   const tools = [
     { id: "back", title: t("tool.back"), svg: TOOL_ICON_SVGS.back },
     { id: "reroll", title: t("tool.reroll"), svg: TOOL_ICON_SVGS.reroll },
     { id: "search", title: t("tool.search"), svg: TOOL_ICON_SVGS.search },
     { id: "compass", title: t("tool.compass"), svg: TOOL_ICON_SVGS.compass },
+    { id: "key", title: t("tool.key"), svg: TOOL_ICON_SVGS.key },
   ];
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
-  el.toolIconsRow.dataset.ready = "3";
+  el.toolIconsRow.dataset.ready = "4";
 }
 
 function overflowChipWidthPx(count) {
@@ -1111,18 +1357,26 @@ function renderRoundsTrack(status) {
     return;
   }
   if (el.roundsBlock) el.roundsBlock.classList.remove("hidden");
-  const total = Math.max(0, Number(status.check_count) || 0);
-  const current = Math.max(1, Number(status.round) || 1);
-  const completed = Math.max(0, Number(status.rounds_completed) || 0);
-  const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
-  const complete = Boolean(status.boss_completed);
+  const path = activePathInfo(status);
+  const onBranch = Boolean(path && path.id && path.id !== "main");
+  const total = onBranch
+    ? Math.max(0, Number(path.length) || 0)
+    : Math.max(0, Number(status.check_count) || 0);
+  const current = onBranch
+    ? Math.max(1, Number(path.round) || 1)
+    : Math.max(1, Number(status.round) || 1);
+  const completed = onBranch
+    ? Math.max(0, Number(path.completed) || 0)
+    : Math.max(0, Number(status.rounds_completed) || 0);
+  const unlocked = onBranch ? total : Math.max(0, Number(status.unlocked_rounds) || 0);
+  const complete = onBranch ? completed >= total && total > 0 : Boolean(status.boss_completed);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
-    let state = "locked";
-    if (complete || i <= completed) state = "done";
-    else if (i <= unlocked) state = "open";
+    let stateName = "locked";
+    if (complete || i <= completed) stateName = "done";
+    else if (i <= unlocked) stateName = "open";
     items.push({
-      state,
+      state: stateName,
       current: !complete && i === current && i > completed,
       label: `${t("track.kindRound")} ${i}`,
     });
@@ -1131,7 +1385,8 @@ function renderRoundsTrack(status) {
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
   renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
   if (el.roundText) {
-    el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
+    const prefix = onBranch ? `${pathLabel(path)} · ` : "";
+    el.roundText.textContent = complete ? `${prefix}${t("hud.complete")}` : `${prefix}${current}/${total}`;
   }
 }
 
@@ -1211,6 +1466,15 @@ function renderToolIcons(status) {
 
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
+  const key = el.toolIconsRow.querySelector('[data-tool="key"]');
+  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0;
+  const keyCount = Math.max(0, Number(status.branch_key_count) || 0);
+  if (key) {
+    key.classList.toggle("hidden", !hasBranches);
+    setIconState(key, keyCount > 0 ? "ok" : "locked");
+    setToolBadge(key, hasBranches ? String(keyCount) : "");
+    key.title = hasBranches ? `${t("tool.key")} ×${keyCount}` : t("tool.key");
+  }
 }
 
 function renderLensIcons(status) {
@@ -2312,9 +2576,19 @@ function updateHUD(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
   const wasPractice = state.status?.practice === true;
+  const prevUnlocked = Array.isArray(state.status?.unlocked_branch_ids)
+    ? state.status.unlocked_branch_ids.map((id) => Number(id))
+    : [];
   noteResumeIdentityFromStatus(status);
   state.status = status;
-  state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
+  const remoteClicks = Number(status.clicks_used);
+  if (status.practice) {
+    state.clicksUsed = Number.isFinite(remoteClicks) ? remoteClicks : state.clicksUsed;
+  } else {
+    const saved = loadSavedClicks();
+    const remote = Number.isFinite(remoteClicks) ? remoteClicks : 0;
+    state.clicksUsed = Math.max(Number(state.clicksUsed) || 0, saved, remote);
+  }
   syncRoundVisitTracking(status);
   if (status.practice) {
     el.connBadge.textContent = t("badge.practice");
@@ -2353,6 +2627,11 @@ function updateHUD(status) {
   updateRerollTargetControls(status);
   renderRoundsTrack(status);
   renderFragmentsTrack(status);
+  renderPathSwitcher(status);
+  renderCrossroadBadge(status);
+  if (el.journeyBtn) {
+    el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
+  }
 
   el.clicksText.textContent = String(state.clicksUsed);
   el.compassHint.textContent = status.compass_unlocked
@@ -2375,6 +2654,20 @@ function updateHUD(status) {
   if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
     toast(t("toast.goalComplete"), "ok", 8000);
     state.announcedGoalComplete = true;
+    if (!state.announcedJourneyCredits) {
+      state.announcedJourneyCredits = true;
+      void openJourneyOverlay({ credits: true });
+    }
+  }
+  const nextUnlocked = Array.isArray(status.unlocked_branch_ids)
+    ? status.unlocked_branch_ids.map((id) => Number(id))
+    : [];
+  for (const id of nextUnlocked) {
+    if (prevUnlocked.includes(id)) continue;
+    const path = (Array.isArray(status.paths) ? status.paths : []).find(
+      (item) => item && item.id === `branch:${id}`
+    );
+    toast(t("toast.branchUnlocked", { theme: pathLabel(path) || formatThemeTag(path?.theme_tag) }), "ok", 7000);
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
   if (status.last_error) {
@@ -2531,6 +2824,7 @@ function initDebugDisplayPanel() {
     debugBtn("Reroll", () => runDebugAction("grant_item", { item: "Progressive Reroll" })),
     debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
     debugBtn("Bingo Stamp", () => runDebugAction("grant_item", { item: "Progressive Bingo Stamp" })),
+    debugBtn("Branch Key", () => runDebugAction("grant_item", { item: "Branch Key" })),
     debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
     debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
     debugBtn("All tools", () => runDebugAction("grant_tools")),
@@ -2542,6 +2836,7 @@ function initDebugDisplayPanel() {
   itemSelect.className = "debug-input";
   for (const name of [
     "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
+    "Branch Key",
     "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
@@ -3149,6 +3444,7 @@ async function openArticle(title, options = {}) {
     submitCheck = countAsClick,
     replaceHistory = false,
     requireConnection = false,
+    travelKind = "",
   } = options;
   if (requireConnection && !requirePlayable()) return;
   if (isBlockedWikiTitle(title)) {
@@ -3233,6 +3529,7 @@ async function openArticle(title, options = {}) {
       page_title: title,
       clicks_used: state.clicksUsed,
       submit_check: Boolean(submitCheck),
+      travel_kind: travelKind || (submitCheck ? "nav" : "restore"),
     });
 
     if (submitCheck) {
@@ -3240,7 +3537,10 @@ async function openArticle(title, options = {}) {
         // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
         resetRoundVisits(title);
-        state.clicksUsed = Number(result.status?.clicks_used) || 0;
+        const nextClicks = Number(result.status?.clicks_used);
+        if (Number.isFinite(nextClicks)) {
+          state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
+        }
         el.clicksText.textContent = String(state.clicksUsed);
         saveLocalProgress();
         return;
@@ -3520,6 +3820,10 @@ document.addEventListener("keydown", (e) => {
       else history.back();
     }
   }
+  if (e.key === "Escape" && state.journeyOpen) {
+    e.preventDefault();
+    closeJourneyOverlay();
+  }
   if (e.key === "Escape" && state.searchOpen) {
     e.preventDefault();
     closeSearchOverlay();
@@ -3588,6 +3892,7 @@ ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
 bindBingoOverlayUi();
+bindJourneyOverlayUi();
 bindStuckHelper();
 showMigrateBannerIfNeeded();
 if (typeof ResizeObserver !== "undefined") {

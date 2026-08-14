@@ -376,6 +376,30 @@ class TargetRerollUnlocks(Range):
     default = 2
 
 
+class BranchCount(Range):
+    """How many main-road rounds are crossroads (each can unlock one side branch). 0 disables branches."""
+    display_name = "Branch Count"
+    range_start = 0
+    range_end = 8
+    default = 0
+
+
+class BranchLength(Range):
+    """Rounds in each unlocked side branch chain."""
+    display_name = "Branch Length"
+    range_start = 1
+    range_end = 20
+    default = 3
+
+
+class AdditionalBranchKeys(Range):
+    """Extra Branch Key items in the pool beyond branch_count. Still progression; extras do not open more branches."""
+    display_name = "Additional Branch Keys"
+    range_start = 0
+    range_end = 8
+    default = 0
+
+
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
@@ -432,3 +456,6 @@ class WikipelagoOptions(PerGameCommonOptions):
     back_depth_unlocks: BackDepthUnlocks
     target_rerolls_start: TargetRerollsStart
     target_reroll_unlocks: TargetRerollUnlocks
+    branch_count: BranchCount
+    branch_length: BranchLength
+    additional_branch_keys: AdditionalBranchKeys
