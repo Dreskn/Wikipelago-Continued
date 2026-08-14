@@ -1220,11 +1220,11 @@ button {
   border-radius: 0 0 0 2px;
   pointer-events: none;
 }
-.rounds-track .seg.crossroad.done::after {
+.rounds-track .seg.crossroad.unlocked {
   border-color: #1ecb70;
 }
-.rounds-track .seg.crossroad.current::after {
-  border-color: #40c4ff;
+.rounds-track .seg.crossroad.unlocked::after {
+  border-color: #1ecb70;
 }
 .crossroad-badge {
   margin-top: 8px;

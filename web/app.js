@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.14.02";
+const APP_VERSION = "2026.08.15.01";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -764,6 +764,20 @@ function pathLabel(path) {
   return theme || t("path.branch", { theme: path.label || path.id });
 }
 
+function forkNumber(item) {
+  const n = Number(item?.fork);
+  if (Number.isFinite(n) && n > 0) return Math.trunc(n);
+  const rawId = item?.id;
+  if (typeof rawId === "number" && Number.isFinite(rawId)) return Math.trunc(rawId) + 1;
+  const match = String(rawId || "").match(/branch:(\d+)/);
+  if (match) return Number(match[1]) + 1;
+  return 1;
+}
+
+function forkProgressTitle(item) {
+  return t("hud.forkTitle", { n: forkNumber(item), theme: pathLabel(item) });
+}
+
 function liveTargetTitles(status) {
   const titles = [status?.current_target, status?.goal_article];
   const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
@@ -791,7 +805,7 @@ function renderBranchTargets(status) {
     const row = document.createElement("p");
     row.className = "target-row branch-target-row";
     const label = document.createElement("strong");
-    label.textContent = t("hud.branchTarget", { theme: formatThemeTag(item.theme_tag) || pathLabel(item) });
+    label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
     const title = document.createElement("span");
     title.textContent = item.target || "…";
     row.appendChild(label);
@@ -816,7 +830,7 @@ function renderBranchTracks(status) {
     const labelRow = document.createElement("div");
     labelRow.className = "run-label-row";
     const strong = document.createElement("strong");
-    strong.textContent = pathLabel(path);
+    strong.textContent = forkProgressTitle(path);
     const meta = document.createElement("span");
     meta.className = "muted-meta";
     meta.textContent = done ? t("hud.complete") : `${current}/${total}`;
@@ -824,7 +838,7 @@ function renderBranchTracks(status) {
     labelRow.appendChild(meta);
     const track = document.createElement("div");
     track.className = "rounds-track branch-rounds-track";
-    track.setAttribute("aria-label", pathLabel(path));
+    track.setAttribute("aria-label", forkProgressTitle(path));
     wrap.appendChild(labelRow);
     wrap.appendChild(track);
     el.branchTracks.appendChild(wrap);
@@ -835,12 +849,12 @@ function renderBranchTracks(status) {
       items.push({
         state: stateName,
         current: !done && i === current && i > completed,
-        label: `${pathLabel(path)} ${i}`,
+        label: `${forkProgressTitle(path)} ${i}`,
       });
     }
     track.style.gap = `${TRACK_SEG_GAP_PX}px`;
     const plan = buildTrackPlan(items, track);
-    renderPlannedTrack(track, plan.plan, pathLabel(path), plan.chipMinPx);
+    renderPlannedTrack(track, plan.plan, forkProgressTitle(path), plan.chipMinPx);
   }
 }
 
@@ -852,15 +866,12 @@ function renderCrossroadBadge(status) {
     el.crossroadBadge.textContent = "";
     return;
   }
-  const branch = (Array.isArray(status.paths) ? status.paths : []).find(
-    (path) => path && path.id === `branch:${info.branch_id}`
-  );
-  const theme = formatThemeTag(branch?.theme_tag || branch?.label || "");
+  const theme = formatThemeTag(info.theme_tag || "");
   el.crossroadBadge.classList.remove("hidden");
   el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
   if (info.unlocked) {
     el.crossroadBadge.textContent = t("crossroad.unlocked", { theme: theme || t("path.main") });
-  } else if (Number(status.branch_key_count) > 0) {
+  } else if (Number(status.branch_keys_available) > 0) {
     el.crossroadBadge.textContent = t("crossroad.ready", { theme: theme || t("path.main") });
   } else {
     el.crossroadBadge.textContent = t("crossroad.needKey");
@@ -1246,6 +1257,7 @@ function rleTrackItems(items) {
         state: item.state,
         current: Boolean(item.current),
         crossroad: Boolean(item.crossroad),
+        unlocked: Boolean(item.unlocked),
         count: 1,
         startLabel: item.label,
         endLabel: item.label,
@@ -1316,12 +1328,13 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
   if (current) seg.classList.add("current");
   if (crossroad) seg.classList.add("crossroad");
+  if (crossroad && unlocked) seg.classList.add("unlocked");
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
@@ -1360,6 +1373,7 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
           state: run.state,
           current: Boolean(run.current),
           crossroad: Boolean(run.crossroad),
+          unlocked: Boolean(run.unlocked),
           title: `${kind} ${individualStart + i}`,
         });
       }
@@ -1393,6 +1407,9 @@ function renderRoundsTrack(status) {
   const crossroads = new Set(
     (Array.isArray(status.crossroad_rounds) ? status.crossroad_rounds : []).map((n) => Number(n))
   );
+  const unlockedCross = new Set(
+    (Array.isArray(status.unlocked_crossroad_rounds) ? status.unlocked_crossroad_rounds : []).map((n) => Number(n))
+  );
   const items = [];
   for (let i = 1; i <= total; i += 1) {
     let stateName = "locked";
@@ -1402,6 +1419,7 @@ function renderRoundsTrack(status) {
       state: stateName,
       current: !complete && i === current && i > completed,
       crossroad: crossroads.has(i),
+      unlocked: unlockedCross.has(i),
       label: `${t("track.kindRound")} ${i}`,
     });
   }
@@ -1493,7 +1511,7 @@ function renderToolIcons(status) {
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
   const key = el.toolIconsRow.querySelector('[data-tool="key"]');
   const hasBranches = Array.isArray(status.branches) && status.branches.length > 0;
-  const keyCount = Math.max(0, Number(status.branch_key_count) || 0);
+  const keyCount = Math.max(0, Number(status.branch_keys_available) || 0);
   if (key) {
     key.classList.toggle("hidden", !hasBranches);
     setIconState(key, keyCount > 0 ? "ok" : "locked");

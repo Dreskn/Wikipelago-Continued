@@ -503,6 +503,14 @@ class SessionState:
     def branch_key_count(self) -> int:
         return self.item_count("Branch Key")
 
+    def branch_keys_available(self) -> int:
+        return max(0, self.branch_key_count() - len(self.unlocked_branch_ids()))
+
+    def reached_main_round(self) -> int:
+        if self.boss_completed:
+            return max(self.check_count, 1)
+        return min(self.round_index + 1, max(self.check_count, 1))
+
     def completed_crossroad_branch_ids(self) -> list[int]:
         completed: list[tuple[int, int]] = []
         for cr in self.crossroads:
@@ -530,7 +538,7 @@ class SessionState:
         return int(branch_id) in set(self.unlocked_branch_ids())
 
     def revealed_crossroad(self) -> dict[str, Any] | None:
-        current_round = min(self.round_index + 1, max(self.check_count, 1))
+        current_round = self.reached_main_round()
         for cr in self.crossroads:
             try:
                 main_round = int(cr.get("main_round") or 0)
@@ -540,22 +548,40 @@ class SessionState:
             if main_round != current_round:
                 continue
             unlocked = self.is_branch_unlocked(branch_id)
+            branch = self.branch_by_id(branch_id)
             return {
                 "main_round": main_round,
                 "branch_id": branch_id,
+                "fork": branch_id + 1,
+                "theme_tag": str((branch or {}).get("theme_tag") or ""),
                 "unlocked": unlocked,
                 "needs_key": not unlocked,
             }
         return None
 
     def crossroad_rounds(self) -> list[int]:
+        current = self.reached_main_round()
         rounds: list[int] = []
         for cr in self.crossroads:
             try:
                 main_round = int(cr.get("main_round") or 0)
             except Exception:
                 continue
-            if main_round >= 1:
+            if 1 <= main_round <= current:
+                rounds.append(main_round)
+        return rounds
+
+    def unlocked_crossroad_rounds(self) -> list[int]:
+        reached = set(self.crossroad_rounds())
+        unlocked = set(self.unlocked_branch_ids())
+        rounds: list[int] = []
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+                branch_id = int(cr.get("branch_id") or 0)
+            except Exception:
+                continue
+            if main_round in reached and branch_id in unlocked:
                 rounds.append(main_round)
         return rounds
 
@@ -601,6 +627,7 @@ class SessionState:
                 continue
             live.append({
                 "id": bid,
+                "fork": bid + 1,
                 "theme_tag": str(branch.get("theme_tag") or ""),
                 "target": str(pairs[idx].get("target") or ""),
                 "round": min(idx + 1, max(len(pairs), 1)),
@@ -626,6 +653,8 @@ class SessionState:
                 bid = int(branch.get("id") or 0)
             except Exception:
                 continue
+            if bid not in unlocked:
+                continue
             pairs = branch.get("pairs") or []
             length = len(pairs) if isinstance(pairs, list) else 0
             idx = int(self.branch_round_index.get(bid, 0) or 0)
@@ -634,6 +663,7 @@ class SessionState:
                 current_target = str(pairs[idx].get("target") or "")
             paths.append({
                 "id": f"branch:{bid}",
+                "fork": bid + 1,
                 "label": str(branch.get("theme_tag") or f"Branch {bid + 1}"),
                 "theme_tag": str(branch.get("theme_tag") or ""),
                 "unlocked": bid in unlocked,
@@ -804,10 +834,12 @@ class SessionState:
             "paths": self.path_payload(),
             "crossroads": list(self.crossroads),
             "crossroad_rounds": self.crossroad_rounds(),
+            "unlocked_crossroad_rounds": self.unlocked_crossroad_rounds(),
             "branches": list(self.branches),
             "unlocked_branch_ids": self.unlocked_branch_ids(),
             "live_branch_targets": self.live_branch_targets(),
             "branch_key_count": self.branch_key_count(),
+            "branch_keys_available": self.branch_keys_available(),
             "revealed_crossroad": self.revealed_crossroad(),
             "travel_event_count": len(self.travel_events),
             "travel_storage_ready": self.travel_storage_ready,
