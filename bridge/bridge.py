@@ -382,52 +382,20 @@ class SessionState:
                 continue
         return None
 
-    def current_pairs(self) -> list[dict[str, str]]:
-        branch = self.current_branch()
-        if branch is not None:
-            pairs = branch.get("pairs") or []
-            return pairs if isinstance(pairs, list) else []
-        return self.round_pairs
-
-    def current_path_index(self) -> int:
-        bid = self.active_branch_id()
-        if bid is None:
-            return self.round_index
-        try:
-            return int(self.branch_round_index.get(bid, 0) or 0)
-        except Exception:
-            return 0
-
     def progress_key(self) -> str:
-        return f"{self.active_path}:{self.current_path_index()}"
+        return f"main:{self.round_index}"
 
     def current_target(self) -> str:
-        if self.active_branch_id() is None:
-            if self.round_index >= len(self.round_pairs):
-                return self.goal_article()
-            return self.round_pairs[self.round_index]["target"]
-        pairs = self.current_pairs()
-        idx = self.current_path_index()
-        if not pairs:
-            return ""
-        if idx >= len(pairs):
-            return str(pairs[-1].get("target") or "")
-        return str(pairs[idx].get("target") or "")
+        if self.round_index >= len(self.round_pairs):
+            return self.goal_article()
+        return self.round_pairs[self.round_index]["target"]
 
     def current_start(self) -> str:
-        if self.active_branch_id() is None:
-            if not self.round_pairs:
-                return ""
-            if self.round_index >= len(self.round_pairs):
-                return self.round_pairs[-1]["target"]
-            return self.round_pairs[self.round_index]["start"]
-        pairs = self.current_pairs()
-        idx = self.current_path_index()
-        if not pairs:
+        if not self.round_pairs:
             return ""
-        if idx >= len(pairs):
-            return str(pairs[-1].get("target") or "")
-        return str(pairs[idx].get("start") or "")
+        if self.round_index >= len(self.round_pairs):
+            return self.round_pairs[-1]["target"]
+        return self.round_pairs[self.round_index]["start"]
 
     def goal_article(self) -> str:
         if self.goal_article_title:
@@ -526,14 +494,8 @@ class SessionState:
         self.sync_target_reroll_counter()
         if not self.is_playable() or self.boss_completed:
             return False
-        bid = self.active_branch_id()
-        if bid is None:
-            if not self.practice and self.round_index >= self.check_count:
-                return False
-        else:
-            pairs = self.current_pairs()
-            if self.current_path_index() >= len(pairs):
-                return False
+        if not self.practice and self.round_index >= self.check_count:
+            return False
         if self.target_rerolls_remaining() <= 0:
             return False
         return bool(self.reroll_pool)
@@ -568,8 +530,6 @@ class SessionState:
         return int(branch_id) in set(self.unlocked_branch_ids())
 
     def revealed_crossroad(self) -> dict[str, Any] | None:
-        if self.active_branch_id() is not None:
-            return None
         current_round = min(self.round_index + 1, max(self.check_count, 1))
         for cr in self.crossroads:
             try:
@@ -588,6 +548,67 @@ class SessionState:
             }
         return None
 
+    def crossroad_rounds(self) -> list[int]:
+        rounds: list[int] = []
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+            except Exception:
+                continue
+            if main_round >= 1:
+                rounds.append(main_round)
+        return rounds
+
+    def branch_by_id(self, branch_id: int) -> dict[str, Any] | None:
+        try:
+            bid = int(branch_id)
+        except Exception:
+            return None
+        for branch in self.branches:
+            try:
+                if int(branch.get("id", -1)) == bid:
+                    return branch
+            except Exception:
+                continue
+        return None
+
+    def branch_pairs(self, branch_id: int) -> list[dict[str, str]]:
+        branch = self.branch_by_id(branch_id)
+        if branch is None:
+            return []
+        pairs = branch.get("pairs") or []
+        return pairs if isinstance(pairs, list) else []
+
+    def branch_current_target(self, branch_id: int) -> str:
+        pairs = self.branch_pairs(branch_id)
+        try:
+            idx = int(self.branch_round_index.get(int(branch_id), 0) or 0)
+        except Exception:
+            idx = 0
+        if idx < 0 or idx >= len(pairs):
+            return ""
+        return str(pairs[idx].get("target") or "")
+
+    def live_branch_targets(self) -> list[dict[str, Any]]:
+        live: list[dict[str, Any]] = []
+        for bid in self.unlocked_branch_ids():
+            branch = self.branch_by_id(bid)
+            if branch is None:
+                continue
+            pairs = self.branch_pairs(bid)
+            idx = int(self.branch_round_index.get(bid, 0) or 0)
+            if idx >= len(pairs):
+                continue
+            live.append({
+                "id": bid,
+                "theme_tag": str(branch.get("theme_tag") or ""),
+                "target": str(pairs[idx].get("target") or ""),
+                "round": min(idx + 1, max(len(pairs), 1)),
+                "length": len(pairs),
+                "completed": min(idx, len(pairs)),
+            })
+        return live
+
     def path_payload(self) -> list[dict[str, Any]]:
         unlocked = set(self.unlocked_branch_ids())
         paths: list[dict[str, Any]] = [{
@@ -595,10 +616,10 @@ class SessionState:
             "label": "Main road",
             "theme_tag": "",
             "unlocked": True,
-            "current": self.active_branch_id() is None,
             "round": min(self.round_index + 1, self.check_count),
             "length": self.check_count,
             "completed": min(self.round_index, self.check_count),
+            "current_target": self.current_target(),
         }]
         for branch in self.branches:
             try:
@@ -608,15 +629,18 @@ class SessionState:
             pairs = branch.get("pairs") or []
             length = len(pairs) if isinstance(pairs, list) else 0
             idx = int(self.branch_round_index.get(bid, 0) or 0)
+            current_target = ""
+            if isinstance(pairs, list) and 0 <= idx < length:
+                current_target = str(pairs[idx].get("target") or "")
             paths.append({
                 "id": f"branch:{bid}",
                 "label": str(branch.get("theme_tag") or f"Branch {bid + 1}"),
                 "theme_tag": str(branch.get("theme_tag") or ""),
                 "unlocked": bid in unlocked,
-                "current": self.active_branch_id() == bid,
                 "round": min(idx + 1, max(length, 1)),
                 "length": length,
                 "completed": min(idx, length),
+                "current_target": current_target,
             })
         return paths
 
@@ -776,11 +800,13 @@ class SessionState:
             "boss_completed": self.boss_completed,
             "last_page": self.last_page,
             "last_error": self.last_error,
-            "active_path": self.active_path or "main",
+            "active_path": "main",
             "paths": self.path_payload(),
             "crossroads": list(self.crossroads),
+            "crossroad_rounds": self.crossroad_rounds(),
             "branches": list(self.branches),
             "unlocked_branch_ids": self.unlocked_branch_ids(),
+            "live_branch_targets": self.live_branch_targets(),
             "branch_key_count": self.branch_key_count(),
             "revealed_crossroad": self.revealed_crossroad(),
             "travel_event_count": len(self.travel_events),
@@ -2133,7 +2159,7 @@ class APConnection:
             "t": int(time.time() * 1000),
             "kind": str(kind or "").strip() or "nav",
             "title": str(title or "").strip(),
-            "path": self.state.active_path or "main",
+            "path": str((extra or {}).get("path") or "main"),
         }
         if extra:
             event["extra"] = extra
@@ -2149,20 +2175,10 @@ class APConnection:
         title = str(new_target or "").strip()
         if not title:
             return False
-        bid = self.state.active_branch_id()
-        idx = self.state.current_path_index()
-        if bid is None:
-            if idx < 0 or idx >= len(self.state.round_pairs):
-                return False
-            self.state.round_pairs[idx]["target"] = title
-            return True
-        branch = self.state.current_branch()
-        if branch is None:
+        idx = self.state.round_index
+        if idx < 0 or idx >= len(self.state.round_pairs):
             return False
-        pairs = branch.get("pairs") or []
-        if not isinstance(pairs, list) or idx < 0 or idx >= len(pairs):
-            return False
-        pairs[idx]["target"] = title
+        self.state.round_pairs[idx]["target"] = title
         return True
 
     def _branch_location_ids(self, branch_id: int) -> list[int]:
@@ -2493,6 +2509,7 @@ class APConnection:
                 "locked": False,
                 "not_connected": True,
                 "boss_completed": self.state.boss_completed,
+                "hits": [],
                 "status": self.state.to_status(),
                 "next_target": self.state.current_target(),
             }
@@ -2504,53 +2521,33 @@ class APConnection:
         target = await self._canonicalize_title(self.state.current_target())
         self._set_active_pair_target(target)
         await self._update_compass_hint(page_title, target)
-        matched = await self._titles_match(page_title, target)
+        matched_main = await self._titles_match(page_title, target)
 
         result: dict[str, Any] = {
-            "matched": matched,
+            "matched": matched_main,
             "target": target,
             "advanced": False,
             "locked": False,
             "boss_completed": self.state.boss_completed,
+            "hits": [],
         }
 
         if self.state.practice:
-            if matched:
-                await self._append_travel_event("round_complete", page_title)
+            if matched_main:
+                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
                 # Chain like AP: keep the player on the cleared target; only roll a new target.
                 self._roll_practice_race(continue_from=page_title)
                 result["advanced"] = True
                 result["practice_rolled"] = True
+                result["hits"] = [{"kind": "main", "target": target}]
             result["status"] = self.state.to_status()
             result["next_target"] = self.state.current_target()
             return result
 
-        branch_id = self.state.active_branch_id()
-        if branch_id is not None:
-            if not self.state.is_branch_unlocked(branch_id):
-                result["locked"] = True
-            else:
-                loc_ids = self._branch_location_ids(branch_id)
-                idx = self.state.current_path_index()
-                if matched and 0 <= idx < len(loc_ids):
-                    loc_id = loc_ids[idx]
-                    scouted = await self.scout_locations([loc_id])
-                    await self.send_location_checks([loc_id])
-                    self.state.branch_round_index[branch_id] = idx + 1
-                    self.state.sync_target_reroll_counter()
-                    self.state.sync_back_counter()
-                    result["advanced"] = True
-                    await self._append_travel_event(
-                        "round_complete",
-                        page_title,
-                        extra={"path": f"branch:{branch_id}"},
-                    )
-                    network_item = scouted.get(loc_id)
-                    if network_item:
-                        sent_text = self._format_send_text(network_item)
-                        if sent_text:
-                            result["sent_text"] = sent_text
-        elif matched and self.state.round_index < self.state.check_count and self.state.location_round_ids:
+        sent_bits: list[str] = []
+        hits: list[dict[str, Any]] = []
+
+        if matched_main and self.state.round_index < self.state.check_count and self.state.location_round_ids:
             round_number = self.state.round_index + 1
             if round_number > self.state.unlocked_rounds():
                 result["locked"] = True
@@ -2562,12 +2559,56 @@ class APConnection:
                 self.state.sync_target_reroll_counter()
                 self.state.sync_back_counter()
                 result["advanced"] = True
-                await self._append_travel_event("round_complete", page_title)
+                hit: dict[str, Any] = {"kind": "main", "target": target, "round": round_number}
                 network_item = scouted.get(round_id)
                 if network_item:
                     sent_text = self._format_send_text(network_item)
                     if sent_text:
-                        result["sent_text"] = sent_text
+                        hit["sent_text"] = sent_text
+                        sent_bits.append(sent_text)
+                hits.append(hit)
+                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
+
+        for bid in list(self.state.unlocked_branch_ids()):
+            loc_ids = self._branch_location_ids(bid)
+            idx = int(self.state.branch_round_index.get(bid, 0) or 0)
+            if idx < 0 or idx >= len(loc_ids):
+                continue
+            branch_target = await self._canonicalize_title(self.state.branch_current_target(bid))
+            if not branch_target or not await self._titles_match(page_title, branch_target):
+                continue
+            loc_id = loc_ids[idx]
+            scouted = await self.scout_locations([loc_id])
+            await self.send_location_checks([loc_id])
+            self.state.branch_round_index[bid] = idx + 1
+            result["advanced"] = True
+            result["matched"] = True
+            hit = {
+                "kind": "branch",
+                "branch_id": bid,
+                "target": branch_target,
+                "round": idx + 1,
+            }
+            branch = self.state.branch_by_id(bid)
+            if branch:
+                hit["theme_tag"] = str(branch.get("theme_tag") or "")
+            network_item = scouted.get(loc_id)
+            if network_item:
+                sent_text = self._format_send_text(network_item)
+                if sent_text:
+                    hit["sent_text"] = sent_text
+                    sent_bits.append(sent_text)
+            hits.append(hit)
+            await self._append_travel_event(
+                "round_complete",
+                page_title,
+                extra={"path": f"branch:{bid}"},
+            )
+
+        if sent_bits:
+            result["sent_text"] = sent_bits[-1]
+        result["hits"] = hits
+        result["matched"] = bool(hits)
 
         await self.try_finish_boss()
         await self.ensure_goal_status_if_complete()
@@ -2583,17 +2624,10 @@ class APConnection:
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
-        if self.state.active_branch_id() is None:
-            if not self.state.practice and self.state.round_index >= self.state.check_count:
-                return {
-                    "ok": False,
-                    "error": "cannot reroll the Grand Goal",
-                    "status": self.state.to_status(),
-                }
-        elif self.state.current_path_index() >= len(self.state.current_pairs()):
+        if not self.state.practice and self.state.round_index >= self.state.check_count:
             return {
                 "ok": False,
-                "error": "no active branch round",
+                "error": "cannot reroll the Grand Goal",
                 "status": self.state.to_status(),
             }
         if self.state.target_rerolls_remaining() <= 0:
@@ -2700,45 +2734,6 @@ class APConnection:
             "backs_used": self.state.backs_used,
             "backs_remaining": self.state.backs_remaining(),
             "back_depth_max": self.state.back_depth_max(),
-            "status": self.state.to_status(),
-        }
-
-    async def switch_path(self, path_id: str) -> dict[str, Any]:
-        """Move between the main road and an unlocked side branch."""
-        self.state.last_seen = time.time()
-        requested = str(path_id or "main").strip() or "main"
-        if requested != "main":
-            if not requested.startswith("branch:"):
-                return {"ok": False, "error": "unknown path", "status": self.state.to_status()}
-            try:
-                branch_id = int(requested.split(":", 1)[1])
-            except Exception:
-                return {"ok": False, "error": "unknown path", "status": self.state.to_status()}
-            if not self.state.is_branch_unlocked(branch_id):
-                return {"ok": False, "error": "branch locked", "status": self.state.to_status()}
-            if not any(int(branch.get("id", -1)) == branch_id for branch in self.state.branches):
-                return {"ok": False, "error": "unknown path", "status": self.state.to_status()}
-
-        if self.state.last_page:
-            self.state.path_last_page[self.state.active_path or "main"] = self.state.last_page
-        old_path = self.state.active_path or "main"
-        self.state.active_path = requested
-        resume = self.state.path_last_page.get(requested) or self.state.current_start()
-        self._remember_page(resume)
-        self.state.sync_back_counter()
-        self.state.sync_target_reroll_counter()
-        self.state.warmer_colder = None
-        self.state.last_distance_estimate = None
-        if old_path != requested:
-            await self._append_travel_event(
-                "branch_switch",
-                resume,
-                extra={"from": old_path, "to": requested},
-            )
-        return {
-            "ok": True,
-            "resume_title": resume,
-            "active_path": self.state.active_path,
             "status": self.state.to_status(),
         }
 
@@ -2867,18 +2862,10 @@ class APConnection:
 
         try:
             if action == "complete_round":
-                branch_id = self.state.active_branch_id()
-                if branch_id is not None:
-                    idx = self.state.current_path_index()
-                    loc_ids = self._branch_location_ids(branch_id)
-                    if idx >= len(loc_ids):
-                        return {"ok": False, "error": "no active branch round left", "status": self.state.to_status()}
-                    result = await self._debug_complete_branch_at(branch_id, idx)
-                else:
-                    idx = self.state.round_index
-                    if idx >= self.state.check_count:
-                        return {"ok": False, "error": "no active round left", "status": self.state.to_status()}
-                    result = await self._debug_complete_round_at(idx)
+                idx = self.state.round_index
+                if idx >= self.state.check_count:
+                    return {"ok": False, "error": "no active round left", "status": self.state.to_status()}
+                result = await self._debug_complete_round_at(idx)
                 await self.try_finish_boss()
                 await self.ensure_goal_status_if_complete()
                 return {"ok": True, "action": action, **result, "status": self.state.to_status()}
@@ -3278,21 +3265,6 @@ class App:
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
 
-    async def session_switch_path(self, request: web.Request) -> web.StreamResponse:
-        sid = request.match_info["sid"]
-        session = self.sessions.get(sid)
-        if not session:
-            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
-        try:
-            data = await request.json()
-        except Exception:
-            data = {}
-        if not isinstance(data, dict):
-            data = {}
-        result = await session.conn.switch_path(str(data.get("path") or "main"))
-        status_code = 200 if result.get("ok") else 400
-        return web.json_response(result, status=status_code)
-
     async def session_journey(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -3386,7 +3358,6 @@ class App:
         app.router.add_post("/api/session/{sid}/bingo-stamp", self.session_use_bingo_stamp)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
-        app.router.add_post("/api/session/{sid}/switch-path", self.session_switch_path)
         app.router.add_get("/api/session/{sid}/journey", self.session_journey)
         app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)

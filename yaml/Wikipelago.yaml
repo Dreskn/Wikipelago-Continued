@@ -67,8 +67,10 @@ Wikipelago:
   # =============================================================================
   # Selected main-road rounds (never round 1) become crossroads.
   # A Branch Key plus completing that round (either order) unlocks a parallel
-  # thematic branch. Extra keys beyond branch_count still count as progression
-  # but do not open more branches. 0 disables the whole system.
+  # thematic branch. All unlocked branches stay live at once: every page visit
+  # can clear the main target and/or a branch target (and still stamp bingo).
+  # Extra keys beyond branch_count still count as progression but do not open
+  # more branches. 0 disables the whole system.
   # branch_count: 0–8 (default 0). branch_length: 1–20 rounds per branch.
   # additional_branch_keys: 0–8 extra keys in the pool.
   branch_count: 0

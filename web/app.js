@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.14.01";
+const APP_VERSION = "2026.08.14.02";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -259,7 +259,8 @@ const el = {
   goalText: document.getElementById("goalText"),
   clicksText: document.getElementById("clicksText"),
   journeyBtn: document.getElementById("journeyBtn"),
-  pathSwitcher: document.getElementById("pathSwitcher"),
+  branchTracks: document.getElementById("branchTracks"),
+  branchTargets: document.getElementById("branchTargets"),
   crossroadBadge: document.getElementById("crossroadBadge"),
   journeyOverlay: document.getElementById("journeyOverlay"),
   journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
@@ -743,12 +744,9 @@ function resetRoundVisits(seedTitle = "") {
 }
 
 function syncRoundVisitTracking(status) {
-  const path = activePathInfo(status);
-  const roundNum = Number(path?.round) || Number(status?.round) || 0;
-  const pathId = String(status?.active_path || "main");
-  if (roundNum !== state.roundVisitRound || pathId !== state.roundVisitPath) {
+  const roundNum = Number(status?.round) || 0;
+  if (roundNum !== state.roundVisitRound) {
     state.roundVisitRound = roundNum;
-    state.roundVisitPath = pathId;
     // Seed with this round's start only. currentTitle may still be the previous target.
     resetRoundVisits(status?.current_start || "");
   }
@@ -759,11 +757,6 @@ function formatThemeTag(tag) {
   return raw ? raw.replace(/_/g, " ") : "";
 }
 
-function activePathInfo(status) {
-  const paths = Array.isArray(status?.paths) ? status.paths : [];
-  return paths.find((item) => item && item.current) || null;
-}
-
 function pathLabel(path) {
   if (!path) return t("path.main");
   if (path.id === "main") return t("path.main");
@@ -771,34 +764,83 @@ function pathLabel(path) {
   return theme || t("path.branch", { theme: path.label || path.id });
 }
 
-function renderPathSwitcher(status) {
-  if (!el.pathSwitcher) return;
+function liveTargetTitles(status) {
+  const titles = [status?.current_target, status?.goal_article];
+  const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
+  for (const item of live) titles.push(item?.target);
+  return titles.filter(Boolean);
+}
+
+function isLiveTargetTitle(title, status) {
+  return liveTargetTitles(status).some((item) => titlesMatch(title, item));
+}
+
+function unlockedBranchPaths(status) {
   const paths = Array.isArray(status?.paths) ? status.paths : [];
-  const show = !status?.practice && paths.some((path) => path && path.id && path.id !== "main");
-  el.pathSwitcher.classList.toggle("hidden", !show);
-  if (!show) {
-    el.pathSwitcher.innerHTML = "";
-    return;
+  return paths.filter((path) => path && path.id && path.id !== "main" && path.unlocked);
+}
+
+function renderBranchTargets(status) {
+  if (!el.branchTargets) return;
+  const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
+  const show = !status?.practice && !status?.boss_completed && live.length > 0;
+  el.branchTargets.classList.toggle("hidden", !show);
+  el.branchTargets.innerHTML = "";
+  if (!show) return;
+  for (const item of live) {
+    const row = document.createElement("p");
+    row.className = "target-row branch-target-row";
+    const label = document.createElement("strong");
+    label.textContent = t("hud.branchTarget", { theme: formatThemeTag(item.theme_tag) || pathLabel(item) });
+    const title = document.createElement("span");
+    title.textContent = item.target || "…";
+    row.appendChild(label);
+    row.appendChild(document.createTextNode(" "));
+    row.appendChild(title);
+    el.branchTargets.appendChild(row);
   }
-  el.pathSwitcher.innerHTML = "";
-  for (const path of paths) {
-    if (!path?.id) continue;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "path-chip";
-    btn.classList.toggle("current", Boolean(path.current));
-    btn.classList.toggle("unlocked", Boolean(path.unlocked));
-    btn.classList.toggle("locked", !path.unlocked);
-    btn.disabled = !path.unlocked;
-    const done = Number(path.completed) || 0;
-    const total = Number(path.length) || 0;
-    btn.textContent = `${pathLabel(path)} ${done}/${total}`;
-    btn.title = pathLabel(path);
-    btn.addEventListener("click", () => {
-      if (path.current || !path.unlocked) return;
-      void switchPath(path.id);
-    });
-    el.pathSwitcher.appendChild(btn);
+}
+
+function renderBranchTracks(status) {
+  if (!el.branchTracks) return;
+  el.branchTracks.innerHTML = "";
+  if (status?.practice) return;
+  const branches = unlockedBranchPaths(status);
+  for (const path of branches) {
+    const total = Math.max(0, Number(path.length) || 0);
+    const current = Math.max(1, Number(path.round) || 1);
+    const completed = Math.max(0, Number(path.completed) || 0);
+    const done = total > 0 && completed >= total;
+    const wrap = document.createElement("div");
+    wrap.className = "branch-track-block";
+    const labelRow = document.createElement("div");
+    labelRow.className = "run-label-row";
+    const strong = document.createElement("strong");
+    strong.textContent = pathLabel(path);
+    const meta = document.createElement("span");
+    meta.className = "muted-meta";
+    meta.textContent = done ? t("hud.complete") : `${current}/${total}`;
+    labelRow.appendChild(strong);
+    labelRow.appendChild(meta);
+    const track = document.createElement("div");
+    track.className = "rounds-track branch-rounds-track";
+    track.setAttribute("aria-label", pathLabel(path));
+    wrap.appendChild(labelRow);
+    wrap.appendChild(track);
+    el.branchTracks.appendChild(wrap);
+    const items = [];
+    for (let i = 1; i <= total; i += 1) {
+      let stateName = "open";
+      if (done || i <= completed) stateName = "done";
+      items.push({
+        state: stateName,
+        current: !done && i === current && i > completed,
+        label: `${pathLabel(path)} ${i}`,
+      });
+    }
+    track.style.gap = `${TRACK_SEG_GAP_PX}px`;
+    const plan = buildTrackPlan(items, track);
+    renderPlannedTrack(track, plan.plan, pathLabel(path), plan.chipMinPx);
   }
 }
 
@@ -822,23 +864,6 @@ function renderCrossroadBadge(status) {
     el.crossroadBadge.textContent = t("crossroad.ready", { theme: theme || t("path.main") });
   } else {
     el.crossroadBadge.textContent = t("crossroad.needKey");
-  }
-}
-
-async function switchPath(pathId) {
-  if (!state.sessionId) return;
-  try {
-    const result = await api(`/api/session/${state.sessionId}/switch-path`, "POST", { path: pathId });
-    if (result.status) updateHUD(result.status);
-    const title = result.resume_title || result.status?.current_start || "";
-    if (title) {
-      resetRoundVisits(title);
-      await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
-    }
-  } catch (err) {
-    const message = err?.message || err;
-    if (String(message).toLowerCase().includes("locked")) toast(t("toast.pathLocked"), "warn");
-    else toast(t("toast.pathSwitchFailed", { error: message }), "warn", 6500);
   }
 }
 
@@ -1034,8 +1059,7 @@ function consumeTrapQueueForPage(title, status) {
   state.activeFoggy = false;
   state.activeMissing = false;
   if (!state.trapQueue.length) return;
-  const target = status?.current_target || "";
-  if (titlesMatch(title, target)) return;
+  if (isLiveTargetTitle(title, status)) return;
   const queued = state.trapQueue.splice(0, state.trapQueue.length);
   state.activeFoggy = queued.includes("Foggy Links");
   state.activeMissing = queued.includes("Missing Links");
@@ -1061,12 +1085,10 @@ function applyMissingToLinks(links) {
 function armBombsOnPage(root, status) {
   state.bombTitles = new Set();
   if (!linkBombsEnabled()) return;
-  const target = status?.current_target || "";
-  const goal = status?.goal_article || "";
   const eligible = [...root.querySelectorAll("a[data-title]")].filter((a) => {
     const dest = a.dataset.title || "";
     if (!dest) return false;
-    if (titlesMatch(dest, target) || titlesMatch(dest, goal)) return false;
+    if (isLiveTargetTitle(dest, status)) return false;
     return true;
   });
   if (!eligible.length) return;
@@ -1193,7 +1215,7 @@ function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
       // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += p.run.current ? chipMinPx : TRACK_SEG_MIN_PX;
+      width += (p.run.current || p.run.crossroad) ? chipMinPx : TRACK_SEG_MIN_PX;
       parts += 1;
     }
     if (p.overflow > 0) {
@@ -1213,7 +1235,9 @@ function rleTrackItems(items) {
       prev &&
       prev.state === item.state &&
       !prev.current &&
-      !item.current;
+      !item.current &&
+      !prev.crossroad &&
+      !item.crossroad;
     if (same) {
       prev.count += 1;
       prev.endLabel = item.label;
@@ -1221,6 +1245,7 @@ function rleTrackItems(items) {
       runs.push({
         state: item.state,
         current: Boolean(item.current),
+        crossroad: Boolean(item.crossroad),
         count: 1,
         startLabel: item.label,
         endLabel: item.label,
@@ -1250,7 +1275,7 @@ function buildTrackPlan(items, trackEl) {
   const avail = trackContentWidthPx(trackEl);
   const runs = rleTrackItems(items);
   const plan = runs.map((run) => {
-    if (run.current || run.count === 1) {
+    if (run.current || run.crossroad || run.count === 1) {
       return { run, individuals: run.count, overflow: 0 };
     }
     return { run, individuals: 0, overflow: run.count };
@@ -1291,11 +1316,12 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "" }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
   if (current) seg.classList.add("current");
+  if (crossroad) seg.classList.add("crossroad");
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
@@ -1333,6 +1359,7 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
         appendTrackSeg(trackEl, {
           state: run.state,
           current: Boolean(run.current),
+          crossroad: Boolean(run.crossroad),
           title: `${kind} ${individualStart + i}`,
         });
       }
@@ -1354,22 +1381,18 @@ function renderRoundsTrack(status) {
     if (el.roundsBlock) el.roundsBlock.classList.add("hidden");
     el.roundsTrack.innerHTML = "";
     if (el.roundText) el.roundText.textContent = "";
+    if (el.branchTracks) el.branchTracks.innerHTML = "";
     return;
   }
   if (el.roundsBlock) el.roundsBlock.classList.remove("hidden");
-  const path = activePathInfo(status);
-  const onBranch = Boolean(path && path.id && path.id !== "main");
-  const total = onBranch
-    ? Math.max(0, Number(path.length) || 0)
-    : Math.max(0, Number(status.check_count) || 0);
-  const current = onBranch
-    ? Math.max(1, Number(path.round) || 1)
-    : Math.max(1, Number(status.round) || 1);
-  const completed = onBranch
-    ? Math.max(0, Number(path.completed) || 0)
-    : Math.max(0, Number(status.rounds_completed) || 0);
-  const unlocked = onBranch ? total : Math.max(0, Number(status.unlocked_rounds) || 0);
-  const complete = onBranch ? completed >= total && total > 0 : Boolean(status.boss_completed);
+  const total = Math.max(0, Number(status.check_count) || 0);
+  const current = Math.max(1, Number(status.round) || 1);
+  const completed = Math.max(0, Number(status.rounds_completed) || 0);
+  const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
+  const complete = Boolean(status.boss_completed);
+  const crossroads = new Set(
+    (Array.isArray(status.crossroad_rounds) ? status.crossroad_rounds : []).map((n) => Number(n))
+  );
   const items = [];
   for (let i = 1; i <= total; i += 1) {
     let stateName = "locked";
@@ -1378,16 +1401,18 @@ function renderRoundsTrack(status) {
     items.push({
       state: stateName,
       current: !complete && i === current && i > completed,
+      crossroad: crossroads.has(i),
       label: `${t("track.kindRound")} ${i}`,
     });
   }
+  el.roundsTrack.classList.toggle("has-crossroads", crossroads.size > 0);
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
   renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
   if (el.roundText) {
-    const prefix = onBranch ? `${pathLabel(path)} · ` : "";
-    el.roundText.textContent = complete ? `${prefix}${t("hud.complete")}` : `${prefix}${current}/${total}`;
+    el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
+  renderBranchTracks(status);
 }
 
 function renderFragmentsTrack(status) {
@@ -2627,7 +2652,7 @@ function updateHUD(status) {
   updateRerollTargetControls(status);
   renderRoundsTrack(status);
   renderFragmentsTrack(status);
-  renderPathSwitcher(status);
+  renderBranchTargets(status);
   renderCrossroadBadge(status);
   if (el.journeyBtn) {
     el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
@@ -3546,12 +3571,25 @@ async function openArticle(title, options = {}) {
         return;
       }
       if (result.matched) {
-        let msg = `Target hit: ${result.target}`;
-        if (result.sent_text) msg += ` — ${result.sent_text}`;
+        const hits = Array.isArray(result.hits) ? result.hits : [];
+        const parts = hits.length
+          ? hits.map((hit) => {
+            const title = hit.target || result.target;
+            const base = hit.kind === "branch"
+              ? t("toast.branchHit", {
+                theme: formatThemeTag(hit.theme_tag) || t("path.branch", { theme: hit.branch_id }),
+                title,
+              })
+              : t("toast.targetHit", { title });
+            return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
+          })
+          : [t("toast.targetHit", { title: result.target })];
+        if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
+          parts[0] += ` — ${result.sent_text}`;
+        }
         const bingoParts = formatBingoCompletionParts(result.bingo_completed);
-        if (bingoParts.length) msg += ` · ${bingoParts.join(" · ")}`;
-        toast(msg, "ok", 8000);
-        // Next round starts from its start article — visit set refreshes on round change via HUD.
+        if (bingoParts.length) parts.push(bingoParts.join(" · "));
+        toast(parts.join(" · "), "ok", 8000);
       } else {
         toastBingoCompletions(result.bingo_completed);
       }
@@ -3612,10 +3650,9 @@ el.articleBody.addEventListener("click", async (e) => {
   if (state.handlingDeath) return;
   const dest = a.dataset.title || "";
   const destNorm = normalizeTitle(dest);
-  const target = state.status?.current_target || "";
 
   // Bomb hit (only on forward wiki clicks).
-  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !titlesMatch(dest, target)) {
+  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !isLiveTargetTitle(dest, state.status)) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} hit a link bomb`);
     await applyDeathEffect("Boom! Link bomb — random page.");
     return;
@@ -3625,7 +3662,7 @@ el.articleBody.addEventListener("click", async (e) => {
   if (
     deathsEnabled()
     && state.roundVisitSet.has(destNorm)
-    && !titlesMatch(dest, target)
+    && !isLiveTargetTitle(dest, state.status)
   ) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} looped on Wikipedia`);
     await applyDeathEffect("Loop death! Already visited this round.");

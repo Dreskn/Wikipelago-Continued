@@ -66,7 +66,10 @@
       "path.progress": "{done}/{total}",
       "crossroad.needKey": "Crossroad — find a Branch Key, then finish this round to open a side path.",
       "crossroad.ready": "Crossroad — finish this round to open {theme}.",
-      "crossroad.unlocked": "Side path unlocked: {theme}. Switch paths anytime.",
+      "crossroad.unlocked": "Side path unlocked: {theme}.",
+      "hud.branchTarget": "{theme}:",
+      "toast.targetHit": "Target hit: {title}",
+      "toast.branchHit": "{theme}: {title}",
 
       "journey.open": "Journey",
       "journey.title": "Journey",

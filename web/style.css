@@ -1174,36 +1174,57 @@ button {
   gap: 8px;
   flex-wrap: wrap;
 }
-.path-switcher {
+.branch-targets {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 8px;
 }
-.path-switcher.hidden { display: none; }
-.path-chip {
-  border: 1px solid #3a5068;
-  background: #101820;
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  cursor: pointer;
+.branch-target-row {
+  margin: 0;
+  font-size: 0.9rem;
 }
-.path-chip.current {
-  color: #072033;
-  background: var(--accent);
-  border-color: var(--accent);
+.branch-tracks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.path-chip.unlocked:not(.current):hover {
+.branch-track-block .run-label-row {
+  margin-top: 4px;
+}
+.branch-rounds-track {
+  margin-bottom: 6px;
+}
+.rounds-track.has-crossroads {
+  padding-bottom: 12px;
+  min-height: 26px;
+  overflow: visible;
+}
+.rounds-track .seg.crossroad {
+  position: relative;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: var(--track-chip-min);
+  min-width: var(--track-chip-min);
+  border-color: #c4a24a;
+}
+.rounds-track .seg.crossroad::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 8px;
+  height: 8px;
+  border-left: 2px solid #ffd789;
+  border-bottom: 2px solid #ffd789;
+  border-radius: 0 0 0 2px;
+  pointer-events: none;
+}
+.rounds-track .seg.crossroad.done::after {
+  border-color: #1ecb70;
+}
+.rounds-track .seg.crossroad.current::after {
   border-color: #40c4ff;
-  color: #ecf2f8;
-}
-.path-chip.locked {
-  opacity: 0.55;
-  cursor: not-allowed;
-  filter: grayscale(1);
 }
 .crossroad-badge {
   margin-top: 8px;
