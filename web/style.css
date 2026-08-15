@@ -1213,8 +1213,9 @@ button {
   margin-bottom: 6px;
 }
 .rounds-track.has-crossroads {
-  --hook-thick: 6px;
-  --hook-drop: 12px;
+  --hook-thick: 8px;
+  --hook-drop: 10px;
+  --fork-label: 12px;
   padding-bottom: 26px;
   min-height: 42px;
   overflow: visible;
@@ -1222,7 +1223,7 @@ button {
 .rounds-track .fork-spur {
   position: absolute;
   left: 50%;
-  top: calc(100% + var(--hook-drop));
+  top: calc(100% + var(--hook-drop) + var(--fork-label));
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -1259,41 +1260,37 @@ button {
   flex-shrink: 0;
   width: var(--track-chip-min);
   min-width: var(--track-chip-min);
-  border-color: #c4a24a;
 }
 .rounds-track .seg.crossroad::after {
   content: "";
   position: absolute;
   left: 50%;
   top: 100%;
-  width: 50%;
+  width: var(--hook-thick);
   height: var(--hook-drop);
-  color: #ffd789;
-  background:
-    linear-gradient(currentColor, currentColor) 0 0 / var(--hook-thick) 100% no-repeat,
-    linear-gradient(currentColor, currentColor) 0 100% / 100% var(--hook-thick) no-repeat;
+  transform: translateX(-50%);
+  background: inherit;
+  border: 1px solid;
+  border-color: inherit;
+  border-top: none;
+  border-radius: 0 0 2px 2px;
+  box-sizing: border-box;
   pointer-events: none;
 }
 .rounds-track .seg.crossroad[data-fork]::before {
   content: attr(data-fork);
   position: absolute;
-  left: calc(100% + 6px);
-  top: calc(100% + var(--hook-drop) - var(--hook-thick) / 2);
-  transform: translateY(-50%);
+  left: 50%;
+  top: calc(100% + var(--hook-drop) + 1px);
+  transform: translateX(-50%);
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1;
-  color: #ffd789;
+  color: #d7e6f5;
   pointer-events: none;
   z-index: 2;
 }
-.rounds-track .seg.crossroad.unlocked {
-  border-color: #1ecb70;
-}
-.rounds-track .seg.crossroad.unlocked::after {
-  color: #1ecb70;
-}
-.rounds-track .seg.crossroad.unlocked[data-fork]::before {
+.rounds-track .seg.crossroad.done[data-fork]::before {
   color: #1ecb70;
 }
 .crossroad-badge {

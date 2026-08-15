@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.05";
+const APP_VERSION = "2026.08.15.06";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -887,7 +887,7 @@ function syncCrossroadTrackSpace(trackEl) {
   if (!trackEl) return;
   let extra = 26;
   trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
-    extra = Math.max(extra, 20 + spur.offsetHeight);
+    extra = Math.max(extra, 24 + spur.offsetHeight);
   });
   trackEl.style.paddingBottom = `${extra}px`;
   trackEl.style.minHeight = `${18 + extra}px`;
