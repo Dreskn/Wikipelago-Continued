@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.06";
+const APP_VERSION = "2026.08.15.07";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -193,6 +193,8 @@ const state = {
   roundVisitPath: "",
   journeyFilter: "all",
   journeyOpen: false,
+  journeyPayload: null,
+  journeyLayoutKey: "",
   announcedJourneyCredits: false,
   rerollBusy: false,
   targetSummaryCache: new Map(),
@@ -267,8 +269,8 @@ const el = {
   journeyOverlayTitle: document.getElementById("journeyOverlayTitle"),
   journeyOverlayClose: document.getElementById("journeyOverlayClose"),
   journeyFilter: document.getElementById("journeyFilter"),
-  journeyTimeline: document.getElementById("journeyTimeline"),
-  journeyHeatmap: document.getElementById("journeyHeatmap"),
+  journeyPath: document.getElementById("journeyPath"),
+  journeyTip: document.getElementById("journeyTip"),
   fragmentsBlock: document.getElementById("fragmentsBlock"),
   fragmentsText: document.getElementById("fragmentsText"),
   fragmentsTrack: document.getElementById("fragmentsTrack"),
@@ -919,102 +921,268 @@ function journeyKindLabel(kind) {
   return label === key ? kind : label;
 }
 
-function renderJourneyView(payload, filter) {
+function journeyEventPath(event) {
+  return String(event?.path || event?.extra?.path || "main");
+}
+
+function journeyPageNodes(events) {
+  const nodes = [];
+  for (const event of events) {
+    const title = String(event?.title || "").trim();
+    const kind = String(event?.kind || "").trim();
+    if (!title || kind === "branch_switch") continue;
+    const last = nodes[nodes.length - 1];
+    const node = last && last.title === title
+      ? last
+      : {
+          title,
+          kinds: new Set(),
+          mainRound: false,
+          forks: new Set(),
+          stamp: false,
+        };
+    node.kinds.add(kind);
+    if (kind === "round_complete") {
+      const pathId = journeyEventPath(event);
+      if (String(pathId).startsWith("branch:")) {
+        node.forks.add(forkNumber({ id: pathId }));
+      } else {
+        node.mainRound = true;
+      }
+    }
+    if (kind === "bingo_stamp") node.stamp = true;
+    if (node !== last) nodes.push(node);
+  }
+  return nodes.map((node) => {
+    const milestone = Boolean(node.mainRound || node.forks.size || node.stamp);
+    return {
+      title: node.title,
+      kinds: node.kinds,
+      mainRound: node.mainRound,
+      forks: [...node.forks].sort((a, b) => a - b),
+      stamp: node.stamp,
+      milestone,
+    };
+  });
+}
+
+function layoutJourneyNodes(nodes, width) {
+  const padX = 28;
+  const padY = 36;
+  const stepX = 54;
+  const rowH = 78;
+  const inner = Math.max(160, width - padX * 2);
+  const cols = Math.max(3, Math.floor(inner / stepX) + 1);
+  const gap = cols <= 1 ? 0 : inner / (cols - 1);
+  return nodes.map((node, i) => {
+    const row = Math.floor(i / cols);
+    let col = i % cols;
+    if (row % 2 === 1) col = cols - 1 - col;
+    return {
+      ...node,
+      row,
+      x: padX + col * gap,
+      y: padY + row * rowH,
+      r: node.milestone ? (node.stamp && (node.mainRound || node.forks.length) ? 11 : 9) : 4.5,
+    };
+  });
+}
+
+function journeyTrailD(points) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const bend = (i % 2 === 0 ? 1 : -1) * Math.min(18, len * 0.24);
+    const cx = mx - (dy / len) * bend;
+    const cy = my + (dx / len) * bend;
+    d += ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+function journeyNodeFill(node) {
+  if (node.mainRound) return { fill: "#1ecb70", stroke: "#148a4c" };
+  if (node.forks.length) return { fill: "#40c4ff", stroke: "#1a7aa0" };
+  if (node.stamp) return { fill: "#ffd76a", stroke: "#c4922a" };
+  return { fill: "#0d1620", stroke: "#6a849c" };
+}
+
+function journeyNodeTipLines(node) {
+  const lines = [];
+  if (node.mainRound) lines.push(t("journey.roundMain"));
+  for (const fork of node.forks) lines.push(t("journey.roundFork", { n: fork }));
+  if (node.stamp) lines.push(t("journey.stamp"));
+  if (!lines.length && node.kinds.has("back")) lines.push(journeyKindLabel("back"));
+  if (!lines.length && node.kinds.has("death")) lines.push(journeyKindLabel("death"));
+  return lines;
+}
+
+function hideJourneyTip() {
+  if (!el.journeyTip) return;
+  el.journeyTip.classList.add("hidden");
+  el.journeyTip.innerHTML = "";
+}
+
+function showJourneyTip(node, clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath) return;
+  const lines = journeyNodeTipLines(node);
+  el.journeyTip.innerHTML = "";
+  const title = document.createElement("strong");
+  title.textContent = node.title;
+  el.journeyTip.appendChild(title);
+  for (const line of lines) {
+    const kind = document.createElement("div");
+    kind.className = "journey-tip-kind";
+    kind.textContent = line;
+    el.journeyTip.appendChild(kind);
+  }
+  el.journeyTip.classList.remove("hidden");
+  const originEl = el.journeyPath.parentElement || el.journeyPath;
+  const wrap = originEl.getBoundingClientRect();
+  const tipW = el.journeyTip.offsetWidth || 160;
+  const tipH = el.journeyTip.offsetHeight || 40;
+  let left = clientX - wrap.left + originEl.scrollLeft + 12;
+  let top = clientY - wrap.top + originEl.scrollTop + 12;
+  const maxLeft = Math.max(8, originEl.clientWidth - tipW - 8);
+  const maxTop = Math.max(8, originEl.scrollHeight - tipH - 8);
+  left = Math.max(8, Math.min(left, maxLeft));
+  top = Math.max(8, Math.min(top, maxTop));
+  el.journeyTip.style.left = `${left}px`;
+  el.journeyTip.style.top = `${top}px`;
+}
+
+function drawJourneyPath(payload, filter) {
+  const host = el.journeyPath;
+  if (!host) return;
   const events = Array.isArray(payload?.events) ? payload.events : [];
-  const paths = Array.isArray(payload?.paths) ? payload.paths : [];
   const selected = filter || "all";
   const filtered = selected === "all"
     ? events
-    : events.filter((event) => String(event?.path || "main") === selected);
-
-  if (el.journeyFilter) {
-    const previous = el.journeyFilter.value || selected;
-    el.journeyFilter.innerHTML = "";
-    const allOpt = document.createElement("option");
-    allOpt.value = "all";
-    allOpt.textContent = t("journey.filterAll");
-    el.journeyFilter.appendChild(allOpt);
-    for (const path of paths) {
-      if (!path?.id) continue;
-      const opt = document.createElement("option");
-      opt.value = path.id;
-      opt.textContent = pathLabel(path);
-      el.journeyFilter.appendChild(opt);
-    }
-    el.journeyFilter.value = [...el.journeyFilter.options].some((opt) => opt.value === previous)
-      ? previous
-      : "all";
+    : events.filter((event) => journeyEventPath(event) === selected);
+  const nodes = journeyPageNodes(filtered);
+  const width = Math.max(host.clientWidth || 0, 0);
+  if (width < 40) {
+    if (state.journeyOpen) requestAnimationFrame(() => drawJourneyPath(payload, selected));
+    return;
+  }
+  const lastTitle = nodes.length ? nodes[nodes.length - 1].title : "";
+  const layoutKey = `${width}|${selected}|${nodes.length}|${nodes[0]?.title || ""}|${lastTitle}|${nodes.filter((n) => n.milestone).length}`;
+  if (layoutKey === state.journeyLayoutKey && host.querySelector("svg")) return;
+  state.journeyLayoutKey = layoutKey;
+  hideJourneyTip();
+  host.innerHTML = "";
+  if (!nodes.length) {
+    const empty = document.createElement("p");
+    empty.className = "journey-empty";
+    empty.textContent = t("journey.empty");
+    host.appendChild(empty);
+    return;
   }
 
-  if (el.journeyTimeline) {
-    el.journeyTimeline.innerHTML = "";
-    if (!filtered.length) {
-      const empty = document.createElement("p");
-      empty.className = "journey-empty";
-      empty.textContent = t("journey.empty");
-      el.journeyTimeline.appendChild(empty);
-    } else {
-      for (const event of filtered) {
-        const li = document.createElement("li");
-        const when = document.createElement("span");
-        const stamp = Number(event?.t) || 0;
-        when.textContent = stamp ? new Date(stamp).toLocaleTimeString() : "";
-        const kind = document.createElement("span");
-        kind.className = "journey-kind";
-        kind.textContent = journeyKindLabel(event?.kind);
-        const title = document.createElement("span");
-        title.textContent = event?.title || "";
-        li.appendChild(when);
-        li.appendChild(kind);
-        li.appendChild(title);
-        el.journeyTimeline.appendChild(li);
-      }
-    }
-  }
+  const points = layoutJourneyNodes(nodes, width);
+  const height = Math.max(...points.map((p) => p.y + p.r), 80) + 56;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "journey-path-svg");
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("aria-hidden", "true");
 
-  if (el.journeyHeatmap) {
-    el.journeyHeatmap.innerHTML = "";
-    const counts = {};
-    if (selected === "all" && payload?.visit_counts && typeof payload.visit_counts === "object") {
-      for (const [title, count] of Object.entries(payload.visit_counts)) {
-        counts[title] = Number(count) || 0;
-      }
-    } else {
-      for (const event of filtered) {
-        if (event?.kind !== "nav" || !event.title) continue;
-        counts[event.title] = (counts[event.title] || 0) + 1;
-      }
+  const trail = document.createElementNS(NS, "path");
+  trail.setAttribute("class", "journey-trail");
+  trail.setAttribute("d", journeyTrailD(points));
+  svg.appendChild(trail);
+
+  const labels = document.createElement("div");
+  labels.style.pointerEvents = "none";
+  for (let i = 0; i < points.length; i += 1) {
+    const node = points[i];
+    const colors = journeyNodeFill(node);
+    if (node.stamp && (node.mainRound || node.forks.length)) {
+      const ring = document.createElementNS(NS, "circle");
+      ring.setAttribute("cx", String(node.x));
+      ring.setAttribute("cy", String(node.y));
+      ring.setAttribute("r", String(node.r + 3));
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", "#ffd76a");
+      ring.setAttribute("stroke-width", "2.5");
+      svg.appendChild(ring);
     }
-    const rows = Object.entries(counts)
-      .filter(([, count]) => count > 0)
-      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-      .slice(0, 40);
-    if (!rows.length) {
-      const empty = document.createElement("p");
-      empty.className = "journey-empty";
-      empty.textContent = t("journey.empty");
-      el.journeyHeatmap.appendChild(empty);
-    } else {
-      const max = Math.max(...rows.map(([, count]) => count), 1);
-      for (const [title, count] of rows) {
-        const row = document.createElement("div");
-        row.className = "journey-heat-row";
-        const name = document.createElement("span");
-        name.textContent = title;
-        const n = document.createElement("span");
-        n.textContent = String(count);
-        const bar = document.createElement("div");
-        bar.className = "journey-heat-bar";
-        const fill = document.createElement("span");
-        fill.style.width = `${Math.max(8, (count / max) * 100)}%`;
-        bar.appendChild(fill);
-        row.appendChild(name);
-        row.appendChild(n);
-        row.appendChild(bar);
-        el.journeyHeatmap.appendChild(row);
-      }
+    const dot = document.createElementNS(NS, "circle");
+    dot.setAttribute("cx", String(node.x));
+    dot.setAttribute("cy", String(node.y));
+    dot.setAttribute("r", String(node.r));
+    dot.setAttribute("fill", colors.fill);
+    dot.setAttribute("stroke", colors.stroke);
+    dot.setAttribute("stroke-width", node.milestone ? "2" : "1.5");
+    svg.appendChild(dot);
+    const hit = document.createElementNS(NS, "circle");
+    hit.setAttribute("class", "journey-node-hit");
+    hit.setAttribute("cx", String(node.x));
+    hit.setAttribute("cy", String(node.y));
+    hit.setAttribute("r", String(Math.max(node.r + 6, 11)));
+    hit.setAttribute("fill", "transparent");
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("role", "img");
+    hit.setAttribute("aria-label", [node.title, ...journeyNodeTipLines(node)].join(", "));
+    hit.addEventListener("pointerenter", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
+    hit.addEventListener("pointermove", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
+    hit.addEventListener("pointerleave", hideJourneyTip);
+    hit.addEventListener("focus", () => showJourneyTip(node, host.getBoundingClientRect().left + node.x, host.getBoundingClientRect().top + node.y));
+    hit.addEventListener("blur", hideJourneyTip);
+    svg.appendChild(hit);
+    if (node.milestone) {
+      const label = document.createElement("span");
+      label.className = "journey-node-label";
+      if (node.row % 2 === 1) label.classList.add("above");
+      label.textContent = node.title;
+      label.style.left = `${node.x}px`;
+      label.style.top = `${node.y}px`;
+      labels.appendChild(label);
     }
   }
+  host.appendChild(svg);
+  host.appendChild(labels);
+}
+
+function fillJourneyFilter(paths, selected) {
+  if (!el.journeyFilter) return selected || "all";
+  const previous = el.journeyFilter.value || selected || "all";
+  el.journeyFilter.innerHTML = "";
+  const allOpt = document.createElement("option");
+  allOpt.value = "all";
+  allOpt.textContent = t("journey.filterAll");
+  el.journeyFilter.appendChild(allOpt);
+  for (const path of paths) {
+    if (!path?.id) continue;
+    const opt = document.createElement("option");
+    opt.value = path.id;
+    opt.textContent = pathLabel(path);
+    el.journeyFilter.appendChild(opt);
+  }
+  const next = [...el.journeyFilter.options].some((opt) => opt.value === previous)
+    ? previous
+    : "all";
+  el.journeyFilter.value = next;
+  return next;
+}
+
+function renderJourneyView(payload, filter) {
+  state.journeyPayload = payload;
+  state.journeyLayoutKey = "";
+  const paths = Array.isArray(payload?.paths) ? payload.paths : [];
+  const selected = fillJourneyFilter(paths, filter || "all");
+  state.journeyFilter = selected;
+  drawJourneyPath(payload, selected);
 }
 
 async function openJourneyOverlay({ credits = false } = {}) {
@@ -4019,6 +4187,17 @@ if (typeof ResizeObserver !== "undefined") {
   });
   if (el.roundsTrack) trackResizeObserver.observe(el.roundsTrack);
   if (el.fragmentsTrack) trackResizeObserver.observe(el.fragmentsTrack);
+  if (el.journeyPath) {
+    let journeyResizeTimer = 0;
+    const journeyResizeObserver = new ResizeObserver(() => {
+      if (!state.journeyOpen || !state.journeyPayload) return;
+      window.clearTimeout(journeyResizeTimer);
+      journeyResizeTimer = window.setTimeout(() => {
+        drawJourneyPath(state.journeyPayload, state.journeyFilter || "all");
+      }, 50);
+    });
+    journeyResizeObserver.observe(el.journeyPath);
+  }
 }
 setInterval(pollStatus, 1500);
 
