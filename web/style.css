@@ -50,7 +50,7 @@ body {
 }
 
 .layout {
-  max-width: 1400px;
+  max-width: 1920px;
   width: 100%;
   flex: 1 1 auto;
   height: auto;
@@ -133,7 +133,7 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 330px;
+  grid-template-columns: 1fr 666px;
   gap: 16px;
   margin-top: 14px;
   align-items: stretch;
@@ -1424,7 +1424,7 @@ button {
   font-size: 0.82rem;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
   body { overflow: auto; }
   .layout {
     height: auto;
