@@ -89,6 +89,7 @@
       "journey.kind.back": "Back",
       "journey.kind.round_complete": "Round",
       "journey.kind.bingo_stamp": "Stamp",
+      "journey.kind.bingo_cell": "Stamp",
       "journey.kind.death": "Death",
       "journey.kind.branch_switch": "Path",
 

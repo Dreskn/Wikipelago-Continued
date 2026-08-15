@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.08";
+const APP_VERSION = "2026.08.15.09";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -109,6 +109,8 @@ const WIKI_SECTION_HEADINGS = {
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
 const TRACK_SEG_GAP_PX = 2;
+/** Do not squash a run into +N unless at least this many like-segments would hide. */
+const TRACK_OVERFLOW_MIN = 5;
 /** Current-round / emphasis segment — matches a typical +N overflow chip. */
 const TRACK_EMPHASIS_MIN_PX = 28;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
@@ -191,7 +193,6 @@ const state = {
   roundVisitSet: new Set(),
   roundVisitRound: 0,
   roundVisitPath: "",
-  journeyFilter: "all",
   journeyOpen: false,
   journeyPayload: null,
   journeyLayoutKey: "",
@@ -267,7 +268,6 @@ const el = {
   journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
   journeyOverlayTitle: document.getElementById("journeyOverlayTitle"),
   journeyOverlayClose: document.getElementById("journeyOverlayClose"),
-  journeyFilter: document.getElementById("journeyFilter"),
   journeyPath: document.getElementById("journeyPath"),
   journeyTip: document.getElementById("journeyTip"),
   fragmentsBlock: document.getElementById("fragmentsBlock"),
@@ -865,12 +865,15 @@ function renderForkSpur(parentSeg, progress, fork) {
   spur.setAttribute("aria-label", done ? `${kind} ${t("hud.complete")}` : `${kind} ${current}/${total}`);
   const runs = rleTrackItems(items);
   for (const run of runs) {
-    if (run.current || run.count === 1) {
-      appendTrackSeg(spur, {
-        state: run.state,
-        current: Boolean(run.current),
-        title: `${kind} ${run.startLabel}`,
-      });
+    const startNum = Number(String(run.startLabel).match(/\d+/)?.[0] || 1);
+    if (run.current || run.count < TRACK_OVERFLOW_MIN) {
+      for (let i = 0; i < run.count; i += 1) {
+        appendTrackSeg(spur, {
+          state: run.state,
+          current: Boolean(run.current) && i === 0,
+          title: `${kind} ${startNum + i}`,
+        });
+      }
     } else {
       appendTrackSeg(spur, {
         state: run.state,
@@ -932,7 +935,30 @@ function journeyEventPath(event) {
   return String(event?.path || event?.extra?.path || "main");
 }
 
+function journeyStampedPairs() {
+  const map = normalizeBingoStampedPairs(state.status?.bingo_stamped_pairs);
+  const set = new Set();
+  for (const pairs of Object.values(map || {})) {
+    for (const pair of pairs || []) {
+      const key = String(pair || "").trim().toUpperCase();
+      if (key) set.add(key);
+    }
+  }
+  return set;
+}
+
+function roughTitleBingoPair(title) {
+  const letters = [];
+  for (const ch of String(title || "")) {
+    const upper = ch.toUpperCase();
+    if (upper >= "A" && upper <= "Z") letters.push(upper);
+    if (letters.length >= 2) return letters[0] + letters[1];
+  }
+  return "";
+}
+
 function journeyPageNodes(events) {
+  const stampedPairs = journeyStampedPairs();
   const nodes = [];
   for (const event of events) {
     const title = String(event?.title || "").trim();
@@ -957,7 +983,9 @@ function journeyPageNodes(events) {
         node.mainRound = true;
       }
     }
-    if (kind === "bingo_stamp") node.stamp = true;
+    if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
+    const pair = roughTitleBingoPair(title);
+    if (pair && stampedPairs.has(pair)) node.stamp = true;
     if (node !== last) nodes.push(node);
   }
   return nodes.map((node) => {
@@ -1066,22 +1094,18 @@ function showJourneyTip(node, clientX, clientY) {
   el.journeyTip.style.top = `${top}px`;
 }
 
-function drawJourneyPath(payload, filter) {
+function drawJourneyPath(payload) {
   const host = el.journeyPath;
   if (!host) return;
   const events = Array.isArray(payload?.events) ? payload.events : [];
-  const selected = filter || "all";
-  const filtered = selected === "all"
-    ? events
-    : events.filter((event) => journeyEventPath(event) === selected);
-  const nodes = journeyPageNodes(filtered);
+  const nodes = journeyPageNodes(events);
   const width = Math.max(host.clientWidth || 0, 0);
   if (width < 40) {
-    if (state.journeyOpen) requestAnimationFrame(() => drawJourneyPath(payload, selected));
+    if (state.journeyOpen) requestAnimationFrame(() => drawJourneyPath(payload));
     return;
   }
   const lastTitle = nodes.length ? nodes[nodes.length - 1].title : "";
-  const layoutKey = `${width}|${selected}|${nodes.length}|${nodes[0]?.title || ""}|${lastTitle}|${nodes.filter((n) => n.milestone).length}`;
+  const layoutKey = `${width}|${nodes.length}|${nodes[0]?.title || ""}|${lastTitle}|${nodes.filter((n) => n.milestone).length}`;
   if (layoutKey === state.journeyLayoutKey && host.querySelector("svg")) return;
   state.journeyLayoutKey = layoutKey;
   hideJourneyTip();
@@ -1161,35 +1185,10 @@ function drawJourneyPath(payload, filter) {
   host.appendChild(labels);
 }
 
-function fillJourneyFilter(paths, selected) {
-  if (!el.journeyFilter) return selected || "all";
-  const previous = el.journeyFilter.value || selected || "all";
-  el.journeyFilter.innerHTML = "";
-  const allOpt = document.createElement("option");
-  allOpt.value = "all";
-  allOpt.textContent = t("journey.filterAll");
-  el.journeyFilter.appendChild(allOpt);
-  for (const path of paths) {
-    if (!path?.id) continue;
-    const opt = document.createElement("option");
-    opt.value = path.id;
-    opt.textContent = pathLabel(path);
-    el.journeyFilter.appendChild(opt);
-  }
-  const next = [...el.journeyFilter.options].some((opt) => opt.value === previous)
-    ? previous
-    : "all";
-  el.journeyFilter.value = next;
-  return next;
-}
-
-function renderJourneyView(payload, filter) {
+function renderJourneyView(payload) {
   state.journeyPayload = payload;
   state.journeyLayoutKey = "";
-  const paths = Array.isArray(payload?.paths) ? payload.paths : [];
-  const selected = fillJourneyFilter(paths, filter || "all");
-  state.journeyFilter = selected;
-  drawJourneyPath(payload, selected);
+  drawJourneyPath(payload);
 }
 
 async function openJourneyOverlay({ credits = false } = {}) {
@@ -1201,9 +1200,9 @@ async function openJourneyOverlay({ credits = false } = {}) {
   }
   try {
     const payload = await api(`/api/session/${state.sessionId}/journey`);
-    renderJourneyView(payload, state.journeyFilter || "all");
+    renderJourneyView(payload);
   } catch {
-    renderJourneyView({ events: [], visit_counts: {}, paths: [] }, "all");
+    renderJourneyView({ events: [], visit_counts: {}, paths: [] });
   }
 }
 
@@ -1218,13 +1217,6 @@ function bindJourneyOverlayUi() {
   });
   el.journeyOverlayClose?.addEventListener("click", closeJourneyOverlay);
   el.journeyOverlayBackdrop?.addEventListener("click", closeJourneyOverlay);
-  el.journeyFilter?.addEventListener("change", () => {
-    state.journeyFilter = el.journeyFilter.value || "all";
-    if (!state.journeyOpen || !state.sessionId) return;
-    void api(`/api/session/${state.sessionId}/journey`)
-      .then((payload) => renderJourneyView(payload, state.journeyFilter))
-      .catch(() => {});
-  });
 }
 
 function titlesMatch(a, b) {
@@ -1499,7 +1491,7 @@ function buildTrackPlan(items, trackEl) {
   const avail = trackContentWidthPx(trackEl);
   const runs = rleTrackItems(items);
   const plan = runs.map((run) => {
-    if (run.current || run.crossroad || run.count === 1) {
+    if (run.current || run.crossroad || run.count < TRACK_OVERFLOW_MIN) {
       return { run, individuals: run.count, overflow: 0 };
     }
     return { run, individuals: 0, overflow: run.count };
@@ -1534,6 +1526,13 @@ function buildTrackPlan(items, trackEl) {
       p.overflow += 1;
       blocked.add(best);
       continue;
+    }
+  }
+
+  for (const p of plan) {
+    if (p.overflow > 0 && p.overflow < TRACK_OVERFLOW_MIN) {
+      p.individuals += p.overflow;
+      p.overflow = 0;
     }
   }
 
@@ -4197,7 +4196,7 @@ if (typeof ResizeObserver !== "undefined") {
       if (!state.journeyOpen || !state.journeyPayload) return;
       window.clearTimeout(journeyResizeTimer);
       journeyResizeTimer = window.setTimeout(() => {
-        drawJourneyPath(state.journeyPayload, state.journeyFilter || "all");
+        drawJourneyPath(state.journeyPayload);
       }, 50);
     });
     journeyResizeObserver.observe(el.journeyPath);

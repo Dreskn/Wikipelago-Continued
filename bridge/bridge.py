@@ -1876,6 +1876,8 @@ class APConnection:
         events = await self._flush_bingo_line_checks()
         if self._bingo_stamps_snapshot() != before:
             await self._persist_bingo_stamps()
+            extra = {"pair": pair} if pair else None
+            await self._append_travel_event("bingo_cell", page_title, extra=extra)
         return events
 
     async def merge_bingo_stamps(self, stamped_pairs: Any) -> list[dict[str, Any]]:
