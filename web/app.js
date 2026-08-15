@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.12";
+const APP_VERSION = "2026.08.15.13";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -937,30 +937,7 @@ function journeyEventPath(event) {
   return String(event?.path || event?.extra?.path || "main");
 }
 
-function journeyStampedPairs() {
-  const map = normalizeBingoStampedPairs(state.status?.bingo_stamped_pairs);
-  const set = new Set();
-  for (const pairs of Object.values(map || {})) {
-    for (const pair of pairs || []) {
-      const key = String(pair || "").trim().toUpperCase();
-      if (key) set.add(key);
-    }
-  }
-  return set;
-}
-
-function roughTitleBingoPair(title) {
-  const letters = [];
-  for (const ch of String(title || "")) {
-    const upper = ch.toUpperCase();
-    if (upper >= "A" && upper <= "Z") letters.push(upper);
-    if (letters.length >= 2) return letters[0] + letters[1];
-  }
-  return "";
-}
-
 function journeyPageNodes(events) {
-  const stampedPairs = journeyStampedPairs();
   const nodes = [];
   for (const event of events) {
     const title = String(event?.title || "").trim();
@@ -975,6 +952,7 @@ function journeyPageNodes(events) {
           mainRound: false,
           forks: new Set(),
           stamp: false,
+          grandGoal: false,
         };
     node.kinds.add(kind);
     if (kind === "round_complete") {
@@ -986,18 +964,18 @@ function journeyPageNodes(events) {
       }
     }
     if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
-    const pair = roughTitleBingoPair(title);
-    if (pair && stampedPairs.has(pair)) node.stamp = true;
+    if (kind === "grand_goal") node.grandGoal = true;
     if (node !== last) nodes.push(node);
   }
   return nodes.map((node) => {
-    const milestone = Boolean(node.mainRound || node.forks.size || node.stamp);
+    const milestone = Boolean(node.mainRound || node.forks.size || node.stamp || node.grandGoal);
     return {
       title: node.title,
       kinds: node.kinds,
       mainRound: node.mainRound,
       forks: [...node.forks].sort((a, b) => a - b),
       stamp: node.stamp,
+      grandGoal: node.grandGoal,
       milestone,
     };
   });
@@ -1020,7 +998,7 @@ function layoutJourneyNodes(nodes, width) {
       row,
       x: padX + col * gap,
       y: padY + row * rowH,
-      r: node.milestone ? (node.stamp && (node.mainRound || node.forks.length) ? 11 : 9) : 4.5,
+      r: node.milestone ? (node.grandGoal || (node.stamp && (node.mainRound || node.forks.length)) ? 11 : 9) : 4.5,
     };
   });
 }
@@ -1046,9 +1024,10 @@ function journeyTrailD(points) {
 }
 
 function journeyNodeFill(node) {
+  if (node.grandGoal) return { fill: "#ffd76a", stroke: "#c4922a" };
   if (node.mainRound) return { fill: "#1ecb70", stroke: "#148a4c" };
   if (node.forks.length) return { fill: "#40c4ff", stroke: "#1a7aa0" };
-  if (node.stamp) return { fill: "#ffd76a", stroke: "#c4922a" };
+  if (node.stamp) return { fill: "#b57bff", stroke: "#7a3fd4" };
   return { fill: "#0d1620", stroke: "#6a849c" };
 }
 
@@ -1056,6 +1035,7 @@ function journeyNodeTipLines(node) {
   const lines = [];
   if (node.mainRound) lines.push(t("journey.roundMain"));
   for (const fork of node.forks) lines.push(t("journey.roundFork", { n: fork }));
+  if (node.grandGoal) lines.push(t("journey.grandGoal"));
   if (node.stamp) lines.push(t("journey.stamp"));
   if (!lines.length && node.kinds.has("back")) lines.push(journeyKindLabel("back"));
   if (!lines.length && node.kinds.has("death")) lines.push(journeyKindLabel("death"));
@@ -1140,13 +1120,13 @@ function drawJourneyPath(payload) {
   for (let i = 0; i < points.length; i += 1) {
     const node = points[i];
     const colors = journeyNodeFill(node);
-    if (node.stamp && (node.mainRound || node.forks.length)) {
+    if (node.stamp && (node.mainRound || node.forks.length || node.grandGoal)) {
       const ring = document.createElementNS(NS, "circle");
       ring.setAttribute("cx", String(node.x));
       ring.setAttribute("cy", String(node.y));
       ring.setAttribute("r", String(node.r + 3));
       ring.setAttribute("fill", "none");
-      ring.setAttribute("stroke", "#ffd76a");
+      ring.setAttribute("stroke", "#b57bff");
       ring.setAttribute("stroke-width", "2.5");
       svg.appendChild(ring);
     }

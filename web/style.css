@@ -120,13 +120,17 @@ body {
   display: flex;
   gap: 8px;
   margin-top: 10px;
-  align-items: center;
+  align-items: stretch;
 }
-.connection-actions #connectBtn {
-  flex: 1 1 auto;
-}
+.connection-actions #connectBtn,
 .connection-actions #practiceBtn {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 10px 14px;
+  font-size: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  border-radius: 9px;
 }
 
 .main-grid {

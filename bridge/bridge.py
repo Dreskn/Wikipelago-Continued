@@ -2852,6 +2852,11 @@ class APConnection:
 
         self.state.boss_completed = True
         await self.send_goal_status()
+        await self._append_travel_event(
+            "grand_goal",
+            self.state.last_page or goal_title,
+            extra={"path": "main"},
+        )
 
     def _debug_item_id(self, name: str) -> int | None:
         if name in self.state.item_ids:
