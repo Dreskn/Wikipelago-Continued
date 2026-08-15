@@ -133,7 +133,8 @@ body {
   flex: 1 1 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 666px;
+  --side-w: clamp(420px, calc(420px + (100vw - 1200px) * 246 / 720), 666px);
+  grid-template-columns: 1fr var(--side-w);
   gap: 16px;
   margin-top: 14px;
   align-items: stretch;
