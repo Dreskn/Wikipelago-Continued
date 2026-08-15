@@ -42,6 +42,7 @@ $repoRoot = Split-Path -Parent $Root
 $bridgePath = [System.IO.Path]::Combine($repoRoot, "bridge", "bridge.py")
 $webAppPath = [System.IO.Path]::Combine($repoRoot, "web", "app.js")
 $webIndexPath = [System.IO.Path]::Combine($repoRoot, "web", "index.html")
+$webCssPath = [System.IO.Path]::Combine($repoRoot, "web", "style.css")
 $webManifestPath = [System.IO.Path]::Combine($repoRoot, "web", "manifest.webmanifest")
 $webServiceWorkerPath = [System.IO.Path]::Combine($repoRoot, "web", "service-worker.js")
 $yamlPath = [System.IO.Path]::Combine($repoRoot, "yaml", "Wikipelago.yaml")
@@ -355,6 +356,10 @@ try {
     Assert-NoPattern $bridgePath 'switch-path' 'Bridge must not keep a switch-path route'
     Assert-NoPattern $webAppPath 'switch-path' 'Web must not call switch-path'
     Assert-HasPattern $webIndexPath 'id="journeyOverlay"' 'Web Journey overlay markup is missing'
+    Assert-HasPattern $webIndexPath 'rounds-label-row' 'Web Journey button must sit on the Rounds heading row'
+    Assert-NoPattern $webIndexPath 'id="clicksText"' 'Web side panel must not show a click counter'
+    Assert-NoPattern $webIndexPath 'clicks-row' 'Web side panel must not keep a Clicks row'
+    Assert-HasPattern $webCssPath 'bottom: calc\(100% \+ 2px\)' 'Web fork index must sit above the crossroad T'
     Assert-HasPattern $bridgePath '"trap_count"' 'Bridge status trap_count is missing'
     Assert-HasPattern $bridgePath 'start_practice' 'Bridge practice mode start helper is missing'
     Assert-HasPattern $bridgePath '/api/session/\{sid\}/practice' 'Bridge practice route is missing'

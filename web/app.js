@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.07";
+const APP_VERSION = "2026.08.15.08";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -259,7 +259,6 @@ const el = {
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
-  clicksText: document.getElementById("clicksText"),
   journeyBtn: document.getElementById("journeyBtn"),
   branchTracks: document.getElementById("branchTracks"),
   branchTargets: document.getElementById("branchTargets"),
@@ -887,12 +886,20 @@ function renderForkSpur(parentSeg, progress, fork) {
 
 function syncCrossroadTrackSpace(trackEl) {
   if (!trackEl) return;
-  let extra = 26;
+  const labelTop = 14;
+  let extra = 12;
   trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
-    extra = Math.max(extra, 24 + spur.offsetHeight);
+    extra = Math.max(extra, 12 + spur.offsetHeight);
   });
-  trackEl.style.paddingBottom = `${extra}px`;
-  trackEl.style.minHeight = `${18 + extra}px`;
+  if (trackEl.classList.contains("has-crossroads") || trackEl.querySelector(".seg.crossroad")) {
+    trackEl.style.paddingTop = `${labelTop}px`;
+    trackEl.style.paddingBottom = `${extra}px`;
+    trackEl.style.minHeight = `${18 + labelTop + extra}px`;
+  } else {
+    trackEl.style.paddingTop = "";
+    trackEl.style.paddingBottom = "";
+    trackEl.style.minHeight = "";
+  }
 }
 
 function renderCrossroadBadge(status) {
@@ -2900,7 +2907,6 @@ function updateHUD(status) {
     el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
   }
 
-  el.clicksText.textContent = String(state.clicksUsed);
   el.compassHint.textContent = status.compass_unlocked
     ? (I18n?.localizeCompassHint
       ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
@@ -3773,7 +3779,6 @@ async function openArticle(title, options = {}) {
     }
 
     if (countAsClick) state.clicksUsed += 1;
-    el.clicksText.textContent = String(state.clicksUsed);
     saveLocalProgress();
 
     if (replaceHistory) {
@@ -3808,7 +3813,6 @@ async function openArticle(title, options = {}) {
         if (Number.isFinite(nextClicks)) {
           state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
         }
-        el.clicksText.textContent = String(state.clicksUsed);
         saveLocalProgress();
         return;
       }

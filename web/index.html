@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260815-7" />
+  <link rel="stylesheet" href="/static/style.css?v=20260815-8" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -75,8 +75,9 @@
 
         <div class="card">
           <div id="roundsBlock">
-            <div class="run-label-row">
+            <div class="run-label-row rounds-label-row">
               <strong data-i18n="hud.rounds">Rounds</strong>
+              <button type="button" id="journeyBtn" class="btn-quiet hidden" data-i18n="journey.open">Journey</button>
               <span id="roundText" class="muted-meta">-</span>
             </div>
             <div id="roundsTrack" class="rounds-track" aria-label="Round progress" data-i18n-aria="items.roundsAria"></div>
@@ -115,10 +116,6 @@
             </p>
           </div>
 
-          <p class="clicks-row">
-            <strong data-i18n="hud.clicks">Clicks:</strong> <span id="clicksText">0</span>
-            <button type="button" id="journeyBtn" class="btn-quiet hidden" data-i18n="journey.open">Journey</button>
-          </p>
           <p><strong data-i18n="hud.compass">Compass:</strong> <span id="compassHint">-</span></p>
           <div id="toast" class="toast hidden"></div>
         </div>
@@ -218,7 +215,7 @@
     </div>
   </div>
 
-  <script src="/static/i18n.js?v=20260815-7"></script>
-  <script src="/static/app.js?v=20260815-7"></script>
+  <script src="/static/i18n.js?v=20260815-8"></script>
+  <script src="/static/app.js?v=20260815-8"></script>
 </body>
 </html>
