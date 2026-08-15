@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.03";
+const APP_VERSION = "2026.08.15.04";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -720,7 +720,12 @@ async function rerollCurrentTarget() {
   try {
     const result = await api(`/api/session/${state.sessionId}/reroll-target`, "POST", {});
     if (result.status) updateHUD(result.status);
-    toast(t("toast.rerolled", { title: result.new_target }), "ok", 6500);
+    const changes = Array.isArray(result.changes) ? result.changes : [];
+    if (changes.length > 1) {
+      toast(t("toast.rerolledAll", { n: changes.length }), "ok", 6500);
+    } else {
+      toast(t("toast.rerolled", { title: result.new_target || changes[0]?.new_target || "" }), "ok", 6500);
+    }
   } catch (err) {
     toast(t("toast.rerollFailed", { error: err.message || err }), "warn", 6500);
     try { await pollStatus(); } catch { /* ignore */ }

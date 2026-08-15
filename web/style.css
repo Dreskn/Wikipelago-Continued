@@ -1193,6 +1193,14 @@ button {
 }
 .targets-block .run-label-row {
   margin-bottom: 2px;
+  align-items: center;
+}
+.targets-reroll {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .targets-block .target-row {
   margin: 4px 0;

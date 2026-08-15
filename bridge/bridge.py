@@ -494,11 +494,29 @@ class SessionState:
         self.sync_target_reroll_counter()
         if not self.is_playable() or self.boss_completed:
             return False
-        if not self.practice and self.round_index >= self.check_count:
-            return False
         if self.target_rerolls_remaining() <= 0:
             return False
-        return bool(self.reroll_pool)
+        if not self.reroll_pool:
+            return False
+        return bool(self.rerollable_target_slots())
+
+    def rerollable_target_slots(self) -> list[dict[str, Any]]:
+        slots: list[dict[str, Any]] = []
+        if self.round_index < len(self.round_pairs):
+            target = str(self.round_pairs[self.round_index].get("target") or "")
+            if target:
+                slots.append({"kind": "main", "old_target": target})
+        for item in self.live_branch_targets():
+            target = str(item.get("target") or "")
+            if not target:
+                continue
+            slots.append({
+                "kind": "branch",
+                "branch_id": int(item.get("id") or 0),
+                "fork": int(item.get("fork") or 0),
+                "old_target": target,
+            })
+        return slots
 
     def branch_key_count(self) -> int:
         return self.item_count("Branch Key")
@@ -2213,6 +2231,20 @@ class APConnection:
         self.state.round_pairs[idx]["target"] = title
         return True
 
+    def _set_branch_pair_target(self, branch_id: int, new_target: str) -> bool:
+        title = str(new_target or "").strip()
+        if not title:
+            return False
+        pairs = self.state.branch_pairs(branch_id)
+        try:
+            idx = int(self.state.branch_round_index.get(int(branch_id), 0) or 0)
+        except Exception:
+            idx = 0
+        if idx < 0 or idx >= len(pairs):
+            return False
+        pairs[idx]["target"] = title
+        return True
+
     def _branch_location_ids(self, branch_id: int) -> list[int]:
         try:
             bid = int(branch_id)
@@ -2656,7 +2688,8 @@ class APConnection:
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
-        if not self.state.practice and self.state.round_index >= self.state.check_count:
+        slots = self.state.rerollable_target_slots()
+        if not slots:
             return {
                 "ok": False,
                 "error": "cannot reroll the Grand Goal",
@@ -2672,9 +2705,21 @@ class APConnection:
         def _norm(title: str) -> str:
             return str(title or "").replace("_", " ").strip().casefold()
 
+        def _title_still_used(title: str) -> bool:
+            needle = _norm(title)
+            if not needle:
+                return False
+            for pair in self.state.round_pairs:
+                if _norm(pair.get("target", "")) == needle:
+                    return True
+            for branch in self.state.branches:
+                for pair in (branch.get("pairs") or []):
+                    if isinstance(pair, dict) and _norm(pair.get("target", "")) == needle:
+                        return True
+            return False
+
         start = self.state.current_start()
-        old_target = self.state.current_target()
-        blocked = {_norm(start), _norm(old_target), _norm(self.state.goal_article())}
+        blocked = {_norm(start), _norm(self.state.goal_article())}
         for pair in self.state.round_pairs:
             blocked.add(_norm(pair.get("target", "")))
         for branch in self.state.branches:
@@ -2682,63 +2727,79 @@ class APConnection:
                 if isinstance(pair, dict):
                     blocked.add(_norm(pair.get("target", "")))
 
-        candidates = [title for title in self.state.reroll_pool if _norm(title) not in blocked]
-        if not candidates:
-            return {
-                "ok": False,
-                "error": "no alternate targets left in the seed pool",
-                "status": self.state.to_status(),
-            }
+        pool = list(self.state.reroll_pool)
 
-        picked = random.choice(candidates)
-        new_target = await self._canonicalize_title(picked)
-        if _norm(new_target) in blocked or not new_target:
-            # Canonicalization collided with a blocked title; try a few more.
+        async def _pick(blocked_titles: set[str]) -> tuple[str, str] | None:
+            candidates = [title for title in pool if _norm(title) not in blocked_titles]
+            if not candidates:
+                return None
+            picked = random.choice(candidates)
+            resolved = await self._canonicalize_title(picked)
+            if resolved and _norm(resolved) not in blocked_titles:
+                return picked, resolved
             random.shuffle(candidates)
-            new_target = ""
             for candidate in candidates[:12]:
                 resolved = await self._canonicalize_title(candidate)
-                if resolved and _norm(resolved) not in blocked:
-                    new_target = resolved
-                    picked = candidate
-                    break
-            if not new_target:
+                if resolved and _norm(resolved) not in blocked_titles:
+                    return candidate, resolved
+            return None
+
+        picks: list[tuple[dict[str, Any], str, str]] = []
+        for slot in slots:
+            chosen = await _pick(blocked)
+            if not chosen:
                 return {
                     "ok": False,
-                    "error": "no usable alternate targets after title resolution",
+                    "error": "no alternate targets left in the seed pool",
                     "status": self.state.to_status(),
                 }
+            picked, new_target = chosen
+            picks.append((slot, picked, new_target))
+            blocked.add(_norm(picked))
+            blocked.add(_norm(new_target))
+            pool = [title for title in pool if _norm(title) != _norm(picked)]
 
-        if not self._set_active_pair_target(new_target):
-            return {"ok": False, "error": "no active round", "status": self.state.to_status()}
-        self.state.reroll_pool = [title for title in self.state.reroll_pool if _norm(title) != _norm(picked)]
-        # Return the discarded target to the pool for later rounds / rerolls.
-        if old_target and _norm(old_target) != _norm(self.state.goal_article()):
-            still_used = False
-            for pair in self.state.round_pairs:
-                if _norm(pair.get("target", "")) == _norm(old_target):
-                    still_used = True
-                    break
-            if not still_used:
-                for branch in self.state.branches:
-                    for pair in (branch.get("pairs") or []):
-                        if isinstance(pair, dict) and _norm(pair.get("target", "")) == _norm(old_target):
-                            still_used = True
-                            break
-                    if still_used:
-                        break
-            if not still_used and all(_norm(title) != _norm(old_target) for title in self.state.reroll_pool):
-                self.state.reroll_pool.append(old_target)
+        changes: list[dict[str, Any]] = []
+        recycled: list[str] = []
+        for slot, picked, new_target in picks:
+            old_target = str(slot.get("old_target") or "")
+            if slot.get("kind") == "branch":
+                if not self._set_branch_pair_target(int(slot.get("branch_id") or 0), new_target):
+                    return {"ok": False, "error": "no active branch round", "status": self.state.to_status()}
+            elif not self._set_active_pair_target(new_target):
+                return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+            change = {
+                "kind": str(slot.get("kind") or "main"),
+                "old_target": old_target,
+                "new_target": new_target,
+            }
+            if slot.get("kind") == "branch":
+                change["branch_id"] = int(slot.get("branch_id") or 0)
+                change["fork"] = int(slot.get("fork") or 0)
+            changes.append(change)
+            if old_target and _norm(old_target) != _norm(self.state.goal_article()):
+                recycled.append(old_target)
 
+        for old_target in recycled:
+            if _title_still_used(old_target):
+                continue
+            if all(_norm(title) != _norm(old_target) for title in pool):
+                pool.append(old_target)
+
+        self.state.reroll_pool = pool
         self.state.target_rerolls_used += 1
-        self.state.warmer_colder = None
-        self.state.last_distance_estimate = None
+        if any(change.get("kind") == "main" for change in changes):
+            self.state.warmer_colder = None
+            self.state.last_distance_estimate = None
 
+        main_change = next((item for item in changes if item.get("kind") == "main"), None)
+        first = main_change or (changes[0] if changes else {})
         return {
             "ok": True,
             "rerolled": True,
-            "old_target": old_target,
-            "new_target": new_target,
+            "changes": changes,
+            "old_target": first.get("old_target") or "",
+            "new_target": first.get("new_target") or "",
             "rerolls_used": self.state.target_rerolls_used,
             "rerolls_remaining": self.state.target_rerolls_remaining(),
             "status": self.state.to_status(),
