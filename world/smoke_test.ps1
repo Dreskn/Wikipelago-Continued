@@ -340,6 +340,8 @@ try {
     Assert-HasPattern $webAppPath 'status.branch_keys_available' 'Web Branch Key badge must show remaining keys'
     Assert-HasPattern $webAppPath 'hud.forkTitle' 'Web fork progress title is missing'
     Assert-HasPattern $webAppPath 'hud.forkTarget' 'Web fork target label is missing'
+    Assert-HasPattern $webAppPath 'dataset.fork' 'Web crossroad fork numbers on the track hook are missing'
+    Assert-HasPattern $webIndexPath 'hud.targets' 'Web Targets heading is missing'
     Assert-HasPattern $webAppPath '/journey' 'Web journey API client is missing'
     Assert-HasPattern $webAppPath 'openJourneyOverlay' 'Web Journey overlay helper is missing'
     Assert-HasPattern $webIndexPath 'id="branchTracks"' 'Web branch track markup is missing'

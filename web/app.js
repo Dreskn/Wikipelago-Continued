@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.01";
+const APP_VERSION = "2026.08.15.02";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -1258,6 +1258,7 @@ function rleTrackItems(items) {
         current: Boolean(item.current),
         crossroad: Boolean(item.crossroad),
         unlocked: Boolean(item.unlocked),
+        fork: Number(item.fork) || 0,
         count: 1,
         startLabel: item.label,
         endLabel: item.label,
@@ -1328,13 +1329,14 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0 }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
   if (current) seg.classList.add("current");
   if (crossroad) seg.classList.add("crossroad");
   if (crossroad && unlocked) seg.classList.add("unlocked");
+  if (crossroad && fork > 0) seg.dataset.fork = String(fork);
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
@@ -1374,6 +1376,7 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
           current: Boolean(run.current),
           crossroad: Boolean(run.crossroad),
           unlocked: Boolean(run.unlocked),
+          fork: Number(run.fork) || 0,
           title: `${kind} ${individualStart + i}`,
         });
       }
@@ -1410,6 +1413,16 @@ function renderRoundsTrack(status) {
   const unlockedCross = new Set(
     (Array.isArray(status.unlocked_crossroad_rounds) ? status.unlocked_crossroad_rounds : []).map((n) => Number(n))
   );
+  const forkByRound = new Map();
+  for (const cr of Array.isArray(status.crossroads) ? status.crossroads : []) {
+    const round = Number(cr?.main_round);
+    if (!crossroads.has(round)) continue;
+    const explicit = Number(cr?.fork);
+    const fork = Number.isFinite(explicit) && explicit > 0
+      ? Math.trunc(explicit)
+      : Math.trunc(Number(cr?.branch_id)) + 1;
+    if (fork > 0) forkByRound.set(round, fork);
+  }
   const items = [];
   for (let i = 1; i <= total; i += 1) {
     let stateName = "locked";
@@ -1420,6 +1433,7 @@ function renderRoundsTrack(status) {
       current: !complete && i === current && i > completed,
       crossroad: crossroads.has(i),
       unlocked: unlockedCross.has(i),
+      fork: forkByRound.get(i) || 0,
       label: `${t("track.kindRound")} ${i}`,
     });
   }

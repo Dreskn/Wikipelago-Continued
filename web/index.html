@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260815-1" />
+  <link rel="stylesheet" href="/static/style.css?v=20260815-2" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -84,16 +84,21 @@
             <div id="crossroadBadge" class="crossroad-badge hidden"></div>
           </div>
 
-          <p class="target-row">
-            <strong data-i18n="hud.target">Target:</strong>
-            <span class="target-hover" id="targetHover">
-              <span id="targetText">-</span>
-              <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
-            </span>
-            <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll this round's target (up to 3 per round; not on Grand Goal)" data-i18n="hud.reroll" data-i18n-title="hud.rerollTitle">Reroll</button>
-            <span id="rerollTargetMeta" class="muted-meta"></span>
-          </p>
-          <div id="branchTargets" class="branch-targets hidden"></div>
+          <div class="targets-block">
+            <div class="run-label-row">
+              <strong data-i18n="hud.targets">Targets</strong>
+            </div>
+            <p class="target-row">
+              <strong data-i18n="path.main">Main road</strong>
+              <span class="target-hover" id="targetHover">
+                <span id="targetText">-</span>
+                <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
+              </span>
+              <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll this round's target (up to 3 per round; not on Grand Goal)" data-i18n="hud.reroll" data-i18n-title="hud.rerollTitle">Reroll</button>
+              <span id="rerollTargetMeta" class="muted-meta"></span>
+            </p>
+            <div id="branchTargets" class="branch-targets hidden"></div>
+          </div>
 
           <div class="goal-block">
             <div id="fragmentsBlock">
@@ -217,7 +222,7 @@
     </div>
   </div>
 
-  <script src="/static/i18n.js?v=20260815-1"></script>
-  <script src="/static/app.js?v=20260815-1"></script>
+  <script src="/static/i18n.js?v=20260815-2"></script>
+  <script src="/static/app.js?v=20260815-2"></script>
 </body>
 </html>

@@ -764,6 +764,11 @@ button {
   flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
+  font-size: 0.92rem;
+}
+.target-row strong {
+  font-size: inherit;
+  font-weight: 700;
 }
 .target-hover {
   position: relative;
@@ -1178,11 +1183,19 @@ button {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  margin: 0 0 8px;
+  margin: 0;
 }
 .branch-target-row {
   margin: 0;
-  font-size: 0.9rem;
+}
+.targets-block {
+  margin: 8px 0 6px;
+}
+.targets-block .run-label-row {
+  margin-bottom: 2px;
+}
+.targets-block .target-row {
+  margin: 4px 0;
 }
 .branch-tracks {
   display: flex;
@@ -1196,8 +1209,8 @@ button {
   margin-bottom: 6px;
 }
 .rounds-track.has-crossroads {
-  padding-bottom: 12px;
-  min-height: 26px;
+  padding-bottom: 22px;
+  min-height: 38px;
   overflow: visible;
 }
 .rounds-track .seg.crossroad {
@@ -1213,18 +1226,34 @@ button {
   position: absolute;
   left: 50%;
   top: 100%;
-  width: 8px;
-  height: 8px;
+  width: 50%;
+  height: 10px;
   border-left: 2px solid #ffd789;
   border-bottom: 2px solid #ffd789;
   border-radius: 0 0 0 2px;
   pointer-events: none;
+}
+.rounds-track .seg.crossroad[data-fork]::before {
+  content: attr(data-fork);
+  position: absolute;
+  left: 100%;
+  top: calc(100% + 10px);
+  transform: translate(-50%, -40%);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #ffd789;
+  pointer-events: none;
+  z-index: 2;
 }
 .rounds-track .seg.crossroad.unlocked {
   border-color: #1ecb70;
 }
 .rounds-track .seg.crossroad.unlocked::after {
   border-color: #1ecb70;
+}
+.rounds-track .seg.crossroad.unlocked[data-fork]::before {
+  color: #1ecb70;
 }
 .crossroad-badge {
   margin-top: 8px;
