@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.09";
+const APP_VERSION = "2026.08.15.10";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -111,6 +111,8 @@ const TRACK_SEG_MIN_PX = 4;
 const TRACK_SEG_GAP_PX = 2;
 /** Do not squash a run into +N unless at least this many like-segments would hide. */
 const TRACK_OVERFLOW_MIN = 5;
+/** Fork spurs are short, so they may collapse from 3 like-segments. */
+const TRACK_FORK_OVERFLOW_MIN = 3;
 /** Current-round / emphasis segment — matches a typical +N overflow chip. */
 const TRACK_EMPHASIS_MIN_PX = 28;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
@@ -866,7 +868,7 @@ function renderForkSpur(parentSeg, progress, fork) {
   const runs = rleTrackItems(items);
   for (const run of runs) {
     const startNum = Number(String(run.startLabel).match(/\d+/)?.[0] || 1);
-    if (run.current || run.count < TRACK_OVERFLOW_MIN) {
+    if (run.current || run.count < TRACK_FORK_OVERFLOW_MIN) {
       for (let i = 0; i < run.count; i += 1) {
         appendTrackSeg(spur, {
           state: run.state,

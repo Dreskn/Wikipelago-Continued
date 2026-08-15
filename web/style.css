@@ -1242,18 +1242,20 @@ button {
   pointer-events: none;
   min-width: 16px;
 }
-.rounds-track .fork-spur .seg,
-.rounds-track .fork-spur .seg.current,
-.rounds-track .fork-spur .seg.overflow {
+.rounds-track .fork-spur .seg {
   flex: 0 0 auto;
   flex-shrink: 0;
   box-sizing: border-box;
   width: auto;
   min-width: 16px;
-  height: 12px;
+  height: 4px;
   border-radius: 1px;
   outline: 1px solid transparent;
   outline-offset: 1px;
+}
+.rounds-track .fork-spur .seg.current,
+.rounds-track .fork-spur .seg.overflow {
+  height: 14px;
 }
 .rounds-track .fork-spur .seg.current {
   outline-color: #40c4ff;

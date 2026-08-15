@@ -358,6 +358,7 @@ try {
     Assert-HasPattern $webIndexPath 'id="journeyOverlay"' 'Web Journey overlay markup is missing'
     Assert-NoPattern $webIndexPath 'id="journeyFilter"' 'Web Journey must not keep a main/fork path filter'
     Assert-HasPattern $webAppPath 'TRACK_OVERFLOW_MIN = 5' 'Web track overflow must require at least 5 like-segments'
+    Assert-HasPattern $webAppPath 'TRACK_FORK_OVERFLOW_MIN = 3' 'Web fork overflow must require at least 3 like-segments'
     Assert-HasPattern $bridgePath '"bingo_cell"' 'Bridge must log bingo cell stamps on the journey'
     Assert-HasPattern $webIndexPath 'rounds-label-row' 'Web Journey button must sit on the Rounds heading row'
     Assert-NoPattern $webIndexPath 'id="clicksText"' 'Web side panel must not show a click counter'
