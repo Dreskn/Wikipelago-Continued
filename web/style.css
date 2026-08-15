@@ -14,9 +14,13 @@
 html, body {
   height: 100%;
 }
+html {
+  font-size: 18px;
+}
 body {
   margin: 0;
   font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 1rem;
   background: radial-gradient(circle at 20% 0%, #122132 0%, var(--bg) 45%);
   color: var(--text);
   overflow: hidden;
@@ -69,7 +73,7 @@ body {
   flex: 0 0 auto;
 }
 .topbar-brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
-.topbar h1 { margin: 0; }
+.topbar h1 { margin: 0; font-size: 2rem; }
 .build-badge {
   font-size: 0.78rem;
   font-weight: 600;
@@ -226,6 +230,7 @@ button {
   border: 1px solid #314358;
   padding: 12px;
   min-width: 0;
+  font-size: 16px;
   transition: filter 160ms ease, opacity 160ms ease;
 }
 .article-stage.is-loading .article-body {
@@ -505,7 +510,7 @@ button {
   max-width: none;
   border-collapse: collapse;
   margin: 0;
-  font-size: 0.92rem;
+  font-size: 0.92em;
   background: transparent;
 }
 .article-body th,
@@ -776,9 +781,10 @@ button {
   font-weight: 700;
 }
 .targets-block .target-list {
-  margin-top: 6px;
-  padding: 8px 0 0 1.5em;
+  margin-top: 0;
+  padding: 10px 0 10px 1.5em;
   border-top: 1px solid #314557;
+  border-bottom: 1px solid #314557;
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
   column-gap: 12px;
@@ -1004,7 +1010,7 @@ button {
   padding: 0 4px;
   height: 14px;
   box-sizing: border-box;
-  font-size: 0.62rem;
+  font-size: 10px;
   font-weight: 700;
   line-height: 1;
   text-align: center;
@@ -1051,7 +1057,7 @@ button {
   background: linear-gradient(180deg, #ffd76a 0%, #d4a017 100%);
   border-color: #c4922a;
 }
-.goal-block { margin: 4px 0 8px; }
+.goal-block { margin: 18px 0 8px; }
 .goal-row { margin: 6px 0 0; }
 
 .item-rows { display: flex; flex-direction: column; gap: 10px; }
@@ -1248,10 +1254,11 @@ button {
   margin: 0;
 }
 .targets-block {
-  margin: 8px 0 6px;
+  margin: 18px 0 0;
 }
 .targets-block .run-label-row {
-  margin-bottom: 2px;
+  margin-top: 0;
+  margin-bottom: 10px;
   align-items: center;
 }
 .targets-reroll {
@@ -1314,7 +1321,7 @@ button {
   justify-content: center;
   width: max-content;
   padding: 0 3px;
-  font-size: 0.52rem;
+  font-size: 8px;
 }
 .rounds-track .seg.crossroad {
   position: relative;
@@ -1346,7 +1353,7 @@ button {
   top: auto;
   bottom: calc(100% + 2px);
   transform: translateX(-50%);
-  font-size: 0.62rem;
+  font-size: 10px;
   font-weight: 800;
   line-height: 1;
   color: #d7e6f5;

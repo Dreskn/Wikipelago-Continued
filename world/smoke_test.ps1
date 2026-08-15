@@ -352,6 +352,7 @@ try {
     Assert-HasPattern $webAppPath 'dataset.fork' 'Web crossroad fork numbers on the track hook are missing'
     Assert-HasPattern $webIndexPath 'hud.targets' 'Web Targets heading is missing'
     Assert-HasPattern $webIndexPath 'target-list' 'Web target rows must sit under a Targets divider'
+    Assert-HasPattern $webCssPath 'border-bottom: 1px solid #314557' 'Web target list must have a matching line below the rows'
     Assert-HasPattern $webI18nPath '"hud.rounds": "Progression"' 'Web Rounds heading must be renamed Progression'
     Assert-HasPattern $webI18nPath '"hud.forkTarget": "Branch {n}"' 'Web target labels must say Branch N'
     Assert-HasPattern $webAppPath '/journey' 'Web journey API client is missing'
