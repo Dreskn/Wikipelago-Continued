@@ -2650,6 +2650,7 @@ class APConnection:
             hit = {
                 "kind": "branch",
                 "branch_id": bid,
+                "fork": bid + 1,
                 "target": branch_target,
                 "round": idx + 1,
             }

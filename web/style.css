@@ -1205,11 +1205,7 @@ button {
 .targets-block .target-row {
   margin: 4px 0;
 }
-.branch-tracks {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+.branch-tracks:empty { display: none; }
 .branch-track-block .run-label-row {
   margin-top: 4px;
 }
@@ -1222,6 +1218,40 @@ button {
   padding-bottom: 26px;
   min-height: 42px;
   overflow: visible;
+}
+.rounds-track .fork-spur {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + var(--hook-drop));
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+.rounds-track .fork-spur .seg {
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  width: 8px;
+  min-width: 8px;
+  height: 8px;
+  border-radius: 1px;
+}
+.rounds-track .fork-spur .seg.current {
+  width: 10px;
+  min-width: 10px;
+  height: 10px;
+  outline: 1px solid #40c4ff;
+  outline-offset: 1px;
+}
+.rounds-track .fork-spur .seg.overflow {
+  width: max-content;
+  min-width: 16px;
+  height: 10px;
+  padding: 0 3px;
+  font-size: 0.52rem;
 }
 .rounds-track .seg.crossroad {
   position: relative;

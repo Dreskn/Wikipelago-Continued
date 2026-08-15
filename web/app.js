@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.04";
+const APP_VERSION = "2026.08.15.05";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -765,8 +765,7 @@ function formatThemeTag(tag) {
 function pathLabel(path) {
   if (!path) return t("path.main");
   if (path.id === "main") return t("path.main");
-  const theme = formatThemeTag(path.theme_tag || path.label || "");
-  return theme || t("path.branch", { theme: path.label || path.id });
+  return t("hud.forkTarget", { n: forkNumber(path) });
 }
 
 function forkNumber(item) {
@@ -776,11 +775,13 @@ function forkNumber(item) {
   if (typeof rawId === "number" && Number.isFinite(rawId)) return Math.trunc(rawId) + 1;
   const match = String(rawId || "").match(/branch:(\d+)/);
   if (match) return Number(match[1]) + 1;
+  const branchId = Number(item?.branch_id);
+  if (Number.isFinite(branchId)) return Math.trunc(branchId) + 1;
   return 1;
 }
 
 function forkProgressTitle(item) {
-  return t("hud.forkTitle", { n: forkNumber(item), theme: pathLabel(item) });
+  return t("hud.forkTarget", { n: forkNumber(item) });
 }
 
 function liveTargetTitles(status) {
@@ -821,46 +822,75 @@ function renderBranchTargets(status) {
 }
 
 function renderBranchTracks(status) {
-  if (!el.branchTracks) return;
-  el.branchTracks.innerHTML = "";
-  if (status?.practice) return;
-  const branches = unlockedBranchPaths(status);
-  for (const path of branches) {
+  if (el.branchTracks) el.branchTracks.innerHTML = "";
+}
+
+function forkProgressByNumber(status) {
+  const map = new Map();
+  for (const path of unlockedBranchPaths(status)) {
+    const fork = forkNumber(path);
     const total = Math.max(0, Number(path.length) || 0);
     const current = Math.max(1, Number(path.round) || 1);
     const completed = Math.max(0, Number(path.completed) || 0);
-    const done = total > 0 && completed >= total;
-    const wrap = document.createElement("div");
-    wrap.className = "branch-track-block";
-    const labelRow = document.createElement("div");
-    labelRow.className = "run-label-row";
-    const strong = document.createElement("strong");
-    strong.textContent = forkProgressTitle(path);
-    const meta = document.createElement("span");
-    meta.className = "muted-meta";
-    meta.textContent = done ? t("hud.complete") : `${current}/${total}`;
-    labelRow.appendChild(strong);
-    labelRow.appendChild(meta);
-    const track = document.createElement("div");
-    track.className = "rounds-track branch-rounds-track";
-    track.setAttribute("aria-label", forkProgressTitle(path));
-    wrap.appendChild(labelRow);
-    wrap.appendChild(track);
-    el.branchTracks.appendChild(wrap);
-    const items = [];
-    for (let i = 1; i <= total; i += 1) {
-      let stateName = "open";
-      if (done || i <= completed) stateName = "done";
-      items.push({
-        state: stateName,
-        current: !done && i === current && i > completed,
-        label: `${forkProgressTitle(path)} ${i}`,
+    map.set(fork, {
+      total,
+      current,
+      completed,
+      done: total > 0 && completed >= total,
+    });
+  }
+  return map;
+}
+
+function renderForkSpur(parentSeg, progress, fork) {
+  const total = Math.max(0, Number(progress?.total) || 0);
+  if (!parentSeg || total <= 0) return;
+  const current = Math.max(1, Number(progress.current) || 1);
+  const completed = Math.max(0, Number(progress.completed) || 0);
+  const done = Boolean(progress.done) || completed >= total;
+  const items = [];
+  for (let i = 1; i <= total; i += 1) {
+    let stateName = "open";
+    if (done || i <= completed) stateName = "done";
+    items.push({
+      state: stateName,
+      current: !done && i === current && i > completed,
+      label: String(i),
+    });
+  }
+  const spur = document.createElement("div");
+  spur.className = "fork-spur";
+  const kind = forkProgressTitle({ fork });
+  spur.setAttribute("aria-label", done ? `${kind} ${t("hud.complete")}` : `${kind} ${current}/${total}`);
+  const runs = rleTrackItems(items);
+  for (const run of runs) {
+    if (run.current || run.count === 1) {
+      appendTrackSeg(spur, {
+        state: run.state,
+        current: Boolean(run.current),
+        title: `${kind} ${run.startLabel}`,
+      });
+    } else {
+      appendTrackSeg(spur, {
+        state: run.state,
+        overflowCount: run.count,
+        title: t("track.moreLikeThis", {
+          kind, start: run.startLabel, end: run.endLabel, overflow: run.count,
+        }),
       });
     }
-    track.style.gap = `${TRACK_SEG_GAP_PX}px`;
-    const plan = buildTrackPlan(items, track);
-    renderPlannedTrack(track, plan.plan, forkProgressTitle(path), plan.chipMinPx);
   }
+  parentSeg.appendChild(spur);
+}
+
+function syncCrossroadTrackSpace(trackEl) {
+  if (!trackEl) return;
+  let extra = 26;
+  trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
+    extra = Math.max(extra, 20 + spur.offsetHeight);
+  });
+  trackEl.style.paddingBottom = `${extra}px`;
+  trackEl.style.minHeight = `${18 + extra}px`;
 }
 
 function renderCrossroadBadge(status) {
@@ -871,13 +901,13 @@ function renderCrossroadBadge(status) {
     el.crossroadBadge.textContent = "";
     return;
   }
-  const theme = formatThemeTag(info.theme_tag || "");
   el.crossroadBadge.classList.remove("hidden");
   el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
+  const fork = Number(info.fork) > 0 ? Math.trunc(Number(info.fork)) : Number(info.branch_id) + 1;
   if (info.unlocked) {
-    el.crossroadBadge.textContent = t("crossroad.unlocked", { theme: theme || t("path.main") });
+    el.crossroadBadge.textContent = t("crossroad.unlocked", { n: fork });
   } else if (Number(status.branch_keys_available) > 0) {
-    el.crossroadBadge.textContent = t("crossroad.ready", { theme: theme || t("path.main") });
+    el.crossroadBadge.textContent = t("crossroad.ready", { n: fork });
   } else {
     el.crossroadBadge.textContent = t("crossroad.needKey");
   }
@@ -1264,6 +1294,7 @@ function rleTrackItems(items) {
         crossroad: Boolean(item.crossroad),
         unlocked: Boolean(item.unlocked),
         fork: Number(item.fork) || 0,
+        forkProgress: item.forkProgress || null,
         count: 1,
         startLabel: item.label,
         endLabel: item.label,
@@ -1334,7 +1365,7 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0 }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, forkProgress = null }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
@@ -1347,6 +1378,7 @@ function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, ti
     seg.textContent = `+${overflowCount}`;
   }
   if (title) seg.title = title;
+  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork);
   trackEl.appendChild(seg);
 }
 
@@ -1382,6 +1414,7 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
           crossroad: Boolean(run.crossroad),
           unlocked: Boolean(run.unlocked),
           fork: Number(run.fork) || 0,
+          forkProgress: run.forkProgress || null,
           title: `${kind} ${individualStart + i}`,
         });
       }
@@ -1428,17 +1461,20 @@ function renderRoundsTrack(status) {
       : Math.trunc(Number(cr?.branch_id)) + 1;
     if (fork > 0) forkByRound.set(round, fork);
   }
+  const progressByFork = forkProgressByNumber(status);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
     let stateName = "locked";
     if (complete || i <= completed) stateName = "done";
     else if (i <= unlocked) stateName = "open";
+    const fork = forkByRound.get(i) || 0;
     items.push({
       state: stateName,
       current: !complete && i === current && i > completed,
       crossroad: crossroads.has(i),
       unlocked: unlockedCross.has(i),
-      fork: forkByRound.get(i) || 0,
+      fork,
+      forkProgress: fork ? (progressByFork.get(fork) || null) : null,
       label: `${t("track.kindRound")} ${i}`,
     });
   }
@@ -1446,6 +1482,7 @@ function renderRoundsTrack(status) {
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
   renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
+  syncCrossroadTrackSpace(el.roundsTrack);
   if (el.roundText) {
     el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
@@ -2729,7 +2766,7 @@ function updateHUD(status) {
     const path = (Array.isArray(status.paths) ? status.paths : []).find(
       (item) => item && item.id === `branch:${id}`
     );
-    toast(t("toast.branchUnlocked", { theme: pathLabel(path) || formatThemeTag(path?.theme_tag) }), "ok", 7000);
+    toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
   if (status.last_error) {
@@ -3614,7 +3651,7 @@ async function openArticle(title, options = {}) {
             const title = hit.target || result.target;
             const base = hit.kind === "branch"
               ? t("toast.branchHit", {
-                theme: formatThemeTag(hit.theme_tag) || t("path.branch", { theme: hit.branch_id }),
+                n: forkNumber(hit),
                 title,
               })
               : t("toast.targetHit", { title });
