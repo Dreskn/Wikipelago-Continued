@@ -43,6 +43,7 @@ $bridgePath = [System.IO.Path]::Combine($repoRoot, "bridge", "bridge.py")
 $webAppPath = [System.IO.Path]::Combine($repoRoot, "web", "app.js")
 $webIndexPath = [System.IO.Path]::Combine($repoRoot, "web", "index.html")
 $webCssPath = [System.IO.Path]::Combine($repoRoot, "web", "style.css")
+$webI18nPath = [System.IO.Path]::Combine($repoRoot, "web", "i18n.js")
 $webManifestPath = [System.IO.Path]::Combine($repoRoot, "web", "manifest.webmanifest")
 $webServiceWorkerPath = [System.IO.Path]::Combine($repoRoot, "web", "service-worker.js")
 $yamlPath = [System.IO.Path]::Combine($repoRoot, "yaml", "Wikipelago.yaml")
@@ -231,6 +232,8 @@ try {
     Assert-HasPattern $webAppPath 'isPlayable' 'Web isPlayable helper is missing'
     Assert-HasPattern $webAppPath '/practice' 'Web practice API call is missing'
     Assert-HasPattern $webIndexPath 'id="connectionSummary"' 'Web connection summary markup is missing'
+    Assert-HasPattern $webIndexPath 'id="connectedSlotText"' 'Web connection panel must show the slot name'
+    Assert-HasPattern $webIndexPath 'connection-head' 'Web connection panel must keep Disconnect on the header row'
     Assert-HasPattern $webIndexPath 'id="disconnectBtn"' 'Web disconnect button markup is missing'
     Assert-HasPattern $webIndexPath 'id="practiceBtn"' 'Web practice button markup is missing'
     Assert-HasPattern $webAppPath 'syncBingoStampsToBridge' 'Web bingo stamp sync helper is missing'
@@ -348,6 +351,9 @@ try {
     Assert-HasPattern $webAppPath 'hud.forkTarget' 'Web fork target label is missing'
     Assert-HasPattern $webAppPath 'dataset.fork' 'Web crossroad fork numbers on the track hook are missing'
     Assert-HasPattern $webIndexPath 'hud.targets' 'Web Targets heading is missing'
+    Assert-HasPattern $webIndexPath 'target-list' 'Web target rows must sit under a Targets divider'
+    Assert-HasPattern $webI18nPath '"hud.rounds": "Progression"' 'Web Rounds heading must be renamed Progression'
+    Assert-HasPattern $webI18nPath '"hud.forkTarget": "Branch {n}"' 'Web target labels must say Branch N'
     Assert-HasPattern $webAppPath '/journey' 'Web journey API client is missing'
     Assert-HasPattern $webAppPath 'openJourneyOverlay' 'Web Journey overlay helper is missing'
     Assert-HasPattern $webIndexPath 'id="branchTracks"' 'Web branch track markup is missing'
@@ -363,10 +369,11 @@ try {
     Assert-HasPattern $bridgePath '"grand_goal",' 'Bridge must log Grand Goal completion on the journey'
     Assert-NoPattern $webAppPath 'roughTitleBingoPair' 'Journey must not color every page that shares a stamped letter pair'
     Assert-HasPattern $webAppPath '#b57bff' 'Journey bingo bubbles must be purple'
-    Assert-HasPattern $webIndexPath 'rounds-label-row' 'Web Journey button must sit on the Rounds heading row'
+    Assert-HasPattern $webIndexPath 'rounds-label-row' 'Web Journey button must sit on the Progression heading row'
     Assert-NoPattern $webIndexPath 'id="clicksText"' 'Web side panel must not show a click counter'
     Assert-NoPattern $webIndexPath 'clicks-row' 'Web side panel must not keep a Clicks row'
     Assert-HasPattern $webCssPath 'bottom: calc\(100% \+ 2px\)' 'Web fork index must sit above the crossroad T'
+    Assert-HasPattern $webCssPath '--hook-thick: 16px' 'Web T stem must match the 16px fork chip width'
     Assert-HasPattern $bridgePath '"trap_count"' 'Bridge status trap_count is missing'
     Assert-HasPattern $bridgePath 'start_practice' 'Bridge practice mode start helper is missing'
     Assert-HasPattern $bridgePath '/api/session/\{sid\}/practice' 'Bridge practice route is missing'

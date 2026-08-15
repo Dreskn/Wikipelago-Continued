@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260815-13" />
+  <link rel="stylesheet" href="/static/style.css?v=20260816-02" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -52,7 +52,16 @@
 
       <aside class="side-panel">
         <div class="card" id="connectionCard">
-          <h2 data-i18n="conn.title">Connection</h2>
+          <div class="connection-head">
+            <div class="connection-head-main">
+              <h2 data-i18n="conn.title">Connection</h2>
+              <div id="connectionSummary" class="connection-identity hidden">
+                <span id="connectedServerText" class="connection-id-part">-</span>
+                <span id="connectedSlotText" class="connection-id-part hidden">-</span>
+              </div>
+            </div>
+            <button id="disconnectBtn" type="button" class="btn-quiet hidden" data-i18n="conn.disconnect">Disconnect</button>
+          </div>
           <div id="connectionForm">
             <label data-i18n="conn.server">Server</label>
             <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
@@ -65,18 +74,12 @@
               <button id="practiceBtn" type="button" class="btn-quiet" data-i18n="conn.practice">Practice</button>
             </div>
           </div>
-          <div id="connectionSummary" class="connection-summary hidden">
-            <p class="connection-summary-line">
-              <strong id="connectionSummaryLabel" data-i18n="conn.serverLabel">Server:</strong> <span id="connectedServerText">-</span>
-            </p>
-            <button id="disconnectBtn" type="button" class="btn-quiet" data-i18n="conn.disconnect">Disconnect</button>
-          </div>
         </div>
 
         <div class="card">
           <div id="roundsBlock">
             <div class="run-label-row rounds-label-row">
-              <strong data-i18n="hud.rounds">Rounds</strong>
+              <strong data-i18n="hud.rounds">Progression</strong>
               <button type="button" id="journeyBtn" class="btn-quiet hidden" data-i18n="journey.open">Journey</button>
               <span id="roundText" class="muted-meta">-</span>
             </div>
@@ -93,14 +96,16 @@
                 <span id="rerollTargetMeta" class="muted-meta"></span>
               </span>
             </div>
-            <p class="target-row">
-              <strong data-i18n="path.main">Main road</strong>
-              <span class="target-hover" id="targetHover">
-                <span id="targetText">-</span>
-                <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
-              </span>
-            </p>
-            <div id="branchTargets" class="branch-targets hidden"></div>
+            <div class="target-list">
+              <p class="target-row">
+                <strong data-i18n="path.main">Main road</strong>
+                <span class="target-hover" id="targetHover">
+                  <span id="targetText">-</span>
+                  <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
+                </span>
+              </p>
+              <div id="branchTargets" class="branch-targets hidden"></div>
+            </div>
           </div>
 
           <div class="goal-block">
@@ -211,7 +216,7 @@
     </div>
   </div>
 
-  <script src="/static/i18n.js?v=20260815-13"></script>
-  <script src="/static/app.js?v=20260815-13"></script>
+  <script src="/static/i18n.js?v=20260816-02"></script>
+  <script src="/static/app.js?v=20260816-02"></script>
 </body>
 </html>

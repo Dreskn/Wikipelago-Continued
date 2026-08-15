@@ -775,6 +775,27 @@ button {
   font-size: inherit;
   font-weight: 700;
 }
+.targets-block .target-list {
+  margin-top: 6px;
+  padding: 8px 0 0 1.5em;
+  border-top: 1px solid #314557;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 4px;
+  align-items: baseline;
+  font-size: 0.92rem;
+}
+.targets-block .target-list .target-row,
+.targets-block .target-list .branch-targets:not(.hidden),
+.targets-block .target-list .branch-target-row {
+  display: contents;
+}
+.targets-block .target-list .target-page,
+.targets-block .target-list .target-hover {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .target-hover {
   position: relative;
   flex: 1 1 auto;
@@ -888,17 +909,42 @@ button {
   background: #0f1824; color: var(--text);
 }
 .card p { margin: 6px 0; }
-.connection-summary {
+.connection-head {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 10px;
 }
-.connection-summary-line {
-  margin: 0;
-  word-break: break-word;
+.connection-head-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
 }
-.connection-summary .btn-quiet {
-  align-self: flex-start;
+.connection-head h2 { margin: 0; }
+.connection-identity {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 10px;
+  min-width: 0;
+  flex: 1 1 8rem;
+}
+.connection-id-part {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+#connectionCard #disconnectBtn {
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+#connectionCard.is-active .connection-head {
+  margin-bottom: 0;
 }
 
 .run-label-row {
@@ -1215,9 +1261,6 @@ button {
   flex-wrap: wrap;
   justify-content: flex-end;
 }
-.targets-block .target-row {
-  margin: 4px 0;
-}
 .branch-tracks:empty { display: none; }
 .branch-track-block .run-label-row {
   margin-top: 4px;
@@ -1226,7 +1269,7 @@ button {
   margin-bottom: 6px;
 }
 .rounds-track.has-crossroads {
-  --hook-thick: 8px;
+  --hook-thick: 16px;
   --hook-drop: 10px;
   --fork-label: 12px;
   padding-top: 14px;

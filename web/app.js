@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.13";
+const APP_VERSION = "2026.08.16.02";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -248,10 +248,11 @@ const el = {
   connectBtn: document.getElementById("connectBtn"),
   practiceBtn: document.getElementById("practiceBtn"),
   disconnectBtn: document.getElementById("disconnectBtn"),
+  connectionCard: document.getElementById("connectionCard"),
   connectionForm: document.getElementById("connectionForm"),
   connectionSummary: document.getElementById("connectionSummary"),
-  connectionSummaryLabel: document.getElementById("connectionSummaryLabel"),
   connectedServerText: document.getElementById("connectedServerText"),
+  connectedSlotText: document.getElementById("connectedSlotText"),
   roundsBlock: document.getElementById("roundsBlock"),
   roundText: document.getElementById("roundText"),
   roundsTrack: document.getElementById("roundsTrack"),
@@ -465,17 +466,28 @@ function updateConnectionPanel(status) {
   const connected = Boolean(status?.connected_to_ap);
   const practice = Boolean(status?.practice);
   const active = connected || practice;
+  if (el.connectionCard) el.connectionCard.classList.toggle("is-active", active);
   if (el.connectionForm) el.connectionForm.classList.toggle("hidden", active);
   if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !active);
-  if (el.connectionSummaryLabel) {
-    el.connectionSummaryLabel.textContent = practice ? t("conn.modeLabel") : t("conn.serverLabel");
-  }
   if (el.connectedServerText) {
-    if (practice) el.connectedServerText.textContent = t("conn.practiceMode");
-    else if (connected) el.connectedServerText.textContent = status.ap_server || el.serverInput?.value?.trim() || "—";
-    else el.connectedServerText.textContent = "-";
+    const server = practice
+      ? t("conn.practiceMode")
+      : connected
+        ? (status.ap_server || el.serverInput?.value?.trim() || "—")
+        : "-";
+    el.connectedServerText.textContent = server;
+    el.connectedServerText.title = server;
+  }
+  if (el.connectedSlotText) {
+    const slot = connected && !practice
+      ? (status.slot_name || el.slotInput?.value?.trim() || "")
+      : "";
+    el.connectedSlotText.textContent = slot;
+    el.connectedSlotText.title = slot;
+    el.connectedSlotText.classList.toggle("hidden", !slot);
   }
   if (el.disconnectBtn) {
+    el.disconnectBtn.classList.toggle("hidden", !active);
     el.disconnectBtn.disabled = !active;
     el.disconnectBtn.textContent = practice ? t("conn.exitPractice") : t("conn.disconnect");
   }
@@ -816,9 +828,9 @@ function renderBranchTargets(status) {
     const label = document.createElement("strong");
     label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
     const title = document.createElement("span");
+    title.className = "target-page";
     title.textContent = item.target || "…";
     row.appendChild(label);
-    row.appendChild(document.createTextNode(" "));
     row.appendChild(title);
     el.branchTargets.appendChild(row);
   }
@@ -895,6 +907,10 @@ function syncCrossroadTrackSpace(trackEl) {
   let extra = 12;
   trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
     extra = Math.max(extra, 12 + spur.offsetHeight);
+    const parent = spur.closest(".seg.crossroad") || spur.parentElement;
+    if (parent) {
+      parent.style.setProperty("--hook-thick", `${Math.max(16, spur.offsetWidth)}px`);
+    }
   });
   if (trackEl.classList.contains("has-crossroads") || trackEl.querySelector(".seg.crossroad")) {
     trackEl.style.paddingTop = `${labelTop}px`;
