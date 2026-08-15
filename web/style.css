@@ -1209,8 +1209,10 @@ button {
   margin-bottom: 6px;
 }
 .rounds-track.has-crossroads {
-  padding-bottom: 22px;
-  min-height: 38px;
+  --hook-thick: 6px;
+  --hook-drop: 12px;
+  padding-bottom: 26px;
+  min-height: 42px;
   overflow: visible;
 }
 .rounds-track .seg.crossroad {
@@ -1227,18 +1229,19 @@ button {
   left: 50%;
   top: 100%;
   width: 50%;
-  height: 10px;
-  border-left: 2px solid #ffd789;
-  border-bottom: 2px solid #ffd789;
-  border-radius: 0 0 0 2px;
+  height: var(--hook-drop);
+  color: #ffd789;
+  background:
+    linear-gradient(currentColor, currentColor) 0 0 / var(--hook-thick) 100% no-repeat,
+    linear-gradient(currentColor, currentColor) 0 100% / 100% var(--hook-thick) no-repeat;
   pointer-events: none;
 }
 .rounds-track .seg.crossroad[data-fork]::before {
   content: attr(data-fork);
   position: absolute;
-  left: 100%;
-  top: calc(100% + 10px);
-  transform: translate(-50%, -40%);
+  left: calc(100% + 6px);
+  top: calc(100% + var(--hook-drop) - var(--hook-thick) / 2);
+  transform: translateY(-50%);
   font-size: 0.62rem;
   font-weight: 800;
   line-height: 1;
@@ -1250,7 +1253,7 @@ button {
   border-color: #1ecb70;
 }
 .rounds-track .seg.crossroad.unlocked::after {
-  border-color: #1ecb70;
+  color: #1ecb70;
 }
 .rounds-track .seg.crossroad.unlocked[data-fork]::before {
   color: #1ecb70;

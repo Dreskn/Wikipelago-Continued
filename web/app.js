@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.15.02";
+const APP_VERSION = "2026.08.15.03";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
