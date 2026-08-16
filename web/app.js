@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.16.03";
+const APP_VERSION = "2026.08.16.04";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -903,7 +903,7 @@ function renderForkSpur(parentSeg, progress, fork) {
 
 function syncCrossroadTrackSpace(trackEl) {
   if (!trackEl) return;
-  const labelTop = 14;
+  const labelTop = 18;
   let extra = 12;
   trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
     extra = Math.max(extra, 12 + spur.offsetHeight);
@@ -1407,8 +1407,8 @@ function ensureToolIcons() {
 }
 
 function overflowChipWidthPx(count) {
-  // Padding/border (~12px) + "+123" at ~7px/char — keep full labels visible.
-  return 12 + (1 + String(Math.max(0, count)).length) * 7;
+  // Padding/border (~12px) + "+123" at ~9px/char for 14px chip type.
+  return 12 + (1 + String(Math.max(0, count)).length) * 9;
 }
 
 function trackChipMinPx(plan) {
@@ -2019,11 +2019,11 @@ function mergeBingoStampMaps(...maps) {
 }
 
 /** Minimum readable cell size (px) before a sidebar board becomes a scaled preview. */
-const BINGO_MIN_SIDE_CELL_PX = 18;
-/** Preferred max board width in the sidebar for small grids (~10.5rem). */
-const BINGO_SIDE_PREF_MAX_PX = 168;
+const BINGO_MIN_SIDE_CELL_PX = 22;
+/** Preferred max board width in the sidebar for small grids (~12.6rem). */
+const BINGO_SIDE_PREF_MAX_PX = 202;
 /** Base cell size (px) for the expanded overlay board before user zoom. */
-const BINGO_OVERLAY_CELL_PX = 36;
+const BINGO_OVERLAY_CELL_PX = 43;
 const BINGO_ZOOM_MIN = 0.4;
 const BINGO_ZOOM_MAX = 4;
 
