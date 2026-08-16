@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.16.06";
+const APP_VERSION = "2026.08.16.07";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -116,7 +116,7 @@ const TRACK_FORK_OVERFLOW_MIN = 3;
 /** Current-round / +N chip width. */
 const TRACK_EMPHASIS_MIN_PX = 24;
 /** Crossroad chip width on the main road. */
-const TRACK_CROSSROAD_PX = 30;
+const TRACK_CROSSROAD_PX = 48;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
 const TRACK_PAD_X_PX = 4;
 
@@ -204,6 +204,8 @@ const state = {
   rerollBusy: false,
   targetSummaryCache: new Map(),
   targetSummaryTitle: "",
+  targetTooltipTitle: "",
+  targetTooltipAnchor: null,
   targetTooltipVisible: false,
   trapQueue: [],
   activeFoggy: false,
@@ -265,6 +267,7 @@ const el = {
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
+  goalHover: document.getElementById("goalHover"),
   journeyBtn: document.getElementById("journeyBtn"),
   branchTracks: document.getElementById("branchTracks"),
   branchTargets: document.getElementById("branchTargets"),
@@ -602,8 +605,9 @@ async function fetchTargetSummary(title) {
 }
 
 function positionTargetTooltip() {
-  if (!el.targetTooltip || !el.targetHover || el.targetTooltip.classList.contains("hidden")) return;
-  const anchor = el.targetHover.getBoundingClientRect();
+  const anchorEl = state.targetTooltipAnchor;
+  if (!el.targetTooltip || !anchorEl || el.targetTooltip.classList.contains("hidden")) return;
+  const anchor = anchorEl.getBoundingClientRect();
   const tip = el.targetTooltip;
   const margin = 8;
   const width = Math.min(tip.offsetWidth || 320, window.innerWidth - margin * 2);
@@ -626,6 +630,8 @@ function positionTargetTooltip() {
 
 function hideTargetTooltip() {
   state.targetTooltipVisible = false;
+  state.targetTooltipTitle = "";
+  state.targetTooltipAnchor = null;
   if (!el.targetTooltip) return;
   el.targetTooltip.classList.add("hidden");
   el.targetTooltip.classList.remove("loading");
@@ -634,9 +640,11 @@ function hideTargetTooltip() {
   el.targetTooltip.style.top = "";
 }
 
-async function showTargetTooltip(title) {
-  if (!el.targetTooltip || !title) return;
+async function showTargetTooltip(title, anchorEl) {
+  if (!el.targetTooltip || !title || !anchorEl) return;
   state.targetTooltipVisible = true;
+  state.targetTooltipTitle = title;
+  state.targetTooltipAnchor = anchorEl;
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
@@ -646,7 +654,7 @@ async function showTargetTooltip(title) {
   positionTargetTooltip();
   try {
     const summary = await fetchTargetSummary(title);
-    if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
+    if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetTooltipTitle)) {
       return;
     }
     el.targetTooltip.classList.remove("loading");
@@ -660,52 +668,90 @@ async function showTargetTooltip(title) {
   }
 }
 
+function hoverWikiTitle(hoverEl) {
+  const raw = String(hoverEl?.dataset?.wikiTitle || "").trim();
+  if (!raw || raw === "..." || raw === "GOAL COMPLETE") return "";
+  return raw;
+}
+
+function enterTargetHover(hover) {
+  const title = hoverWikiTitle(hover);
+  if (!title) return;
+  if (
+    state.targetTooltipVisible
+    && state.targetTooltipAnchor === hover
+    && normalizeTitle(state.targetTooltipTitle) === normalizeTitle(title)
+  ) {
+    return;
+  }
+  showTargetTooltip(title, hover);
+}
+
+function leaveTargetHover(hover, related) {
+  if (related && hover.contains(related)) return;
+  if (state.targetTooltipAnchor === hover) hideTargetTooltip();
+}
+
 function bindTargetTooltip() {
-  if (!el.targetHover || !el.targetTooltip) return;
+  if (!el.targetTooltip) return;
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
-  el.targetHover.addEventListener("mouseenter", () => {
-    const title = state.targetSummaryTitle;
-    if (!title) return;
-    showTargetTooltip(title);
+  const root = document.querySelector(".side-panel") || document;
+  root.addEventListener("mouseover", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (!hover || !root.contains(hover)) return;
+    const from = event.relatedTarget;
+    if (from && hover.contains(from)) return;
+    enterTargetHover(hover);
   });
-  el.targetHover.addEventListener("mouseleave", () => {
-    hideTargetTooltip();
+  root.addEventListener("mouseout", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (!hover) return;
+    leaveTargetHover(hover, event.relatedTarget);
   });
-  el.targetHover.addEventListener("focusin", () => {
-    const title = state.targetSummaryTitle;
-    if (!title) return;
-    showTargetTooltip(title);
+  root.addEventListener("focusin", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (hover) enterTargetHover(hover);
   });
-  el.targetHover.addEventListener("focusout", () => {
-    hideTargetTooltip();
+  root.addEventListener("focusout", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (hover) leaveTargetHover(hover, event.relatedTarget);
   });
   window.addEventListener("resize", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   });
   // Side panel scroll would otherwise leave a stale fixed position.
-  document.querySelector(".side-panel")?.addEventListener("scroll", () => {
+  root.addEventListener("scroll", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   }, { passive: true });
+}
+
+function setHoverWikiTitle(hoverEl, title) {
+  if (!hoverEl) return;
+  const next = String(title || "").trim();
+  if (!next || next === "..." || next === "GOAL COMPLETE") {
+    hoverEl.dataset.wikiTitle = "";
+    hoverEl.removeAttribute("tabindex");
+    return;
+  }
+  hoverEl.dataset.wikiTitle = next;
+  hoverEl.tabIndex = 0;
+  fetchTargetSummary(next).catch(() => {});
 }
 
 function setTargetSummaryTitle(title) {
   const next = String(title || "").trim();
   if (next === "GOAL COMPLETE" || next === "..." || !next) {
     state.targetSummaryTitle = "";
-    hideTargetTooltip();
-    if (el.targetHover) el.targetHover.removeAttribute("tabindex");
+    setHoverWikiTitle(el.targetHover, "");
+    if (state.targetTooltipAnchor === el.targetHover) hideTargetTooltip();
     return;
   }
   const changed = normalizeTitle(next) !== normalizeTitle(state.targetSummaryTitle);
   state.targetSummaryTitle = next;
-  if (el.targetHover) el.targetHover.tabIndex = 0;
-  if (changed) {
-    hideTargetTooltip();
-    // Prefetch so hover feels instant.
-    fetchTargetSummary(next).catch(() => {});
-  }
+  setHoverWikiTitle(el.targetHover, next);
+  if (changed && state.targetTooltipAnchor === el.targetHover) hideTargetTooltip();
 }
 
 function updateRerollTargetControls(status) {
@@ -830,8 +876,9 @@ function renderBranchTargets(status) {
     const label = document.createElement("strong");
     label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
     const title = document.createElement("span");
-    title.className = "target-page";
+    title.className = "target-hover target-page";
     title.textContent = item.target || "…";
+    setHoverWikiTitle(title, item.target || "");
     row.appendChild(label);
     row.appendChild(title);
     el.branchTargets.appendChild(row);
@@ -1033,7 +1080,7 @@ function journeyTrailD(points) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const len = Math.hypot(dx, dy) || 1;
-    const bend = (i % 2 === 0 ? 1 : -1) * Math.min(18, len * 0.24);
+    const bend = (i % 2 === 0 ? -1 : 1) * Math.min(18, len * 0.24);
     const cx = mx - (dy / len) * bend;
     const cy = my + (dx / len) * bend;
     d += ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
@@ -1667,6 +1714,7 @@ function renderFragmentsTrack(status) {
   if (status?.practice) {
     if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
     if (el.goalRow) el.goalRow.classList.add("hidden");
+    setHoverWikiTitle(el.goalHover, "");
     el.fragmentsTrack.innerHTML = "";
     if (el.fragmentsText) el.fragmentsText.textContent = "";
     return;
@@ -1682,6 +1730,9 @@ function renderFragmentsTrack(status) {
     el.goalText.textContent = status.boss_completed
       ? `${goal} ${t("hud.goalCompleteSuffix")}`
       : goal;
+    setHoverWikiTitle(el.goalHover, status.goal_article || "");
+  } else {
+    setHoverWikiTitle(el.goalHover, "");
   }
   if (showGoal) return;
 

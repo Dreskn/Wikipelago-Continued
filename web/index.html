@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260816-06" />
+  <link rel="stylesheet" href="/static/style.css?v=20260816-07" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -117,7 +117,10 @@
               <div id="fragmentsTrack" class="fragments-track" aria-label="Knowledge fragments" data-i18n-aria="items.fragmentsAria"></div>
             </div>
             <p id="goalRow" class="goal-row hidden">
-              <strong data-i18n="hud.grandGoal">Grand Goal:</strong> <span id="goalText">-</span>
+              <strong data-i18n="hud.grandGoal">Grand Goal:</strong>
+              <span class="target-hover" id="goalHover">
+                <span id="goalText">-</span>
+              </span>
             </p>
           </div>
 
@@ -216,7 +219,7 @@
     </div>
   </div>
 
-  <script src="/static/i18n.js?v=20260816-06"></script>
-  <script src="/static/app.js?v=20260816-06"></script>
+  <script src="/static/i18n.js?v=20260816-07"></script>
+  <script src="/static/app.js?v=20260816-07"></script>
 </body>
 </html>

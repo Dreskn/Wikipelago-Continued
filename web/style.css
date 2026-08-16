@@ -808,8 +808,6 @@ button {
   min-width: 0;
   display: inline-block;
   max-width: 100%;
-}
-.target-hover #targetText {
   border-bottom: 1px dotted #6f8499;
   cursor: help;
 }
@@ -978,7 +976,7 @@ button {
 .rounds-track,
 .fragments-track {
   --track-chip-min: 24px;
-  --track-crossroad-w: 30px;
+  --track-crossroad-w: 48px;
   display: flex;
   gap: 2px;
   width: 100%;
