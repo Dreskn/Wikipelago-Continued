@@ -377,7 +377,7 @@ class TargetRerollUnlocks(Range):
 
 
 class BranchCount(Range):
-    """How many main-road rounds are crossroads (each can unlock one side branch). 0 disables branches."""
+    """How many main-road rounds are crossroads (Branch N needs N keys plus that finished crossroad). 0 disables branches."""
     display_name = "Branch Count"
     range_start = 0
     range_end = 8

@@ -426,6 +426,13 @@ class WikipelagoWorld(World):
     def _branch_location_count(self) -> int:
         return self._branch_count() * self._branch_length()
 
+    def _round_access_needed(self, round_index: int) -> int:
+        round_count = self.options.check_count.value
+        start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
+        per_unlock = max(1, self.options.rounds_per_unlock.value)
+        extra_rounds = max(0, round_index - start_unlocked)
+        return (extra_rounds + per_unlock - 1) // per_unlock
+
     def _display_unlock_items(self) -> list[str]:
         unlocks: list[str] = []
         if self.options.randomize_tables.value:
@@ -713,9 +720,6 @@ class WikipelagoWorld(World):
     def set_rules(self) -> None:
         round_count = self.options.check_count.value
         required_fragments = min(self.options.required_fragments.value, round_count)
-        start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
-        per_unlock = max(1, self.options.rounds_per_unlock.value)
-        early_open = start_unlocked
 
         goal_location = self.multiworld.get_location("Grand Goal", self.player)
         set_rule(
@@ -725,8 +729,7 @@ class WikipelagoWorld(World):
 
         for round_index in range(1, round_count + 1):
             location = self.multiworld.get_location(f"Round {round_index} Complete", self.player)
-            extra_rounds = max(0, round_index - early_open)
-            needed_round_access = (extra_rounds + per_unlock - 1) // per_unlock
+            needed_round_access = self._round_access_needed(round_index)
             set_rule(
                 location,
                 lambda state, need=needed_round_access: state.has("Round Access", self.player, need),
@@ -749,16 +752,25 @@ class WikipelagoWorld(World):
                     )
 
         branch_count = self._branch_count()
-        branch_length = self._branch_length()
         if branch_count > 0:
+            # branch_id is assigned in main_round order in generate_early, matching
+            # client FIFO: Branch N needs N keys and the Round Access of its crossroad.
+            crossroad_round_by_branch = {
+                int(cr["branch_id"]) + 1: int(cr["main_round"])
+                for cr in (getattr(self, "crossroads", None) or [])
+            }
             for branch in range(1, branch_count + 1):
-                for round_index in range(1, branch_length + 1):
-                    name = branch_location_name(branch, round_index)
-                    location = self.multiworld.get_location(name, self.player)
-                    set_rule(
-                        location,
-                        lambda state: state.has("Branch Key", self.player, 1),
-                    )
+                keys_needed = branch
+                main_round = crossroad_round_by_branch.get(branch)
+                need_ra = self._round_access_needed(main_round) if main_round else 0
+                entrance = self.multiworld.get_entrance(f"To Branch {branch}", self.player)
+                set_rule(
+                    entrance,
+                    lambda state, need_keys=keys_needed, need_ra=need_ra: (
+                        state.has("Branch Key", self.player, need_keys)
+                        and (need_ra <= 0 or state.has("Round Access", self.player, need_ra))
+                    ),
+                )
 
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
