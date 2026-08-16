@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.16.07";
+const APP_VERSION = "2026.08.16.08";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -1071,6 +1071,9 @@ function layoutJourneyNodes(nodes, width) {
 function journeyTrailD(points) {
   if (!points.length) return "";
   if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  const minX = Math.min(...points.map((p) => p.x));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const midX = (minX + maxX) / 2;
   let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
   for (let i = 1; i < points.length; i += 1) {
     const a = points[i - 1];
@@ -1080,7 +1083,15 @@ function journeyTrailD(points) {
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const len = Math.hypot(dx, dy) || 1;
-    const bend = (i % 2 === 0 ? -1 : 1) * Math.min(18, len * 0.24);
+    // Horizontals keep the u/n chain (first hop is a "u"). Vertical wraps
+    // bulge like "(" on the left and ")" on the right, independent of that chain.
+    let sign = i % 2 === 0 ? -1 : 1;
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      const onRight = mx >= midX;
+      sign = onRight ? -1 : 1;
+      if (dy < 0) sign = -sign;
+    }
+    const bend = sign * Math.min(18, len * 0.24);
     const cx = mx - (dy / len) * bend;
     const cy = my + (dx / len) * bend;
     d += ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;

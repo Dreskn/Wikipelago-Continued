@@ -1,6 +1,6 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/wikipelago/archipelago.json` for Archipelago; marketing tag in `full_version`).
+World package version: **0.7.0-APath** (`world_version` **0.7.0** in `APWorldSource/wikipelago/archipelago.json` for Archipelago; marketing tag in `full_version`).
 
 The live runtime article pools are `APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 

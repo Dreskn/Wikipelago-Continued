@@ -117,7 +117,10 @@ try {
     Assert-HasPattern $yamlToCheck 'link_bomb_density:\s*(few|more|insane)' 'YAML template is missing link_bomb_density'
     Assert-HasPattern $yamlToCheck '^requires:\s*$' 'YAML template is missing requires block'
     Assert-HasPattern $yamlToCheck '^\s*version:\s*0\.6\.7\s*$' 'YAML template is missing requires.version 0.6.7'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*0\.6\.0\s*$' 'YAML template is missing requires.game.Wikipelago 0.6.0'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*0\.7\.0\s*$' 'YAML template is missing requires.game.Wikipelago 0.7.0'
+    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "0.7.0-APath"' 'Bridge client version must be 0.7.0-APath'
+    Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
+    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "0.7.0-APath"' 'World full_version must be 0.7.0-APath'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
     Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
@@ -342,6 +345,7 @@ try {
     Assert-HasPattern $webAppPath 'function renderForkSpur' 'Web fork spur attached to crossroad hooks is missing'
     Assert-HasPattern $webAppPath 'function journeyPageNodes' 'Web journey page-node helper is missing'
     Assert-HasPattern $webAppPath 'function drawJourneyPath' 'Web journey path renderer is missing'
+    Assert-HasPattern $webAppPath 'onRight \? -1 : 1' 'Web Journey vertical wraps must bulge like parentheses by side'
     Assert-HasPattern $webIndexPath 'id="journeyPath"' 'Web Journey path markup is missing'
     Assert-NoPattern $webIndexPath 'id="journeyTimeline"' 'Web Journey must not keep a timestamp timeline'
     Assert-NoPattern $webIndexPath 'id="journeyHeatmap"' 'Web Journey must not keep a revisits heatmap'
@@ -479,7 +483,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.6\.0"' 'Packaged world_version should be 0.6.0'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.7\.0"' 'Packaged world_version should be 0.7.0'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"
