@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.16.05";
+const APP_VERSION = "2026.08.16.06";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -113,8 +113,10 @@ const TRACK_SEG_GAP_PX = 2;
 const TRACK_OVERFLOW_MIN = 5;
 /** Fork spurs are short, so they may collapse from 3 like-segments. */
 const TRACK_FORK_OVERFLOW_MIN = 3;
-/** Current-round / emphasis segment — matches a typical +N overflow chip. */
-const TRACK_EMPHASIS_MIN_PX = 28;
+/** Current-round / +N chip width. */
+const TRACK_EMPHASIS_MIN_PX = 24;
+/** Crossroad chip width on the main road. */
+const TRACK_CROSSROAD_PX = 30;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
 const TRACK_PAD_X_PX = 4;
 
@@ -909,7 +911,7 @@ function syncCrossroadTrackSpace(trackEl) {
     extra = Math.max(extra, 12 + spur.offsetHeight);
     const parent = spur.closest(".seg.crossroad") || spur.parentElement;
     if (parent) {
-      parent.style.setProperty("--hook-thick", `${Math.max(16, spur.offsetWidth)}px`);
+      parent.style.setProperty("--hook-thick", `${Math.max(24, spur.offsetWidth)}px`);
     }
   });
   if (trackEl.classList.contains("has-crossroads") || trackEl.querySelector(".seg.crossroad")) {
@@ -1407,8 +1409,7 @@ function ensureToolIcons() {
 }
 
 function overflowChipWidthPx(count) {
-  // Padding/border (~12px) + "+123" at ~9px/char for 14px chip type.
-  return 12 + (1 + String(Math.max(0, count)).length) * 9;
+  return Math.max(TRACK_EMPHASIS_MIN_PX, 12 + (1 + String(Math.max(0, count)).length) * 9);
 }
 
 function trackChipMinPx(plan) {
@@ -1426,7 +1427,7 @@ function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
       // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += (p.run.current || p.run.crossroad) ? chipMinPx : TRACK_SEG_MIN_PX;
+      width += p.run.crossroad ? TRACK_CROSSROAD_PX : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
       parts += 1;
     }
     if (p.overflow > 0) {

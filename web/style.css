@@ -977,7 +977,8 @@ button {
 }
 .rounds-track,
 .fragments-track {
-  --track-chip-min: 28px;
+  --track-chip-min: 24px;
+  --track-crossroad-w: 30px;
   display: flex;
   gap: 2px;
   width: 100%;
@@ -993,7 +994,7 @@ button {
 .fragments-track .seg {
   flex: 1 1 0;
   min-width: 4px;
-  height: 14px;
+  height: 18px;
   border-radius: 2px;
   border: 1px solid #314557;
   background: #0d1620;
@@ -1005,10 +1006,10 @@ button {
   justify-content: center;
   flex: 0 0 auto;
   flex-shrink: 0;
-  width: max-content;
-  min-width: var(--track-chip-min);
-  padding: 0 4px;
-  height: 20px;
+  width: 24px;
+  min-width: 24px;
+  padding: 0 2px;
+  height: 18px;
   box-sizing: border-box;
   font-size: 14px;
   font-weight: 700;
@@ -1046,8 +1047,8 @@ button {
 .rounds-track .seg.current {
   flex: 0 0 auto;
   flex-shrink: 0;
-  width: var(--track-chip-min);
-  min-width: var(--track-chip-min);
+  width: 24px;
+  min-width: 24px;
   outline: 1px solid #40c4ff;
   outline-offset: 1px;
   position: relative;
@@ -1276,7 +1277,7 @@ button {
   margin-bottom: 6px;
 }
 .rounds-track.has-crossroads {
-  --hook-thick: 16px;
+  --hook-thick: 24px;
   --hook-drop: 10px;
   --fork-label: 12px;
   padding-top: 18px;
@@ -1295,22 +1296,18 @@ button {
   gap: 2px;
   z-index: 1;
   pointer-events: none;
-  min-width: 16px;
+  min-width: 24px;
 }
 .rounds-track .fork-spur .seg {
   flex: 0 0 auto;
   flex-shrink: 0;
   box-sizing: border-box;
-  width: auto;
-  min-width: 16px;
-  height: 14px;
+  width: 24px;
+  min-width: 24px;
+  height: 18px;
   border-radius: 2px;
   outline: 1px solid transparent;
   outline-offset: 1px;
-}
-.rounds-track .fork-spur .seg.current,
-.rounds-track .fork-spur .seg.overflow {
-  height: 20px;
 }
 .rounds-track .fork-spur .seg.current {
   outline-color: #40c4ff;
@@ -1319,16 +1316,17 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: max-content;
-  padding: 0 3px;
+  width: 24px;
+  min-width: 24px;
+  padding: 0 2px;
   font-size: 14px;
 }
 .rounds-track .seg.crossroad {
   position: relative;
   flex: 0 0 auto;
   flex-shrink: 0;
-  width: var(--track-chip-min);
-  min-width: var(--track-chip-min);
+  width: var(--track-crossroad-w);
+  min-width: var(--track-crossroad-w);
 }
 .rounds-track .seg.crossroad::after {
   content: "";
