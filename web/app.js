@@ -2730,12 +2730,15 @@ function renderBingoHud(status) {
     const header = document.createElement("div");
     header.className = "bingo-board-header";
 
+    const title = document.createElement("div");
+    title.className = "bingo-board-title";
+
     const label = document.createElement("p");
     label.className = "bingo-board-label";
     label.textContent = complete
       ? t("bingo.boardComplete", { n: boardKey })
       : t("bingo.board", { n: boardKey });
-    header.appendChild(label);
+    title.appendChild(label);
 
     const toggle = document.createElement("button");
     toggle.type = "button";
@@ -2746,7 +2749,8 @@ function renderBingoHud(status) {
       setBingoBoardCollapsed(status, boardKey, !collapsed);
       renderBingoHud(state.status || status);
     });
-    header.appendChild(toggle);
+    title.appendChild(toggle);
+    header.appendChild(title);
     block.appendChild(header);
 
     const { grid, n, lines: lineMap } = renderBingoBoardGrid(

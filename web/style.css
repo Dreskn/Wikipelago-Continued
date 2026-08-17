@@ -602,8 +602,14 @@ button {
 .bingo-board-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px;
+}
+.bingo-board-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 .bingo-board-label {
   margin: 0;
