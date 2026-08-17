@@ -905,6 +905,45 @@ button {
 }
 .card { padding: 12px; }
 .card h2 { margin: 0 0 10px; font-size: 1rem; }
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.card > .card-head { margin: 0 0 10px; }
+.card-head h2 { margin: 0; }
+.card-toggle {
+  flex: 0 0 auto;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-toggle::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  transform-origin: 50% 45%;
+  transition: transform 0.15s ease;
+}
+.card-toggle[aria-expanded="false"]::before {
+  transform: rotate(-90deg);
+}
+.card.is-collapsed > .card-head,
+.side-section.is-collapsed > .card-head {
+  margin-bottom: 0;
+}
+.card.is-collapsed > .card-body,
+.side-section.is-collapsed > .card-body {
+  display: none;
+}
 .card label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.86rem; }
 .card input,
 .card select {
@@ -961,7 +1000,7 @@ button {
 .run-label-row:first-of-type { margin-top: 0; }
 .rounds-label-row {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: 1fr auto 1fr auto;
   align-items: center;
 }
 .rounds-label-row > strong {
@@ -971,6 +1010,9 @@ button {
   justify-self: center;
 }
 .rounds-label-row > #roundText {
+  justify-self: end;
+}
+.rounds-label-row > .card-toggle {
   justify-self: end;
 }
 .rounds-track,

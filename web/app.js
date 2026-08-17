@@ -546,6 +546,7 @@ function onUiLanguageChanged(code) {
   }
   if (state.victoryOpen) fillVictoryOverlay(state.status);
   refreshSearchChrome();
+  refreshSidePanelToggles();
 }
 
 function bindUiLanguageControls() {
@@ -3459,8 +3460,89 @@ function initDebugDisplayPanel() {
   ]));
   card.appendChild(challenge);
 
+  card.setAttribute("data-panel", "debug");
+  const debugHead = document.createElement("div");
+  debugHead.className = "card-head";
+  const debugTitle = card.querySelector("h2");
+  if (debugTitle) debugHead.appendChild(debugTitle);
+  const debugToggle = document.createElement("button");
+  debugToggle.type = "button";
+  debugToggle.className = "card-toggle btn-quiet";
+  debugToggle.setAttribute("data-panel-toggle", "");
+  debugToggle.setAttribute("aria-expanded", "true");
+  debugHead.appendChild(debugToggle);
+  const debugBody = document.createElement("div");
+  debugBody.className = "card-body";
+  while (card.firstChild) debugBody.appendChild(card.firstChild);
+  card.appendChild(debugHead);
+  card.appendChild(debugBody);
   document.querySelector(".side-panel")?.appendChild(card);
+  bindSidePanel(card);
   syncDebugOptionToggles(card);
+}
+
+const SIDE_PANEL_STORAGE_KEY = "wikipelago_side_panels";
+
+function loadCollapsedPanels() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SIDE_PANEL_STORAGE_KEY) || "{}");
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCollapsedPanels(map) {
+  try {
+    localStorage.setItem(SIDE_PANEL_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function isPanelCollapsed(id) {
+  return Boolean(loadCollapsedPanels()[id]);
+}
+
+function setPanelCollapsed(id, collapsed) {
+  const map = loadCollapsedPanels();
+  if (collapsed) map[id] = true;
+  else delete map[id];
+  saveCollapsedPanels(map);
+}
+
+function syncPanelToggle(panel) {
+  const id = panel?.getAttribute("data-panel");
+  if (!id) return;
+  const collapsed = isPanelCollapsed(id);
+  panel.classList.toggle("is-collapsed", collapsed);
+  const btn = panel.querySelector("[data-panel-toggle]");
+  if (!btn) return;
+  const label = collapsed ? t("panel.show") : t("panel.hide");
+  btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+function bindSidePanel(panel) {
+  if (!panel || panel.dataset.panelBound === "1") return;
+  const id = panel.getAttribute("data-panel");
+  const btn = panel.querySelector("[data-panel-toggle]");
+  if (!id || !btn) return;
+  panel.dataset.panelBound = "1";
+  btn.addEventListener("click", () => {
+    setPanelCollapsed(id, !isPanelCollapsed(id));
+    syncPanelToggle(panel);
+  });
+  syncPanelToggle(panel);
+}
+
+function initSidePanelToggles() {
+  document.querySelectorAll("[data-panel]").forEach(bindSidePanel);
+}
+
+function refreshSidePanelToggles() {
+  document.querySelectorAll("[data-panel]").forEach(syncPanelToggle);
 }
 
 function bindStuckHelper() {
@@ -4437,6 +4519,7 @@ bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();
 bindStuckHelper();
+initSidePanelToggles();
 showMigrateBannerIfNeeded();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;
