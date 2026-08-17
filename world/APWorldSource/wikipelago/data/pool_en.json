@@ -1,7 +1,7 @@
 {
   "lang": "en",
   "source": "pool_annotated_en.json",
-  "count": 11179,
+  "count": 11178,
   "entries": [
     {
       "title": "Wikipedia",
@@ -4418,13 +4418,6 @@
       "tags": [
         "famous_people",
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "AMGTV",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

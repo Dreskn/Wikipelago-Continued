@@ -5,8 +5,8 @@
   "mode": "full",
   "sample_n": 0,
   "sample_seed": null,
-  "pool_size": 8876,
-  "annotated_count": 8876,
+  "pool_size": 8873,
+  "annotated_count": 8873,
   "elapsed_s": 489.2,
   "api_calls_delta": 915,
   "sitelink_cache_hits": 3283,
@@ -5691,15 +5691,6 @@
         "miscellaneous"
       ],
       "sensitive": true
-    },
-    {
-      "title": "Assembleia da República",
-      "canonical_title": "Assembleia da República",
-      "qid": "Q740564",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
     },
     {
       "title": "Assexualidade",
@@ -54489,25 +54480,6 @@
       "title": "Predefinição:Elenco do Clube de Regatas do Flamengo",
       "canonical_title": "Predefinição:Elenco do Clube de Regatas do Flamengo",
       "qid": "Q25777092",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Cruzeiro Esporte Clube",
-      "canonical_title": "Predefinição:Elenco do Cruzeiro Esporte Clube",
-      "qid": null,
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false,
-      "note": "no_wikidata"
-    },
-    {
-      "title": "Predefinição:Elenco do Santos Futebol Clube",
-      "canonical_title": "Predefinição:Elenco do Santos Futebol Clube",
-      "qid": "Q25805655",
       "tags": [
         "miscellaneous"
       ],

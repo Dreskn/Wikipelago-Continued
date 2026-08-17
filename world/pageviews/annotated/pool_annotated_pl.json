@@ -5,8 +5,8 @@
   "mode": "full",
   "sample_n": 0,
   "sample_seed": null,
-  "pool_size": 8449,
-  "annotated_count": 8449,
+  "pool_size": 8448,
+  "annotated_count": 8448,
   "elapsed_s": 621.6,
   "api_calls_delta": 1306,
   "sitelink_cache_hits": 2865,
@@ -30251,15 +30251,6 @@
       "title": "Kultura",
       "canonical_title": "Kultura",
       "qid": "Q11042",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kundalinijoga",
-      "canonical_title": "Kundalinijoga",
-      "qid": "Q25416411",
       "tags": [
         "miscellaneous"
       ],

@@ -5,8 +5,8 @@
   "mode": "full",
   "sample_n": 0,
   "sample_seed": null,
-  "pool_size": 10304,
-  "annotated_count": 10304,
+  "pool_size": 10303,
+  "annotated_count": 10303,
   "elapsed_s": 1915.54,
   "api_calls_delta": 4417,
   "sitelink_cache_hits": 2901,
@@ -46869,16 +46869,6 @@
         "miscellaneous"
       ],
       "sensitive": true
-    },
-    {
-      "title": "Lilli Schweiger",
-      "canonical_title": "Lilli Schweiger",
-      "qid": "Q100175",
-      "tags": [
-        "famous_people",
-        "movies"
-      ],
-      "sensitive": false
     },
     {
       "title": "Lilly Becker",

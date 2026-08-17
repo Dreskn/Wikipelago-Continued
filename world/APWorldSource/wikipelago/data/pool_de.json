@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "source": "pool_annotated_de.json",
-  "count": 10075,
+  "count": 10074,
   "entries": [
     {
       "title": "1. FC Kaiserslautern",
@@ -36282,14 +36282,6 @@
         "miscellaneous"
       ],
       "sensitive": true
-    },
-    {
-      "title": "Lilli Schweiger",
-      "tags": [
-        "famous_people",
-        "movies"
-      ],
-      "sensitive": false
     },
     {
       "title": "Lilly Becker",

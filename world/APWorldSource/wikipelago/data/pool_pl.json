@@ -1,7 +1,7 @@
 {
   "lang": "pl",
   "source": "pool_annotated_pl.json",
-  "count": 8222,
+  "count": 8221,
   "entries": [
     {
       "title": "07 zgłoś się",
@@ -23286,13 +23286,6 @@
     },
     {
       "title": "Kultura",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kundalinijoga",
       "tags": [
         "miscellaneous"
       ],

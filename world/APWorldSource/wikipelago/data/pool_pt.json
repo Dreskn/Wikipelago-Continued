@@ -1,7 +1,7 @@
 {
   "lang": "pt",
   "source": "pool_annotated_pt.json",
-  "count": 8545,
+  "count": 8542,
   "entries": [
     {
       "title": "1.ª Companhia",
@@ -4272,13 +4272,6 @@
         "miscellaneous"
       ],
       "sensitive": true
-    },
-    {
-      "title": "Assembleia da República",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
     },
     {
       "title": "Assexualidade",
@@ -40970,20 +40963,6 @@
     },
     {
       "title": "Predefinição:Elenco do Clube de Regatas do Flamengo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Cruzeiro Esporte Clube",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Santos Futebol Clube",
       "tags": [
         "miscellaneous"
       ],
