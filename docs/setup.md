@@ -65,7 +65,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **1.0-beta1** |
+| Wikipelago world (`apworld`) | **1.0-beta1** (`world_version` **1.0.0**) |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above (always use the current deploy) |
 

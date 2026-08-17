@@ -117,7 +117,7 @@ try {
     Assert-HasPattern $yamlToCheck 'link_bomb_density:\s*(few|more|insane)' 'YAML template is missing link_bomb_density'
     Assert-HasPattern $yamlToCheck '^requires:\s*$' 'YAML template is missing requires block'
     Assert-HasPattern $yamlToCheck '^\s*version:\s*0\.6\.7\s*$' 'YAML template is missing requires.version 0.6.7'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0-beta1\s*$' 'YAML template is missing requires.game.Wikipelago 1.0-beta1'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0\.0\s*$' 'YAML template is missing requires.game.Wikipelago 1.0.0'
     Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0-beta1"' 'Bridge client version must be 1.0-beta1'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
     Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.0-beta1"' 'World full_version must be 1.0-beta1'
@@ -406,6 +406,8 @@ try {
     Assert-HasPattern $webAppPath 'TRACK_EMPHASIS_MIN_PX = 24' 'Web current and +N chips must be 24px wide'
     Assert-HasPattern $webAppPath 'TRACK_SEG_MAX_PX = 16' 'Web idle track bars must cap at 16px'
     Assert-HasPattern $webCssPath '--track-seg-max: 16px' 'Web idle track bars must cap at 16px in CSS'
+    Assert-HasPattern $webCssPath 'justify-content: center; /\* leftover space after the 16px idle-bar cap \*/' 'Web round track must be centered when idle bars do not fill the panel'
+    Assert-HasPattern $webCssPath 'max-width: var\(--track-seg-max\);' 'Web idle-bar max-width must apply to rounds only'
     Assert-HasPattern $webCssPath 'font-size: 14px' 'Web track labels must be 14px'
     Assert-HasPattern $webCssPath 'font-size: 19px' 'Web bingo cell type must be a whole 19px'
     Assert-HasPattern $webAppPath 'BINGO_SIDE_PREF_MAX_PX = 202' 'Web sidebar bingo board must be 20% larger'
@@ -505,7 +507,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0-beta1"' 'Packaged world_version should be 1.0-beta1'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0\.0"' 'Packaged world_version should be 1.0.0'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

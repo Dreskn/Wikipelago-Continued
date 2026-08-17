@@ -989,15 +989,20 @@ button {
   align-items: center;
   box-sizing: border-box;
 }
+.rounds-track {
+  justify-content: center; /* leftover space after the 16px idle-bar cap */
+}
 .rounds-track .seg,
 .fragments-track .seg {
   flex: 1 1 0;
   min-width: 4px;
-  max-width: var(--track-seg-max);
   height: 18px;
   border-radius: 2px;
   border: 1px solid #314557;
   background: #0d1620;
+}
+.rounds-track .seg {
+  max-width: var(--track-seg-max);
 }
 .rounds-track .seg.overflow,
 .fragments-track .seg.overflow {

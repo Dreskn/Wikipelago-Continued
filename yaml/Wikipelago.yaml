@@ -7,10 +7,11 @@ description: Default Wikipelago player template
 
 # Fail generation if the host Archipelago / Wikipelago apworld is too old for this
 # template (avoids silent ignores of newer options like progressive tools).
+# Archipelago only accepts dotted integers here (1.0.0), not 1.0-beta1.
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 1.0-beta1
+    Wikipelago: 1.0.0
 
 Wikipelago:
 

@@ -1,7 +1,7 @@
 {
   "game": "Wikipelago",
   "authors": ["Dreskn (continued)", "Skrumptily69 (original)"],
-  "world_version": "1.0-beta1",
+  "world_version": "1.0.0",
   "minimum_ap_version": "0.6.7",
   "display_name": "Wikipelago Continued",
   "full_version": "1.0-beta1",
