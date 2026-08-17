@@ -14,7 +14,7 @@
   "new_qids_classified": 4150,
   "no_qid": 42,
   "miscellaneous_only": 917,
-  "sensitive_flagged": 160,
+  "sensitive_flagged": 162,
   "tag_counts": {
     "famous_people": 4504,
     "movies": 2472,
@@ -59607,7 +59607,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Porphyrie",
@@ -61179,7 +61179,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Raquel Garrido",

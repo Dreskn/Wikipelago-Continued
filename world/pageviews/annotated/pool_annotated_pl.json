@@ -14,7 +14,7 @@
   "new_qids_classified": 3930,
   "no_qid": 45,
   "miscellaneous_only": 1413,
-  "sensitive_flagged": 111,
+  "sensitive_flagged": 113,
   "tag_counts": {
     "famous_people": 3542,
     "miscellaneous": 1463,
@@ -5573,7 +5573,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BGM-109 Tomahawk",
@@ -55920,7 +55920,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Stowarzyszenie Roty Niepodległości",

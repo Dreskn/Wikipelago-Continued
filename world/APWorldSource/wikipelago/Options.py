@@ -222,8 +222,9 @@ class IncludeBiologyMedicine(Toggle):
 
 class IncludeSensitivePages(Toggle):
     """
-    When off (default), pages flagged sensitive (porn, terrorism, violent/sexual crime,
-    illicit drugs) are excluded even if they match an enabled category.
+    When off (default), pages flagged sensitive (pornography, BDSM / sadomasochism /
+    sexual roleplay, terrorism, violent/sexual crime, illicit drugs) are excluded
+    even if they match an enabled category.
     When on, those pages may appear if they also match an enabled category.
     """
     display_name = "Include Sensitive Pages"

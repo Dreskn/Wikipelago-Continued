@@ -35,7 +35,7 @@ BATCH = 50
 SLEEP_S = 0.05
 MAX_RETRIES = 8
 CACHE_SAVE_EVERY = 200  # new QIDs classified between disk saves
-CACHE_SCHEMA = 5       # bump when classification rules change (invalidates old cache)
+CACHE_SCHEMA = 6       # bump when classification rules change (invalidates old cache)
 
 UA = "WikipelagoPoolAnnotate/0.1 (https://github.com/Dreskn/Wikipelago-Continued)"
 MISC_TAG = "miscellaneous"
@@ -55,6 +55,18 @@ HUMAN = "Q5"
 ANIMALIA = "Q729"
 TAXON = "Q16521"
 
+# Adult sexual topics. Also matched as the entity itself in is_sensitive()
+# (the Wikipedia page *is* Q291, it is not instance-of Q291).
+ADULT_TOPIC_QIDS = {
+    "Q1361427",  # sexual roleplay
+    "Q2211650",  # sadomasochism
+    "Q83372",    # sadism and masochism (legacy Wikidata item)
+    "Q185529",   # pornographic film
+    "Q291",      # pornography (topic)
+    "Q190845",   # BDSM
+    "Q5873",     # sexual intercourse
+}
+
 SENSITIVE_QIDS: dict[str, set[str]] = {
     "P31": {
         "Q185529", "Q599558", "Q3244962", "Q291",
@@ -62,11 +74,21 @@ SENSITIVE_QIDS: dict[str, set[str]] = {
         "Q132821", "Q149086", "Q484188", "Q750215",
         "Q47092", "Q365680", "Q7458798",  # sexual misconduct
         "Q83871", "Q11367", "Q844924",
+        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
     },
     "P106": {"Q484188"},
-    "P136": {"Q185529", "Q599558"},
-    "P360": {"Q47092", "Q365680", "Q7458798", "Q185529", "Q291"},
-    "P921": {"Q47092", "Q365680", "Q7458798", "Q185529", "Q291"},
+    "P136": {
+        "Q185529", "Q599558",
+        "Q291", "Q1361427", "Q2211650", "Q83372", "Q190845",
+    },
+    "P360": {
+        "Q47092", "Q365680", "Q7458798", "Q185529", "Q291",
+        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+    },
+    "P921": {
+        "Q47092", "Q365680", "Q7458798", "Q185529", "Q291",
+        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+    },
 }
 
 QID_MAP: dict[str, dict[str, set[str]]] = {
@@ -386,6 +408,10 @@ def tags_for_expanded(expanded: dict[str, set[str]]) -> set[str]:
 
 
 def is_sensitive(entity: dict, expanded: dict[str, set[str]]) -> bool:
+    """True if this item *is* an adult denylist concept, or claims expand into the denylist."""
+    qid = entity.get("id")
+    if qid and qid in ADULT_TOPIC_QIDS:
+        return True
     if claim_targets(entity, "P3461"):
         return True
     for prop, denylist in SENSITIVE_QIDS.items():
