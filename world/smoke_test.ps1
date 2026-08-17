@@ -154,7 +154,17 @@ try {
     Assert-HasPattern $optionsPath 'class WikipediaLanguage' 'WikipediaLanguage option is missing'
     Assert-HasPattern $optionsPath 'class IncludeSensitivePages' 'IncludeSensitivePages option is missing'
     Assert-HasPattern $optionsPath 'class IncludeFamousPeople' 'IncludeFamousPeople option is missing'
-    Assert-HasPattern $initPath 'first_start = picks\[0\]' 'Random first-round start selection is missing'
+    Assert-HasPattern $initPath 'pick_grand_goal_card' 'World must pick Grand Goal from the question bank'
+    Assert-HasPattern $initPath '"goal_question"' 'World slot data must include goal_question'
+    $grandGoalPath = Join-Path $worldRoot "grand_goal.py"
+    Assert-HasPattern $grandGoalPath 'def pick_grand_goal_card' 'grand_goal.pick_grand_goal_card missing'
+    $bankDir = Join-Path $repoRoot "docs\grand-goal\bank"
+    foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
+        $bankFile = Join-Path $bankDir "$lang.json"
+        if (-not (Test-Path -LiteralPath $bankFile)) {
+            throw "Missing Grand Goal question bank [$bankFile]"
+        }
+    }
     Assert-HasPattern $initPath '_entry_matches' 'Multi-tag pool filter helper is missing'
     Assert-HasPattern $optionsPath 'class Searchsanity' 'Searchsanity option is missing'
     Assert-HasPattern $optionsPath 'class Scrollsanity' 'Scrollsanity option is missing'
@@ -370,7 +380,9 @@ try {
     Assert-NoPattern $webIndexPath 'id="pathSwitcher"' 'Web must not keep a manual path switcher'
     Assert-NoPattern $bridgePath 'switch-path' 'Bridge must not keep a switch-path route'
     Assert-NoPattern $webAppPath 'switch-path' 'Web must not call switch-path'
-    Assert-HasPattern $webIndexPath 'id="journeyOverlay"' 'Web Journey overlay markup is missing'
+    Assert-HasPattern $bridgePath '"goal_question"' 'Bridge status must include goal_question'
+    Assert-HasPattern $webIndexPath 'id="victoryOverlay"' 'Web Grand Goal victory overlay markup is missing'
+    Assert-HasPattern $webAppPath 'openVictoryOverlay' 'Web must open a victory overlay on Grand Goal'
     Assert-NoPattern $webIndexPath 'id="journeyFilter"' 'Web Journey must not keep a main/fork path filter'
     Assert-HasPattern $webAppPath 'TRACK_OVERFLOW_MIN = 5' 'Web track overflow must require at least 5 like-segments'
     Assert-HasPattern $webAppPath 'TRACK_FORK_OVERFLOW_MIN = 3' 'Web fork overflow must require at least 3 like-segments'

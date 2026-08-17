@@ -201,6 +201,7 @@ const state = {
   journeyPayload: null,
   journeyLayoutKey: "",
   announcedJourneyCredits: false,
+  victoryOpen: false,
   rerollBusy: false,
   targetSummaryCache: new Map(),
   targetSummaryTitle: "",
@@ -268,6 +269,7 @@ const el = {
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   goalHover: document.getElementById("goalHover"),
+  goalAnswer: document.getElementById("goalAnswer"),
   journeyBtn: document.getElementById("journeyBtn"),
   branchTracks: document.getElementById("branchTracks"),
   branchTargets: document.getElementById("branchTargets"),
@@ -278,6 +280,14 @@ const el = {
   journeyOverlayClose: document.getElementById("journeyOverlayClose"),
   journeyPath: document.getElementById("journeyPath"),
   journeyTip: document.getElementById("journeyTip"),
+  victoryOverlay: document.getElementById("victoryOverlay"),
+  victoryOverlayBackdrop: document.getElementById("victoryOverlayBackdrop"),
+  victoryOverlayTitle: document.getElementById("victoryOverlayTitle"),
+  victoryQuestion: document.getElementById("victoryQuestion"),
+  victoryAnswer: document.getElementById("victoryAnswer"),
+  victoryMessage: document.getElementById("victoryMessage"),
+  victoryJourneyBtn: document.getElementById("victoryJourneyBtn"),
+  victoryCloseBtn: document.getElementById("victoryCloseBtn"),
   fragmentsBlock: document.getElementById("fragmentsBlock"),
   fragmentsText: document.getElementById("fragmentsText"),
   fragmentsTrack: document.getElementById("fragmentsTrack"),
@@ -526,6 +536,7 @@ function onUiLanguageChanged(code) {
       el.connBadge.className = "badge offline";
     }
   }
+  if (state.victoryOpen) fillVictoryOverlay(state.status);
   refreshSearchChrome();
 }
 
@@ -848,7 +859,8 @@ function forkProgressTitle(item) {
 }
 
 function liveTargetTitles(status) {
-  const titles = [status?.current_target, status?.goal_article];
+  const titles = [status?.current_target];
+  if (status?.boss_completed) titles.push(status?.goal_article);
   const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
   for (const item of live) titles.push(item?.target);
   return titles.filter(Boolean);
@@ -856,6 +868,14 @@ function liveTargetTitles(status) {
 
 function isLiveTargetTitle(title, status) {
   return liveTargetTitles(status).some((item) => titlesMatch(title, item));
+}
+
+function isGoalArticleTitle(title, status) {
+  return Boolean(status?.goal_article) && titlesMatch(title, status.goal_article);
+}
+
+function isProtectedNavTitle(title, status) {
+  return isLiveTargetTitle(title, status) || isGoalArticleTitle(title, status);
 }
 
 function unlockedBranchPaths(status) {
@@ -1269,6 +1289,44 @@ function closeJourneyOverlay() {
   el.journeyOverlay?.classList.add("hidden");
 }
 
+function fillVictoryOverlay(status) {
+  const question = String(status?.goal_question || "").trim();
+  const title = status?.goal_article || "";
+  if (el.victoryQuestion) {
+    el.victoryQuestion.textContent = question;
+    el.victoryQuestion.classList.toggle("hidden", !question);
+  }
+  if (el.victoryAnswer) {
+    el.victoryAnswer.textContent = title ? t("victory.answer", { title }) : "";
+    el.victoryAnswer.classList.toggle("hidden", !title);
+  }
+  if (el.victoryMessage) el.victoryMessage.textContent = t("victory.message");
+  if (el.victoryOverlayTitle) el.victoryOverlayTitle.textContent = t("victory.title");
+  if (el.victoryJourneyBtn) el.victoryJourneyBtn.textContent = t("victory.seeJourney");
+  if (el.victoryCloseBtn) el.victoryCloseBtn.textContent = t("victory.continue");
+}
+
+function openVictoryOverlay(status) {
+  if (!el.victoryOverlay) return;
+  state.victoryOpen = true;
+  fillVictoryOverlay(status || state.status);
+  el.victoryOverlay.classList.remove("hidden");
+}
+
+function closeVictoryOverlay() {
+  state.victoryOpen = false;
+  el.victoryOverlay?.classList.add("hidden");
+}
+
+function bindVictoryOverlayUi() {
+  el.victoryJourneyBtn?.addEventListener("click", () => {
+    closeVictoryOverlay();
+    void openJourneyOverlay({ credits: true });
+  });
+  el.victoryCloseBtn?.addEventListener("click", closeVictoryOverlay);
+  el.victoryOverlayBackdrop?.addEventListener("click", closeVictoryOverlay);
+}
+
 function bindJourneyOverlayUi() {
   el.journeyBtn?.addEventListener("click", () => {
     void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
@@ -1330,7 +1388,7 @@ function consumeTrapQueueForPage(title, status) {
   state.activeFoggy = false;
   state.activeMissing = false;
   if (!state.trapQueue.length) return;
-  if (isLiveTargetTitle(title, status)) return;
+  if (isProtectedNavTitle(title, status)) return;
   const queued = state.trapQueue.splice(0, state.trapQueue.length);
   state.activeFoggy = queued.includes("Foggy Links");
   state.activeMissing = queued.includes("Missing Links");
@@ -1359,7 +1417,7 @@ function armBombsOnPage(root, status) {
   const eligible = [...root.querySelectorAll("a[data-title]")].filter((a) => {
     const dest = a.dataset.title || "";
     if (!dest) return false;
-    if (isLiveTargetTitle(dest, status)) return false;
+    if (isProtectedNavTitle(dest, status)) return false;
     return true;
   });
   if (!eligible.length) return;
@@ -1737,11 +1795,27 @@ function renderFragmentsTrack(status) {
   if (el.fragmentsBlock) el.fragmentsBlock.classList.toggle("hidden", showGoal);
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
   if (el.goalText && showGoal) {
-    const goal = status.goal_article || "...";
-    el.goalText.textContent = status.boss_completed
-      ? `${goal} ${t("hud.goalCompleteSuffix")}`
-      : goal;
-    setHoverWikiTitle(el.goalHover, status.goal_article || "");
+    const question = String(status.goal_question || "").trim();
+    const title = status.goal_article || "";
+    if (question) {
+      el.goalText.textContent = question;
+      if (el.goalHover) el.goalHover.classList.toggle("hidden", !status.boss_completed);
+      if (el.goalAnswer) {
+        el.goalAnswer.textContent = status.boss_completed
+          ? `${t("hud.goalAnswer", { title })} ${t("hud.goalCompleteSuffix")}`
+          : "";
+      }
+      setHoverWikiTitle(el.goalHover, status.boss_completed ? title : "");
+    } else {
+      el.goalText.textContent = "";
+      if (el.goalHover) el.goalHover.classList.remove("hidden");
+      if (el.goalAnswer) {
+        el.goalAnswer.textContent = status.boss_completed
+          ? `${title || "..."} ${t("hud.goalCompleteSuffix")}`
+          : (title || "...");
+      }
+      setHoverWikiTitle(el.goalHover, title);
+    }
   } else {
     setHoverWikiTitle(el.goalHover, "");
   }
@@ -2984,13 +3058,12 @@ function updateHUD(status) {
   applyDisplayLocks();
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
-  if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
-    toast(t("toast.goalComplete"), "ok", 8000);
+  if (!status.boss_completed) {
+    state.announcedGoalComplete = false;
+    if (state.victoryOpen) closeVictoryOverlay();
+  } else if (!wasComplete && !state.announcedGoalComplete) {
     state.announcedGoalComplete = true;
-    if (!state.announcedJourneyCredits) {
-      state.announcedJourneyCredits = true;
-      void openJourneyOverlay({ credits: true });
-    }
+    openVictoryOverlay(status);
   }
   const nextUnlocked = Array.isArray(status.unlocked_branch_ids)
     ? status.unlocked_branch_ids.map((id) => Number(id))
@@ -3958,7 +4031,7 @@ el.articleBody.addEventListener("click", async (e) => {
   const destNorm = normalizeTitle(dest);
 
   // Bomb hit (only on forward wiki clicks).
-  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !isLiveTargetTitle(dest, state.status)) {
+  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !isProtectedNavTitle(dest, state.status)) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} hit a link bomb`);
     await applyDeathEffect("Boom! Link bomb — random page.");
     return;
@@ -3968,7 +4041,7 @@ el.articleBody.addEventListener("click", async (e) => {
   if (
     deathsEnabled()
     && state.roundVisitSet.has(destNorm)
-    && !isLiveTargetTitle(dest, state.status)
+    && !isProtectedNavTitle(dest, state.status)
   ) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} looped on Wikipedia`);
     await applyDeathEffect("Loop death! Already visited this round.");
@@ -4236,6 +4309,7 @@ bindTargetTooltip();
 bindUiLanguageControls();
 bindBingoOverlayUi();
 bindJourneyOverlayUi();
+bindVictoryOverlayUi();
 bindStuckHelper();
 showMigrateBannerIfNeeded();
 if (typeof ResizeObserver !== "undefined") {

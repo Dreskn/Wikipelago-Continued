@@ -324,6 +324,7 @@ class SessionState:
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     goal_article_title: str = ""
+    goal_question: str = ""
     wikipedia_language: str = "en"
     reroll_pool: list[str] = field(default_factory=list)
     target_rerolls_start: int = TARGET_REROLLS_PER_ROUND
@@ -777,6 +778,7 @@ class SessionState:
             "current_start": self.current_start(),
             "current_target": self.current_target(),
             "goal_article": self.goal_article(),
+            "goal_question": self.goal_question,
             "wikipedia_language": self.wikipedia_language or "en",
             "round": min(self.round_index + 1, self.check_count),
             "rounds_completed": min(self.round_index, self.check_count),
@@ -912,6 +914,7 @@ class APConnection:
         self.state.check_count = 1
         self.state.reroll_pool = rest
         self.state.goal_article_title = ""
+        self.state.goal_question = ""
         self.state.backs_used = 0
         self.state.backs_round = ""
         self.state.target_rerolls_used = 0
@@ -1062,6 +1065,7 @@ class APConnection:
             self.state.wikipedia_language = "en"
             self.state.round_pairs = []
             self.state.goal_article_title = ""
+            self.state.goal_question = ""
             self.state.reroll_pool = []
             self.state.path_last_page = {}
         self.items_seen = 0
@@ -1093,6 +1097,7 @@ class APConnection:
             self.state.round_pairs = []
             self.state.reroll_pool = []
             self.state.goal_article_title = ""
+            self.state.goal_question = ""
             self.state.received_items.clear()
             self.state.back_depth_start = 0
             self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
@@ -1348,6 +1353,12 @@ class APConnection:
         elif self.state.round_pairs:
             # Legacy seeds: last round target was the Grand Goal.
             self.state.goal_article_title = self.state.round_pairs[-1]["target"]
+
+        question_from_slot = slot_data.get("goal_question")
+        if isinstance(question_from_slot, str) and question_from_slot.strip():
+            self.state.goal_question = question_from_slot.strip()
+        else:
+            self.state.goal_question = ""
 
         wiki_lang = slot_data.get("wikipedia_language", "en")
         if isinstance(wiki_lang, str) and wiki_lang.strip():

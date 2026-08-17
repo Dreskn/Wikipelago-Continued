@@ -92,6 +92,21 @@ try {
             [System.IO.Compression.CompressionLevel]::Optimal
         )
     }
+
+    $repoRoot = Split-Path -Parent $Root
+    $bankDir = Join-Path $repoRoot "docs\grand-goal\bank"
+    foreach ($lang in $supportedLangs) {
+        $bankFile = Join-Path $bankDir "$lang.json"
+        if (!(Test-Path -LiteralPath $bankFile)) {
+            throw "Missing Grand Goal bank: $bankFile"
+        }
+        [void][System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+            $zip,
+            $bankFile,
+            "$PackageName/data/grand_goal/$lang.json",
+            [System.IO.Compression.CompressionLevel]::Optimal
+        )
+    }
 }
 finally {
     $zip.Dispose()
@@ -106,6 +121,7 @@ try {
         "$PackageName/__init__.py",
         "$PackageName/article_pool.py",
         "$PackageName/data/pool_en.json",
+        "$PackageName/data/grand_goal/en.json",
         "$PackageName/letter_pairs.py"
     ) + @(
         foreach ($lang in $supportedLangs) {

@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260816-08" />
+  <link rel="stylesheet" href="/static/style.css?v=20260817-01" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -118,8 +118,11 @@
             </div>
             <p id="goalRow" class="goal-row hidden">
               <strong data-i18n="hud.grandGoal">Grand Goal:</strong>
-              <span class="target-hover" id="goalHover">
-                <span id="goalText">-</span>
+              <span class="goal-body">
+                <span id="goalText" class="goal-question">-</span>
+                <span class="target-hover hidden" id="goalHover">
+                  <span id="goalAnswer" class="goal-answer"></span>
+                </span>
               </span>
             </p>
           </div>
@@ -219,7 +222,21 @@
     </div>
   </div>
 
-  <script src="/static/i18n.js?v=20260816-08"></script>
-  <script src="/static/app.js?v=20260816-08"></script>
+  <div id="victoryOverlay" class="victory-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="victoryOverlayTitle">
+    <button type="button" class="bingo-overlay-backdrop" id="victoryOverlayBackdrop" aria-label="Close" data-i18n-aria="victory.continue"></button>
+    <div class="victory-overlay-panel">
+      <h2 id="victoryOverlayTitle" data-i18n="victory.title">Grand Goal reached!</h2>
+      <p id="victoryQuestion" class="victory-question"></p>
+      <p id="victoryAnswer" class="victory-answer"></p>
+      <p id="victoryMessage" class="victory-message" data-i18n="victory.message">You found the page and finished this seed.</p>
+      <div class="victory-actions">
+        <button type="button" id="victoryJourneyBtn" data-i18n="victory.seeJourney">See your journey</button>
+        <button type="button" id="victoryCloseBtn" class="btn-quiet" data-i18n="victory.continue">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/i18n.js?v=20260817-01"></script>
+  <script src="/static/app.js?v=20260817-01"></script>
 </body>
 </html>

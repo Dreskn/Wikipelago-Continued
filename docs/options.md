@@ -14,7 +14,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
+| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. |
 | `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
@@ -42,8 +42,8 @@ Hover the **Target** title to see a plain-text blurb: Wikipedia short descriptio
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `random_goal_article` | `true` | If true, the Grand Goal article is picked randomly from enabled categories. |
-| `goal_article_preset` | `dark_souls` | Used only when `random_goal_article` is `false`. Picks a fixed famous article. |
+| `random_goal_article` | `true` | If true, the Grand Goal is a closed question from that wiki language's bank (answer page preferred from enabled categories). |
+| `goal_article_preset` | `dark_souls` | Used only when `random_goal_article` is `false`. Picks a fixed famous article (question attached when the bank has one). |
 
 Valid presets include (see the YAML for the full list):  
 `minecraft`, `the_legend_of_zelda`, `dark_souls`, `elden_ring`, `super_mario_bros`, `pokemon_red_and_blue`, `chess`, `catan`, `the_dark_knight`, `star_wars_film`, `lord_of_the_rings_fellowship`, `the_matrix`, `avatar_the_last_airbender`, `breaking_bad`, `stranger_things`, `game_of_thrones`, `the_simpsons`, `spongebob_squarepants`, `super_smash_bros_ultimate`, `halo_combat_evolved`.

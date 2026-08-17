@@ -42,7 +42,10 @@ class RoundsPerUnlock(Range):
 
 
 class RandomGoalArticle(Toggle):
-    """When enabled, the Grand Goal article is chosen randomly from enabled categories."""
+    """When enabled, the Grand Goal is a closed question from that wiki language's
+    question bank. The answer page is preferred from enabled categories.
+    Knowledge Fragments still unlock the question; landing on the answer page still
+    sends the Victory / CLIENT_GOAL check."""
     display_name = "Random Goal Article"
     default = 1
 

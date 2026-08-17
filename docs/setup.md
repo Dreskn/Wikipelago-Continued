@@ -53,7 +53,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 2. Enter server, slot name, and password (if used).
 3. Click connect.
 4. Play available rounds: Start → Target by clicking Wikipedia links.
-5. Collect Knowledge Fragments and clear the Grand Goal when ready.
+5. Collect Knowledge Fragments to unlock the Grand Goal question, then find the answer page.
 
 ### Tips
 

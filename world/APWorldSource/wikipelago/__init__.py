@@ -12,6 +12,7 @@ from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch
 from .Options import WikipelagoOptions
 from .Regions import create_regions
 from .article_pool import SUPPORTED_LANGS, load_article_pool
+from .grand_goal import card_for_title, pick_grand_goal_card
 from .letter_pairs import (
     bingo_location_count,
     bingo_location_names,
@@ -254,6 +255,8 @@ class WikipelagoWorld(World):
 
     round_pairs: list[dict[str, str]]
     goal_article: str
+    goal_question: str
+    goal_qid: str | None
     reroll_pool: list[str]
     bingo_letterpairs_boards: list[list[list[str]]]
     crossroads: list[dict[str, int]]
@@ -516,8 +519,24 @@ class WikipelagoWorld(World):
                 "Lower check_count / branch_count / branch_length or enable more article categories."
             )
 
+        self.goal_question = ""
+        self.goal_qid = None
+        lang = self._wikipedia_language()
         if self.options.random_goal_article.value:
-            self.goal_article = self.random.choice(filtered_pool)
+            try:
+                card = pick_grand_goal_card(
+                    self.random, lang, selected_topics, filtered_pool
+                )
+            except FileNotFoundError:
+                card = None
+            if card:
+                self.goal_article = card["answer_title"]
+                self.goal_question = card["question"]
+                self.goal_qid = card.get("qid")
+            else:
+                self.goal_article = self.random.choice(filtered_pool)
+            if self.goal_article not in filtered_pool:
+                filtered_pool.append(self.goal_article)
         else:
             goal_preset_value = self.options.goal_article_preset.value
             self.goal_article = _preset_goal_name(goal_preset_value)
@@ -530,6 +549,13 @@ class WikipelagoWorld(World):
                 )
             if self.goal_article not in filtered_pool:
                 filtered_pool.append(self.goal_article)
+            try:
+                preset_card = card_for_title(lang, self.goal_article)
+            except FileNotFoundError:
+                preset_card = None
+            if preset_card:
+                self.goal_question = preset_card["question"]
+                self.goal_qid = preset_card.get("qid")
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
         # Opening start + one target per round + branch_length extra titles per branch.
@@ -819,6 +845,8 @@ class WikipelagoWorld(World):
             "rounds_per_unlock": per_unlock,
             "wikipedia_language": self._wikipedia_language(),
             "goal_article": self.goal_article,
+            "goal_question": self.goal_question,
+            "goal_qid": self.goal_qid,
             "round_pairs": self.round_pairs,
             "crossroads": list(getattr(self, "crossroads", []) or []),
             "branches": list(getattr(self, "branches", []) or []),
