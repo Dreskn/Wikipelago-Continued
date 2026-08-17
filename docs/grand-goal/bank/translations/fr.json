@@ -1,0 +1,917 @@
+{
+  "Q178995": {
+    "question": "Quelle petite quantité de données, introduite en 1994 par un ingénieur de Netscape, un site web stocke-t-il sur l'ordinateur d'un visiteur pour mémoriser l'état entre les requêtes ?",
+    "lead_fact": "Inventé en 1994 chez Netscape ; état côté client entre requêtes HTTP.",
+    "source": "translated-from-en"
+  },
+  "Q142": {
+    "question": "Quel État souverain transcontinental a son territoire métropolitain en Europe de l'Ouest et des territoires ultramarins dans les océans Indien, Atlantique et Pacifique, ainsi qu'en Antarctique et en Amérique du Sud ?",
+    "lead_fact": "Métropole en Europe de l'Ouest ; outre-mer dans trois océans, Antarctique et Amérique du Sud.",
+    "source": "native-lead"
+  },
+  "Q11571": {
+    "question": "Quel attaquant portugais détient les records de la Ligue des champions de l'UEFA pour le plus grand nombre de buts (140) et de passes décisives (42) ?",
+    "lead_fact": "140 buts et 42 passes décisives en Ligue des champions.",
+    "source": "translated-from-en"
+  },
+  "Q3052772": {
+    "question": "Quel président de la République française, inspecteur des finances sorti de l'ENA en 2004 puis banquier chez Rothschild, est en fonction depuis le 14 mai 2017 ?",
+    "lead_fact": "Président depuis le 14 mai 2017 ; ENA 2004, inspecteur des finances, Rothschild.",
+    "source": "native-lead"
+  },
+  "Q21621995": {
+    "question": "Quel attaquant international français, né le 20 décembre 1998, évolue au Real Madrid et est reconnu pour sa percussion, sa très grande vitesse et sa qualité de finition ?",
+    "lead_fact": "Né en 1998 ; attaquant au Real Madrid ; vitesse et finition.",
+    "source": "native-lead"
+  },
+  "Q9682": {
+    "question": "Quelle reine britannique est devenue héritière présomptive à dix ans après l'abdication de son oncle en 1936 ?",
+    "lead_fact": "L'abdication d'Édouard VIII fit de la princesse, alors âgée de dix ans, l'héritière présomptive.",
+    "source": "translated-from-en"
+  },
+  "Q615": {
+    "question": "Quel attaquant argentin a inscrit 672 buts en club pour le FC Barcelone, un record pour un seul club ?",
+    "lead_fact": "672 buts pour le Barça, record pour un seul club.",
+    "source": "translated-from-en"
+  },
+  "Q30": {
+    "question": "Quelle république fédérale est née de l'établissement de Virginie en 1607, devenu les Treize Colonies, et compte aujourd'hui l'Alaska comme semi-exclave ?",
+    "lead_fact": "Virginie 1607 / Treize Colonies ; Alaska en semi-exclave. Pas la capitale.",
+    "source": "translated-from-en"
+  },
+  "Q866": {
+    "question": "Quel site de vidéos, lancé par trois anciens employés de PayPal, accueillait déjà plus de 500 heures de vidéo mises en ligne chaque minute en 2019 ?",
+    "lead_fact": "Fondé par Chen, Hurley et Karim ; plus de 500 heures mises en ligne par minute en 2019.",
+    "source": "translated-from-en"
+  },
+  "Q22686": {
+    "question": "Quel président américain a présenté l'émission de téléréalité The Apprentice de 2004 à 2015, entre une carrière dans l'immobilier et des mandats électifs ?",
+    "lead_fact": "Animateur de The Apprentice (2004-2015) ; 45e et 47e président.",
+    "source": "translated-from-en"
+  },
+  "Q18756": {
+    "question": "Quelle compétition interclubs de l'UEFA a commencé en 1955 sous le nom de Coupe des clubs champions européens ?",
+    "lead_fact": "Créée en 1955 sous le nom de Coupe des clubs champions européens.",
+    "source": "translated-from-en"
+  },
+  "Q355": {
+    "question": "Quel réseau social, d'abord réservé aux étudiants de Harvard, tire son nom des trombinoscopes de campus ?",
+    "lead_fact": "Lancement limité à Harvard ; nom tiré des « face books » / trombinoscopes.",
+    "source": "translated-from-en"
+  },
+  "Q317521": {
+    "question": "Quel homme d'affaires a cofondé en 1995 la société web Zip2, puis X.com, fusionnée ensuite dans PayPal ?",
+    "lead_fact": "Zip2 (1995) puis X.com → PayPal ; pas Tesla/SpaceX comme accroche.",
+    "source": "translated-from-en"
+  },
+  "Q95": {
+    "question": "Quelle entreprise, fondée par Larry Page et Sergey Brin en 1998, est devenue une filiale à 100 % d'Alphabet en 2015 ?",
+    "lead_fact": "Fondée en 1998 ; réorganisation sous Alphabet en 2015.",
+    "source": "translated-from-en"
+  },
+  "Q2831": {
+    "question": "Quel chanteur, huitième d'une fratrie de dix, a sorti Thriller, plus tard présenté comme l'album le plus vendu de l'histoire ?",
+    "lead_fact": "Huitième des dix enfants Jackson ; Thriller, album le plus vendu.",
+    "source": "translated-from-en"
+  },
+  "Q135622": {
+    "question": "Quel service de traduction automatique, fourni par Google, convertit du texte d'une langue vers une autre ?",
+    "lead_fact": "Service de traduction automatique fourni par Google.",
+    "source": "native-lead"
+  },
+  "Q90": {
+    "question": "Quelle métropole, occupée dès le IIIe siècle avant notre ère sous le nom de Lutèce par un peuple gaulois, s'étend sur une boucle de la Seine entre les confluents de la Marne et de l'Oise ?",
+    "lead_fact": "Lutèce des Parisii ; boucle de la Seine entre Marne et Oise.",
+    "source": "native-lead"
+  },
+  "Q517": {
+    "question": "Quel militaire corse, second enfant de Charles Bonaparte et Letizia Ramolino, fut le premier empereur des Français de 1804 à 1814 puis pendant les Cent-Jours de 1815 ?",
+    "lead_fact": "Premier empereur des Français (1804-1814 et Cent-Jours 1815) ; né à Ajaccio.",
+    "source": "native-lead"
+  },
+  "Q10693": {
+    "question": "Quel classement, généralement attribué au chimiste russe Dmitri Mendeleïev en 1869, range tous les éléments chimiques par numéro atomique croissant selon leur configuration électronique ?",
+    "lead_fact": "Éléments par numéro atomique ; attribué à Mendeleïev (1869).",
+    "source": "native-lead"
+  },
+  "Q1795024": {
+    "question": "Comment appelle-t-on chacune des douze divisions égales de 30° de la bande de ciel parcourue par le Soleil, la Lune et les planètes, à ne pas confondre avec les constellations de même nom ?",
+    "lead_fact": "Douze divisions de 30° du zodiaque (dodécatémorie), distinctes des constellations.",
+    "source": "native-lead"
+  },
+  "Q142794": {
+    "question": "Quel footballeur international brésilien, né en 1992 à Mogi das Cruzes et formé au Santos FC, évolue comme ailier gauche ou milieu offensif ?",
+    "lead_fact": "Né à Mogi das Cruzes en 1992 ; formé au Santos FC.",
+    "source": "native-lead"
+  },
+  "Q15869": {
+    "question": "Quel chanteur de Queen, né Farrokh Bulsara à Zanzibar de parents indiens parsis, a fui la révolution de 1964 ?",
+    "lead_fact": "Né Farrokh Bulsara ; parents parsis ; révolution de Zanzibar de 1964.",
+    "source": "translated-from-en"
+  },
+  "Q535": {
+    "question": "Quel écrivain romantique français, né à Besançon le 26 février 1802, fut aussi une personnalité politique engagée au XIXe siècle ?",
+    "lead_fact": "Poète, dramaturge et romancier romantique né à Besançon en 1802.",
+    "source": "native-lead"
+  },
+  "Q30339350": {
+    "question": "Quel homme d'État français, né en 1989, a été Premier ministre du 9 janvier au 5 septembre 2024 avant de présider le groupe Ensemble pour la République à l'Assemblée nationale ?",
+    "lead_fact": "Premier ministre du 9 janvier au 5 septembre 2024 ; Renaissance.",
+    "source": "native-lead"
+  },
+  "Q21511883": {
+    "question": "Quelle professeure de lettres, née Trogneux à Amiens, a rencontré son futur mari lorsqu'il était élève au lycée où elle donnait des cours de théâtre ?",
+    "lead_fact": "Née Trogneux ; professeure de lettres ; rencontre au lycée d'Amiens via le théâtre.",
+    "source": "native-lead"
+  },
+  "Q40655898": {
+    "question": "Quel homme politique français, né en 1995 à Drancy, préside depuis 2021 le Rassemblement national ?",
+    "lead_fact": "Président du RN depuis 2021 ; né à Drancy en 1995.",
+    "source": "native-lead"
+  },
+  "Q23572": {
+    "question": "Quelle série américaine de fantasy, créée par David Benioff et D. B. Weiss et diffusée sur HBO de 2011 à 2019, adapte en 73 épisodes la saga romanesque de George R. R. Martin ?",
+    "lead_fact": "73 épisodes, huit saisons, 2011-2019 ; adaptation de Martin.",
+    "source": "translated-from-en"
+  },
+  "Q7747": {
+    "question": "Quel dirigeant russe a démissionné du KGB comme lieutenant-colonel en 1991, puis a brièvement dirigé le FSB avant de devenir Premier ministre ?",
+    "lead_fact": "Lieutenant-colonel du KGB jusqu'en 1991 ; directeur du FSB, puis Premier ministre en 1999.",
+    "source": "translated-from-en"
+  },
+  "Q1835": {
+    "question": "Quel milieu offensif international français, formé à l'AS Cannes, est devenu sélectionneur de l'équipe de France le 1er août 2026 ?",
+    "lead_fact": "Formé à Cannes ; sélectionneur des Bleus depuis le 1er août 2026.",
+    "source": "native-lead"
+  },
+  "Q6465": {
+    "question": "En France, comment appelle-t-on à la fois une circonscription administrative des services déconcentrés de l'État et une collectivité territoriale dotée de la personnalité morale ?",
+    "lead_fact": "À la fois circonscription déconcentrée de l'État et collectivité territoriale.",
+    "source": "native-lead"
+  },
+  "Q455462": {
+    "question": "Quel international français, surnommé Grizi, formé à la Real Sociedad dès l'âge de treize ans, évolue comme second attaquant à Orlando City ?",
+    "lead_fact": "Formé à la Real Sociedad à 13 ans ; Orlando City ; surnom Grizi.",
+    "source": "native-lead"
+  },
+  "Q7742": {
+    "question": "Quel roi de France et de Navarre, surnommé le Roi-Soleil, a régné 72 ans, le plus long règne de l'histoire de France ?",
+    "lead_fact": "Règne de 72 ans (1643-1715), le plus long de l'histoire de France.",
+    "source": "native-lead"
+  },
+  "Q352": {
+    "question": "Quel dirigeant nazi a pris le titre de Führer und Reichskanzler en 1934, un an après être devenu chancelier allemand ?",
+    "lead_fact": "Chancelier en 1933 ; Führer und Reichskanzler en 1934.",
+    "source": "translated-from-en"
+  },
+  "Q288477": {
+    "question": "Quel journaliste et essayiste français, diplômé de Sciences Po, a travaillé au Quotidien de Paris de 1986 à 1994 puis au service politique du Figaro ?",
+    "lead_fact": "Sciences Po ; Quotidien de Paris puis Figaro ; polémiste d'extrême droite.",
+    "source": "native-lead"
+  },
+  "Q10132": {
+    "question": "Quel joueur de tennis espagnol, né à Manacor, est considéré comme le meilleur joueur sur terre battue de l'histoire et a remporté 92 titres en simple ?",
+    "lead_fact": "Meilleur joueur sur terre battue ; 92 titres ; membre du Big Three.",
+    "source": "native-lead"
+  },
+  "Q1912": {
+    "question": "Quel avant-centre international français, surnommé KB9, a remporté le Ballon d'or et le titre de Joueur de l'année de l'UEFA en 2022 ?",
+    "lead_fact": "Ballon d'or et Joueur UEFA de l'année 2022 ; meilleur buteur français en C1.",
+    "source": "native-lead"
+  },
+  "Q483020": {
+    "question": "Quel club français de football, né en 1970 de la fusion du Stade saint-germanois et du Paris Football Club, joue au Parc des Princes ?",
+    "lead_fact": "Fusion de 1970 ; Parc des Princes ; centre d'entraînement à Poissy.",
+    "source": "native-lead"
+  },
+  "Q19317": {
+    "question": "Quelle compétition entre équipes nationales masculines de football, imaginée en 1928 sous l'impulsion de Jules Rimet, est ouverte aux professionnels contrairement au tournoi olympique de l'époque ?",
+    "lead_fact": "Créée sous l'impulsion de Jules Rimet (1928) ; ouverte aux professionnels.",
+    "source": "native-lead"
+  },
+  "Q2042": {
+    "question": "Quel militaire et homme d'État, fondateur de la France libre pendant la Seconde Guerre mondiale, a instauré la Ve République dont il fut le premier président ?",
+    "lead_fact": "France libre ; premier président de la Ve République.",
+    "source": "native-lead"
+  },
+  "Q958": {
+    "question": "Quel État fédéral d'Afrique de l'Est, sans accès à la mer, a pour voisins le Soudan, l'Éthiopie, le Kenya, l'Ouganda, la RDC et la Centrafrique ?",
+    "lead_fact": "État fédéral enclavé d'Afrique de l'Est ; indépendant du Soudan. Pas Djouba.",
+    "source": "native-lead"
+  },
+  "Q5829": {
+    "question": "Quel homme politique français, fondateur de La France insoumise, a milité à l'OCI puis au Parti socialiste avant de quitter ce dernier ?",
+    "lead_fact": "Fondateur de LFI ; OCI puis PS.",
+    "source": "native-lead"
+  },
+  "Q8682": {
+    "question": "Quel club madrilène, fondé en 1902 par Julián Palacios et les frères Padrós, a reçu de la FIFA le titre honorifique de plus grand club du XXe siècle ?",
+    "lead_fact": "Fondé en 1902 ; titre FIFA de plus grand club du XXe siècle.",
+    "source": "native-lead"
+  },
+  "Q2105": {
+    "question": "Quel homme d'État français a été deux fois Premier ministre (1974-1976 et 1986-1988) puis président de la République de 1995 à 2007 ?",
+    "lead_fact": "Premier ministre 1974-76 et 1986-88 ; président 1995-2007.",
+    "source": "native-lead"
+  },
+  "Q362": {
+    "question": "Quelle guerre de 1939-1945 a été suivie de l'occupation de l'Allemagne, de l'Autriche, du Japon et de la Corée, ainsi que de procès de dirigeants allemands et japonais ?",
+    "lead_fact": "Occupation d'après-guerre de ces quatre pays ; procès pour crimes de guerre.",
+    "source": "translated-from-en"
+  },
+  "Q115564437": {
+    "question": "Quel agent conversationnel a atteint 100 millions d'utilisateurs mensuels en deux mois après son lancement le 30 novembre 2022 ?",
+    "lead_fact": "Lancé le 30 novembre 2022 ; 100 millions d'utilisateurs mensuels en deux mois.",
+    "source": "translated-from-en"
+  },
+  "Q16": {
+    "question": "Quel pays, formé de dix provinces et trois territoires s'étendant de l'Atlantique au Pacifique jusqu'à l'Arctique, est le deuxième plus vaste du monde par superficie totale ?",
+    "lead_fact": "10 provinces, 3 territoires ; 2e plus grand pays par superficie. Pas Ottawa.",
+    "source": "translated-from-en"
+  },
+  "Q361": {
+    "question": "Quelle guerre de 1914-1918, opposant les Alliés aux Puissances centrales, est aussi liée à la diffusion de la grippe espagnole ?",
+    "lead_fact": "Alliés contre Puissances centrales ; diffusion de la grippe espagnole.",
+    "source": "translated-from-en"
+  },
+  "Q38111": {
+    "question": "Quel acteur a obtenu sa première nomination à l'Oscar pour le rôle d'un garçon handicapé mental dans What's Eating Gilbert Grape ?",
+    "lead_fact": "Première nomination à l'Oscar : What's Eating Gilbert Grape (1993).",
+    "source": "translated-from-en"
+  },
+  "Q187447": {
+    "question": "Quel Colombien, fondateur du cartel de Medellín, était surnommé le « roi de la cocaïne » et estimé à environ 30 milliards de dollars à sa mort ?",
+    "lead_fact": "Cartel de Medellín ; roi de la cocaïne ; ~30 milliards de dollars.",
+    "source": "translated-from-en"
+  },
+  "Q1028": {
+    "question": "Quel royaume d'Afrique du Nord, l'un des seuls avec l'Espagne et la France à avoir des côtes à la fois sur la Méditerranée et l'Atlantique, est aussi appelé Empire chérifien ?",
+    "lead_fact": "Façades méditerranéenne et atlantique ; Empire chérifien. Pas Rabat.",
+    "source": "native-lead"
+  },
+  "Q212015": {
+    "question": "Quel chanteur né Jean-Philippe Smet a popularisé le rock en France dès 1960 et a mené une carrière de 57 ans ?",
+    "lead_fact": "Né Jean-Philippe Smet ; popularise le rock en France dès 1960.",
+    "source": "native-lead"
+  },
+  "Q298180": {
+    "question": "Quelle magistrate, déportée à Auschwitz à 16 ans, est devenue une femme d'État française après des études de droit et de science politique ?",
+    "lead_fact": "Déportée à Auschwitz à 16 ans ; magistrate puis femme d'État.",
+    "source": "native-lead"
+  },
+  "Q106529": {
+    "question": "Quel acteur franco-suisse, révélé par Plein Soleil de René Clément en 1960, a enchaîné avec Rocco et ses frères et Le Guépard ?",
+    "lead_fact": "Révélé par Plein Soleil (1960) ; Rocco et ses frères ; Le Guépard.",
+    "source": "native-lead"
+  },
+  "Q3232172": {
+    "question": "Quel jeu télévisé français, présenté par Jean-Luc Reichmann sur TF1 depuis 2010, a vu le champion Émilien atteindre 647 participations ?",
+    "lead_fact": "Jeu TF1 présenté par Reichmann depuis 2010 ; champion Émilien (647 participations).",
+    "source": "native-lead"
+  },
+  "Q29647346": {
+    "question": "Quelle série espagnole créée par Álex Pina, d'abord diffusée sur Antena 3 en 2017, a connu un succès mondial après son arrivée sur Netflix ?",
+    "lead_fact": "Créée par Álex Pina ; Antena 3 puis Netflix (2017-2021).",
+    "source": "native-lead"
+  },
+  "Q937": {
+    "question": "Quel physicien a reçu le prix Nobel de 1921 pour l'effet photoélectrique plutôt que pour la relativité ?",
+    "lead_fact": "Nobel 1921 pour l'effet photoélectrique, pas la relativité.",
+    "source": "translated-from-en"
+  },
+  "Q687": {
+    "question": "Quel auteur de comédies, né Jean-Baptiste Poquelin et baptisé à Saint-Eustache en 1622, a fondé à 21 ans la troupe de l'Illustre Théâtre avec la famille Béjart ?",
+    "lead_fact": "Né Jean-Baptiste Poquelin ; Illustre Théâtre avec les Béjart.",
+    "source": "native-lead"
+  },
+  "Q5812": {
+    "question": "Quel joueur de tennis serbe, professionnel depuis 2003, a remporté tous les tournois du Grand Chelem au moins trois fois et forme le Big Three avec Nadal et Federer ?",
+    "lead_fact": "Serbe ; Grand Chelem au moins trois fois chacun ; Big Three.",
+    "source": "native-lead"
+  },
+  "Q243": {
+    "question": "Quelle tour autoportante de fer puddlé, haute de 330 m avec antennes, a été construite en deux ans pour l'Exposition universelle de Paris de 1889, initialement sous le nom de « tour de 300 mètres » ?",
+    "lead_fact": "Fer puddlé ; 330 m ; Exposition universelle de 1889.",
+    "source": "native-lead"
+  },
+  "Q262": {
+    "question": "Quel État souverain d'Afrique du Nord, faisant partie du Maghreb, a pour forme longue République démocratique populaire et pour noms locaux Dzayer et al-Jazā'ir ?",
+    "lead_fact": "État du Maghreb ; forme longue RADP ; arabe et tamazight. Pas Alger comme réponse.",
+    "source": "native-lead"
+  },
+  "Q14944179": {
+    "question": "Quelle série britannique en 36 épisodes, créée par Steven Knight, suit une famille criminelle de Birmingham dans l'entre-deux-guerres, avec Cillian Murphy dans le rôle principal ?",
+    "lead_fact": "Steven Knight ; 36 épisodes (2013-2022) ; Birmingham de l'entre-deux-guerres.",
+    "source": "native-lead"
+  },
+  "Q43": {
+    "question": "Quel pays transcontinental, à cheval sur l'Asie et l'Europe, a des frontières avec la Grèce, la Bulgarie, la Géorgie, l'Arménie, l'Azerbaïdjan, l'Iran, l'Irak et la Syrie ?",
+    "lead_fact": "État transcontinental Asie-Europe ; nombreuses frontières terrestres. Pas Ankara.",
+    "source": "native-lead"
+  },
+  "Q19877770": {
+    "question": "Quel acteur franco-américain, révélé par le rôle d'Elio Perlman dans Call Me by Your Name, est devenu le plus jeune nommé à l'Oscar du meilleur acteur depuis Mickey Rooney en 1939 ?",
+    "lead_fact": "Call Me by Your Name ; nomination à l'Oscar du meilleur acteur (plus jeune depuis 1939).",
+    "source": "native-lead"
+  },
+  "Q36268": {
+    "question": "Quelle actrice et chanteuse française, née en 1934, a mis fin à sa carrière artistique en 1973 après 46 films pour se consacrer à la défense de la cause animale ?",
+    "lead_fact": "46 films ; fin de carrière artistique en 1973 ; militante animaliste.",
+    "source": "native-lead"
+  },
+  "Q46896": {
+    "question": "Quel attaquant international suédois, né à Malmö et ceinture noire de taekwondo, est considéré comme l'un des avants-centres les plus complets de sa génération ?",
+    "lead_fact": "Né à Malmö ; taekwondo ; avant-centre suédois.",
+    "source": "native-lead"
+  },
+  "Q2656389": {
+    "question": "Quelle île des Mascareignes, située entre La Réunion et Rodrigues, s'appelait Isle de France durant la colonisation française de 1715 à 1810 ?",
+    "lead_fact": "Île principale des Mascareignes ; appelée Isle de France de 1715 à 1810.",
+    "source": "native-lead"
+  },
+  "Q80976": {
+    "question": "Quel royal, né prince de Grèce et de Danemark, a été le consort britannique au plus long service de l'histoire ?",
+    "lead_fact": "Né prince de Grèce et de Danemark ; plus long consort britannique.",
+    "source": "translated-from-en"
+  },
+  "Q5592": {
+    "question": "Quel sculpteur, peintre et architecte florentin, né Michelangelo Buonarroti à Caprese en 1475, a marqué la Haute Renaissance ?",
+    "lead_fact": "Michelangelo Buonarroti ; Caprese 1475 ; Haute Renaissance.",
+    "source": "native-lead"
+  },
+  "Q43203": {
+    "question": "Quel acteur, célèbre comme l'« Homme sans nom » de Sergio Leone, a été maire de Carmel-by-the-Sea pendant deux ans à partir de 1986 ?",
+    "lead_fact": "Trilogie du dollar ; maire de Carmel-by-the-Sea en 1986.",
+    "source": "translated-from-en"
+  },
+  "Q106255": {
+    "question": "Quel acteur français, révélé par À bout de souffle de la Nouvelle Vague en 1960, a ensuite confirmé avec La ciociara, Le Doulos et L'Homme de Rio ?",
+    "lead_fact": "Révélé par À bout de souffle (1960) ; Nouvelle Vague.",
+    "source": "native-lead"
+  },
+  "Q145": {
+    "question": "Quel pays, formé de l'Angleterre, de l'Écosse, du pays de Galles et de l'Irlande du Nord, n'a de frontière terrestre qu'avec la République d'Irlande ?",
+    "lead_fact": "Quatre nations constitutives ; seule frontière terrestre avec l'Irlande. Pas Londres.",
+    "source": "translated-from-en"
+  },
+  "Q329": {
+    "question": "Quel homme d'État français, ancien maire de Neuilly-sur-Seine, a été président de la République du 16 mai 2007 au 15 mai 2012 ?",
+    "lead_fact": "Président de 2007 à 2012 ; ancien maire de Neuilly-sur-Seine.",
+    "source": "native-lead"
+  },
+  "Q153815": {
+    "question": "Quelle fille cadette de George VI est restée au château de Windsor pendant la Seconde Guerre mondiale au lieu d'être évacuée au Canada ?",
+    "lead_fact": "Restée à Windsor pendant la guerre ; sœur cadette d'Élisabeth II.",
+    "source": "translated-from-en"
+  },
+  "Q41726": {
+    "question": "Comment appelle-t-on l'ensemble d'espaces de sociabilité sélectifs, recrutant par cooptation, qui pratiquent des rites initiatiques fondés sur un secret et l'art de bâtir, apparus notamment avec les statuts Schaw en 1598 ?",
+    "lead_fact": "Sociabilités initiatiques ; secret et art de bâtir ; statuts Schaw (1598).",
+    "source": "native-lead"
+  },
+  "Q1124861": {
+    "question": "Quelle société nationale publique de télévision française, créée le 7 septembre 1992 par regroupement des deux chaînes publiques nationales, est devenue une entreprise commerciale le 4 janvier 2010 ?",
+    "lead_fact": "Groupe public créé en 1992 ; entreprise commerciale depuis 2010.",
+    "source": "native-lead"
+  },
+  "Q232737": {
+    "question": "Quelle série d'horreur américaine, développée par Frank Darabont d'après la bande dessinée de Robert Kirkman, a été diffusée sur AMC de 2010 à 2022 ?",
+    "lead_fact": "Adaptation Kirkman par Darabont ; AMC (2010-2022).",
+    "source": "native-lead"
+  },
+  "Q2124": {
+    "question": "Quel président de la République française, polytechnicien et inspecteur des finances, a exercé de 1974 à 1981 après avoir été directeur adjoint du cabinet d'Edgar Faure ?",
+    "lead_fact": "Président 1974-1981 ; X-ENA, inspecteur des finances.",
+    "source": "native-lead"
+  },
+  "Q39": {
+    "question": "Quel État fédéral d'Europe, formé de 26 cantons, est sans littoral mais relié à la mer par la navigation sur le Rhin, et a pour capitale de facto Berne ?",
+    "lead_fact": "26 cantons ; enclavé, accès à la mer via le Rhin ; Berne de facto.",
+    "source": "native-lead"
+  },
+  "Q7156": {
+    "question": "Quel club catalan, fondé en 1899 à Barcelone, a notamment remporté 29 fois le championnat d'Espagne et cinq Ligues des champions ?",
+    "lead_fact": "Fondé en 1899 ; 29 Liga, 5 C1 (chiffres 2026).",
+    "source": "native-lead"
+  },
+  "Q32055": {
+    "question": "Quel milliardaire français, PDG et actionnaire majoritaire du groupe LVMH, est aussi propriétaire via ce groupe des Échos, du Parisien et de Paris Match ?",
+    "lead_fact": "PDG-actionnaire majoritaire de LVMH ; Les Échos, Le Parisien, Paris Match.",
+    "source": "native-lead"
+  },
+  "Q171530": {
+    "question": "Quel auteur-compositeur-interprète et joueur de poker, né à Tlemcen, a lancé sa carrière avec Marre de cette nana-là ! en 1984 ?",
+    "lead_fact": "Né à Tlemcen ; tube Marre de cette nana-là ! (1984).",
+    "source": "native-lead"
+  },
+  "Q1911": {
+    "question": "Quel attaquant international français, né à Chambéry, a reçu le prix Puskás 2017 et évolue au LOSC Lille ?",
+    "lead_fact": "Prix Puskás 2017 ; pivot ; LOSC Lille.",
+    "source": "native-lead"
+  },
+  "Q31": {
+    "question": "Quel royaume d'Europe de l'Ouest, monarchie constitutionnelle fédérale, est bordé par la France, les Pays-Bas, l'Allemagne, le Luxembourg et la mer du Nord ?",
+    "lead_fact": "Monarchie fédérale ; 30 688 km² ; voisins France, Pays-Bas, Allemagne, Luxembourg.",
+    "source": "native-lead"
+  },
+  "Q5105": {
+    "question": "Quelle chanteuse canadienne, dernière d'une fratrie de quatorze, a connu le succès dès 1981 avec Ce n'était qu'un rêve puis a gagné le Concours Eurovision de la chanson ?",
+    "lead_fact": "Dernière de 14 enfants ; Ce n'était qu'un rêve (1981) ; Eurovision.",
+    "source": "native-lead"
+  },
+  "Q47774": {
+    "question": "Quelle équipe nationale masculine, créée en 1904 sous l'égide de la FFF, a pour symbole le coq gaulois et pour surnom Les Bleus ?",
+    "lead_fact": "Créée en 1904 ; coq gaulois ; surnom Les Bleus.",
+    "source": "native-lead"
+  },
+  "Q7186": {
+    "question": "Quelle physicienne et chimiste d'origine polonaise, naturalisée française par son mariage avec Pierre Curie, est la seule personne à avoir reçu deux prix Nobel dans deux sciences distinctes ?",
+    "lead_fact": "Deux Nobel dans deux sciences ; née Skłodowska ; naturalisée par mariage.",
+    "source": "native-lead"
+  },
+  "Q501": {
+    "question": "Quel poète français, qualifié de « Dante d'une époque déchue » par Barbey d'Aurevilly, est surtout connu pour Les Fleurs du mal et Le Spleen de Paris ?",
+    "lead_fact": "Les Fleurs du mal ; Le Spleen de Paris ; figure de la modernité poétique.",
+    "source": "native-lead"
+  },
+  "Q37079": {
+    "question": "Quel acteur a reçu à la fois une Palme d'or d'honneur et un Oscar d'honneur après ses percées dans Risky Business et Top Gun ?",
+    "lead_fact": "Palme d'or d'honneur et Oscar d'honneur ; Risky Business et Top Gun.",
+    "source": "translated-from-en"
+  },
+  "Q1426": {
+    "question": "Quel joueur de tennis suisse, professionnel de 1998 à 2022, a occupé 310 semaines la première place ATP dont 237 consécutives ?",
+    "lead_fact": "310 semaines n°1 ATP dont 237 consécutives ; Big Three.",
+    "source": "native-lead"
+  },
+  "Q3334141": {
+    "question": "Quel jeu télévisé français, adapté de Don't Forget the Lyrics!, est présenté par Nagui sur France 2 depuis le 15 décembre 2007 ?",
+    "lead_fact": "Adaptation de Don't Forget the Lyrics! ; Nagui ; France 2 depuis 2007.",
+    "source": "native-lead"
+  },
+  "Q19798734": {
+    "question": "Quelle série Netflix, créée par les frères Duffer, se déroule dans les années 1980 à Hawkins (Indiana) après qu'une fille surnommée Eleven a ouvert une porte vers l'Upside Down ?",
+    "lead_fact": "Hawkins, Eleven, Upside Down ; frères Duffer.",
+    "source": "translated-from-en"
+  },
+  "Q183": {
+    "question": "Quelle république fédérale d'Europe centrale est entourée par la mer du Nord, le Danemark et la mer Baltique au nord, et par la France, la Belgique, le Luxembourg et les Pays-Bas à l'ouest ?",
+    "lead_fact": "République fédérale ; mer du Nord et Baltique au nord ; nombreux voisins. Pas Berlin.",
+    "source": "native-lead"
+  },
+  "Q2737": {
+    "question": "Quel acteur comique français, né en 1914 à Courbevoie, a joué dans plus de cent cinquante films et dominé le box-office français des années 1960 au début des années 1980 ?",
+    "lead_fact": "Plus de 150 films ; box-office français 1960-début 1980.",
+    "source": "native-lead"
+  },
+  "Q801": {
+    "question": "Quel pays d'Asie de l'Ouest, situé au bord du point le plus bas de la Terre à la mer Morte, a reçu en 1917 le soutien britannique à un foyer national juif par la déclaration Balfour ?",
+    "lead_fact": "Mer Morte / point le plus bas ; déclaration Balfour 1917. Pas la capitale.",
+    "source": "translated-from-en"
+  },
+  "Q12927": {
+    "question": "Quelle femme politique française, figure principale du FN devenu RN, a dirigé ce parti de 2011 à 2021 après y être entrée en 1986 sous la présidence de son père ?",
+    "lead_fact": "Présidente du FN/RN de 2011 à 2021 ; fille de Jean-Marie Le Pen.",
+    "source": "native-lead"
+  },
+  "Q5020214": {
+    "question": "Quelle Coupe du monde de la FIFA a été la première organisée par trois pays et la première à accueillir 48 équipes ?",
+    "lead_fact": "Première édition à trois pays hôtes ; première à 48 équipes.",
+    "source": "translated-from-en"
+  },
+  "Q3123610": {
+    "question": "Quel homme politique français, élu maire de Tourcoing en 2014, a été nommé ministre de l'Action et des Comptes publics avant d'occuper d'autres portefeuilles ministériels ?",
+    "lead_fact": "Maire de Tourcoing (2014) ; ministre de l'Action et des Comptes publics.",
+    "source": "native-lead"
+  },
+  "Q40026": {
+    "question": "Quel acteur a écrit et interprété Rocky (1976) et est l'un des deux seuls à avoir eu un film n°1 au box-office sur six décennies consécutives ?",
+    "lead_fact": "Auteur et interprète de Rocky ; n°1 au box-office sur six décennies, avec Harrison Ford.",
+    "source": "translated-from-en"
+  },
+  "Q8337": {
+    "question": "Quelle série de sept romans pour la jeunesse, écrite par J. K. Rowling, suit un jeune sorcier et ses amis à Poudlard ?",
+    "lead_fact": "Sept romans ; Poudlard ; trio contre Voldemort.",
+    "source": "translated-from-en"
+  },
+  "Q8023": {
+    "question": "Quel dirigeant anti-apartheid est devenu le premier président noir d'Afrique du Sud après les premières élections pleinement représentatives, de 1994 à 1999 ?",
+    "lead_fact": "Président 1994-1999 ; premier chef d'État noir du pays.",
+    "source": "translated-from-en"
+  },
+  "Q25173": {
+    "question": "Quel paquebot transatlantique britannique à quatre cheminées de la White Star Line a sombré dans la nuit du 14 au 15 avril 1912 après une collision avec un iceberg, lors de son voyage inaugural Southampton–New York ?",
+    "lead_fact": "Naufrage du 14-15 avril 1912 ; iceberg ; voyage inaugural Southampton–New York.",
+    "source": "native-lead"
+  },
+  "Q209330": {
+    "question": "Quelle application photo, plus tard propriété de Meta, se distinguait à l'origine en imposant que les publications soient cadrées en carré ?",
+    "lead_fact": "Cadrage carré à l'origine ; ensuite plateforme de Meta.",
+    "source": "translated-from-en"
+  },
+  "Q1049511": {
+    "question": "Quelle messagerie, dont le nom évoque l'anglais « what's up », a été lancée en mai 2009 puis rachetée par Facebook ?",
+    "lead_fact": "Nom ≈ « what's up » ; lancée en mai 2009 ; rachat par Facebook.",
+    "source": "translated-from-en"
+  },
+  "Q140": {
+    "question": "Quel mammifère carnivore de la famille des Félidés, dont le mâle porte une importante crinière, a pour nom scientifique Panthera leo ?",
+    "lead_fact": "Panthera leo ; mâle à crinière ; femelle et petit distincts.",
+    "source": "native-lead"
+  },
+  "Q486": {
+    "question": "Quelle catastrophe, l'une des deux seules classées 7 sur l'échelle internationale des événements nucléaires, a commencé lors d'un test de sûreté du réacteur n° 4 le 26 avril 1986 ?",
+    "lead_fact": "INES 7 ; réacteur 4 ; test de sûreté du 26 avril 1986.",
+    "source": "translated-from-en"
+  },
+  "Q8073": {
+    "question": "Quelle chaîne franco-allemande de service public, acronyme d'Association relative à la télévision européenne, a succédé à La Sept et émet depuis Strasbourg ?",
+    "lead_fact": "Chaîne franco-allemande (GEIE) ; Strasbourg ; successeur de La Sept (1992).",
+    "source": "native-lead"
+  },
+  "Q4116214": {
+    "question": "Comment appelle-t-on l'ensemble de systèmes d'information subjectifs ayant pour objet la mesure de la valeur des moyens et des résultats d'une entité, fondés sur des conventions de représentation ?",
+    "lead_fact": "Systèmes d'information mesurant la valeur des moyens et résultats d'une entité.",
+    "source": "native-lead"
+  },
+  "Q166177": {
+    "question": "Quelle récompense, créée en 1956 par le magazine France Football, désigne le meilleur footballeur de l'année et n'était d'abord réservée qu'aux Européens évoluant en Europe ?",
+    "lead_fact": "Créé en 1956 par France Football ; d'abord réservé aux Européens.",
+    "source": "native-lead"
+  },
+  "Q6534": {
+    "question": "Quelle période d'intenses bouleversements, ouverte par les États généraux le 5 mai 1789 et close par le coup d'État du 18 brumaire, a mis fin à l'Ancien Régime en France ?",
+    "lead_fact": "1789-1799 ; États généraux au 18 brumaire ; fin de l'Ancien Régime.",
+    "source": "native-lead"
+  },
+  "Q207361": {
+    "question": "Quelle agence du département de la Défense des États-Unis, à l'origine du réseau ARPANET devenu Internet, est chargée de la recherche et développement de nouvelles technologies militaires ?",
+    "lead_fact": "Agence R&D du département de la Défense US ; à l'origine d'ARPANET.",
+    "source": "native-lead"
+  },
+  "Q28667972": {
+    "question": "Quel manga d'Eiichirō Oda, prépublié depuis juillet 1997, suit Monkey D. Luffy cherchant un trésor légendaire pour devenir roi des pirates ?",
+    "lead_fact": "Oda ; Weekly Shōnen Jump depuis juillet 1997 ; Luffy / trésor.",
+    "source": "translated-from-en"
+  },
+  "Q171": {
+    "question": "Quel type de site web collaboratif, dont les pages se créent et se modifient en quelques clics parfois sans inscription, tire son nom d'un mot hawaïen signifiant « rapide » ?",
+    "lead_fact": "Hawaïen « rapide » ; WikiWikiWeb comme premier exemple.",
+    "source": "translated-from-en"
+  },
+  "Q586025": {
+    "question": "Quel manga d'Hajime Isayama, prépublié de 2009 à 2021, se déroule derrière des murailles qui protègent des Titans mangeurs d'hommes ?",
+    "lead_fact": "Isayama ; Bessatsu Shōnen 2009-2021 ; Titans et murailles.",
+    "source": "translated-from-en"
+  },
+  "Q36101": {
+    "question": "Quel marsupial arboricole herbivore, seul représentant vivant des Phascolarctidés, est endémique d'Australie et parfois appelé paresseux australien ?",
+    "lead_fact": "Phascolarctos cinereus ; marsupial arboricole endémique d'Australie.",
+    "source": "native-lead"
+  },
+  "Q26971382": {
+    "question": "Quel shōnen manga de Masashi Kishimoto, prépublié de 1999 à 2014 et compilé en 72 tomes, a été adapté en anime par le studio Pierrot ?",
+    "lead_fact": "Kishimoto ; Weekly Shōnen Jump 1999-2014 ; 72 tomes ; studio Pierrot.",
+    "source": "native-lead"
+  },
+  "Q57751738": {
+    "question": "Quel groupe de virus à ARN comprend les agents responsables du SRAS, du MERS et de la Covid-19 ?",
+    "lead_fact": "Orthocoronavirinae ; SRAS, MERS, Covid-19.",
+    "source": "translated-from-en"
+  },
+  "Q200790": {
+    "question": "Quel conflit armé, mené de 1954 à 1962 dans une colonie française divisée en départements depuis 1848, s'est achevé par l'indépendance validée par référendum ?",
+    "lead_fact": "1954-1962 ; colonie française depuis 1830 ; indépendance par référendum.",
+    "source": "native-lead"
+  },
+  "Q8676": {
+    "question": "Quelle guerre américaine, menée de 1861 à 1865 entre l'Union et la Confédération, s'est achevée par l'abolition de l'esclavage ?",
+    "lead_fact": "1861-1865 ; Union contre Confédération ; abolition de l'esclavage.",
+    "source": "translated-from-en"
+  },
+  "Q544": {
+    "question": "Comment appelle-t-on le système planétaire du Soleil, composé de huit planètes confirmées, de planètes naines et de milliards de petits corps gravitant autour de cette étoile ?",
+    "lead_fact": "Système planétaire du Soleil : 8 planètes, planètes naines et petits corps.",
+    "source": "native-lead"
+  },
+  "Q146": {
+    "question": "Quel petit carnivore domestique, Felis catus, est un mangeur de viande obligatoire doté de griffes rétractiles ?",
+    "lead_fact": "Felis catus ; carnivore strict ; griffes rétractiles.",
+    "source": "translated-from-en"
+  },
+  "Q2": {
+    "question": "Quelle planète, troisième à partir du Soleil, est le seul objet céleste connu pour abriter la vie ?",
+    "lead_fact": "Troisième planète ; seul monde connu avec de la vie.",
+    "source": "translated-from-en"
+  },
+  "Q161790": {
+    "question": "Quel ancien diagnostic, marqué par des difficultés d'interaction sociale et des intérêts restreints, a été fusionné dans le trouble du spectre de l'autisme dans le DSM-5 en 2013 ?",
+    "lead_fact": "Fusionné dans le TSA (DSM-5 2013 et CIM-11 2022).",
+    "source": "translated-from-en"
+  },
+  "Q8683": {
+    "question": "Quelle période de fortes tensions géopolitiques de la seconde moitié du XXe siècle a opposé le bloc de l'Ouest mené par les États-Unis au bloc de l'Est mené par l'URSS ?",
+    "lead_fact": "Tensions USA/URSS après 1945 ; blocs de l'Ouest et de l'Est.",
+    "source": "native-lead"
+  },
+  "Q178275": {
+    "question": "Quelle pandémie grippale, due au virus H1N1, a commencé vers 1918 et aurait tué au moins 17 millions de personnes ?",
+    "lead_fact": "Pandémie H1N1 de 1918-1920 ; au moins 17 millions de morts.",
+    "source": "translated-from-en"
+  },
+  "Q314492": {
+    "question": "Quel Viking légendaire, surnommé « aux braies velues » (loðbrók), aurait ravagé les îles Britanniques et l'Empire carolingien au IXe siècle ?",
+    "lead_fact": "Vieux norrois loðbrók ; raids du IXe siècle.",
+    "source": "translated-from-en"
+  },
+  "Q504998": {
+    "question": "Quel groupe de luxe français, fondé en 1987 par Alain Chevalier et Henry Racamier, a pour actionnaire majoritaire Christian Dior SE depuis 1989 ?",
+    "lead_fact": "Fusion 1987 ; n°1 mondial du luxe ; actionnaire majoritaire Christian Dior SE.",
+    "source": "native-lead"
+  },
+  "Q24862683": {
+    "question": "Quel manga de Koyoharu Gotōge suit Tanjiro Kamado après le massacre de sa famille et la transformation de sa sœur Nezuko en démon ?",
+    "lead_fact": "Gotōge ; WSJ 2016-2020 ; Tanjiro et Nezuko.",
+    "source": "translated-from-en"
+  },
+  "Q41112": {
+    "question": "Quel spectre de troubles mentaux chroniques du groupe des troubles psychotiques, apparaissant souvent au début de l'âge adulte, affecterait environ 0,3 % à 0,72 % de la population ?",
+    "lead_fact": "Trouble psychotique chronique ; hallucinations et délire ; 0,3-0,72 % de la population.",
+    "source": "native-lead"
+  },
+  "Q2998680": {
+    "question": "Quel nom vernaculaire, sans rang taxonomique unique, désigne une partie des Cuculinae de l'Ancien Monde et des Coccyzinae du Nouveau Monde, oiseaux souvent parasites de ponte ?",
+    "lead_fact": "Nom vernaculaire ambigu : Cuculinae et Coccyzinae ; souvent parasites de ponte.",
+    "source": "native-lead"
+  },
+  "Q81068910": {
+    "question": "Quelle pandémie a commencé par un foyer à Wuhan en décembre 2019 et a été déclarée comme telle par l'OMS le 11 mars 2020 ?",
+    "lead_fact": "Wuhan décembre 2019 ; déclaration OMS le 11 mars 2020.",
+    "source": "translated-from-en"
+  },
+  "Q12554": {
+    "question": "Quelle période de l'histoire européenne, du début du Ve à la fin du XVe siècle, s'ouvre avec le déclin de l'Empire romain d'Occident et s'achève avec la Renaissance et les grandes découvertes ?",
+    "lead_fact": "Ve-XVe siècle ; entre Antiquité et Temps modernes.",
+    "source": "native-lead"
+  },
+  "Q5268834": {
+    "question": "Comment appelle-t-on les outils et systèmes qui permettent de créer, transmettre, stocker et partager des informations, traduction de l'anglais information and communication technologies ?",
+    "lead_fact": "Outils de création, transmission et stockage de l'information ; ICT en anglais.",
+    "source": "native-lead"
+  },
+  "Q178810": {
+    "question": "Quel conflit armé, né de manifestations du Printemps arabe contre le régime baasiste de Bachar el-Assad, s'est déroulé de 2011 à 2024 ?",
+    "lead_fact": "2011-2024 ; Printemps arabe ; régime de Bachar el-Assad.",
+    "source": "native-lead"
+  },
+  "Q41662": {
+    "question": "Quel neuvième mois du calendrier hégirien, seul mois nommé dans le Coran, est pour les musulmans celui du jeûne (saoum) et contient la nuit du Destin ?",
+    "lead_fact": "9e mois hégirien ; saoum ; Laylat al-Qadr.",
+    "source": "native-lead"
+  },
+  "Q11660": {
+    "question": "Comment appelle-t-on l'ensemble des systèmes informatiques capables d'effectuer des tâches typiquement associées à l'intelligence, telles que l'apprentissage, le raisonnement ou la perception ?",
+    "lead_fact": "Systèmes informatiques imitant l'apprentissage, le raisonnement et la perception.",
+    "source": "native-lead"
+  },
+  "Q151622": {
+    "question": "Quel conflit du Proche-Orient, qualifié de « guerre de Cent ans » par Rachad Antonius, oppose le sionisme et le nationalisme palestinien sur le territoire de l'ancienne Palestine mandataire ?",
+    "lead_fact": "Sionisme vs nationalisme palestinien ; Palestine mandataire.",
+    "source": "native-lead"
+  },
+  "Q82866": {
+    "question": "Quel temps liturgique de quarante jours, institué au IVe siècle en référence au jeûne du Christ dans le désert, précède la fête de Pâques ?",
+    "lead_fact": "Quarante jours avant Pâques ; jeûne et abstinence ; IVe siècle.",
+    "source": "native-lead"
+  },
+  "Q177166": {
+    "question": "Quelle pâtisserie à pâte feuilletée et frangipane se déguste à l'Épiphanie dans le nord de la France, en Belgique, en Suisse et au Québec ?",
+    "lead_fact": "Pâte feuilletée et frangipane ; Épiphanie ; moitié nord de la France.",
+    "source": "native-lead"
+  },
+  "Q18047903": {
+    "question": "Quel manga de Kōhei Horikoshi, situé dans un monde d'alter, suit un garçon sans pouvoir qui hérite de celui d'All Might ?",
+    "lead_fact": "Horikoshi ; alters ; Midoriya hérite du pouvoir d'All Might.",
+    "source": "translated-from-en"
+  },
+  "Q201989": {
+    "question": "Quelle maladie transmise par les tiques Ixodes, due à des borrélies, commence souvent par une plaque rouge expansive appelée érythème migrant ?",
+    "lead_fact": "Borrelia ; Ixodes ; érythème migrant.",
+    "source": "translated-from-en"
+  },
+  "Q15978631": {
+    "question": "Quelle espèce de primates originaire d'Afrique, seul représentant actuel du genre Homo, s'est répandue sur toute la Terre hormis l'Antarctique ?",
+    "lead_fact": "Seul Homo actuel ; originaire d'Afrique ; naturalisé hors Antarctique.",
+    "source": "native-lead"
+  },
+  "Q696071": {
+    "question": "Quel manga de Yoshihiro Togashi, prépublié depuis mars 1998 dans Weekly Shōnen Jump, a connu deux adaptations animées dont une par Nippon Animation (1999-2001) ?",
+    "lead_fact": "Togashi ; Jump depuis 1998 ; anime Nippon Animation puis second anime.",
+    "source": "native-lead"
+  },
+  "Q55522899": {
+    "question": "Quel manga de Gege Akutami suit Yuji Itadori après qu'il est devenu l'hôte de la malédiction Ryomen Sukuna ?",
+    "lead_fact": "Akutami ; Yuji Itadori hôte de Sukuna.",
+    "source": "translated-from-en"
+  },
+  "Q42005": {
+    "question": "Quelle pandémie de peste, principalement bubonique, a sévi au milieu du XIVe siècle, probablement partie d'Asie centrale, et aurait fait jusqu'à 50 millions de victimes ?",
+    "lead_fact": "Peste bubonique du milieu du XIVe siècle ; jusqu'à 50 millions de morts.",
+    "source": "native-lead"
+  },
+  "Q44197": {
+    "question": "Quel avocat d'Arras, figure centrale de la Révolution française, a été guillotiné le 28 juillet 1794 place de la Révolution à Paris ?",
+    "lead_fact": "Avocat d'Arras ; guillotiné le 28 juillet 1794 place de la Révolution.",
+    "source": "native-lead"
+  },
+  "Q84263196": {
+    "question": "Quelle maladie infectieuse émergente, causée par le SARS-CoV-2, s'est répandue dans le monde à partir de janvier 2020 et a entraîné une pandémie ?",
+    "lead_fact": "Maladie due au SARS-CoV-2 ; pandémie à partir de 2020.",
+    "source": "translated-from-en"
+  },
+  "Q349375": {
+    "question": "Quel jeu en ligne d'Epic Games propose notamment un mode coopératif contre des zombies, Sauver le monde, et un battle royale gratuit jusqu'à 100 joueurs ?",
+    "lead_fact": "Modes Sauver le monde et Battle Royale ; développé par Epic Games.",
+    "source": "native-lead"
+  },
+  "Q34201": {
+    "question": "Quel dieu grec, fils de Cronos et de Rhéa, a renversé son père puis vaincu les Titans et Typhon pour devenir roi des dieux et maître du ciel ?",
+    "lead_fact": "Cronide ; roi des dieux ; ciel et souveraineté après la Titanomachie.",
+    "source": "native-lead"
+  },
+  "Q315796": {
+    "question": "Quel apporteur de cadeaux légendaire de la culture chrétienne occidentale s'inspire d'un évêque grec du IVe siècle, saint patron des enfants ?",
+    "lead_fact": "Issu de saint Nicolas, évêque du IVe siècle.",
+    "source": "translated-from-en"
+  },
+  "Q155874": {
+    "question": "Quel genre de plantes de la famille des Asparagaceae, aussi appelé pita, maguey ou cabuya, est originaire surtout du Mexique ?",
+    "lead_fact": "Asparagaceae ; pita, maguey, cabuya ; originaire surtout du Mexique.",
+    "source": "native-lead"
+  },
+  "Q9048543": {
+    "question": "Quel manga de Nakaba Suzuki, adapté en anime par A-1 Pictures à partir de 2014, a été prépublié dans Weekly Shōnen Magazine de 2012 à 2020 et compilé en 41 tomes ?",
+    "lead_fact": "Nakaba Suzuki ; Magazine 2012-2020 ; 41 tomes ; anime A-1 Pictures.",
+    "source": "native-lead"
+  },
+  "Q185498": {
+    "question": "Quelle figure, à la fois étoile du matin dans la mythologie romaine et ange déchu dans la tradition chrétienne, est parfois assimilée au Diable ?",
+    "lead_fact": "Figure de la mythologie romaine et du christianisme ; ange déchu / étoile du matin.",
+    "source": "native-lead"
+  },
+  "Q45792": {
+    "question": "Quel seigneur breton légendaire, parfois dit Pendragon, aurait organisé la défense des Celtes face aux envahisseurs germaniques vers la fin du Ve siècle ?",
+    "lead_fact": "Seigneur breton légendaire ; défense celte face aux Saxons ; existence non attestée.",
+    "source": "native-lead"
+  },
+  "Q126462072": {
+    "question": "Quel jeu de rôle de fantasy, première création du studio français Sandfall Interactive, se déroule dans un univers inspiré de la Belle Époque et est sorti le 24 avril 2025 ?",
+    "lead_fact": "Sandfall Interactive ; Kepler Interactive ; sortie le 24 avril 2025 ; esthétique Belle Époque.",
+    "source": "native-lead"
+  },
+  "Q19839121": {
+    "question": "Quel manga écrit par Akira Toriyama et illustré par Toyotarō, prépublié dans V Jump de 2015 à 2024, est une suite de Dragon Ball ?",
+    "lead_fact": "Toriyama et Toyotarō ; V Jump 2015-2024 ; suite de Dragon Ball.",
+    "source": "native-lead"
+  },
+  "Q37122": {
+    "question": "Quelle déesse grecque, née du crâne de Zeus, protège les cités et l'artisanat et incarne la sagesse et la mètis ?",
+    "lead_fact": "Née du crâne de Zeus ; cité, guerre, artisanat, sagesse et mètis.",
+    "source": "native-lead"
+  },
+  "Q124372204": {
+    "question": "Comment appelle-t-on les aliments d'origine végétale constitués dans une forte proportion d'amidon ou de glucides complexes, comme certaines graines, tubercules ou pâtes ?",
+    "lead_fact": "Aliments végétaux riches en amidon ou glucides complexes.",
+    "source": "native-lead"
+  },
+  "Q163873": {
+    "question": "Quel grand requin lamniforme fossile, autrefois rapproché du grand blanc mais classé depuis dans les Otodontidae, a vécu du début du Miocène au début du Pliocène ?",
+    "lead_fact": "Otodontidae ; Miocène-Pliocène (23-3,6 Ma) ; « grande dent ».",
+    "source": "native-lead"
+  },
+  "Q420292": {
+    "question": "Quelle série de jeux d'action-aventure historique en monde ouvert, développée par Ubisoft Montréal, mêle infiltration et plate-forme à travers plusieurs époques ?",
+    "lead_fact": "Ubisoft Montréal ; action-aventure historique et infiltration en monde ouvert.",
+    "source": "native-lead"
+  },
+  "Q18796": {
+    "question": "Quel shōnen manga de Hiro Mashima, prépublié de 2006 à 2017 dans Weekly Shōnen Magazine et compilé en 63 tomes, a été publié en français par Pika Édition ?",
+    "lead_fact": "Hiro Mashima ; Magazine 2006-2017 ; 63 tomes ; Pika Édition.",
+    "source": "native-lead"
+  },
+  "Q20966579": {
+    "question": "Quel jeu mobile freemium de réalité augmentée, lancé en juillet 2016 sur iOS et Android par Niantic, déjà responsable d'Ingress, consiste à capturer des créatures dans le monde réel ?",
+    "lead_fact": "Niantic (déjà auteur d'Ingress) ; AR et localisation ; juillet 2016.",
+    "source": "native-lead"
+  },
+  "Q79576": {
+    "question": "Quelle suite d'applications Google, née le 22 octobre 2008 de la fusion d'Android Market, Google Movies, Google eBookstore et Google Music, sert de magasin officiel sous Android ?",
+    "lead_fact": "Fusion 2008 d'Android Market et d'autres services ; magasin Android officiel.",
+    "source": "native-lead"
+  },
+  "Q29526": {
+    "question": "Quel fruit du plaqueminier du Japon, aussi appelé plaquemine de Chine ou anciennement figue caque, est surtout produit de l'Inde au Japon ?",
+    "lead_fact": "Fruit de Diospyros kaki ; plaquemine du Japon / de Chine.",
+    "source": "native-lead"
+  },
+  "Q963088": {
+    "question": "Quelle équipe festive de huit cervidés, nommés dans le poème de 1823 A Visit from St. Nicholas, s'est vue plus tard adjoindre un neuvième au nez rouge ?",
+    "lead_fact": "Huit dans le poème de 1823 ; Rudolph ajouté plus tard.",
+    "source": "translated-from-en"
+  },
+  "Q178342": {
+    "question": "Comment appelle-t-on, dans la hiérarchie céleste, le huitième chœur des anges, juste au-dessus des anges eux-mêmes, dont le préfixe grec signifie « supérieur » ?",
+    "lead_fact": "Huitième chœur ; niveau au-dessus des anges ; judaïsme, christianisme, islam.",
+    "source": "native-lead"
+  },
+  "Q529": {
+    "question": "Quel chimiste et physicien français, né à Dole en 1822, est passé de l'étude des fermentations à la vaccination contre la rage ?",
+    "lead_fact": "Né à Dole ; fermentations puis vaccin contre la rage.",
+    "source": "native-lead"
+  },
+  "Q28062624": {
+    "question": "Quelle série de jeux d'action-aventure post-apocalyptique de Naughty Dog, lancée en 2013, met en scène une pandémie provoquée par un champignon cordyceps ?",
+    "lead_fact": "Naughty Dog / Sony ; cordyceps ; plus de 30 millions d'exemplaires.",
+    "source": "native-lead"
+  },
+  "Q41746": {
+    "question": "Quel héros de la guerre de Troie, fils de Pélée et de la Néréide Thétis, fut plongé dans le Styx sauf au talon par lequel sa mère le tenait ?",
+    "lead_fact": "Fils de Pélée et Thétis ; talon non trempé dans le Styx.",
+    "source": "native-lead"
+  },
+  "Q47231": {
+    "question": "Quel roi d'Ithaque, époux de Pénélope et père de Télémaque, est le héros central du poème qui porte en grec le nom d'Odyssée ?",
+    "lead_fact": "Roi d'Ithaque ; Pénélope et Télémaque ; héros de l'Odyssée.",
+    "source": "native-lead"
+  },
+  "Q122248": {
+    "question": "Quel héros grec, d'abord nommé Alcide, fils de Zeus et d'Alcmène, est surtout célèbre pour ses Douze Travaux ?",
+    "lead_fact": "D'abord Alcide ; fils de Zeus et d'Alcmène ; Douze Travaux.",
+    "source": "native-lead"
+  },
+  "Q151954": {
+    "question": "Quelle enseigne allemande de soft discount, fondée en 1930 par Josef Schwarz et dont le siège est à Neckarsulm, comptait plus de 11 000 magasins en Europe en 2021 ?",
+    "lead_fact": "Fondée par Josef Schwarz (1930) ; siège à Neckarsulm ; filiale du groupe Schwarz.",
+    "source": "native-lead"
+  },
+  "Q9458574": {
+    "question": "Quel nom vernaculaire désigne plusieurs hyménoptères à abdomen généralement jaune rayé de noir, dont la femelle porte un dard venimeux ?",
+    "lead_fact": "Hyménoptères apocrites ; abdomen jaune et noir ; dard venimeux de la femelle.",
+    "source": "native-lead"
+  },
+  "Q68": {
+    "question": "Quel système de traitement de l'information programmable, tel que défini par Alan Turing, exécute séquentiellement des instructions organisées en programmes selon la logique binaire ?",
+    "lead_fact": "Machine de Turing ; instructions en programmes ; logique binaire.",
+    "source": "native-lead"
+  },
+  "Q657032": {
+    "question": "Quelle boisson fermentée légèrement acide d'origine chinoise est préparée en plongeant une culture symbiotique de bactéries et de levures, dite « mère », dans du thé sucré ?",
+    "lead_fact": "Thé sucré fermenté par une « mère » (SCOBY) ; origine chinoise.",
+    "source": "native-lead"
+  },
+  "Q3535552": {
+    "question": "Quelle pâtisserie poitevine est préparée avec du fromage de chèvre frais ?",
+    "lead_fact": "Spécialité poitevine ; fromage de chèvre frais.",
+    "source": "native-lead"
+  },
+  "Q2739210": {
+    "question": "Comment appelle-t-on aussi calenos les mets sucrés servis après le gros souper de Noël en Provence, dont le nombre treize est une tradition assez jeune ?",
+    "lead_fact": "Gros souper provençal de Noël ; calenos ; le nombre 13 est plus récent.",
+    "source": "native-lead"
+  },
+  "Q594676": {
+    "question": "Comment appelle-t-on un coq Gallus gallus domesticus castré pour obtenir une chair plus tendre et une plus grande masse, à la peau fine et nacrée ?",
+    "lead_fact": "Coq castré ; chair plus tendre et plus massive ; peau nacrée.",
+    "source": "native-lead"
+  },
+  "Q284352": {
+    "question": "Quelle araignée aranéomorphe de la famille des Sicariidae est appelée « recluse brune » ou, comme d'autres de son genre, « araignée violoniste » ?",
+    "lead_fact": "Sicariidae ; recluse brune / araignée violoniste.",
+    "source": "native-lead"
+  },
+  "Q739711": {
+    "question": "Quel studio de développement et distributeur de jeux basé à Cary, en Caroline du Nord, a pour fondateur Tim Sweeney, resté actionnaire majoritaire face à Tencent ?",
+    "lead_fact": "Cary, Caroline du Nord ; Tim Sweeney 51 % ; Tencent 40 %.",
+    "source": "native-lead"
+  },
+  "Q96417649": {
+    "question": "Quel jeu d'ambiance multijoueur d'Innersloth, sorti en 2018, place les joueurs dans un vaisseau où certains sont des imposteurs parmi l'équipage ?",
+    "lead_fact": "Innersloth (2018) ; équipage vs imposteurs dans un vaisseau spatial.",
+    "source": "native-lead"
+  },
+  "Q1300469": {
+    "question": "Quelle larve d'acarien Trombiculidé (Neotrombicula autumnalis), aussi appelée rouget ou vendangeon, parasite temporairement les organismes à sang chaud en fin d'été ?",
+    "lead_fact": "Larve de Neotrombicula autumnalis ; rouget / vendangeon ; piqûres prurigineuses.",
+    "source": "native-lead"
+  },
+  "Q3182559": {
+    "question": "Quel action-RPG en monde ouvert à la première personne, développé par CD Projekt RED d'après le jeu de rôle sur table de Mike Pondsmith, se déroule dans un futur dystopique ?",
+    "lead_fact": "CD Projekt RED ; d'après Cyberpunk 2020 de Pondsmith ; action-RPG futuriste.",
+    "source": "native-lead"
+  },
+  "Q10304508": {
+    "question": "Comment appelle-t-on couramment les Ixodida, ordre d'acariens ectoparasites de vertébrés décrit par William Elford Leach en 1815, autrefois aussi appelés Ricinus ?",
+    "lead_fact": "Ordre Ixodida (Leach, 1815) ; ectoparasites de vertébrés ; anciennement tiquet/Ricinus.",
+    "source": "native-lead"
+  }
+}

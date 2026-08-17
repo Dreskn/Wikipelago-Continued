@@ -1,0 +1,892 @@
+{
+  "Q262547": {
+    "question": "Welche wasserlöslichen Farbstoffe im Zellsaft höherer Pflanzen färben Blüten und Früchte intensiv rot, violett oder blau?",
+    "lead_fact": "Wasserlösliche Pflanzenfarbstoffe; rot, violett oder blau.",
+    "source": "native-lead"
+  },
+  "Q183": {
+    "question": "Welcher mitteleuropäische Bundesstaat besteht aus 16 Ländern und wurde 1949 als freiheitlich-demokratischer Rechtsstaat gegründet, als jüngste Ausprägung des 1871 entstandenen Nationalstaats?",
+    "lead_fact": "16 Länder; Bundesrepublik 1949; Nationalstaat 1871.",
+    "source": "native-lead"
+  },
+  "Q22686": {
+    "question": "Welcher US-Präsident moderierte zwischen Immobilienkarriere und Wahlamt von 2004 bis 2015 die Reality-Serie The Apprentice?",
+    "lead_fact": "Moderator von The Apprentice 2004–2015; später 45. und 47. Präsident.",
+    "source": "translated-from-en"
+  },
+  "Q30": {
+    "question": "Welche föderale Republik begann 1607 mit der Virginia-Siedlung, aus der die Dreizehn Kolonien entstanden, und umfasst heute Alaska als Semi-Exklave?",
+    "lead_fact": "Virginia 1607 / Dreizehn Kolonien; Alaska als Semi-Exklave. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Q9682": {
+    "question": "Welche britische Königin wurde mit zehn Jahren Thronanwärterin, nachdem ihr Onkel 1936 abdankte?",
+    "lead_fact": "Abdankung Eduards VIII. machte die zehnjährige Prinzessin zur mutmaßlichen Thronfolgerin.",
+    "source": "translated-from-en"
+  },
+  "Q10693": {
+    "question": "Welche Tabelle ordnet alle chemischen Elemente nach steigender Kernladung so in Zeilen, dass in den Spalten chemisch ähnliche Elemente stehen?",
+    "lead_fact": "Liste der Elemente nach Ordnungszahl; Perioden und Gruppen.",
+    "source": "native-lead"
+  },
+  "Q40": {
+    "question": "Welcher mitteleuropäische Binnenstaat mit neun Bundesländern grenzt an Deutschland, Tschechien, die Slowakei, Ungarn, Slowenien, Italien, die Schweiz und Liechtenstein?",
+    "lead_fact": "Binnenstaat; neun Bundesländer aus historischen Kronländern.",
+    "source": "native-lead"
+  },
+  "Q23572": {
+    "question": "Welche HBO-Serie setzte George R. R. Martins Romane in 73 Folgen über acht Staffeln um und endete 2019?",
+    "lead_fact": "73 Folgen, acht Staffeln, 2011–2019.",
+    "source": "translated-from-en"
+  },
+  "Q39": {
+    "question": "Welcher föderalistische Staat in Mitteleuropa hat Deutsch, Französisch, Italienisch und Rätoromanisch als Landessprachen und grenzt im Norden an Deutschland?",
+    "lead_fact": "Vier Landessprachen; föderalistische Eidgenossenschaft.",
+    "source": "native-lead"
+  },
+  "Q64": {
+    "question": "Welche deutsche Stadt ist zugleich ein Bundesland, hat zwölf Bezirke und ist mit rund 3,7 Millionen Einwohnern die bevölkerungsreichste Gemeinde der EU?",
+    "lead_fact": "Hauptstadt und Land; 12 Bezirke; bevölkerungsreichste EU-Stadt.",
+    "source": "native-lead"
+  },
+  "Q317521": {
+    "question": "Welcher Unternehmer gründete 1995 mit Zip2 eine Webfirma und später X.com, das in PayPal aufging?",
+    "lead_fact": "Zip2 (1995), dann X.com → PayPal; nicht Tesla/SpaceX als Einstieg.",
+    "source": "translated-from-en"
+  },
+  "Q48989": {
+    "question": "Welches öffentlich-rechtliche bundesweite Fernsehprogramm wird in Deutschland seit 1963 ausgestrahlt und ist das Hauptprogramm der gleichnamigen Rundfunkanstalt?",
+    "lead_fact": "Zweites bundesweites Programm; Sendebeginn 1963.",
+    "source": "native-lead"
+  },
+  "Q352": {
+    "question": "Welcher NS-Führer nahm 1934 den Titel Führer und Reichskanzler an, nachdem er im Jahr zuvor deutscher Reichskanzler geworden war?",
+    "lead_fact": "Reichskanzler 1933; Führer und Reichskanzler 1934.",
+    "source": "translated-from-en"
+  },
+  "Q567": {
+    "question": "Welche promovierte Physikerin war von 2005 bis 2021 Bundeskanzlerin und die erste in der DDR sozialisierte Person in diesem Amt?",
+    "lead_fact": "Kanzlerin 2005–2021; erste Frau; einzige in der DDR sozialisierte Amtsinhaberin.",
+    "source": "native-lead"
+  },
+  "Q11571": {
+    "question": "Welcher portugiesische Stürmer hält die UEFA-Champions-League-Rekorde für die meisten Tore (140) und Vorlagen (42)?",
+    "lead_fact": "Champions-League-Tore 140 und Vorlagen 42.",
+    "source": "translated-from-en"
+  },
+  "Q564328": {
+    "question": "Welche deutsche Politikerin war als erste Frau Bundesaußenministerin und wurde 2025 Präsidentin der 80. UN-Generalversammlung?",
+    "lead_fact": "Erste Außenministerin 2021–2025; UN-GV-Präsidentin 2025.",
+    "source": "native-lead"
+  },
+  "Q212": {
+    "question": "Welcher osteuropäische Staat ist nach Russland flächenmäßig der zweitgrößte Europas und der größte, dessen Gebiet ganz auf dem Kontinent liegt?",
+    "lead_fact": "Zweitgrößter Staat Europas nach Russland; größter ganz in Europa.",
+    "source": "native-lead"
+  },
+  "Q15869": {
+    "question": "Welcher Queen-Sänger wurde als Farrokh Bulsara in Sansibar als Sohn indischer Parsen geboren und floh später vor der Revolution von 1964?",
+    "lead_fact": "Geburtsname Farrokh Bulsara; parsisches Elternhaus; Revolution 1964. Antwort ist die Person.",
+    "source": "translated-from-en"
+  },
+  "Q2009573": {
+    "question": "Welche von Ian Fleming 1953 in Casino Royale eingeführte Figur arbeitet für den MI6 mit Lizenz zum Töten?",
+    "lead_fact": "Literarische Figur Flemings; Debüt Casino Royale 1953; MI6.",
+    "source": "native-lead"
+  },
+  "Q361": {
+    "question": "Welcher Krieg von 1914 bis 1918 zwischen Alliierten und Mittelmächten wird auch mit der Ausbreitung der Spanischen Grippe in Verbindung gebracht?",
+    "lead_fact": "Alliierte gegen Mittelmächte; Ausbreitung der Spanischen Grippe.",
+    "source": "translated-from-en"
+  },
+  "Q115564437": {
+    "question": "Welcher Chatbot erreichte innerhalb von zwei Monaten nach dem Start am 30. November 2022 100 Millionen monatliche Nutzer?",
+    "lead_fact": "Start 30. November 2022; 100 Millionen Nutzer in zwei Monaten.",
+    "source": "translated-from-en"
+  },
+  "Q236549": {
+    "question": "Welche deutsche Schlagersängerin, geboren in Krasnojarsk, verkaufte über 18 Millionen Tonträger und landete mit Farbenspiel eines der meistverkauften Alben Deutschlands?",
+    "lead_fact": "Über 18 Millionen Tonträger; Album Farbenspiel; geboren in Krasnojarsk.",
+    "source": "native-lead"
+  },
+  "Q635": {
+    "question": "Nach dem Tod welcher hellenistischen Königin 30 v. Chr. wurde Ägypten römische Provinz und endete die hellenistische Zeit im Mittelmeerraum?",
+    "lead_fact": "Letzte aktive hellenistische Pharaonin; Tod markiert Ägypten als römische Provinz.",
+    "source": "translated-from-en"
+  },
+  "Q362": {
+    "question": "Nach welchem Krieg von 1939 bis 1945 wurden Deutschland, Österreich, Japan und Korea besetzt und deutsche sowie japanische Führungsfiguren vor Gericht gestellt?",
+    "lead_fact": "Nachkriegsbesetzung dieser vier; Kriegsverbrecherprozesse.",
+    "source": "translated-from-en"
+  },
+  "Q801": {
+    "question": "Welches vorderasiatische Land liegt am tiefsten Punkt der Erde am Toten Meer und erhielt 1917 mit der Balfour-Deklaration britische Unterstützung für eine jüdische Heimstätte?",
+    "lead_fact": "Totes Meer / tiefster Punkt; Balfour-Deklaration 1917. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Q7184": {
+    "question": "Welches Verteidigungsbündnis aus 32 europäischen und nordamerikanischen Mitgliedstaaten dient dem gemeinsamen Schutz der eigenen Territorien?",
+    "lead_fact": "32 Mitglieder in Europa und Nordamerika; kollektiver Schutz.",
+    "source": "native-lead"
+  },
+  "Q52": {
+    "question": "Welche Enzyklopädie wird seit 2003 von einer US-Stiftung betrieben, die sich vor allem aus Spenden der Leser finanziert?",
+    "lead_fact": "Seit 2003 von der Wikimedia Foundation betrieben; spendenfinanziert.",
+    "source": "translated-from-en"
+  },
+  "Q161790": {
+    "question": "Welche frühere Diagnose mit Schwierigkeiten in der sozialen Interaktion und eingeschränkten Interessen ging 2013 im DSM-5 in der Autismus-Spektrum-Störung auf?",
+    "lead_fact": "2013 im DSM-5 und 2022 in der ICD-11 in der ASS aufgegangen.",
+    "source": "translated-from-en"
+  },
+  "Q27975838": {
+    "question": "Welche AfD-Politikerin sitzt seit 2017 im Bundestag, ist seit 2021 Co-Fraktionschefin mit Tino Chrupalla und seit 2022 Bundessprecherin der Partei?",
+    "lead_fact": "MdB seit 2017; Co-Fraktionschefin und Bundessprecherin mit Chrupalla.",
+    "source": "native-lead"
+  },
+  "Q2386078": {
+    "question": "Welcher private bayerische Regionalsender für Unterfranken hieß früher TV Touring und erreicht bis zu 350.000 Zuschauer?",
+    "lead_fact": "Privater Regionalsender Unterfranken; früher TV Touring.",
+    "source": "native-lead"
+  },
+  "Q38": {
+    "question": "Welcher südeuropäische Staat liegt zum größten Teil auf der Apenninhalbinsel und zählt mit knapp 59 Millionen Einwohnern zu den vier bevölkerungsreichsten ganz in Europa liegenden Ländern?",
+    "lead_fact": "Apenninhalbinsel; knapp 59 Millionen Einwohner.",
+    "source": "native-lead"
+  },
+  "Q142": {
+    "question": "Welcher westeuropäische Einheitsstaat hat Überseegebiete auf allen Kontinenten außer Asien und reicht im Mutterland vom Mittelmeer bis zum Ärmelkanal?",
+    "lead_fact": "Interkontinentaler Einheitsstaat; Mutterland Mittelmeer bis Ärmelkanal.",
+    "source": "native-lead"
+  },
+  "Q46": {
+    "question": "Welcher Erdteil bildet das westliche Fünftel der eurasischen Landmasse, zählt über 740 Millionen Einwohner und gilt kulturell als eigener Kontinent?",
+    "lead_fact": "Westliches Fünftel Eurasiens; über 740 Millionen Einwohner.",
+    "source": "native-lead"
+  },
+  "Q4970706": {
+    "question": "Welches Amt ist in der Bundesrepublik der Regierungschef, bildet mit den Ministern die Bundesregierung und bestimmt laut Verfassung deren politische Richtlinien?",
+    "lead_fact": "Regierungschef; Richtlinienkompetenz; oft als Kanzlerdemokratie bezeichnet.",
+    "source": "native-lead"
+  },
+  "Q7747": {
+    "question": "Welcher russische Politiker schied 1991 als Oberstleutnant aus dem KGB aus und leitete später kurz den FSB, bevor er Ministerpräsident wurde?",
+    "lead_fact": "KGB-Oberstleutnant bis 1991; FSB-Chef, dann Ministerpräsident 1999.",
+    "source": "translated-from-en"
+  },
+  "Q19798734": {
+    "question": "Welche Netflix-Serie der Duffer-Brüder spielt im Hawkins der 1980er-Jahre, nachdem ein Mädchen namens Eleven ein Tor zur Upside Down öffnet?",
+    "lead_fact": "Hawkins, Eleven, Upside Down; Duffer-Brüder.",
+    "source": "translated-from-en"
+  },
+  "Q273008": {
+    "question": "Welche Übersicht stellt Identitäten der Dreieckslehre wie Sinus- und Kosinussatz sowie Additionstheoreme tabellarisch zum Nachschlagen zusammen?",
+    "lead_fact": "Tabellarische Sammlung trigonometrischer Identitäten und Sätze.",
+    "source": "native-lead"
+  },
+  "Q9671": {
+    "question": "Welcher deutsche Rennfahrer startete bei 307 Formel-1-Grands-Prix, wurde fünfmal in Folge Weltmeister und hält den Rekord von 77 schnellsten Rennrunden?",
+    "lead_fact": "307 GPs; fünf WM-Titel in Folge; 77 schnellste Runden.",
+    "source": "native-lead"
+  },
+  "Q462": {
+    "question": "Welches Film-Franchise begann 1977 mit Krieg der Sterne, stammt von George Lucas und wurde 2012 mit Lucasfilm an Disney verkauft?",
+    "lead_fact": "Beginn 1977; Lucasfilm-Verkauf an Disney 2012.",
+    "source": "native-lead"
+  },
+  "Q96251657": {
+    "question": "Welche Liste beschreibt fiktive Personen und Gruppen aus Comics des US-Verlags Marvel, deren Zahl über 6000 liegt?",
+    "lead_fact": "Über 6000 Figuren aus Marvel-Comics; Übersichtsartikel.",
+    "source": "native-lead"
+  },
+  "Q1055": {
+    "question": "Welche deutsche Stadt ist als Freie und Hansestadt zugleich ein Land, mit rund 1,87 Millionen Einwohnern die zweitgrößte Deutschlands und historisch Mitglied der Hanse?",
+    "lead_fact": "Stadtstaat; zweitgrößte Stadt; Hansegeschichte.",
+    "source": "native-lead"
+  },
+  "Q866": {
+    "question": "Welche Videoplattform, von drei ehemaligen PayPal-Mitarbeitern gestartet, verzeichnete 2019 bereits über 500 Stunden Upload pro Minute?",
+    "lead_fact": "Gegründet von Hurley, Karim und Chen; 2019 über 500 Stunden pro Minute.",
+    "source": "translated-from-en"
+  },
+  "Q25223": {
+    "question": "Welches Amt ist das Staatsoberhaupt der Bundesrepublik, protokollarisch ihr höchstes Verfassungsorgan, und hält sich traditionell aus der Tagespolitik zurück?",
+    "lead_fact": "Staatsoberhaupt nach Art. 54–61 GG; zurückhaltend gegenüber Tagespolitik.",
+    "source": "native-lead"
+  },
+  "Q77193": {
+    "question": "Welche deutsche Politikerin gehörte dem PDS-Bundesvorstand an, galt in der Linken als Stimme der Kommunistischen Plattform und gründete später eine eigene Partei?",
+    "lead_fact": "PDS-Vorstand; Kommunistische Plattform; später BSW.",
+    "source": "native-lead"
+  },
+  "Q145": {
+    "question": "Welches Land umfasst England, Schottland, Wales und Nordirland und hat nur mit der Republik Irland eine Landgrenze?",
+    "lead_fact": "Vier Landesteile; einzige Landgrenze zu Irland. Nicht London.",
+    "source": "translated-from-en"
+  },
+  "Q517": {
+    "question": "Welcher korsische General wurde Erster Konsul, dann Kaiser der Franzosen und König von Italien und starb 1821 auf St. Helena?",
+    "lead_fact": "Erster Konsul, Kaiser, König von Italien 1805–1814; Tod auf St. Helena.",
+    "source": "native-lead"
+  },
+  "Q232737": {
+    "question": "Welche AMC-Serie von Frank Darabont nach Comics von Robert Kirkman und Tony Moore lief von 2010 bis 2022 und startete an Halloween im Fearfest?",
+    "lead_fact": "AMC 2010–2022; Kirkman/Moore-Comics; Start am 31. Oktober 2010.",
+    "source": "native-lead"
+  },
+  "Q980": {
+    "question": "Welches deutsche Land ist flächenmäßig das größte, einwohnermäßig das zweitgrößte und hat im Süden Anteil an den Ostalpen?",
+    "lead_fact": "Größtes Flächenland; zweitbevölkerungsreichstes; Ostalpen im Süden.",
+    "source": "native-lead"
+  },
+  "Q216930": {
+    "question": "Welche achtteilige Warner-Bros-Verfilmung der Romane von J. K. Rowling erschien zwischen 2001 und 2011 mit Daniel Radcliffe in der Titelrolle?",
+    "lead_fact": "Acht Filme 2001–2011; Warner Bros.; Daniel Radcliffe.",
+    "source": "native-lead"
+  },
+  "Q38111": {
+    "question": "Welcher Schauspieler erhielt seine erste Oscar-Nominierung für die Rolle eines geistig behinderten Jungen in Gilbert Grape – Irgendwo in Iowa?",
+    "lead_fact": "Erste Oscar-Nominierung: Gilbert Grape (1993/94).",
+    "source": "translated-from-en"
+  },
+  "Q1199677": {
+    "question": "Wie heißt das Verhältnis zweier Personen, von denen eine von der anderen abstammt oder die einen gemeinsamen Vorfahren haben, einschließlich rechtlicher Abstammung durch Adoption?",
+    "lead_fact": "Blutsverwandtschaft oder rechtliche Abstammung; gemeinsamer Vorfahre.",
+    "source": "native-lead"
+  },
+  "Q49653": {
+    "question": "Welcher Rundfunkverbund aus den Landesrundfunkanstalten und der Deutschen Welle besteht in Deutschland seit 1950 und wird vor allem aus dem Rundfunkbeitrag finanziert?",
+    "lead_fact": "Landesrundfunkanstalten plus Deutsche Welle; seit 1950.",
+    "source": "native-lead"
+  },
+  "Q19317": {
+    "question": "Welches alle vier Jahre ausgetragene FIFA-Turnier ermittelt in einer rund vierwöchigen Endrunde den Weltmeister der Männer-Nationalmannschaften?",
+    "lead_fact": "FIFA-Turnier alle vier Jahre; Männer-Nationalmannschaften.",
+    "source": "native-lead"
+  },
+  "Q2831": {
+    "question": "Welcher Sänger, das achte von zehn Geschwistern, veröffentlichte Thriller, später als meistverkauftes Album der Geschichte bezeichnet?",
+    "lead_fact": "Achtes von zehn Jackson-Kindern; Thriller meistverkauftes Album.",
+    "source": "translated-from-en"
+  },
+  "Q148": {
+    "question": "Welches ostasiatische Land gliedert sich in 33 Einheiten auf Provinzebene einschließlich zweier Sonderverwaltungszonen und wurde 221 v. Chr. erstmals unter den Qin geeint?",
+    "lead_fact": "33 Einheiten auf Provinzebene plus 2 Sonderverwaltungszonen; Qin 221 v. Chr. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Benutzer:Plenz/OSM for Wiki/languages": {
+    "question": "Auf welcher Benutzerunterseite stehen die Sprachtexte der osm4wiki-Karte, mit der Anweisung, [xx] als letzte Zeile zu lassen und HTML-kodierte Zeichen zu verwenden?",
+    "lead_fact": "Sprachdatei für osm4wiki; [xx] als letzte Zeile; HTML-Zeichen.",
+    "source": "native-lead"
+  },
+  "Q458": {
+    "question": "Welcher Staatenverbund umfasst 27 Mitglieder, davon 26 in Europa und Zypern geographisch in Asien, und zählt etwa 450 Millionen Einwohner?",
+    "lead_fact": "27 Staaten; ~450 Millionen Einwohner; supranational.",
+    "source": "native-lead"
+  },
+  "Q303": {
+    "question": "Welcher Sänger begann 1954 bei Sun Records aufzunehmen, nachdem seine Familie von Tupelo nach Memphis gezogen war?",
+    "lead_fact": "Sun Records 1954; Tupelo, dann Memphis. Antwort ist die Person.",
+    "source": "translated-from-en"
+  },
+  "Q408": {
+    "question": "Welches Land ist der flachste und trockenste bewohnte Kontinent der Erde und umfasst neben dem Festland auch Tasmanien?",
+    "lead_fact": "Flachster/trockenster bewohnter Kontinent; inklusive Tasmanien. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Q937": {
+    "question": "Welcher Physiker erhielt den Nobelpreis 1921 für den photoelektrischen Effekt und nicht für die Relativitätstheorie?",
+    "lead_fact": "Nobelpreis 1921 für den photoelektrischen Effekt, nicht Relativität.",
+    "source": "translated-from-en"
+  },
+  "Q16": {
+    "question": "Welches Land hat zehn Provinzen und drei Territorien vom Atlantik bis zum Pazifik und in die Arktis und ist nach Gesamtfläche das zweitgrößte der Erde?",
+    "lead_fact": "10 Provinzen, 3 Territorien; flächenmäßig zweitgrößtes Land. Nicht Ottawa.",
+    "source": "translated-from-en"
+  },
+  "Q43": {
+    "question": "Welcher Einheitsstaat liegt in Anatolien und Ostthrakien, wird meist in sieben Regionen gegliedert und hat in der Agglomeration Istanbul rund ein Fünftel seiner über 86 Millionen Einwohner?",
+    "lead_fact": "Anatolien und Ostthrakien; sieben Regionen; Istanbul rund ein Fünftel.",
+    "source": "native-lead"
+  },
+  "Q55": {
+    "question": "Welches der vier autonomen Länder seines Königreichs liegt größtenteils in Westeuropa und grenzt an Nordsee, Belgien und Deutschland?",
+    "lead_fact": "Eines von vier Ländern des Königreichs; Nordsee, Belgien, Deutschland.",
+    "source": "native-lead"
+  },
+  "Q170645": {
+    "question": "Bei welcher 21. Fußball-WM in Russland besiegte Frankreich im Finale Kroatien mit 4:2 und wurde zum zweiten Mal nach 1998 Weltmeister?",
+    "lead_fact": "Russland 2018; Frankreich siegt 4:2 gegen Kroatien.",
+    "source": "native-lead"
+  },
+  "Q1198": {
+    "question": "Welches deutsche Land hat rund 18 Millionen Einwohner, Düsseldorf als Landeshauptstadt und Köln als größte Stadt und beherbergt mit Bonn den ehemaligen Regierungssitz?",
+    "lead_fact": "Bevölkerungsreichstes Land; Düsseldorf, Köln, Bonn.",
+    "source": "native-lead"
+  },
+  "Q80976": {
+    "question": "Welcher Royal, geboren als Prinz von Griechenland und Dänemark, war der am längsten amtierende Prinzgemahl der britischen Geschichte?",
+    "lead_fact": "Geboren als Prinz von Griechenland und Dänemark; längster britischer Prinzgemahl.",
+    "source": "translated-from-en"
+  },
+  "Q2685": {
+    "question": "Welcher in Österreich geborene Bodybuilder gewann mit 20 den Mr. Universe, siebenmal den Mr. Olympia und war später der 38. Gouverneur Kaliforniens?",
+    "lead_fact": "Mr. Universe mit 20; siebenmal Mr. Olympia; 38. Gouverneur Kaliforniens.",
+    "source": "translated-from-en"
+  },
+  "Q668": {
+    "question": "Welches südasiatische Land ist nach Einwohnerzahl das größte und nach Fläche das siebtgrößte der Erde und liegt am Arabischen Meer und am Golf von Bengalen?",
+    "lead_fact": "Größte Bevölkerung, flächenmäßig 7.; Arabisches Meer und Golf von Bengalen. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Q1726": {
+    "question": "Welche kreisfreie Stadt ist Landeshauptstadt des Freistaats Bayern, drittgrößte Gemeinde Deutschlands und flächenbezogen die am dichtesten besiedelte?",
+    "lead_fact": "Landeshauptstadt Bayerns; drittgrößte und am dichtesten besiedelte Gemeinde.",
+    "source": "native-lead"
+  },
+  "Q452810": {
+    "question": "Welche 26 Stufen und 83 Bezeichnungen ordnen Soldaten der deutschen Streitkräfte ein und werden vom Bundespräsidenten per Anordnung festgesetzt?",
+    "lead_fact": "26 Dienstgradstufen, 83 Bezeichnungen; Anordnung des Bundespräsidenten.",
+    "source": "native-lead"
+  },
+  "Q794": {
+    "question": "Welcher vorderasiatische Staat am Kaspischen Meer und Persischen Golf hieß bis 1935 historisch Persien und ist seit 1979 eine Islamische Republik?",
+    "lead_fact": "Bis 1935 Persien; Islamische Republik seit 1979; Kaspisches Meer und Golf.",
+    "source": "native-lead"
+  },
+  "Q36": {
+    "question": "Welche parlamentarische Republik in Mitteleuropa gliedert sich in 16 Woiwodschaften, hat Warschau als Hauptstadt und um Kattowitz den größten Ballungsraum?",
+    "lead_fact": "16 Woiwodschaften; Warschau; Metropolregion Kattowitz.",
+    "source": "native-lead"
+  },
+  "Q187447": {
+    "question": "Welcher Kolumbianer, Gründer des Medellín-Kartells, wurde „König des Kokains“ genannt und bei seinem Tod auf etwa 30 Milliarden Dollar geschätzt?",
+    "lead_fact": "Medellín-Kartell; König des Kokains; rund 30 Milliarden Dollar.",
+    "source": "translated-from-en"
+  },
+  "Q15789": {
+    "question": "Welcher Münchner Sportverein wurde am 27. Februar 1900 gegründet und zählt mit über 400.000 Mitgliedern zu den beiden mitgliederstärksten der Welt?",
+    "lead_fact": "Gegründet 27. Februar 1900; einer der zwei mitgliederstärksten Vereine.",
+    "source": "native-lead"
+  },
+  "Q608": {
+    "question": "Wie nennt man die praktische Ausübung erotischer Handlungen zwischen zwei oder mehr Partnern, insbesondere den Geschlechtsverkehr?",
+    "lead_fact": "Praktische Ausübung erotischer Handlungen; von lateinisch sexus.",
+    "source": "native-lead"
+  },
+  "Q189": {
+    "question": "Welcher Inselstaat im äußersten Nordwesten Europas ist nach dem Vereinigten Königreich der flächenmäßig zweitgrößte Europas und liegt auf der größten Vulkaninsel der Erde knapp südlich des Polarkreises?",
+    "lead_fact": "Zweitgrößter Inselstaat Europas; größte Vulkaninsel; knapp südlich des Polarkreises.",
+    "source": "native-lead"
+  },
+  "Q2904131": {
+    "question": "Welcher Finanzier begann als Mathematiklehrer an der Dalton School in New York, bevor er später wegen Menschenhandels angeklagt wurde?",
+    "lead_fact": "Mathematiklehrer an der Dalton School, dann Finanzen.",
+    "source": "translated-from-en"
+  },
+  "Q2579463": {
+    "question": "Welche kanadisch-irische Fernsehserie verbindet die Wikingerzeit mit den Sagen um Ragnar Lodbrok, seine Söhne und die Schildmaid Lagertha und startete 2013 bei History Television?",
+    "lead_fact": "History Television 2013; Ragnar, Söhne, Lagertha.",
+    "source": "native-lead"
+  },
+  "Q60": {
+    "question": "Welche US-Stadt besteht aus fünf Boroughs, die jeweils einem County entsprechen, und beherbergt den Sitz der Vereinten Nationen?",
+    "lead_fact": "Fünf Boroughs deckungsgleich mit Counties; UN-Sitz.",
+    "source": "translated-from-en"
+  },
+  "Q254": {
+    "question": "Welcher Komponist der Wiener Klassik erhielt als Kind mit seiner Schwester Maria Anna Unterricht vom Vater und starb 1791 in Wien?",
+    "lead_fact": "Wiener Klassik; Kind mit Schwester Nannerl; Tod 1791 in Wien.",
+    "source": "native-lead"
+  },
+  "Q8337": {
+    "question": "Welche siebenbändige Kinder-Fantasyreihe von J. K. Rowling folgt einem jungen Zauberer und seinen Freunden in Hogwarts?",
+    "lead_fact": "Sieben Romane; Hogwarts; Kampf gegen Voldemort.",
+    "source": "translated-from-en"
+  },
+  "Q29647346": {
+    "question": "Welche spanische Serie von Álex Pina erzählt im Heist-Stil einen Überfall auf die spanische Banknotendruckerei und später die Zentralbank?",
+    "lead_fact": "Álex Pina; Druckerei, dann Zentralbank; erfolgreiche Netflix-Serie.",
+    "source": "native-lead"
+  },
+  "Q224": {
+    "question": "Welcher demokratische Verfassungsstaat liegt in der Übergangszone von Mittel- und Südosteuropa, mit Binnenland in der Pannonischen Tiefebene und Küste an der Adria, getrennt vom Dinarischen Gebirge?",
+    "lead_fact": "Pannonische Tiefebene und Adriaküste; Dinarisches Gebirge als Wasserscheide.",
+    "source": "native-lead"
+  },
+  "Q37079": {
+    "question": "Welcher Schauspieler erhielt nach den Durchbrüchen mit Risky Business und Top Gun sowohl eine Ehrenpalme von Cannes als auch einen Ehrenoscar?",
+    "lead_fact": "Ehrenpalme und Ehrenoscar; Risky Business und Top Gun.",
+    "source": "translated-from-en"
+  },
+  "Q43416": {
+    "question": "Welcher kanadische Schauspieler, geboren in Beirut und aufgewachsen in Toronto, hatte seinen Durchbruch in Bill & Teds verrückte Reise durch die Zeit?",
+    "lead_fact": "Geboren in Beirut, aufgewachsen in Toronto; Durchbruch mit Bill & Ted.",
+    "source": "translated-from-en"
+  },
+  "Q642878": {
+    "question": "Welches Film-Franchise gruppiert seine Filme in Phasen, wobei die ersten drei zusammen als Infinity Saga gelten?",
+    "lead_fact": "Phasen; Infinity Saga = die ersten drei Phasen.",
+    "source": "translated-from-en"
+  },
+  "Q34": {
+    "question": "Welche parlamentarische Monarchie auf dem östlichen Teil der Skandinavischen Halbinsel umfasst auch Gotland und Öland und trat 2024 der NATO bei?",
+    "lead_fact": "Ostteil der Skandinavischen Halbinsel; Gotland und Öland; NATO 2024.",
+    "source": "native-lead"
+  },
+  "Q51805": {
+    "question": "Welcher Artikel gibt einen Überblick über die wichtigsten Personen des von George Lucas geschaffenen Universums, das 1977 mit Krieg der Sterne begann?",
+    "lead_fact": "Übersicht der Figuren des von Lucas geschaffenen Universums.",
+    "source": "native-lead"
+  },
+  "Q6721203": {
+    "question": "Welche 2013 gegründete deutsche Partei zog 2014 ins Europaparlament, 2017 als drittstärkste Fraktion in den Bundestag und stellt seit 2025 die zweitstärkste Fraktion?",
+    "lead_fact": "Gründung 2013; Bundestag 2017 drittstärkste, 2025 zweitstärkste Fraktion.",
+    "source": "native-lead"
+  },
+  "Q486": {
+    "question": "Welche Katastrophe, eine von nur zwei mit Stufe 7 auf der INES-Skala, begann am 26. April 1986 bei einem Sicherheitstest in Block 4?",
+    "lead_fact": "INES 7; Block 4; Sicherheitstest am 26. April 1986.",
+    "source": "translated-from-en"
+  },
+  "Q1741": {
+    "question": "Welche Stadt an der Donau ist zugleich Bundeshauptstadt und Bundesland Österreichs, hat über 2 Millionen Einwohner und ist die zweitgrößte des deutschen Sprachraums?",
+    "lead_fact": "Hauptstadt und Bundesland; über 2 Millionen; zweitgrößte deutschsprachige Stadt.",
+    "source": "native-lead"
+  },
+  "Q8216": {
+    "question": "Welches Schriftsystem mit heute 24 Buchstaben dient seit etwa dem 9. Jahrhundert v. Chr. der griechischen Sprache und erhielt im Hellenismus Betonungs- und Hauchzeichen?",
+    "lead_fact": "24 Buchstaben seit ca. 9. Jh. v. Chr.; hellenistische Diakritika.",
+    "source": "native-lead"
+  },
+  "Q5020214": {
+    "question": "Welche FIFA-Weltmeisterschaft wurde als erste von drei Ländern ausgerichtet und erstmals mit 48 Mannschaften gespielt?",
+    "lead_fact": "Erste WM mit drei Gastgebern; erste mit 48 Teams.",
+    "source": "translated-from-en"
+  },
+  "Q10738": {
+    "question": "Welcher Schauspieler erhielt als Defensive Tackle der Miami Hurricanes ein Football-Stipendium, bevor er in der Attitude Era zum WWF-Star wurde?",
+    "lead_fact": "Defensive Tackle der University of Miami; Wrestling in der Attitude Era.",
+    "source": "translated-from-en"
+  },
+  "Q60036": {
+    "question": "Welches deutsche Model moderiert und produziert Germany’s Next Topmodel und war über ein Jahrzehnt bei Project Runway und als Jurorin bei America’s Got Talent tätig?",
+    "lead_fact": "GNTM; Project Runway; America’s Got Talent; US-Staatsbürgerschaft 2008.",
+    "source": "native-lead"
+  },
+  "Q15180": {
+    "question": "Welcher transkontinentale Staat, 1922 gegründet und 1991 aufgelöst, war flächenmäßig der größte und einwohnermäßig der drittgrößte der Erde?",
+    "lead_fact": "1922–1991; flächenmäßig größter, einwohnermäßig drittgrößter Staat. Nicht die Hauptstadt.",
+    "source": "translated-from-en"
+  },
+  "Q566257": {
+    "question": "Welcher CDU-Politiker ist seit Mai 2025 der zehnte Bundeskanzler, seit 2022 Parteivorsitzender und war 1989–1994 Mitglied des Europäischen Parlaments?",
+    "lead_fact": "Zehnter Kanzler ab 6. Mai 2025; CDU-Chef seit 2022; MdEP 1989–1994.",
+    "source": "native-lead"
+  },
+  "Q37175": {
+    "question": "Welcher Schauspieler gab 1984 in Nightmare – Mörderische Träume sein Filmdebüt und wurde danach in 21 Jump Street zum Teenager-Idol?",
+    "lead_fact": "Elm Street 1984; 21 Jump Street 1987–1990.",
+    "source": "translated-from-en"
+  },
+  "Q29": {
+    "question": "Welcher Staat auf der Iberischen Halbinsel umfasst die Balearen, die Kanaren und die nordafrikanischen Exklaven Ceuta und Melilla und gliedert sich in 17 autonome Gemeinschaften?",
+    "lead_fact": "Iberische Halbinsel; Balearen, Kanaren, Ceuta und Melilla; 17 Autonomien.",
+    "source": "native-lead"
+  },
+  "Q178275": {
+    "question": "Welche Influenza-Pandemie durch H1N1 begann um 1918 und forderte Schätzungen zufolge mindestens 17 Millionen Tote?",
+    "lead_fact": "H1N1-Pandemie 1918–1920; 17 bis 50 Millionen Tote.",
+    "source": "translated-from-en"
+  },
+  "Q2680": {
+    "question": "Welcher in Idar-Oberstein geborene US-Schauspieler wurde 1985 durch Das Model und der Schnüffler bekannt und hatte 1988 mit Stirb langsam als John McClane seinen Kinodurchbruch?",
+    "lead_fact": "Geboren in Idar-Oberstein; Moonlighting 1985; Stirb langsam 1988.",
+    "source": "native-lead"
+  },
+  "Q8740": {
+    "question": "Welcher Konflikt in Vietnam, Laos und Kambodscha endete am 30. April 1975, zwei Jahre nach dem Abzug der US-Truppen?",
+    "lead_fact": "Etwa 1955 bis 30. April 1975; US-Abzug 1973.",
+    "source": "translated-from-en"
+  },
+  "Q23786473": {
+    "question": "Welches Online-Content-Netzwerk von ARD und ZDF richtet sich an 14- bis 29-Jährige, wird federführend vom SWR betreut und erscheint vor allem auf populären Onlineportalen?",
+    "lead_fact": "ARD/ZDF-Netzwerk für 14–29-Jährige; Federführung SWR.",
+    "source": "native-lead"
+  },
+  "Q171": {
+    "question": "Welche Art von Website lässt Besucher Inhalte direkt im Browser bearbeiten und hat ihren Namen von einem hawaiischen Wort für „schnell“?",
+    "lead_fact": "Hawaiisch „schnell“; erste solche Seite von Ward Cunningham 1995.",
+    "source": "translated-from-en"
+  },
+  "Q14663": {
+    "question": "Welche traditionelle Benutzerschnittstelle unter Unix lässt Kommandos in einer Eingabezeile ausführen; den Begriff prägte Louis Pouzin, die Umsetzung für Multics Glenda Schroeder?",
+    "lead_fact": "Kommandozeileninterpreter; Pouzin 1964/65; Schroeder für Multics.",
+    "source": "native-lead"
+  },
+  "Q83889294": {
+    "question": "Welches regionale Pandemiegeschehen begann in Deutschland am 27. Januar 2020 mit einem Fall bei der Firma Webasto, während die WHO den internationalen Notstand im Mai 2023 aufhob?",
+    "lead_fact": "Erster Fall 27. Januar 2020 bei Webasto; WHO-Notstand bis Mai 2023.",
+    "source": "native-lead"
+  },
+  "Q12204": {
+    "question": "Welche Infektionskrankheit, historisch Schwindsucht genannt, wird durch Mycobacterium tuberculosis verursacht und befällt meist die Lunge?",
+    "lead_fact": "Mycobacterium tuberculosis; historisch Schwindsucht; meist die Lunge.",
+    "source": "translated-from-en"
+  },
+  "Q81068910": {
+    "question": "Welche Pandemie begann mit einem Ausbruch in Wuhan im Dezember 2019 und wurde von der WHO am 11. März 2020 zur Pandemie erklärt?",
+    "lead_fact": "Wuhan Dezember 2019; WHO-Pandemieerklärung 11. März 2020.",
+    "source": "translated-from-en"
+  },
+  "Q131723": {
+    "question": "Welche erste und am Weltmarkt stärkste Kryptowährung nutzt ein dezentrales Blockchain-Buch und wickelt Zahlungen peer-to-peer ohne klassisches Bank-Settlement ab?",
+    "lead_fact": "Erste Kryptowährung; Blockchain; Peer-to-Peer-Settlement.",
+    "source": "native-lead"
+  },
+  "Q2487": {
+    "question": "Welcher Konflikt von 1618 bis 1648 begann als Religionskrieg im Heiligen Römischen Reich, endete als Territorialkrieg und entlud den Gegensatz zwischen Habsburg und Frankreich?",
+    "lead_fact": "1618–1648; Religions- dann Territorialkrieg; Habsburg gegen Frankreich.",
+    "source": "native-lead"
+  },
+  "Q111012213": {
+    "question": "Welche Übersicht listet Ereignisse seit der russischen Invasion in der Ukraine ab 2022 chronologisch auf?",
+    "lead_fact": "Chronologische Übersicht der Invasion ab 2022.",
+    "source": "native-lead"
+  },
+  "Q355": {
+    "question": "Welches soziale Netzwerk war anfangs nur für Harvard-Studenten zugänglich und hat seinen Namen von Campus-Fotoverzeichnissen?",
+    "lead_fact": "Start nur für Harvard; Name von Face-Book-Verzeichnissen.",
+    "source": "translated-from-en"
+  },
+  "Q12548": {
+    "question": "Wie hieß vom Spätmittelalter bis 1806 das Herrschaftsgebiet der römisch-deutschen Kaiser, das sich seit dem 10. Jahrhundert aus zahlreichen Territorien zusammensetzte?",
+    "lead_fact": "Offizieller Name bis 1806; römisch-deutsche Kaiser seit dem 10. Jahrhundert.",
+    "source": "native-lead"
+  },
+  "Q131755": {
+    "question": "Welche affektive Erkrankung zeichnet sich durch phasenhaftes Pendeln zwischen Depression und Manie bzw. Hypomanie aus, weit über das Normalniveau hinaus?",
+    "lead_fact": "Zweipolige Stimmungsschwankungen; Depression und Manie/Hypomanie.",
+    "source": "native-lead"
+  },
+  "Q208166": {
+    "question": "Welche Persönlichkeitsstörung ist durch Impulsivität, instabile intensive Beziehungen, rasche Stimmungswechsel und starke Angst vor dem Verlassenwerden gekennzeichnet?",
+    "lead_fact": "Impulsivität; instabile Beziehungen; Angst vor dem Verlassenwerden.",
+    "source": "native-lead"
+  },
+  "Q8442": {
+    "question": "Welcher preußische Ministerpräsident war von 1867 bis 1871 Bundeskanzler des Norddeutschen Bundes und anschließend erster Reichskanzler des Deutschen Kaiserreichs bis 1890?",
+    "lead_fact": "Preußischer Ministerpräsident; Norddeutscher Bund; Reichskanzler 1871–1890.",
+    "source": "native-lead"
+  },
+  "Q38404": {
+    "question": "Welche angeborene neuronale Entwicklungsstörung zeigt sich früh in Schwierigkeiten bei sozialer Interaktion, Kommunikation und in eingeschränkten, stereotypen Interessen?",
+    "lead_fact": "Angeborene Entwicklungsstörung; Interaktion, Kommunikation, stereotype Interessen.",
+    "source": "native-lead"
+  },
+  "Q135622": {
+    "question": "Welcher Onlinedienst von Alphabet übersetzt Texte und Webseiten maschinell, startete 2006 nur zwischen Englisch und Arabisch und unterstützte 2022 bereits 133 Sprachen?",
+    "lead_fact": "Start 2006 Englisch–Arabisch; 2022 bereits 133 Sprachen.",
+    "source": "native-lead"
+  },
+  "Q243": {
+    "question": "Welcher 330 Meter hohe Eisenfachwerkturm in Paris wurde 1887–1889 als Eingangsportal der Weltausstellung zum 100. Jahrestag der Französischen Revolution am Champ de Mars errichtet?",
+    "lead_fact": "330 m; Weltausstellung 1889; 100 Jahre Französische Revolution; Champ de Mars.",
+    "source": "native-lead"
+  },
+  "Q41304": {
+    "question": "Wie heißt der Abschnitt der deutschen Geschichte von 1918 bis 1933, in dem erstmals eine parlamentarische Demokratie im Deutschen Reich bestand, ausgerufen am 9. November 1918?",
+    "lead_fact": "1918–1933; Ausrufung am 9. November 1918; Ende 30. Januar 1933.",
+    "source": "native-lead"
+  },
+  "Q41112": {
+    "question": "Welche Psychose betrifft Wahrnehmung, Denken und Antrieb und geht im akuten Stadium oft mit nicht vorhandenen, gehörten Stimmen einher?",
+    "lead_fact": "Psychose mit Stimmenhören; Störungen von Wahrnehmung, Denken, Antrieb.",
+    "source": "native-lead"
+  },
+  "Q8277": {
+    "question": "Welche chronisch-entzündliche Autoimmunerkrankung des Zentralnervensystems greift die Markscheiden der Nervenfasern an und wird wegen ihrer Verlaufsvielfalt „Krankheit mit tausend Gesichtern“ genannt?",
+    "lead_fact": "Entmarkung im ZNS; „Krankheit mit tausend Gesichtern“.",
+    "source": "native-lead"
+  },
+  "Q1294021": {
+    "question": "Welche auf XML basierende Technikensammlung von Amazon/A9 aus dem März 2005 erlaubt die Ausgabe von Suchergebnissen in einem standardisierten maschinenlesbaren Format?",
+    "lead_fact": "XML-Techniken; A9/Amazon März 2005; CC-BY-SA 2.5.",
+    "source": "native-lead"
+  },
+  "Q1653": {
+    "question": "Welcher europäische Strom ist nach der Wolga der zweitlängste, entwässert Mittel- und Südosteuropa und durchfließt oder berührt zehn Länder – so viele wie kein anderer Fluss?",
+    "lead_fact": "2857 km; zehn Anrainerstaaten; nach der Wolga der zweitlängste.",
+    "source": "native-lead"
+  },
+  "Q540571": {
+    "question": "Welches Syndrom umfasst ausgebreitete Schmerzen in verschiedenen Körperregionen, Schlafstörungen und Erschöpfung, ohne eine entzündliche Erkrankung zu sein?",
+    "lead_fact": "Ausgebreitete Schmerzen, Schlafstörungen, Erschöpfung; keine Entzündung.",
+    "source": "native-lead"
+  },
+  "Q133780": {
+    "question": "Welche hoch ansteckende Infektionskrankheit wird vor allem durch ein Bakterium der Gattung Yersinia hervorgerufen und tritt unter anderem als Beulen- und als Lungenform auf?",
+    "lead_fact": "Erreger der Gattung Yersinia; Beulen- und Lungenform.",
+    "source": "native-lead"
+  },
+  "Q5": {
+    "question": "Welche Art der Gattung Homo aus der Familie der Hominidae ist die einzige rezente und seit rund 300.000 Jahren fossil in Afrika belegt?",
+    "lead_fact": "Einzige rezente Homo-Art; Fossilien in Afrika seit ca. 300.000 Jahren.",
+    "source": "native-lead"
+  },
+  "Q15860072": {
+    "question": "Welcher Konflikt begann Ende Februar 2014 mit einem bewaffneten Geschehen auf der Krim, gefolgt von deren Annexion und prorussischen Milizen im Donbass?",
+    "lead_fact": "Beginn Februar 2014 auf der Krim; Annexion und Donbass.",
+    "source": "native-lead"
+  },
+  "Q180266": {
+    "question": "Welche akute Kinderkrankheit durch β-hämolysierende Streptokokken tritt vor allem im Alter von vier bis sieben Jahren mit Fieber, Rachenentzündung und Hautausschlag auf?",
+    "lead_fact": "β-hämolysierende Streptokokken; typisch mit 4–7 Jahren; Exanthem.",
+    "source": "native-lead"
+  },
+  "Q86847911": {
+    "question": "Welches regionale Pandemiegeschehen registrierte am 25. Februar 2020 die ersten Fälle bei zwei in Innsbruck lebenden Italienern und verhängte ab dem 16. März einen bundesweiten Lockdown?",
+    "lead_fact": "Erste Fälle 25. Februar 2020 in Innsbruck; Lockdown ab 16. März.",
+    "source": "native-lead"
+  },
+  "Q420292": {
+    "question": "Welche Action-Adventure-Serie des französischen Publishers Ubisoft besteht seit 2007, umfasst 13 Hauptspiele und wird meist in Montreal entwickelt?",
+    "lead_fact": "Seit 2007; 13 Hauptspiele; Ubisoft Montreal.",
+    "source": "native-lead"
+  },
+  "Q349375": {
+    "question": "Welcher Third-Person-Shooter von Epic Games und People Can Fly erschien 2017 und wurde vor allem durch einen kostenlosen Battle-Royale-Modus populär?",
+    "lead_fact": "Epic/People Can Fly 2017; Popularität durch Battle Royale.",
+    "source": "native-lead"
+  },
+  "Q902450": {
+    "question": "Welche auffällig gezeichnete Radnetzspinne (Argiope bruennichi) wurde 2001 zur Spinne des Jahres gewählt und heißt auch Zebra- oder Tigerspinne?",
+    "lead_fact": "Argiope bruennichi; Spinne des Jahres 2001; Zebra-/Tigerspinne.",
+    "source": "native-lead"
+  },
+  "Q314492": {
+    "question": "Welcher sagenhafte Wikinger soll im 9. Jahrhundert die Britischen Inseln und das Karolingerreich überfallen haben und als Vater von Ivar, Björn und Ubba gelten?",
+    "lead_fact": "Raubzüge im 9. Jahrhundert; Vater von Ivar, Björn und Ubba.",
+    "source": "translated-from-en"
+  },
+  "Q925042": {
+    "question": "Welche gehörnte Alpenfigur soll am 5. Dezember den heiligen Nikolaus begleiten und unartige Kinder mit Ruten strafen?",
+    "lead_fact": "Begleiter des Nikolaus am 5. Dezember; Strafe mit Ruten.",
+    "source": "translated-from-en"
+  },
+  "Q147818": {
+    "question": "Welche ursprünglich mediterrane Kräuseljagdspinne (Zoropsis spinimana) hat sich durch Verschleppung und Klimaerwärmung in Mitteleuropa ausgebreitet und zählt zu den eindrucksvollsten Webspinnen der Region?",
+    "lead_fact": "Zoropsis spinimana; mediterranen Ursprungs; Ausbreitung nach Mitteleuropa.",
+    "source": "native-lead"
+  },
+  "Q315796": {
+    "question": "Welche sagenhafte Gabenbringerfigur der westlich-christlichen Kultur geht auf einen griechischen Bischof des 4. Jahrhunderts zurück, den Schutzpatron der Kinder?",
+    "lead_fact": "Abgeleitet vom heiligen Nikolaus, Bischof des 4. Jahrhunderts.",
+    "source": "translated-from-en"
+  },
+  "Q34726": {
+    "question": "Wie heißt die Gesamtheit der antiken Mythen von Göttern und Heroen des antiken Griechenlands?",
+    "lead_fact": "Gesamtheit der Götter- und Heldenmythen des antiken Griechenlands.",
+    "source": "native-lead"
+  },
+  "Q25407": {
+    "question": "Welche Gattung staatenbildender Echter Bienen (Bombus) lebt vor allem in kühleren Regionen der Nordhalbkugel, mit Völkern aus Königin und etwa 50 bis 600 Tieren?",
+    "lead_fact": "Gattung Bombus; 50–600 Tiere plus Königin; Nordhalbkugel.",
+    "source": "native-lead"
+  },
+  "Q163873": {
+    "question": "Welche ausgestorbene Haiart beschrieb Louis Agassiz 1835; ihr Fossilbericht reicht vom oberen Miozän bis zur Pliozän-Pleistozän-Grenze und besteht vor allem aus Zahnfunden?",
+    "lead_fact": "Beschreibung durch Agassiz 1835; Miozän bis Pliozän/Pleistozän; Zähne.",
+    "source": "native-lead"
+  },
+  "Q146": {
+    "question": "Welches kleine domestizierte Raubtier, Felis catus, ist ein obligatorischer Fleischfresser mit einziehbaren Krallen?",
+    "lead_fact": "Felis catus; obligatorischer Fleischfresser; einziehbare Krallen.",
+    "source": "translated-from-en"
+  },
+  "Q130882": {
+    "question": "Welche Lauchart (Allium ursinum) ist ein Frühlingsblüher mit Zwiebel, riecht knoblauchähnlich durch Methiin und Alliin und ist eng mit dem Knoblauch verwandt?",
+    "lead_fact": "Allium ursinum; knoblauchähnlicher Geruch durch Methiin und Alliin.",
+    "source": "native-lead"
+  },
+  "Q25334": {
+    "question": "Welcher Fliegenschnäpper (Erithacus rubecula) besiedelt Europa bis Nordafrika, singt schon eine Stunde vor Sonnenaufgang und war in Deutschland 1992 und 2021 Vogel des Jahres?",
+    "lead_fact": "Erithacus rubecula; Gesang vor Sonnenaufgang; Vogel des Jahres 1992 und 2021.",
+    "source": "native-lead"
+  },
+  "Q138835900": {
+    "question": "Welcher weibliche Buckelwal wurde am 3. März 2026 erstmals im Hafen von Wismar gesichtet, später in die Nordsee transportiert und am 14. Mai 2026 tot vor der dänischen Insel Anholt gefunden?",
+    "lead_fact": "Sichtung Wismar 3. März 2026; tot vor Anholt 14. Mai 2026.",
+    "source": "native-lead"
+  },
+  "Q151954": {
+    "question": "Welcher Discounter betreibt über 12.500 Filialen in Europa und den USA, ist nach Aldi der zweitgrößte der Welt und gehört mit Kaufland zur Schwarz-Gruppe?",
+    "lead_fact": "Über 12.500 Filialen; zweitgrößter Discounter nach Aldi; Schwarz-Gruppe.",
+    "source": "native-lead"
+  },
+  "Q162691": {
+    "question": "Welches Hochfest am 15. August feiert die leibliche Aufnahme Marias in den Himmel und wird mindestens seit dem 5. Jahrhundert begangen?",
+    "lead_fact": "15. August; leibliche Aufnahme Mariens; mindestens seit dem 5. Jahrhundert.",
+    "source": "native-lead"
+  },
+  "Q1071758": {
+    "question": "Welche Trichterspinne (Eratigena atrica) lebt synanthrop in und an Gebäuden, wurde nach Nordamerika eingeführt und zählt zu den größten Spinnen Mitteleuropas?",
+    "lead_fact": "Eratigena atrica; synanthrop; eine der größten mitteleuropäischen Spinnen.",
+    "source": "native-lead"
+  },
+  "Q273585": {
+    "question": "Welches Märchen der Brüder Grimm (KHM 12, ATU 310) geht indirekt auf Petrosinella in Basiles Pentameron zurück?",
+    "lead_fact": "KHM 12; ATU 310; Quelle Petrosinella bei Basile.",
+    "source": "native-lead"
+  },
+  "Q353817": {
+    "question": "Unter welchem Handelsnamen werden im deutschen Sprachraum bestimmte Pampelmusen-Sorten (Citrus maxima) verkauft, die milder schmecken und einen kleinen Grapefruit-Erbanteil haben?",
+    "lead_fact": "Handelsname für Pampelmusen-Sorten; milder; kleiner Grapefruit-Anteil.",
+    "source": "native-lead"
+  },
+  "Q42562": {
+    "question": "Welche Ingwergewächs-Art (Curcuma longa) stammt aus Südasien; ihr intensiv gelbes Rhizom dient als Gewürz und Farbstoff?",
+    "lead_fact": "Curcuma longa; gelbes Rhizom als Gewürz und Farbstoff.",
+    "source": "native-lead"
+  },
+  "Q130571534": {
+    "question": "Welche mit Pistaziencreme und Kadaifi gefüllte Süßware löste 2024/25 einen Social-Media-Hype aus und stammt von Fix Dessert Chocolatier unter dem Namen „Can’t Get Knafeh of It“?",
+    "lead_fact": "Pistazie und Kadaifi; Hype 2024/25; Fix Dessert Chocolatier.",
+    "source": "native-lead"
+  },
+  "Q37153": {
+    "question": "Welche Lorbeergewächs-Art (Persea americana) stammt aus den Regenwäldern Mexikos und Zentralamerikas; ihre botanisch als Beere geltende Frucht wird in über 400 Sorten angebaut?",
+    "lead_fact": "Persea americana; botanisch eine Beere; Ursprung Mexiko/Zentralamerika.",
+    "source": "native-lead"
+  },
+  "Q255819": {
+    "question": "Welcher überreife sardische Schafskäse wird von der Käsefliege Piophila casei mit Eiern belegt und enthält daher Maden?",
+    "lead_fact": "Sardischer Schafskäse mit Maden der Käsefliege Piophila casei.",
+    "source": "native-lead"
+  },
+  "Q1661828": {
+    "question": "Wie bezeichnet man Schabenarten der Blattidae, die vor allem in menschlichen Behausungen als Vorratsschädlinge leben, darunter die Deutsche und die Orientalische Schabe?",
+    "lead_fact": "Blattidae in Wohnungen; Deutsche und Orientalische Schabe.",
+    "source": "native-lead"
+  },
+  "Q1070684": {
+    "question": "Welche therapeutische Ernährungsform reduziert Kohlenhydrate so weit, dass der Körper Energie vor allem aus Fett und Ketonkörpern statt aus Glukose gewinnt?",
+    "lead_fact": "Kohlenhydratlimitiert; Energie aus Fett und Ketonkörpern.",
+    "source": "native-lead"
+  },
+  "Q1402637": {
+    "question": "Welcher Gehilfe des heiligen Nikolaus besucht im nördlichen und mittleren deutschen Sprachraum am Vorabend des 6. Dezembers mit ihm die Kinder zu Hause?",
+    "lead_fact": "Nikolaus-Gehilfe; Hausbesuche am 5./6. Dezember in Nord- und Mitteldeutschland.",
+    "source": "native-lead"
+  },
+  "Q1986744": {
+    "question": "Welches Survival-Horror-Action-Adventure von Naughty Dog erschien am 14. Juni 2013 exklusiv für die PlayStation 3 und später als Remaster und Remake?",
+    "lead_fact": "Naughty Dog; 14. Juni 2013 für PS3; später Remaster und Remake.",
+    "source": "native-lead"
+  },
+  "Q96417649": {
+    "question": "Welches Online-Mehrspieler-Deduktionsspiel des Indie-Studios Innersloth erschien am 15. Juni 2018 und verzeichnete ab Juli 2020 einen starken Spielerzuwachs?",
+    "lead_fact": "Innersloth; 15. Juni 2018; Boom ab Juli 2020.",
+    "source": "native-lead"
+  },
+  "Q209422": {
+    "question": "Welche von Martin Luther um 1535 als Alternative zum Nikolaustag propagierte Symbolfigur bringt den Kindern ungesehen die Weihnachtsgeschenke und ist heute vor allem in katholischen Gegenden verbreitet?",
+    "lead_fact": "Luther um 1535; ungesehener Gabenbringer; heute vor allem katholisch.",
+    "source": "native-lead"
+  },
+  "Q37525": {
+    "question": "Welches natürlich vorkommende Monosaccharid heißt fachsprachlich auch Traubenzucker oder Dextrose und ist in der D-Form die häufigste Zuckerart?",
+    "lead_fact": "D-Form natürlich; Traubenzucker/Dextrose; häufigstes Monosaccharid.",
+    "source": "native-lead"
+  },
+  "Q20966579": {
+    "question": "Welches Smartphone-Spiel von Niantic in Kooperation mit Nintendo ließ Spieler ab Juli 2016 per GPS Wesen einer bekannten Spielemarke in der realen Umgebung fangen?",
+    "lead_fact": "Niantic/Nintendo Juli 2016; Location-based; Fangen per Standortsignal.",
+    "source": "native-lead"
+  },
+  "Q28667972": {
+    "question": "Welcher Manga von Eiichirō Oda, seit Juli 1997 fortgesetzt, folgt Monkey D. Luffys Suche nach einem legendären Schatz, um König der Piraten zu werden?",
+    "lead_fact": "Oda; Weekly Shōnen Jump seit Juli 1997; Luffy will König der Piraten werden.",
+    "source": "translated-from-en"
+  },
+  "Q83160": {
+    "question": "Welcher Titan der griechischen Mythologie täuschte Zeus bei einem Tieropfer, indem er ihm nur die wertlosen Teile überließ?",
+    "lead_fact": "Titan; Opferlist gegen Zeus, nur die wertlosen Teile.",
+    "source": "native-lead"
+  },
+  "Q3182559": {
+    "question": "Welches Action-Rollenspiel von CD Projekt Red spielt in der fiktiven Stadt Night City in Kalifornien und erschien am 10. Dezember 2020, 57 Jahre nach einem Pen-and-Paper-Rollenspiel als Vorlage?",
+    "lead_fact": "CD Projekt Red; Night City; 10. Dezember 2020; 57 Jahre nach der Pen-and-Paper-Vorlage.",
+    "source": "native-lead"
+  },
+  "Q302": {
+    "question": "Welcher jüdische Prediger des 1. Jahrhunderts aus der römischen Provinz Judäa ist die zentrale Figur des Christentums?",
+    "lead_fact": "Prediger des 1. Jahrhunderts in Judäa; zentrale Figur des Christentums.",
+    "source": "translated-from-en"
+  },
+  "Q27438121": {
+    "question": "Welches Open-World-Action-Adventure von Rockstar Games mit Wild-West-Setting erschien im Oktober 2018 für PlayStation 4 und Xbox One als dritter Teil seiner Reihe?",
+    "lead_fact": "Rockstar; Wilder Westen; Oktober 2018; dritter Teil der Reihe.",
+    "source": "native-lead"
+  },
+  "Q11377464": {
+    "question": "Welche Manga-Serie von Haro Asō erschien von 2010 bis 2016, erhielt zwei Fortsetzungen und wurde 2020 als Fernsehserie adaptiert?",
+    "lead_fact": "Haro Asō 2010–2016; zwei Fortsetzungen; TV-Adaption 2020.",
+    "source": "native-lead"
+  },
+  "Q33972": {
+    "question": "Welches ursprünglich mechanische, heute meist elektronische Gerät startet nach Münz- oder Scheineinwurf einen Spielverlauf aus Zufall und Spielerbetätigung, oft in der Hoffnung auf Gewinn?",
+    "lead_fact": "Mechanisch dann elektronisch; Zufall plus Spieleraktion; Gewinnhoffnung.",
+    "source": "native-lead"
+  },
+  "Q23925035": {
+    "question": "Welcher Kyoto-Animation-Film von Naoko Yamada nach einem Manga von Yoshitoki Ōima kam am 17. September 2016 in die japanischen Kinos und erzählt ein Oberschuldrama?",
+    "lead_fact": "Naoko Yamada; Kyōto Animation; 17. September 2016; Manga von Ōima.",
+    "source": "native-lead"
+  },
+  "Q339962": {
+    "question": "Welche arcadelastige Flugsimulationsreihe von Namco begann 1995 mit Air Combat für die erste PlayStation und verknüpft Missionen durch eine fortlaufende Geschichte?",
+    "lead_fact": "Namco; Start als Air Combat 1995; fortlaufende Missionsgeschichte.",
+    "source": "native-lead"
+  },
+  "Q54855979": {
+    "question": "Welcher Begriff aus der japanischen Pornografie bezeichnet einen übersteigerten Gesichtsausdruck mit rollenden oder schielenden Augen, herausgestreckter Zunge und gerötetem Gesicht?",
+    "lead_fact": "Übersteigerter Orgasmus-Gesichtsausdruck in Hentai und Erogē.",
+    "source": "native-lead"
+  },
+  "Q1525793": {
+    "question": "Welche Shōnen-Mangaserie von Takahiro und Tetsuya Tashiro erscheint seit 2010 und lief im deutschen Fernsehen unter dem Titel Schwerter der Assassinen?",
+    "lead_fact": "Takahiro/Tashiro seit 2010; deutsche TV-Fassung Schwerter der Assassinen.",
+    "source": "native-lead"
+  },
+  "Q111437353": {
+    "question": "Welche Mangaserie von Yūki Suenaga und Takamasa Moue erscheint seit 2022, handelt von einer Schülerin, die Rakugo erlernt, und wurde 2026 als Anime adaptiert?",
+    "lead_fact": "Suenaga/Moue seit 2022; Rakugo-Schülerin; Anime 2026.",
+    "source": "native-lead"
+  },
+  "Q542634": {
+    "question": "Welcher britische Schriftsteller von The Beach schrieb das Drehbuch zu 28 Days Later und führte später bei Ex Machina und Civil War Regie?",
+    "lead_fact": "Autor von The Beach; Drehbuch 28 Days Later; Regie Ex Machina.",
+    "source": "native-lead"
+  },
+  "Q335340": {
+    "question": "Welcher US-amerikanisch-japanische Animationsfilm von 2003 versammelt neun Kurzfilme in der Welt der Matrix, meist unter japanischen Anime-Regisseuren gemeinsam mit den Wachowskis?",
+    "lead_fact": "Neun Kurzfilme 2003; Matrix-Welt; Wachowskis und japanische Regisseure.",
+    "source": "native-lead"
+  },
+  "Q1107": {
+    "question": "Wie heißen die in Japan produzierten Zeichentrickfilme und -serien, das filmische Pendant zum Manga, in einem Land mit der umfangreichsten Trickfilmkultur der Welt?",
+    "lead_fact": "Japanische Animationsfilme und -serien; Pendant zum Manga.",
+    "source": "native-lead"
+  },
+  "Q308950": {
+    "question": "Welcher junge Trainer aus Alabastia ist der Protagonist der Pokémon-Animeserie, reist mit einem Pikachu und will Pokémon-Meister werden?",
+    "lead_fact": "Protagonist der Animeserie; aus Alabastia; reist mit Pikachu.",
+    "source": "native-lead"
+  },
+  "Q3277067": {
+    "question": "Welche Manga-Serie von Yūsei Matsui (2012–2016) folgt einem oktopusähnlichen Lehrer und seiner Klasse, die ihn töten muss, um die Zerstörung der Erde zu verhindern?",
+    "lead_fact": "Matsui 2012–2016; Lehrer Koro-Sensei; Klasse soll ihn töten.",
+    "source": "native-lead"
+  }
+}
