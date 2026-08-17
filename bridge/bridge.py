@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "0.7.0-APath"
+CLIENT_VERSION = "1.0-beta1"
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -104,9 +104,10 @@ DEFAULT_ITEMS = {
     "Foggy Links": 1_870_046,
     "Missing Links": 1_870_047,
     "Branch Key": 1_870_048,
+    "Wrong Wiki": 1_870_049,
 }
 
-TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
+TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links", "Wrong Wiki"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
 # Fallback max for legacy seeds that omit target_rerolls_start.
 TARGET_REROLLS_PER_ROUND = 3
@@ -1711,6 +1712,8 @@ class APConnection:
             return trap_name == "Foggy Links"
         if self.state.trap_type == 2:
             return trap_name == "Missing Links"
+        if self.state.trap_type == 3:
+            return trap_name == "Wrong Wiki"
         return True
 
     def _queue_event(self, event: dict[str, Any]) -> None:
@@ -3021,6 +3024,17 @@ class APConnection:
                     "status": self.state.to_status(),
                 }
 
+            if action == "unlock_all_branches":
+                need = max(0, len(self.state.branches))
+                while self.state.item_count("Branch Key") < need:
+                    await self._debug_grant_named("Branch Key", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "branch_key_count": self.state.branch_key_count(),
+                    "status": self.state.to_status(),
+                }
+
             if action == "grant_item":
                 name = str(data.get("item") or "").strip()
                 if not name:
@@ -3131,7 +3145,7 @@ class APConnection:
             if action == "queue_trap":
                 trap = str(data.get("trap") or "").strip()
                 if trap not in TRAP_ITEM_NAMES:
-                    return {"ok": False, "error": "trap must be Foggy Links or Missing Links", "status": self.state.to_status()}
+                    return {"ok": False, "error": "trap must be Foggy Links, Missing Links, or Wrong Wiki", "status": self.state.to_status()}
                 # Inject as a received trap item so inventory + TrapLink stay consistent.
                 await self._debug_grant_named(trap, unique=False, fire_trap=True)
                 return {"ok": True, "action": action, "trap": trap, "status": self.state.to_status()}

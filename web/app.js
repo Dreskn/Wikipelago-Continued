@@ -1,4 +1,4 @@
-const APP_VERSION = "2026.08.16.08";
+const APP_VERSION = "1.0-beta1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -22,8 +22,12 @@ function wikipediaLanguage() {
   return lang || "en";
 }
 
-function wikipediaOrigin() {
-  return `https://${wikipediaLanguage()}.wikipedia.org`;
+function wikipediaOrigin(lang = wikipediaLanguage()) {
+  return `https://${lang}.wikipedia.org`;
+}
+
+function articleLanguage() {
+  return state.articleLang || wikipediaLanguage();
 }
 
 /**
@@ -152,6 +156,7 @@ function trapTypeLabel(trapType) {
     0: "diff.trapType.both",
     1: "diff.trapType.foggy",
     2: "diff.trapType.missing",
+    3: "diff.trapType.wrongWiki",
   }[Number(trapType) || 0] || "diff.trapType.both";
   return t(key);
 }
@@ -211,6 +216,7 @@ const state = {
   trapQueue: [],
   activeFoggy: false,
   activeMissing: false,
+  articleLang: "",
   bombTitles: new Set(),
   handlingDeath: false,
   /** After slot/language switch, open current_start instead of sticky hash/last_page. */
@@ -1348,6 +1354,82 @@ async function fetchRandomWikiTitle() {
   return title;
 }
 
+async function fetchLangLinks(title, fromLang) {
+  const params = new URLSearchParams({
+    action: "query",
+    prop: "langlinks",
+    lllimit: "500",
+    titles: title,
+    redirects: "true",
+    format: "json",
+    origin: "*",
+    formatversion: "2",
+  });
+  const url = `${wikipediaOrigin(fromLang)}/w/api.php?${params}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const page = data?.query?.pages?.[0];
+  if (!page || page.missing) return [];
+  const links = Array.isArray(page.langlinks) ? page.langlinks : [];
+  return links
+    .map((item) => ({
+      lang: String(item?.lang || "").trim().toLowerCase(),
+      title: String(item?.title || "").trim(),
+    }))
+    .filter((item) => item.lang && item.title);
+}
+
+function langLinkTitle(links, lang) {
+  const want = String(lang || "").trim().toLowerCase();
+  const hit = links.find((item) => item.lang === want);
+  return hit?.title || "";
+}
+
+function takeQueuedTrap(name) {
+  const idx = state.trapQueue.indexOf(name);
+  if (idx < 0) return false;
+  state.trapQueue.splice(idx, 1);
+  return true;
+}
+
+async function resolveArticleNavigation(requestedTitle, { countAsClick = false } = {}) {
+  const seedLang = wikipediaLanguage();
+  let displayLang = state.articleLang || seedLang;
+  let displayTitle = requestedTitle;
+  let checkTitle = requestedTitle;
+
+  if (displayLang !== seedLang) {
+    const links = await fetchLangLinks(displayTitle, displayLang);
+    const homeTitle = langLinkTitle(links, seedLang);
+    if (homeTitle) {
+      displayLang = seedLang;
+      displayTitle = homeTitle;
+      checkTitle = homeTitle;
+      state.articleLang = "";
+      toast(t("toast.wrongWikiBack", { lang: seedLang }), "ok", 5000);
+    } else {
+      toast(t("toast.wrongWikiStay", { lang: seedLang, current: displayLang }), "warn", 5000);
+    }
+  }
+
+  if (countAsClick && displayLang === seedLang && state.trapQueue.includes("Wrong Wiki")) {
+    const links = await fetchLangLinks(displayTitle, seedLang);
+    const others = links.filter((item) => item.lang !== seedLang);
+    if (others.length) {
+      takeQueuedTrap("Wrong Wiki");
+      const pick = others[Math.floor(Math.random() * others.length)];
+      state.articleLang = pick.lang;
+      displayLang = pick.lang;
+      displayTitle = pick.title;
+      checkTitle = requestedTitle;
+      toast(t("toast.wrongWiki", { lang: pick.lang }), "warn", 7000);
+    }
+  }
+
+  return { displayLang, displayTitle, checkTitle };
+}
+
 async function notifyDeathLink(cause) {
   if (!deathLinkEnabled() || !state.sessionId || !isApConnected()) return;
   try {
@@ -1364,6 +1446,7 @@ async function applyDeathEffect(reasonText) {
   // loop-deaths / no-op clicks while handlingDeath blocks applyDeathEffect.
   resetRoundVisits("");
   state.bombTitles = new Set();
+  state.articleLang = "";
   try {
     toast(reasonText || t("toast.deathJump"), "warn", 7000);
     const title = await fetchRandomWikiTitle();
@@ -1379,7 +1462,7 @@ async function applyDeathEffect(reasonText) {
 }
 
 function queueTrap(trapName) {
-  if (trapName !== "Foggy Links" && trapName !== "Missing Links") return;
+  if (trapName !== "Foggy Links" && trapName !== "Missing Links" && trapName !== "Wrong Wiki") return;
   state.trapQueue.push(trapName);
   toast(t("toast.trap", { name: trapName }), "warn", 6500);
 }
@@ -1389,9 +1472,13 @@ function consumeTrapQueueForPage(title, status) {
   state.activeMissing = false;
   if (!state.trapQueue.length) return;
   if (isProtectedNavTitle(title, status)) return;
-  const queued = state.trapQueue.splice(0, state.trapQueue.length);
-  state.activeFoggy = queued.includes("Foggy Links");
-  state.activeMissing = queued.includes("Missing Links");
+  const kept = [];
+  for (const trap of state.trapQueue) {
+    if (trap === "Foggy Links") state.activeFoggy = true;
+    else if (trap === "Missing Links") state.activeMissing = true;
+    else kept.push(trap);
+  }
+  state.trapQueue = kept;
 }
 
 function applyMissingToLinks(links) {
@@ -3015,6 +3102,7 @@ function updateHUD(status) {
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
+    state.articleLang = "";
   }
   if (wasPractice && !status.practice && !status.connected_to_ap) {
     clearStickyConnectionError();
@@ -3219,8 +3307,24 @@ function initDebugDisplayPanel() {
   ]));
   progress.appendChild(debugRow([
     debugBtn("Unlock all rounds", () => runDebugAction("unlock_all_rounds")),
+    debugBtn("Unlock all branches", () => runDebugAction("unlock_all_branches")),
     debugBtn("Finish Grand Goal", () => runDebugAction("finish_boss")),
+  ]));
+  progress.appendChild(debugRow([
     debugBtn("Reset rerolls", () => runDebugAction("reset_rerolls")),
+    debugBtn("Reset backs", () => runDebugAction("reset_backs")),
+  ]));
+  const roundInput = document.createElement("input");
+  roundInput.type = "number";
+  roundInput.min = "1";
+  roundInput.className = "debug-input";
+  roundInput.placeholder = "Round #";
+  progress.appendChild(debugRow([
+    roundInput,
+    debugBtn("Set round", () => {
+      const round = Number(roundInput.value) || 1;
+      runDebugAction("set_round", { round });
+    }),
   ]));
   card.appendChild(progress);
 
@@ -3247,7 +3351,7 @@ function initDebugDisplayPanel() {
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
     "Knowledge Fragment", "Round Access", "Footnote",
-    "Foggy Links", "Missing Links",
+    "Foggy Links", "Missing Links", "Wrong Wiki",
     ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => `Search Letter ${letter}`),
   ]) {
     const opt = document.createElement("option");
@@ -3265,11 +3369,20 @@ function initDebugDisplayPanel() {
   travel.appendChild(debugRow([
     debugBtn("Target", async () => {
       const title = state.status?.current_target;
+      state.articleLang = "";
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
     debugBtn("Grand Goal", async () => {
       const title = state.status?.goal_article;
+      state.articleLang = "";
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }),
+    debugBtn("Journey", () => {
+      void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
+    }),
+    debugBtn("Victory", () => {
+      if (state.status?.boss_completed) openVictoryOverlay(state.status);
+      else toast("Finish Grand Goal first", "warn", 3000);
     }),
   ]));
   const pageInput = document.createElement("input");
@@ -3284,6 +3397,7 @@ function initDebugDisplayPanel() {
         toast(t("toast.enterTitle"), "warn", 3000);
         return;
       }
+      state.articleLang = "";
       await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
@@ -3332,10 +3446,12 @@ function initDebugDisplayPanel() {
       toast(t("toast.visitsCleared"), "ok", 3000);
     }),
     debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
+    debugBtn("Send DeathLink", () => runDebugAction("send_death_link", { cause: "Debug DeathLink" })),
   ]));
   challenge.appendChild(debugRow([
     debugBtn("Trigger Foggy", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
     debugBtn("Trigger Missing", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+    debugBtn("Trigger Wrong Wiki", () => runDebugAction("queue_trap", { trap: "Wrong Wiki" })),
   ]));
   card.appendChild(challenge);
 
@@ -3601,8 +3717,8 @@ function processArticleLinks(root, options = {}) {
   if (playable) applyMissingToLinks(playable);
 }
 
-function wikiHtmlCacheKey(title) {
-  return `${wikipediaLanguage()}::${normalizeTitle(title)}`;
+function wikiHtmlCacheKey(title, lang = articleLanguage()) {
+  return `${lang}::${normalizeTitle(title)}`;
 }
 
 function clearWikiHtmlCache() {
@@ -3634,9 +3750,9 @@ function ensureWikiHtmlCacheLanguage() {
   if (!state.wikiCacheLanguage) state.wikiCacheLanguage = lang;
 }
 
-function storeWikiHtmlCache(title, html) {
+function storeWikiHtmlCache(title, html, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
   state.wikiHtmlCache.set(key, { html: String(html || "") });
   while (state.wikiHtmlCache.size > WIKI_PREFETCH_MAX_CACHE) {
@@ -3645,9 +3761,9 @@ function storeWikiHtmlCache(title, html) {
   }
 }
 
-function takeWikiHtmlCache(title) {
+function takeWikiHtmlCache(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   const hit = state.wikiHtmlCache.get(key);
   if (!hit) return null;
   // Refresh LRU order.
@@ -3656,7 +3772,7 @@ function takeWikiHtmlCache(title) {
   return hit.html;
 }
 
-async function fetchWikiHtmlUncached(title) {
+async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
   const params = new URLSearchParams({
     action: "parse",
     page: title,
@@ -3666,30 +3782,30 @@ async function fetchWikiHtmlUncached(title) {
     origin: "*",
     redirects: "true",
   });
-  const url = `${wikipediaOrigin()}/w/api.php?${params}`;
+  const url = `${wikipediaOrigin(lang)}/w/api.php?${params}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${wikipediaLanguage()})`);
+  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${lang})`);
   const data = await res.json();
   if (data?.error) {
     const info = data.error.info || data.error.code || "Article unavailable";
-    throw new Error(`${info} [${wikipediaLanguage()}]`);
+    throw new Error(`${info} [${lang}]`);
   }
-  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${wikipediaLanguage()}]`);
+  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${lang}]`);
   return data.parse.text;
 }
 
-async function fetchWikiHtml(title) {
+async function fetchWikiHtml(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const cached = takeWikiHtmlCache(title);
+  const cached = takeWikiHtmlCache(title, lang);
   if (cached != null) return cached;
 
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   let inflight = state.wikiHtmlInflight.get(key);
   if (!inflight) {
     inflight = (async () => {
       try {
-        const html = await fetchWikiHtmlUncached(title);
-        storeWikiHtmlCache(title, html);
+        const html = await fetchWikiHtmlUncached(title, lang);
+        storeWikiHtmlCache(title, html, lang);
         return html;
       } finally {
         state.wikiHtmlInflight.delete(key);
@@ -3859,19 +3975,24 @@ async function openArticle(title, options = {}) {
   }
 
   const endLoading = beginArticleLoading();
-  const prepareKey = wikiHtmlCacheKey(title);
-  const prepareWait = state.wikiPrepareInflight.get(prepareKey);
-  if (prepareWait) {
-    try { await prepareWait; } catch { /* fall through */ }
-  }
 
   try {
-    state.currentTitle = title;
-    el.articleTitle.textContent = title;
-    el.articleBody.scrollTop = 0;
-    consumeTrapQueueForPage(title, state.status);
+    const { displayLang, displayTitle, checkTitle } = await resolveArticleNavigation(title, { countAsClick });
+    const prepareKey = wikiHtmlCacheKey(displayTitle, displayLang);
+    const prepareWait = state.wikiPrepareInflight.get(prepareKey);
+    if (prepareWait) {
+      try { await prepareWait; } catch { /* fall through */ }
+    }
 
-    const prepared = takeWikiPreparedCache(title);
+    state.currentTitle = displayTitle;
+    const seedLang = wikipediaLanguage();
+    el.articleTitle.textContent = displayLang !== seedLang
+      ? `${displayTitle} · ${displayLang}`
+      : displayTitle;
+    el.articleBody.scrollTop = 0;
+    consumeTrapQueueForPage(checkTitle, state.status);
+
+    const prepared = takeWikiPreparedCache(displayTitle);
     if (prepared) {
       el.articleBody.replaceChildren(...prepared.childNodes);
       // Re-apply current fog/missing on the live tree (pre-prepare used neutral flags).
@@ -3884,11 +4005,11 @@ async function openArticle(title, options = {}) {
     } else {
       let html;
       try {
-        html = await fetchWikiHtml(title);
+        html = await fetchWikiHtml(displayTitle, displayLang);
       } catch (err) {
         endLoading();
         const detail = err?.message ? ` (${err.message})` : "";
-        toast(t("toast.openFailed", { title, detail }), "warn");
+        toast(t("toast.openFailed", { title: displayTitle, detail }), "warn");
         return;
       }
       el.articleBody.innerHTML = html;
@@ -3899,9 +4020,9 @@ async function openArticle(title, options = {}) {
     }
     armBombsOnPage(el.articleBody, state.status);
     if (countAsClick || !state.roundVisitSet.size) {
-      state.roundVisitSet.add(normalizeTitle(title));
+      state.roundVisitSet.add(normalizeTitle(displayTitle));
     } else if (!submitCheck) {
-      state.roundVisitSet.add(normalizeTitle(title));
+      state.roundVisitSet.add(normalizeTitle(displayTitle));
     }
     // Drop prior page snapshot; a new one is cloned lazily if Ctrl+F is used.
     state.baseArticleClone = null;
@@ -3915,9 +4036,9 @@ async function openArticle(title, options = {}) {
     saveLocalProgress();
 
     if (replaceHistory) {
-      history.replaceState({ title }, "", `#${encodeURIComponent(title)}`);
+      history.replaceState({ title: checkTitle }, "", `#${encodeURIComponent(checkTitle)}`);
     } else {
-      history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
+      history.pushState({ title: checkTitle }, "", `#${encodeURIComponent(checkTitle)}`);
     }
 
     // Show the page as soon as DOM work is done; bridge check can finish after.
@@ -3931,7 +4052,7 @@ async function openArticle(title, options = {}) {
 
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
-      page_title: title,
+      page_title: checkTitle,
       clicks_used: state.clicksUsed,
       submit_check: Boolean(submitCheck),
       travel_kind: travelKind || (submitCheck ? "nav" : "restore"),
@@ -3941,7 +4062,7 @@ async function openArticle(title, options = {}) {
       if (result.matched && (result.status?.practice || result.practice_rolled)) {
         // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
-        resetRoundVisits(title);
+        resetRoundVisits(displayTitle);
         const nextClicks = Number(result.status?.clicks_used);
         if (Number.isFinite(nextClicks)) {
           state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
@@ -3988,6 +4109,7 @@ async function openArticle(title, options = {}) {
 async function restoreArticleView(force = false) {
   if (!state.status || !isPlayable()) return;
   if (state.handlingDeath) return;
+  state.articleLang = "";
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
   if (!force && normalizeTitle(desiredTitle) === normalizeTitle(state.currentTitle)) return;

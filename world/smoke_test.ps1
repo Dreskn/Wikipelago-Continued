@@ -117,14 +117,14 @@ try {
     Assert-HasPattern $yamlToCheck 'link_bomb_density:\s*(few|more|insane)' 'YAML template is missing link_bomb_density'
     Assert-HasPattern $yamlToCheck '^requires:\s*$' 'YAML template is missing requires block'
     Assert-HasPattern $yamlToCheck '^\s*version:\s*0\.6\.7\s*$' 'YAML template is missing requires.version 0.6.7'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*0\.7\.0\s*$' 'YAML template is missing requires.game.Wikipelago 0.7.0'
-    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "0.7.0-APath"' 'Bridge client version must be 0.7.0-APath'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0-beta1\s*$' 'YAML template is missing requires.game.Wikipelago 1.0-beta1'
+    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0-beta1"' 'Bridge client version must be 1.0-beta1'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
-    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "0.7.0-APath"' 'World full_version must be 0.7.0-APath'
+    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.0-beta1"' 'World full_version must be 1.0-beta1'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
     Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
-    Assert-HasPattern $yamlToCheck 'trap_type:\s*(both|only_foggy_links|only_missing_links)' 'YAML template is missing trap_type'
+    Assert-HasPattern $yamlToCheck 'trap_type:\s*(both|only_foggy_links|only_missing_links|only_wrong_wiki)' 'YAML template is missing trap_type'
     Assert-HasPattern $yamlToCheck 'trap_link:\s*(true|false)' 'YAML template is missing trap_link'
     Assert-HasPattern $yamlToCheck 'toggle_bingo_letterpairs:\s*(true|false)' 'YAML template is missing toggle_bingo_letterpairs'
     Assert-HasPattern $yamlToCheck 'bingo_letterpairs_grid:\s*\d+' 'YAML template is missing bingo_letterpairs_grid'
@@ -202,6 +202,7 @@ try {
     Assert-HasPattern $optionsPath 'How many letter-pair bingo boards are unlocked from the start \(0 =' 'BingoCardsStart docstring should allow 0'
     Assert-HasPattern $itemsPath '"Foggy Links"' 'Foggy Links trap item is missing'
     Assert-HasPattern $itemsPath '"Missing Links"' 'Missing Links trap item is missing'
+    Assert-HasPattern $itemsPath '"Wrong Wiki"' 'Wrong Wiki trap item is missing'
     Assert-HasPattern $initPath '_trap_item_names' 'Trap item name helper is missing'
     Assert-HasPattern $bridgePath 'MAX_AP_CONNECT_ATTEMPTS' 'Bridge reconnect attempt limit is missing'
     Assert-HasPattern $bridgePath 'send_death_link' 'Bridge DeathLink send helper is missing'
@@ -382,7 +383,10 @@ try {
     Assert-NoPattern $webAppPath 'switch-path' 'Web must not call switch-path'
     Assert-HasPattern $bridgePath '"goal_question"' 'Bridge status must include goal_question'
     Assert-HasPattern $webIndexPath 'id="victoryOverlay"' 'Web Grand Goal victory overlay markup is missing'
+    Assert-HasPattern $webIndexPath 'id="supportDock"' 'Web support buttons are missing'
     Assert-HasPattern $webAppPath 'openVictoryOverlay' 'Web must open a victory overlay on Grand Goal'
+    Assert-HasPattern $webAppPath 'Wrong Wiki' 'Web must handle the Wrong Wiki trap'
+    Assert-HasPattern $bridgePath 'unlock_all_branches' 'Bridge debug must unlock all branches'
     Assert-NoPattern $webIndexPath 'id="journeyFilter"' 'Web Journey must not keep a main/fork path filter'
     Assert-HasPattern $webAppPath 'TRACK_OVERFLOW_MIN = 5' 'Web track overflow must require at least 5 like-segments'
     Assert-HasPattern $webAppPath 'TRACK_FORK_OVERFLOW_MIN = 3' 'Web fork overflow must require at least 3 like-segments'
@@ -499,7 +503,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"0\.7\.0"' 'Packaged world_version should be 0.7.0'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0-beta1"' 'Packaged world_version should be 1.0-beta1'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

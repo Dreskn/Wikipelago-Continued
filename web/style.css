@@ -1551,3 +1551,31 @@ button {
     overflow: visible;
   }
 }
+
+.support-dock {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  pointer-events: none;
+}
+.support-btn {
+  pointer-events: auto;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid #3a5068;
+  background: rgba(21, 33, 49, 0.92);
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+}
+.support-btn:hover {
+  color: var(--text);
+  border-color: #52708d;
+}

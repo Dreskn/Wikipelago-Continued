@@ -288,7 +288,7 @@ class LinkBombDensity(Choice):
 
 
 class TrapCount(Range):
-    """Number of trap items (Foggy Links / Missing Links) added to the pool before Footnote filler."""
+    """Number of trap items (Foggy Links / Missing Links / Wrong Wiki) added to the pool before Footnote filler."""
     display_name = "Trap Count"
     range_start = 0
     range_end = 99
@@ -301,6 +301,7 @@ class TrapType(Choice):
     option_both = 0
     option_only_foggy_links = 1
     option_only_missing_links = 2
+    option_only_wrong_wiki = 3
     default = 0
 
 

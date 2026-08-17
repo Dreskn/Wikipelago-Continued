@@ -10,7 +10,7 @@ description: Default Wikipelago player template
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 0.7.0
+    Wikipelago: 1.0-beta1
 
 Wikipelago:
 
@@ -150,8 +150,8 @@ Wikipelago:
   # =============================================================================
   # Traps
   # =============================================================================
-  # trap_count: Foggy Links / Missing Links items in the pool (0–99)
-  # trap_type: both | only_foggy_links | only_missing_links
+  # trap_count: Foggy Links / Missing Links / Wrong Wiki items in the pool (0–99)
+  # trap_type: both | only_foggy_links | only_missing_links | only_wrong_wiki
   # trap_link: share traps with other Trap Link players (independent of count).
   trap_count: 0
   trap_type: both
