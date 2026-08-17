@@ -1076,7 +1076,7 @@ function journeyPageNodes(events) {
 
 function layoutJourneyNodes(nodes, width) {
   const padX = 28;
-  const padY = 36;
+  const padY = 44;
   const stepX = 54;
   const rowH = 78;
   const inner = Math.max(160, width - padX * 2);
@@ -1221,6 +1221,7 @@ function drawJourneyPath(payload) {
 
   const labels = document.createElement("div");
   labels.style.pointerEvents = "none";
+  let milestoneLabel = 0;
   for (let i = 0; i < points.length; i += 1) {
     const node = points[i];
     const colors = journeyNodeFill(node);
@@ -1260,7 +1261,8 @@ function drawJourneyPath(payload) {
     if (node.milestone) {
       const label = document.createElement("span");
       label.className = "journey-node-label";
-      if (node.row % 2 === 1) label.classList.add("above");
+      if (milestoneLabel % 2 === 1) label.classList.add("above");
+      milestoneLabel += 1;
       label.textContent = node.title;
       label.style.left = `${node.x}px`;
       label.style.top = `${node.y}px`;

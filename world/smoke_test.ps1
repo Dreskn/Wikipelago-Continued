@@ -360,6 +360,7 @@ try {
     Assert-HasPattern $webAppPath 'function renderForkSpur' 'Web fork spur attached to crossroad hooks is missing'
     Assert-HasPattern $webAppPath 'function journeyPageNodes' 'Web journey page-node helper is missing'
     Assert-HasPattern $webAppPath 'function drawJourneyPath' 'Web journey path renderer is missing'
+    Assert-HasPattern $webAppPath 'if \(milestoneLabel % 2 === 1\) label.classList.add\("above"\)' 'Web journey labels must alternate above and below'
     Assert-HasPattern $webAppPath 'onRight \? -1 : 1' 'Web Journey vertical wraps must bulge like parentheses by side'
     Assert-HasPattern $webIndexPath 'id="journeyPath"' 'Web Journey path markup is missing'
     Assert-NoPattern $webIndexPath 'id="journeyTimeline"' 'Web Journey must not keep a timestamp timeline'
