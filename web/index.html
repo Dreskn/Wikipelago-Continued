@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260818-01" />
+  <link rel="stylesheet" href="/static/style.css?v=20260818-02" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -51,8 +51,8 @@
       </section>
 
       <aside class="side-panel">
-        <div class="card" id="connectionCard" data-panel="connection">
-          <div class="card-head connection-head">
+        <div class="card" id="connectionCard">
+          <div class="connection-head">
             <div class="connection-head-main">
               <h2 data-i18n="conn.title">Connection</h2>
               <div id="connectionSummary" class="connection-identity hidden">
@@ -61,9 +61,8 @@
               </div>
             </div>
             <button id="disconnectBtn" type="button" class="btn-quiet hidden" data-i18n="conn.disconnect">Disconnect</button>
-            <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
           </div>
-          <div id="connectionForm" class="card-body">
+          <div id="connectionForm">
             <label data-i18n="conn.server">Server</label>
             <input id="serverInput" type="text" placeholder="archipelago.gg:PORT" />
             <label data-i18n="conn.slot">Slot</label>
@@ -77,69 +76,62 @@
           </div>
         </div>
 
-        <div class="card">
-          <div id="roundsBlock" class="side-section" data-panel="progression">
-            <div class="run-label-row rounds-label-row card-head">
-              <strong data-i18n="hud.rounds">Progression</strong>
-              <button type="button" id="journeyBtn" class="btn-quiet hidden" data-i18n="journey.open">Journey</button>
-              <span id="roundText" class="muted-meta">-</span>
-              <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
-            </div>
-            <div class="card-body">
+        <div class="card" data-panel="progression">
+          <div class="run-label-row rounds-label-row card-head">
+            <strong data-i18n="hud.rounds">Progression</strong>
+            <button type="button" id="journeyBtn" class="btn-quiet hidden" data-i18n="journey.open">Journey</button>
+            <span id="roundText" class="muted-meta">-</span>
+            <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
+          </div>
+          <div class="card-body">
+            <div id="roundsBlock">
               <div id="roundsTrack" class="rounds-track" aria-label="Round progress" data-i18n-aria="items.roundsAria"></div>
               <div id="branchTracks" class="branch-tracks"></div>
               <div id="crossroadBadge" class="crossroad-badge hidden"></div>
             </div>
-          </div>
 
-          <div class="targets-block side-section" data-panel="targets">
-            <div class="run-label-row card-head">
-              <strong data-i18n="hud.targets">Targets</strong>
-              <span class="targets-reroll">
-                <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll every current target (up to 3 per round; not the Grand Goal)" data-i18n="hud.reroll" data-i18n-title="hud.rerollTitle">Reroll</button>
-                <span id="rerollTargetMeta" class="muted-meta"></span>
-              </span>
-              <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
-            </div>
-            <div class="card-body target-list">
-              <p class="target-row">
-                <strong data-i18n="path.main">Main road</strong>
-                <span class="target-hover" id="targetHover">
-                  <span id="targetText">-</span>
-                  <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
+            <div class="targets-block">
+              <div class="run-label-row">
+                <strong data-i18n="hud.targets">Targets</strong>
+                <span class="targets-reroll">
+                  <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll every current target (up to 3 per round; not the Grand Goal)" data-i18n="hud.reroll" data-i18n-title="hud.rerollTitle">Reroll</button>
+                  <span id="rerollTargetMeta" class="muted-meta"></span>
                 </span>
-              </p>
-              <div id="branchTargets" class="branch-targets hidden"></div>
-            </div>
-          </div>
-
-          <div class="goal-block">
-            <div id="fragmentsBlock" class="side-section" data-panel="fragments">
-              <div class="run-label-row card-head">
-                <strong data-i18n="hud.fragments">Fragments</strong>
-                <span id="fragmentsText" class="muted-meta">0/0</span>
-                <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
               </div>
-              <div class="card-body">
+              <div class="target-list">
+                <p class="target-row">
+                  <strong data-i18n="path.main">Main road</strong>
+                  <span class="target-hover" id="targetHover">
+                    <span id="targetText">-</span>
+                    <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
+                  </span>
+                </p>
+                <div id="branchTargets" class="branch-targets hidden"></div>
+              </div>
+            </div>
+
+            <div class="goal-block">
+              <div id="fragmentsBlock">
+                <div class="run-label-row">
+                  <strong data-i18n="hud.fragments">Fragments</strong>
+                  <span id="fragmentsText" class="muted-meta">0/0</span>
+                </div>
                 <div id="fragmentsTrack" class="fragments-track" aria-label="Knowledge fragments" data-i18n-aria="items.fragmentsAria"></div>
               </div>
-            </div>
-            <div id="goalRow" class="goal-row side-section hidden" data-panel="grandgoal">
-              <div class="run-label-row card-head">
+              <p id="goalRow" class="goal-row hidden">
                 <strong data-i18n="hud.grandGoal">Grand Goal:</strong>
-                <button type="button" class="card-toggle btn-quiet" data-panel-toggle aria-expanded="true" aria-label="Hide panel" data-i18n-aria="panel.hide"></button>
-              </div>
-              <div class="card-body goal-body">
-                <span id="goalText" class="goal-question">-</span>
-                <span class="target-hover hidden" id="goalHover">
-                  <span id="goalAnswer" class="goal-answer"></span>
+                <span class="goal-body">
+                  <span id="goalText" class="goal-question">-</span>
+                  <span class="target-hover hidden" id="goalHover">
+                    <span id="goalAnswer" class="goal-answer"></span>
+                  </span>
                 </span>
-              </div>
+              </p>
             </div>
-          </div>
 
-          <p><strong data-i18n="hud.compass">Compass:</strong> <span id="compassHint">-</span></p>
-          <div id="toast" class="toast hidden"></div>
+            <p><strong data-i18n="hud.compass">Compass:</strong> <span id="compassHint">-</span></p>
+            <div id="toast" class="toast hidden"></div>
+          </div>
         </div>
 
         <div class="card" data-panel="items">
@@ -277,7 +269,7 @@
     <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
   </nav>
 
-  <script src="/static/i18n.js?v=20260818-01"></script>
-  <script src="/static/app.js?v=20260818-01"></script>
+  <script src="/static/i18n.js?v=20260818-02"></script>
+  <script src="/static/app.js?v=20260818-02"></script>
 </body>
 </html>

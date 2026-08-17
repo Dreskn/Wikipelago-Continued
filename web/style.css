@@ -936,12 +936,10 @@ button {
 .card-toggle[aria-expanded="false"]::before {
   transform: rotate(-90deg);
 }
-.card.is-collapsed > .card-head,
-.side-section.is-collapsed > .card-head {
+.card.is-collapsed > .card-head {
   margin-bottom: 0;
 }
-.card.is-collapsed > .card-body,
-.side-section.is-collapsed > .card-body {
+.card.is-collapsed > .card-body {
   display: none;
 }
 .card label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.86rem; }
