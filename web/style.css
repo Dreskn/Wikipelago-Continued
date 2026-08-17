@@ -976,6 +976,7 @@ button {
 .rounds-track,
 .fragments-track {
   --track-chip-min: 24px;
+  --track-seg-max: 16px;
   --track-crossroad-w: 48px;
   display: flex;
   gap: 2px;
@@ -992,6 +993,7 @@ button {
 .fragments-track .seg {
   flex: 1 1 0;
   min-width: 4px;
+  max-width: var(--track-seg-max);
   height: 18px;
   border-radius: 2px;
   border: 1px solid #314557;
@@ -1004,8 +1006,9 @@ button {
   justify-content: center;
   flex: 0 0 auto;
   flex-shrink: 0;
-  width: 24px;
-  min-width: 24px;
+  width: var(--track-chip-min);
+  min-width: var(--track-chip-min);
+  max-width: none;
   padding: 0 2px;
   height: 18px;
   box-sizing: border-box;
@@ -1047,6 +1050,7 @@ button {
   flex-shrink: 0;
   width: 24px;
   min-width: 24px;
+  max-width: none;
   outline: 1px solid #40c4ff;
   outline-offset: 1px;
   position: relative;
@@ -1305,6 +1309,7 @@ button {
   box-sizing: border-box;
   width: 24px;
   min-width: 24px;
+  max-width: none;
   height: 18px;
   border-radius: 2px;
   outline: 1px solid transparent;
@@ -1319,6 +1324,7 @@ button {
   justify-content: center;
   width: 24px;
   min-width: 24px;
+  max-width: none;
   padding: 0 2px;
   font-size: 14px;
 }
@@ -1328,6 +1334,7 @@ button {
   flex-shrink: 0;
   width: var(--track-crossroad-w);
   min-width: var(--track-crossroad-w);
+  max-width: none;
 }
 .rounds-track .seg.crossroad::after {
   content: "";

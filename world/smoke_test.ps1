@@ -404,6 +404,8 @@ try {
     Assert-HasPattern $webIndexPath 'id="goalHover"' 'Web Grand Goal must use the target hover tooltip'
     Assert-HasPattern $webAppPath 'setHoverWikiTitle' 'Web branch and goal titles must share the target tooltip'
     Assert-HasPattern $webAppPath 'TRACK_EMPHASIS_MIN_PX = 24' 'Web current and +N chips must be 24px wide'
+    Assert-HasPattern $webAppPath 'TRACK_SEG_MAX_PX = 16' 'Web idle track bars must cap at 16px'
+    Assert-HasPattern $webCssPath '--track-seg-max: 16px' 'Web idle track bars must cap at 16px in CSS'
     Assert-HasPattern $webCssPath 'font-size: 14px' 'Web track labels must be 14px'
     Assert-HasPattern $webCssPath 'font-size: 19px' 'Web bingo cell type must be a whole 19px'
     Assert-HasPattern $webAppPath 'BINGO_SIDE_PREF_MAX_PX = 202' 'Web sidebar bingo board must be 20% larger'

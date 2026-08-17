@@ -112,6 +112,8 @@ const WIKI_SECTION_HEADINGS = {
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
+/** Idle bars may grow to fill, but never past this — current stays visually larger. */
+const TRACK_SEG_MAX_PX = 16;
 const TRACK_SEG_GAP_PX = 2;
 /** Do not squash a run into +N unless at least this many like-segments would hide. */
 const TRACK_OVERFLOW_MIN = 5;
