@@ -8,7 +8,7 @@
   <title>Wikipelago</title>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="apple-touch-icon" href="/icons/icon-192_placeholder.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260818-03" />
+  <link rel="stylesheet" href="/static/style.css?v=20260818-04" />
 </head>
 <body>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
@@ -199,18 +199,20 @@
               <span data-i18n="stuck.tryThe">Try the</span>
               <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer" data-i18n="stuck.solver">Wiki path solver</a>
             </p>
-            <p class="helper-line">
-              <label class="helper-debug-label">
-                <input type="checkbox" id="enableDebugMenuChk" />
-                <span data-i18n="stuck.enableDebug">Enable AP debug menu</span>
-              </label>
-            </p>
-            <div id="debugConsentPanel" class="helper-panel hidden">
-              <p class="helper-line helper-warn" data-i18n="stuck.warning">
-                Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink.
-                You can accidentally break or goal your seed in one click. Are you sure you want to continue?
+            <div id="debugUnlockWrap" class="hidden">
+              <p class="helper-line">
+                <label class="helper-debug-label">
+                  <input type="checkbox" id="enableDebugMenuChk" />
+                  <span data-i18n="stuck.enableDebug">Enable AP debug menu</span>
+                </label>
               </p>
-              <button type="button" id="showDebugMenuBtn" class="helper-toggle" data-i18n="stuck.showDebug">Show Debug menu</button>
+              <div id="debugConsentPanel" class="helper-panel hidden">
+                <p class="helper-line helper-warn" data-i18n="stuck.warning">
+                  Mutates this slot and can send real Archipelago checks / DeathLink / TrapLink.
+                  You can accidentally break or goal your seed in one click. Are you sure you want to continue?
+                </p>
+                <button type="button" id="showDebugMenuBtn" class="helper-toggle" data-i18n="stuck.showDebug">Show Debug menu</button>
+              </div>
             </div>
           </div>
         </div>
@@ -269,7 +271,7 @@
     <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
   </nav>
 
-  <script src="/static/i18n.js?v=20260818-03"></script>
-  <script src="/static/app.js?v=20260818-03"></script>
+  <script src="/static/i18n.js?v=20260818-04"></script>
+  <script src="/static/app.js?v=20260818-04"></script>
 </body>
 </html>

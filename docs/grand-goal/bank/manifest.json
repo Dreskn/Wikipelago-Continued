@@ -71,13 +71,12 @@
     "overall_rank": "1–100 if this page is in the usable top 100; else null.",
     "category_ranks": "Rank within each tag's usable top 10 that selected it.",
     "views_summed_from_monthly_tops": "From pageviews_aggregate_{lang}.json.",
-    "sensitive": "Copied from the pool; bank selection already drops sensitive pages.",
-    "status": "draft | needs_translation | needs_native | accepted | rejected.",
+    "sensitive": "Copied from the pool. Generate skips these when include_sensitive_pages is false.",
     "question_source": "en-hand | translated-from-en | native-lead | missing-*.",
     "notes": "Hand-review notes."
   },
   "usage": {
-    "pick": "Filter cards where question is non-empty and status is not rejected.",
+    "pick": "Cards with a non-empty question. Skip sensitive when include_sensitive_pages is false.",
     "victory": "Compare the landed page title to answer_title (after redirects).",
     "cross_lang": "Join on qid when the same entity exists in several banks."
   }

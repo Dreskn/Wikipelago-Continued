@@ -22,8 +22,8 @@ Wikipelago:
   # check_count: how many Start → Target rounds (checks) are generated (10–999, default 40).
   # required_fragments / additional_fragments_in_pool: 1–200 / 0–200.
   # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access unlocks this many more (1–999).
-  # random_goal_article: true = closed question from the language bank (answer page from enabled
-  #   categories when possible); false = use goal_article_preset (question attached if the bank has one).
+  # Grand Goal is always a closed question from that wiki language's goal pool
+  # (answer page preferred from enabled categories).
   progression_balancing: 50
   check_count: 40
   required_fragments: 7
@@ -31,10 +31,8 @@ Wikipelago:
   start_rounds_unlocked: 10
   rounds_per_unlock: 5
   random_goal_article: true
-  # Used only when random_goal_article is false. Valid values:
-  #   minecraft | the_legend_of_zelda | dark_souls | elden_ring | super_mario_bros | pokemon_red_and_blue | chess | catan
-  #   the_dark_knight | star_wars_film | lord_of_the_rings_fellowship | the_matrix | avatar_the_last_airbender | breaking_bad | stranger_things
-  #   game_of_thrones | the_simpsons | spongebob_squarepants | super_smash_bros_ultimate | halo_combat_evolved
+  # Deprecated and ignored. Kept so older YAMLs still generate. The Grand Goal
+  # always comes from the language goal pool, not this list.
   goal_article_preset: dark_souls
 
   # =============================================================================

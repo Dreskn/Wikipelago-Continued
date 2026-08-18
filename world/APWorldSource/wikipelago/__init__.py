@@ -12,7 +12,7 @@ from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch
 from .Options import WikipelagoOptions
 from .Regions import create_regions
 from .article_pool import SUPPORTED_LANGS, load_article_pool
-from .grand_goal import card_for_title, pick_grand_goal_card
+from .grand_goal import pick_grand_goal_card
 from .letter_pairs import (
     bingo_location_count,
     bingo_location_names,
@@ -171,58 +171,6 @@ SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
 }
 
 SCROLL_SPEED_UPGRADES = 5
-
-
-def _preset_goal_name(option_value: int) -> str:
-    mapping = {
-        0: "Minecraft",
-        1: "The Legend of Zelda",
-        2: "Dark Souls",
-        3: "Elden Ring",
-        4: "Super Mario Bros.",
-        5: "Pokémon Red and Blue",
-        6: "Chess",
-        7: "Catan",
-        8: "The Dark Knight",
-        9: "Star Wars (film)",
-        10: "The Lord of the Rings: The Fellowship of the Ring",
-        11: "The Matrix",
-        12: "Avatar: The Last Airbender",
-        13: "Breaking Bad",
-        14: "Stranger Things",
-        15: "Game of Thrones",
-        16: "The Simpsons",
-        17: "SpongeBob SquarePants",
-        18: "Super Smash Bros. Ultimate",
-        19: "Halo: Combat Evolved",
-    }
-    return mapping.get(option_value, "Minecraft")
-
-
-def _preset_goal_topic(option_value: int) -> str:
-    mapping = {
-        0: "video_games",
-        1: "video_games",
-        2: "video_games",
-        3: "video_games",
-        4: "video_games",
-        5: "video_games",
-        6: "miscellaneous",
-        7: "miscellaneous",
-        8: "movies",
-        9: "movies",
-        10: "movies",
-        11: "movies",
-        12: "tv_shows",
-        13: "tv_shows",
-        14: "tv_shows",
-        15: "tv_shows",
-        16: "tv_shows",
-        17: "tv_shows",
-        18: "video_games",
-        19: "video_games",
-    }
-    return mapping.get(option_value, "video_games")
 
 
 class WikipelagoWeb(WebWorld):
@@ -470,6 +418,11 @@ class WikipelagoWorld(World):
             raise Exception(f"Wikipelago unsupported wikipedia_language: {lang}")
         include_sensitive = bool(self.options.include_sensitive_pages.value)
         article_entries = load_article_pool(lang)
+        sensitive_titles = {
+            str(entry.get("title") or "").strip()
+            for entry in article_entries
+            if entry.get("sensitive")
+        }
         filtered_entries = [
             entry
             for entry in article_entries
@@ -522,40 +475,27 @@ class WikipelagoWorld(World):
         self.goal_question = ""
         self.goal_qid = None
         lang = self._wikipedia_language()
-        if self.options.random_goal_article.value:
-            try:
-                card = pick_grand_goal_card(
-                    self.random, lang, selected_topics, filtered_pool
-                )
-            except FileNotFoundError:
-                card = None
-            if card:
-                self.goal_article = card["answer_title"]
-                self.goal_question = card["question"]
-                self.goal_qid = card.get("qid")
-            else:
-                self.goal_article = self.random.choice(filtered_pool)
-            if self.goal_article not in filtered_pool:
-                filtered_pool.append(self.goal_article)
+        # random_goal_article / goal_article_preset are kept so old YAMLs still
+        # parse; generate always picks from this wiki language's goal pool.
+        try:
+            card = pick_grand_goal_card(
+                self.random,
+                lang,
+                selected_topics,
+                filtered_pool,
+                include_sensitive=include_sensitive,
+                sensitive_titles=sensitive_titles,
+            )
+        except FileNotFoundError:
+            card = None
+        if card:
+            self.goal_article = card["answer_title"]
+            self.goal_question = card["question"]
+            self.goal_qid = card.get("qid")
         else:
-            goal_preset_value = self.options.goal_article_preset.value
-            self.goal_article = _preset_goal_name(goal_preset_value)
-            goal_topic = _preset_goal_topic(goal_preset_value)
-            if goal_topic not in selected_topics:
-                raise Exception(
-                    "Wikipelago goal article preset category is disabled. "
-                    f"Goal '{self.goal_article}' is in category '{goal_topic}'. "
-                    "Enable that category or set random_goal_article: true."
-                )
-            if self.goal_article not in filtered_pool:
-                filtered_pool.append(self.goal_article)
-            try:
-                preset_card = card_for_title(lang, self.goal_article)
-            except FileNotFoundError:
-                preset_card = None
-            if preset_card:
-                self.goal_question = preset_card["question"]
-                self.goal_qid = preset_card.get("qid")
+            self.goal_article = self.random.choice(filtered_pool)
+        if self.goal_article not in filtered_pool:
+            filtered_pool.append(self.goal_article)
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
         # Opening start + one target per round + branch_length extra titles per branch.

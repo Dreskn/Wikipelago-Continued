@@ -35,6 +35,11 @@ def _env_first(*names: str) -> str:
     return ""
 
 
+def debug_menu_enabled() -> bool:
+    """Playtest debug console. Off by default; set WIKIPELAGO_DEBUG_MENU=1 and restart."""
+    return (_env_first("WIKIPELAGO_DEBUG_MENU") or "").lower() in ("1", "true", "yes", "on")
+
+
 def _git_output(*args: str) -> str:
     """Best-effort git identity for self-hosted/VPS deploys (Render sets env instead)."""
     try:
@@ -80,6 +85,7 @@ def build_info() -> dict[str, Any]:
         "commit_full": commit_full,
         "service": service,
         "staging": staging,
+        "debug_menu": debug_menu_enabled(),
     }
 
 DEFAULT_ITEMS = {
@@ -2967,7 +2973,9 @@ class APConnection:
         return result
 
     async def debug_action(self, action: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Full AP/session debug mutators for playtesting. Unauthenticated for 0.4."""
+        """Full AP/session debug mutators for playtesting.
+        The HTTP route is only registered when WIKIPELAGO_DEBUG_MENU is set.
+        """
         data = data or {}
         self.state.last_seen = time.time()
         action = str(action or "").strip()
@@ -3449,6 +3457,8 @@ class App:
         return web.json_response(result, status=status_code)
 
     async def session_debug(self, request: web.Request) -> web.StreamResponse:
+        if not debug_menu_enabled():
+            return web.json_response({"ok": False, "error": "not found"}, status=404)
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
         if not session:
@@ -3485,7 +3495,8 @@ class App:
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
         app.router.add_get("/api/session/{sid}/journey", self.session_journey)
-        app.router.add_post("/api/session/{sid}/debug", self.session_debug)
+        if debug_menu_enabled():
+            app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 
@@ -3516,6 +3527,8 @@ async def main_async(args: argparse.Namespace) -> None:
     await site.start()
 
     LOG.info(f"Wikipelago cloud app running on http://{args.host}:{args.port}")
+    if debug_menu_enabled():
+        LOG.info("Debug menu enabled (WIKIPELAGO_DEBUG_MENU)")
     while True:
         await asyncio.sleep(3600)
 
@@ -3524,11 +3537,18 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Wikipelago cloud app")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "5000")))
+    parser.add_argument(
+        "--debug-menu",
+        action="store_true",
+        help="Enable the playtest debug console (same as WIKIPELAGO_DEBUG_MENU=1)",
+    )
     return parser.parse_args()
 
 
 def launch() -> None:
     args = parse_args()
+    if args.debug_menu:
+        os.environ["WIKIPELAGO_DEBUG_MENU"] = "1"
     asyncio.run(main_async(args))
 
 

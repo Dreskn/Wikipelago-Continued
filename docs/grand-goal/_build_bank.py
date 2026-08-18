@@ -61,7 +61,6 @@ def apply_en_questions(payload: dict, by_title: dict[str, dict[str, str]]) -> No
         card["question_en"] = q["question"]
         card["lead_fact_en"] = q["fact"]
         card["question_source"] = "en-hand"
-        card["status"] = "draft"
     if missing:
         raise SystemExit("Missing EN questions for: " + "; ".join(missing))
 
@@ -97,15 +96,12 @@ def apply_translations(payload: dict, en_by_qid: dict[str, dict]) -> None:
             card["question_source"] = row.get("source") or (
                 "translated-from-en" if en else "native-lead"
             )
-            card["status"] = row.get("status") or "draft"
             if row.get("notes"):
                 card["notes"] = row["notes"]
         elif en and not card.get("question"):
             card["question_source"] = "missing-translation"
-            card["status"] = "needs_translation"
         elif not card.get("question"):
             card["question_source"] = "missing-native"
-            card["status"] = "needs_native"
 
 
 def write_json(path: Path, payload: dict) -> None:
@@ -142,13 +138,12 @@ def build_manifest(payloads: dict[str, dict]) -> dict:
             "overall_rank": "1–100 if this page is in the usable top 100; else null.",
             "category_ranks": "Rank within each tag's usable top 10 that selected it.",
             "views_summed_from_monthly_tops": "From pageviews_aggregate_{lang}.json.",
-            "sensitive": "Copied from the pool; bank selection already drops sensitive pages.",
-            "status": "draft | needs_translation | needs_native | accepted | rejected.",
+            "sensitive": "Copied from the pool. Generate skips these when include_sensitive_pages is false.",
             "question_source": "en-hand | translated-from-en | native-lead | missing-*.",
             "notes": "Hand-review notes.",
         },
         "usage": {
-            "pick": "Filter cards where question is non-empty and status is not rejected.",
+            "pick": "Cards with a non-empty question. Skip sensitive when include_sensitive_pages is false.",
             "victory": "Compare the landed page title to answer_title (after redirects).",
             "cross_lang": "Join on qid when the same entity exists in several banks.",
         },

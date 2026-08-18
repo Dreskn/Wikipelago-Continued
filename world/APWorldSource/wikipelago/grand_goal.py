@@ -71,16 +71,42 @@ def load_grand_goal_cards(lang: str = "en") -> list[dict[str, Any]]:
                 "answer_title": title,
                 "question": question,
                 "tags": [str(tag) for tag in (raw.get("tags") or []) if tag],
+                "sensitive": bool(raw.get("sensitive")),
             }
         )
     return cards
 
 
-def card_for_title(lang: str, title: str) -> dict[str, Any] | None:
+def _usable_cards(
+    lang: str,
+    *,
+    include_sensitive: bool,
+    sensitive_titles: set[str] | None = None,
+) -> list[dict[str, Any]]:
+    banned = {title.strip().lower() for title in (sensitive_titles or ()) if title}
+    cards: list[dict[str, Any]] = []
+    for card in load_grand_goal_cards(lang):
+        if not include_sensitive and card.get("sensitive"):
+            continue
+        if not include_sensitive and card["answer_title"].strip().lower() in banned:
+            continue
+        cards.append(card)
+    return cards
+
+
+def card_for_title(
+    lang: str,
+    title: str,
+    *,
+    include_sensitive: bool = True,
+    sensitive_titles: set[str] | None = None,
+) -> dict[str, Any] | None:
     want = (title or "").strip().lower()
     if not want:
         return None
-    for card in load_grand_goal_cards(lang):
+    for card in _usable_cards(
+        lang, include_sensitive=include_sensitive, sensitive_titles=sensitive_titles
+    ):
         if card["answer_title"].lower() == want:
             return card
     return None
@@ -91,9 +117,14 @@ def pick_grand_goal_card(
     lang: str,
     selected_topics: set[str],
     pool_titles: list[str],
+    *,
+    include_sensitive: bool = True,
+    sensitive_titles: set[str] | None = None,
 ) -> dict[str, Any] | None:
-    """Pick a bank card, preferring answers already in the filtered article pool."""
-    cards = load_grand_goal_cards(lang)
+    """Pick a bank card for this wiki language, preferring answers already in the filtered article pool."""
+    cards = _usable_cards(
+        lang, include_sensitive=include_sensitive, sensitive_titles=sensitive_titles
+    )
     if not cards:
         return None
     pool_set = set(pool_titles)

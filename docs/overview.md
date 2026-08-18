@@ -29,7 +29,7 @@ Collect enough **Knowledge Fragments** (count set by `required_fragments`). The 
 
 Grand Goal holds a locked local **Victory** token (not shuffled into the multiworld). Clearing it marks you complete. What happens to any remaining unchecked locations is up to the room’s release settings, as with any Archipelago game.
 
-The question is drawn from that language's Grand Goal bank (answer page preferred from your enabled categories), or a fixed preset — see the [Options guide](options.md).
+The question is drawn from that language's Grand Goal pool (answer page preferred from your enabled categories) — see the [Options guide](options.md).
 
 ## Useful items
 

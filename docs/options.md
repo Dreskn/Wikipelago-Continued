@@ -42,11 +42,8 @@ Hover the **Target** title to see a plain-text blurb: Wikipedia short descriptio
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `random_goal_article` | `true` | If true, the Grand Goal is a closed question from that wiki language's bank (answer page preferred from enabled categories). |
-| `goal_article_preset` | `dark_souls` | Used only when `random_goal_article` is `false`. Picks a fixed famous article (question attached when the bank has one). |
-
-Valid presets include (see the YAML for the full list):  
-`minecraft`, `the_legend_of_zelda`, `dark_souls`, `elden_ring`, `super_mario_bros`, `pokemon_red_and_blue`, `chess`, `catan`, `the_dark_knight`, `star_wars_film`, `lord_of_the_rings_fellowship`, `the_matrix`, `avatar_the_last_airbender`, `breaking_bad`, `stranger_things`, `game_of_thrones`, `the_simpsons`, `spongebob_squarepants`, `super_smash_bros_ultimate`, `halo_combat_evolved`.
+| `random_goal_article` | `true` | Kept for old YAMLs; ignored. The Grand Goal always comes from that wiki language's goal pool (answer page preferred from enabled categories). |
+| `goal_article_preset` | `dark_souls` | Deprecated and ignored. Kept so older YAMLs still generate. |
 
 ---
 

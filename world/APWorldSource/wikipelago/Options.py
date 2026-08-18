@@ -42,10 +42,9 @@ class RoundsPerUnlock(Range):
 
 
 class RandomGoalArticle(Toggle):
-    """When enabled, the Grand Goal is a closed question from that wiki language's
-    question bank. The answer page is preferred from enabled categories.
-    Knowledge Fragments still unlock the question; landing on the answer page still
-    sends the Victory / CLIENT_GOAL check."""
+    """Kept for existing YAMLs. The Grand Goal always comes from that wiki
+    language's goal pool; this toggle is ignored. Knowledge Fragments still
+    unlock the question; landing on the answer page still sends Victory."""
     display_name = "Random Goal Article"
     default = 1
 
@@ -227,16 +226,17 @@ class IncludeSensitivePages(Toggle):
     """
     When off (default), pages flagged sensitive (pornography, BDSM / sadomasochism /
     sexual roleplay, terrorism, violent/sexual crime, illicit drugs) are excluded
-    even if they match an enabled category.
-    When on, those pages may appear if they also match an enabled category.
+    from round targets and from the Grand Goal pool even if they match an enabled
+    category. When on, those pages may appear if they also match an enabled category.
     """
     display_name = "Include Sensitive Pages"
     default = 0
 
 
 class GoalArticlePreset(Choice):
-    """Deprecated: prefer random_goal_article. Kept for existing YAMLs."""
-    display_name = "Goal Article Preset (used when random goal is off)"
+    """Deprecated and ignored. Kept so existing YAMLs still parse. The Grand
+    Goal always comes from the language goal pool, not this list."""
+    display_name = "Goal Article Preset (deprecated, ignored)"
     option_minecraft = 0
     option_the_legend_of_zelda = 1
     option_dark_souls = 2

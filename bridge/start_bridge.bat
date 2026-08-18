@@ -33,6 +33,7 @@ if errorlevel 1 (
 )
 
 echo Starting Wikipelago bridge...
+REM Optional playtest console: set WIKIPELAGO_DEBUG_MENU=1 then restart this script.
 "%PYEXE%" bridge.py
 
 endlocal

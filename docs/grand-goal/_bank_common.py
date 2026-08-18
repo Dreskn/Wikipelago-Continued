@@ -284,8 +284,7 @@ def select_union(lang: str) -> dict:
                 "overall_rank": overall_rank.get(title),
                 "category_ranks": category_ranks.get(title) or {},
                 "views_summed_from_monthly_tops": row["views"],
-                "sensitive": False,
-                "status": "draft",
+                "sensitive": bool(row.get("sensitive")),
                 "question_source": None,
                 "notes": "",
             }

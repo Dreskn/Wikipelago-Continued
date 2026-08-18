@@ -99,6 +99,7 @@ try {
         throw "YAML template is not strict UTF-8: $yamlToCheck"
     }
     Assert-NoPattern $yamlToCheck 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset alias found'
+    Assert-HasPattern $yamlToCheck 'Deprecated and ignored' 'YAML template must mark goal_article_preset as deprecated'
     Assert-HasPattern $yamlToCheck 'searchsanity:\s*(true|false)' 'YAML template is missing searchsanity'
     Assert-HasPattern $yamlToCheck 'scrollsanity:\s*(true|false)' 'YAML template is missing scrollsanity'
     Assert-HasPattern $yamlToCheck 'search_starting_letters:\s*(none|all_vowels|etaoi|raise)' 'YAML template is missing search_starting_letters'
@@ -154,16 +155,20 @@ try {
     Assert-HasPattern $optionsPath 'class WikipediaLanguage' 'WikipediaLanguage option is missing'
     Assert-HasPattern $optionsPath 'class IncludeSensitivePages' 'IncludeSensitivePages option is missing'
     Assert-HasPattern $optionsPath 'class IncludeFamousPeople' 'IncludeFamousPeople option is missing'
-    Assert-HasPattern $initPath 'pick_grand_goal_card' 'World must pick Grand Goal from the question bank'
+    Assert-HasPattern $initPath 'pick_grand_goal_card' 'World must pick Grand Goal from the goal pool'
+    Assert-NoPattern $initPath '_preset_goal_name' 'Deprecated goal presets must not be used at generate time'
     Assert-HasPattern $initPath '"goal_question"' 'World slot data must include goal_question'
     $grandGoalPath = Join-Path $worldRoot "grand_goal.py"
     Assert-HasPattern $grandGoalPath 'def pick_grand_goal_card' 'grand_goal.pick_grand_goal_card missing'
+    Assert-HasPattern $grandGoalPath 'include_sensitive' 'Grand Goal pick must honor include_sensitive_pages'
+    Assert-HasPattern $initPath 'sensitive_titles' 'World must pass pool-flagged sensitive titles into Grand Goal pick'
     $bankDir = Join-Path $repoRoot "docs\grand-goal\bank"
     foreach ($lang in @("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")) {
         $bankFile = Join-Path $bankDir "$lang.json"
         if (-not (Test-Path -LiteralPath $bankFile)) {
             throw "Missing Grand Goal question bank [$bankFile]"
         }
+        Assert-NoPattern $bankFile '"status":' "Grand Goal pool must not use a draft/review status field [$lang]"
     }
     Assert-HasPattern $initPath '_entry_matches' 'Multi-tag pool filter helper is missing'
     Assert-HasPattern $optionsPath 'class Searchsanity' 'Searchsanity option is missing'
@@ -389,6 +394,10 @@ try {
     Assert-HasPattern $webAppPath 'openVictoryOverlay' 'Web must open a victory overlay on Grand Goal'
     Assert-HasPattern $webAppPath 'Wrong Wiki' 'Web must handle the Wrong Wiki trap'
     Assert-HasPattern $bridgePath 'unlock_all_branches' 'Bridge debug must unlock all branches'
+    Assert-HasPattern $bridgePath 'WIKIPELAGO_DEBUG_MENU' 'Bridge must gate the debug menu behind WIKIPELAGO_DEBUG_MENU'
+    Assert-HasPattern $webIndexPath 'id="debugUnlockWrap"' 'Web debug console wrap is missing'
+    Assert-HasPattern $webIndexPath 'wiki.spaceface.dev' 'Web must keep the wiki path solver'
+    Assert-HasPattern $webAppPath 'function isDebugMenuAllowed' 'Web must hide the debug console unless the server enables it'
     Assert-NoPattern $webIndexPath 'id="journeyFilter"' 'Web Journey must not keep a main/fork path filter'
     Assert-HasPattern $webAppPath 'TRACK_OVERFLOW_MIN = 5' 'Web track overflow must require at least 5 like-segments'
     Assert-HasPattern $webAppPath 'TRACK_FORK_OVERFLOW_MIN = 3' 'Web fork overflow must require at least 3 like-segments'

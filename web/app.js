@@ -175,7 +175,7 @@ function bombDensityLabel(density) {
   return t(`diff.density.${bombDensityKey(density)}`);
 }
 
-let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
+let debugDisplayEnabled = false;
 let debugPanelReady = false;
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
@@ -383,6 +383,7 @@ function readEmbeddedBuildInfo() {
 }
 
 function applyBuildBadge(info) {
+  applyDebugMenuAvailability(info);
   if (!el.buildBadge || !info) return;
   const branch = String(info.branch || "").trim();
   const staging = Boolean(info.staging) || (branch !== "" && !["main", "master"].includes(branch));
@@ -3209,6 +3210,21 @@ function renderLensStatus(status) {
   el.lensesItem.textContent = parts.length ? parts.join(" · ") : t("lens.native");
 }
 
+function isDebugMenuAllowed(info) {
+  if (info && typeof info.debug_menu === "boolean") return info.debug_menu;
+  const embedded = readEmbeddedBuildInfo();
+  return Boolean(embedded?.debug_menu);
+}
+
+function applyDebugMenuAvailability(info) {
+  const allowed = isDebugMenuAllowed(info);
+  const wrap = document.getElementById("debugUnlockWrap");
+  if (wrap) wrap.classList.toggle("hidden", !allowed);
+  if (!allowed && (debugDisplayEnabled || debugPanelReady)) {
+    disableDebugDisplayMenu();
+  }
+}
+
 function setDebugQueryParam(enabled) {
   const url = new URL(window.location.href);
   if (enabled) url.searchParams.set("debug", "");
@@ -3230,6 +3246,7 @@ function setDebugConsentOpen(open) {
 }
 
 function enableDebugDisplayMenu() {
+  if (!isDebugMenuAllowed()) return;
   debugDisplayEnabled = true;
   setDebugQueryParam(true);
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
@@ -3247,6 +3264,7 @@ function disableDebugDisplayMenu() {
 }
 
 async function runDebugAction(action, payload = {}) {
+  if (!isDebugMenuAllowed()) return null;
   if (!state.sessionId) await ensureSession();
   if (!isApConnected()) {
     toast(t("toast.debugNeedAp"), "warn");
@@ -3559,6 +3577,10 @@ function bindStuckHelper() {
   }
   if (el.enableDebugMenuChk) {
     el.enableDebugMenuChk.addEventListener("change", () => {
+      if (!isDebugMenuAllowed()) {
+        el.enableDebugMenuChk.checked = false;
+        return;
+      }
       if (el.enableDebugMenuChk.checked) {
         setDebugConsentOpen(true);
       } else {
@@ -3569,6 +3591,7 @@ function bindStuckHelper() {
   }
   if (el.showDebugMenuBtn) {
     el.showDebugMenuBtn.addEventListener("click", () => {
+      if (!isDebugMenuAllowed()) return;
       if (!el.enableDebugMenuChk?.checked) {
         if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
         setDebugConsentOpen(true);
@@ -3577,7 +3600,8 @@ function bindStuckHelper() {
       toast(t("toast.debugEnabled"), "ok", 4000);
     });
   }
-  if (debugDisplayEnabled) {
+  applyDebugMenuAvailability();
+  if (isDebugMenuAllowed() && new URLSearchParams(window.location.search).has("debug")) {
     setStuckPanelOpen(true);
     enableDebugDisplayMenu();
   }
