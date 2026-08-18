@@ -215,7 +215,7 @@ try {
     Assert-HasPattern $optionsPath 'class TrapCount' 'TrapCount option is missing'
     Assert-HasPattern $optionsPath 'class TrapType' 'TrapType option is missing'
     Assert-HasPattern $optionsPath 'option_all = 0' 'TrapType must include all'
-    Assert-HasPattern $optionsPath 'option_both = 0' 'Deprecated trap_type both must remain valid'
+    Assert-HasPattern $optionsPath 'alias_both = 0' 'Deprecated trap_type both must remain a valid alias'
     Assert-HasPattern $yamlPath 'both is deprecated' 'YAML must note that trap_type both is deprecated'
     Assert-HasPattern $optionsPath 'class TrapLink' 'TrapLink option is missing'
     Assert-HasPattern $optionsPath 'class ToggleBingoLetterpairs' 'ToggleBingoLetterpairs option is missing'

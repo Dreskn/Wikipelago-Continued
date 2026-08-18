@@ -303,7 +303,7 @@ class TrapType(Choice):
     """
     display_name = "Trap Type"
     option_all = 0
-    option_both = 0  # deprecated; same as all
+    alias_both = 0  # deprecated YAML name; same as all
     option_only_foggy_links = 1
     option_only_missing_links = 2
     option_only_wrong_wiki = 3
