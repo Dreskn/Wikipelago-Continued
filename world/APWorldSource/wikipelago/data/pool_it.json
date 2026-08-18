@@ -1,7 +1,7 @@
 {
   "lang": "it",
   "source": "pool_annotated_it.json",
-  "count": 9809,
+  "count": 9779,
   "entries": [
     {
       "title": "+Europa",
@@ -1064,27 +1064,6 @@
       "title": "Air - La storia del grande salto",
       "tags": [
         "movies"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Aiuto:Disambiguazione",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Aiuto:Giapponese",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Aiuto:IPA",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -14994,13 +14973,6 @@
     },
     {
       "title": "Discussioni aiuto:Categorie eponime",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Discussioni utente:Cberthiaume",
       "tags": [
         "miscellaneous"
       ],
@@ -55164,104 +55136,6 @@
       "sensitive": false
     },
     {
-      "title": "Speciale:CercaCollegamenti",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:Cita",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:CreaUtenza",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:Cronologia/Wikipedia:Comunicato 3 luglio 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:DownloadAsPdf",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:Entra",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:Libro",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:MieDiscussioni",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:ModificheCorrelate",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:OpzioniMobile",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:OsservatiSpeciali",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:PuntanoQui",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:Ricerca",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Speciale:UltimeModifiche",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Spectre (film)",
       "tags": [
         "movies"
@@ -62245,90 +62119,6 @@
       "tags": [
         "art_literature",
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bar",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bar/2018 09 9",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bar/Discussioni/L'Unione Europea, il copyright e il sapere libero",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Comunicato 3 luglio 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Comunicato 3 luglio 2018/en",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Comunicato 5 luglio 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:I rischi del prossimo voto del Parlamento europeo sulla libertà della Rete",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Info utente/Oroscopo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mese asiatico di Wikipedia 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Pagina delle prove",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Uso delle fonti",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedia20",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

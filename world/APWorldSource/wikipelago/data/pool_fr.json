@@ -1,7 +1,7 @@
 {
   "lang": "fr",
   "source": "pool_annotated_fr.json",
-  "count": 9458,
+  "count": 9431,
   "entries": [
     {
       "title": "(236984) Astier",
@@ -14601,20 +14601,6 @@
       "title": "Disclosure Day",
       "tags": [
         "movies"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Discussion:Soudan du Sud",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Discussion:XNXX",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -39797,20 +39783,6 @@
       "sensitive": false
     },
     {
-      "title": "Modèle:Effectif actuel de l'équipe de France de football",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Modèle:Liste des arcs de One Piece/Chronologie",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Moha La Squale",
       "tags": [
         "famous_people",
@@ -45866,34 +45838,6 @@
       "sensitive": false
     },
     {
-      "title": "Portail:Accueil",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portail:Mammifères/Liste alphabétique des noms vernaculaires de mammifères",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portail:Miss France",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portail:Sécurité informatique",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Porto Rico",
       "tags": [
         "politics"
@@ -46233,20 +46177,6 @@
     },
     {
       "title": "Loi du 26 janvier 2024 pour contrôler l'immigration, améliorer l'intégration",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Projet:Les sans pagEs/Quinzaine des autrices francophones/2024/Bibliothèque francophone multimédia de Limoges",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Projet:Wikifier la science",
       "tags": [
         "miscellaneous"
       ],
@@ -57840,125 +57770,6 @@
       "tags": [
         "art_literature",
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Accueil de la communauté",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Citez vos sources",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Contact",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Le saviez-vous ?/Archives",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2017",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2018",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2019",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2021",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2023",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois asiatique Wikipédia/2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois de la contribution 2017",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois de la contribution 2019",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois de la contribution 2023",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois de la contribution francophone 2024",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Mois des fiertés/2026",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Pastiches/Une femme",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:À propos de Wikipédia",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

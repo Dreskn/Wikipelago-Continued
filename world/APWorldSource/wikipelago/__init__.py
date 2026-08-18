@@ -11,7 +11,7 @@ from .Items import TRAP_ITEM_NAMES, item_table
 from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
-from .article_pool import SUPPORTED_LANGS, load_article_pool
+from .article_pool import SUPPORTED_LANGS, is_blocked_wiki_title, load_article_pool
 from .grand_goal import pick_grand_goal_card
 from .letter_pairs import (
     bingo_location_count,
@@ -268,8 +268,10 @@ class WikipelagoWorld(World):
 
     @staticmethod
     def _looks_common_knowledge(title: str) -> bool:
+        if is_blocked_wiki_title(title):
+            return False
         lowered = title.lower().strip()
-        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ", "category:", "template:", "help:", "portal:", "wikipedia:")):
+        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ")):
             return False
         if any(keyword in lowered for keyword in BANNED_TITLE_KEYWORDS):
             return False

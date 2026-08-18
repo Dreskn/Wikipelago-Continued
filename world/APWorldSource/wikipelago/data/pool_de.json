@@ -1,7 +1,7 @@
 {
   "lang": "de",
   "source": "pool_annotated_de.json",
-  "count": 10074,
+  "count": 10018,
   "entries": [
     {
       "title": "1. FC Kaiserslautern",
@@ -6450,34 +6450,6 @@
       "tags": [
         "famous_people",
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Benutzer Diskussion:AnBuKu",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Benutzer Diskussion:Cellerius",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Benutzer Diskussion:Colonestarrice",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Benutzer:Plenz/OSM for Wiki/languages",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -24996,13 +24968,6 @@
       "sensitive": false
     },
     {
-      "title": "Wikipedia:Hauptseite",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Haus Reuß",
       "tags": [
         "miscellaneous"
@@ -26004,13 +25969,6 @@
       "tags": [
         "famous_people",
         "movies"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Hilfe:Neuen Artikel anlegen",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -32716,27 +32674,6 @@
         "movies",
         "music",
         "tv_shows"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategorie:Abkürzung",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategorie:Begriffsklärung",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategorie:Mann",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -49610,34 +49547,6 @@
       "sensitive": true
     },
     {
-      "title": "Portal:COVID-19",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:Medizin",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:Technik",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:Wikipedia nach Themen",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Portugal",
       "tags": [
         "geography",
@@ -63676,13 +63585,6 @@
       "sensitive": false
     },
     {
-      "title": "Vorlage:Navigationsleiste COVID-19-Pandemie",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Vorstadtweiber",
       "tags": [
         "tv_shows"
@@ -64718,300 +64620,6 @@
       "title": "Wikipedia",
       "tags": [
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Afrikamonat 2026",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asiatischer Monat 2017",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asiatischer Monat 2018",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asiatischer Monat 2020",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asiatischer Monat 2021",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asiatischer Monat 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Auskunft",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Auskunft/Archiv/2010/Woche 39",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Autorenportal",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Begriffsklärung",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Fragen zur Wikipedia/Archiv/2010/Woche 34",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Impressum",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kartensaison",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kontakt",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kurier/alt",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Meinungsbilder/Protest gegen EU-Urheberrechtsreform",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Vandalismusmeldung",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2017/Deutschland/Karte",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2020/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2021/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2022/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2024/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2025/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Earth 2026/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2016/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2017/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2018/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2019/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2020/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2021/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2022/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2023/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2024/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Monuments 2025/Deutschland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:WikiDACH/2017",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:WikiDACH/2018/Anmeldung",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikimedia Deutschland/JetztMitmachen",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikimedia Deutschland/Lerne Wikipedia",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikimedia Deutschland/Lerne Wikipedia/FAQ",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedia vor Ort",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedia vor Ort 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedianische KulTour/Archiv der deutschen Frauenbewegung 2024",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

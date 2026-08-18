@@ -34,6 +34,7 @@ function articleLanguage() {
  * Non-article namespaces blocked for navigation (toast; never leave the SPA).
  * Includes English + localized prefixes/aliases for en/fr/de/es/it/pt/nl/sv/pl.
  * Matching uses the title segment before the first ":".
+ * Keep in sync with world/APWorldSource/wikipelago/article_pool.py BLOCKED_WIKI_NAMESPACES.
  */
 const BLOCKED_WIKI_NAMESPACES = new Set([
   // English / canonical

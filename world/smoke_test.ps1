@@ -154,9 +154,18 @@ try {
     Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
     Assert-NoPattern $optionsPath 'include_board_games' 'board_games category should be removed in 0.6'
     Assert-HasPattern $articlePoolPath 'def load_article_pool' 'article_pool.load_article_pool missing'
+    Assert-HasPattern $articlePoolPath 'def is_blocked_wiki_title' 'article_pool.is_blocked_wiki_title missing'
+    Assert-HasPattern $articlePoolPath 'plik' 'article_pool blocked namespaces must include Polish Plik'
+    Assert-HasPattern $articlePoolPath 'fichier' 'article_pool blocked namespaces must include French Fichier'
+    Assert-HasPattern $articlePoolPath 'vorlage' 'article_pool blocked namespaces must include German Vorlage'
+    Assert-HasPattern $articlePoolPath 'sjabloon' 'article_pool blocked namespaces must include Dutch Sjabloon'
+    Assert-HasPattern $articlePoolPath 'szablon' 'article_pool blocked namespaces must include Polish Szablon'
+    Assert-HasPattern $articlePoolPath 'portail' 'article_pool blocked namespaces must include French Portail'
+    Assert-HasPattern $initPath 'is_blocked_wiki_title' 'Generate must skip blocked wiki namespaces'
     if (-not (Test-Path -LiteralPath $poolEnPath)) {
         throw "EN multi-tag pool data/pool_en.json missing [$poolEnPath]"
     }
+    Assert-NoPattern $poolEnPath 'Template:Pornography' 'EN pool must not ship Template:Pornography'
     Assert-HasPattern $optionsPath 'class WikipediaLanguage' 'WikipediaLanguage option is missing'
     Assert-HasPattern $optionsPath 'class IncludeSensitivePages' 'IncludeSensitivePages option is missing'
     Assert-HasPattern $optionsPath 'class IncludeFamousPeople' 'IncludeFamousPeople option is missing'
@@ -339,6 +348,11 @@ try {
         throw "test_letter_pairs.py failed"
     }
     Write-Pass "Scrabble letter-pair extraction cases pass"
+    & python (Join-Path $Root "test_blocked_namespaces.py")
+    if ($LASTEXITCODE -ne 0) {
+        throw "test_blocked_namespaces.py failed"
+    }
+    Write-Pass "Blocked wiki-namespace helpers match the client; pools are clean"
     Assert-HasPattern $yamlPath 'bingo_cards_start:' 'YAML bingo_cards_start is missing'
     Assert-HasPattern $yamlPath 'back_depth_start:' 'YAML back_depth_start is missing'
     Assert-HasPattern $yamlPath 'target_rerolls_start:' 'YAML target_rerolls_start is missing'
