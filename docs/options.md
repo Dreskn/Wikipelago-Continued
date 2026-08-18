@@ -182,4 +182,5 @@ If several traps land at once, they wait in a queue and apply **one page at a ti
 - **Harder / spice:** enable one sanity or one lens — not everything at once. Add `deaths` or a small `trap_count` for chaos.
 
 For gameplay concepts (rounds, fragments, items), see the [Overview](overview.md).  
+For a numbered map of the browser HUD, see the [web client UI](ui.md).  
 For install and connect steps, see the [Setup guide](setup.md).

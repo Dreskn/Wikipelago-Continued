@@ -11,6 +11,7 @@ There is no separate desktop client to install for players — use the [hosted w
 ## The web client
 
 The page is split in two: the **article** on the left, and your **HUD** on the right.
+A numbered map of every control is in the [web client UI](ui.md) guide.
 
 - **Top bar** — game title, a small build tag, the **UI language** dropdown, and a **Connected / Offline / Practice** badge.
 - **Article** — the current Wikipedia page. Only in-article wiki links count as moves. File, Template, Wikipedia-namespace, and similar non-article pages are blocked (you stay in the client with a warning).

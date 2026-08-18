@@ -39,7 +39,7 @@ No. `both` still means every trap kind. The current name is `all`. Prefer `all` 
 
 ## Can I hide the bingo boards / side panels?
 
-Yes. Each HUD card has a hide control on its header. Each bingo board also has **Hide** next to **Board N**. Click a board to open a larger zoomable view.
+Yes. Each HUD card has a hide control on its header. Each bingo board also has **Hide** next to **Board N**. Click a board to open a larger zoomable view. See the [UI map](ui.md) (callouts 10 and 20).
 
 ## The victory screen came back after I reloaded.
 

@@ -9,7 +9,8 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 
 ## What is this?
 
-- **[Overview](docs/overview.md)** — how the game works (rounds, items, goal, client UI)
+- **[Overview](docs/overview.md)** — how the game works (rounds, items, goal)
+- **[Web client UI](docs/ui.md)** — numbered HUD map of the browser client
 - **[Setup guide](docs/setup.md)** — install the apworld, generate a seed, connect and play
 - **[Options](docs/options.md)** — YAML settings explained (length, branches, bingo, sanities, lenses, categories, deaths, traps)
 - **[Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)** — download `wikipelago.apworld` and the player YAML template

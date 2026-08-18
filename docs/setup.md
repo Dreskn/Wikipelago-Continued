@@ -50,7 +50,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 ## Connect and play (player)
 
 1. Open https://wikipelago.dreskn.fr/
-2. Optional: pick a **UI language** in the top-right dropdown (menus and toasts only — your YAML still chooses which Wikipedia you race on).
+2. Optional: pick a **UI language** in the top-right dropdown (menus and toasts only — your YAML still chooses which Wikipedia you race on). The [UI map](ui.md) labels each control.
 3. Enter server, slot name, and password (if used).
 4. Click **Connect**. The top badge turns **Connected**.
 5. Play available rounds: Start → Target by clicking Wikipedia links.
