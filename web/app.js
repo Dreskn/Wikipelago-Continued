@@ -156,11 +156,11 @@ const TOOL_ICON_SVGS = {
 
 function trapTypeLabel(trapType) {
   const key = {
-    0: "diff.trapType.both",
+    0: "diff.trapType.all",
     1: "diff.trapType.foggy",
     2: "diff.trapType.missing",
     3: "diff.trapType.wrongWiki",
-  }[Number(trapType) || 0] || "diff.trapType.both";
+  }[Number(trapType) || 0] || "diff.trapType.all";
   return t(key);
 }
 
@@ -1420,11 +1420,13 @@ async function resolveArticleNavigation(requestedTitle, { countAsClick = false }
     }
   }
 
-  if (countAsClick && displayLang === seedLang && state.trapQueue.includes("Wrong Wiki")) {
+  let appliedWrongWiki = false;
+  if (countAsClick && displayLang === seedLang && state.trapQueue[0] === "Wrong Wiki") {
     const links = await fetchLangLinks(displayTitle, seedLang);
     const others = links.filter((item) => item.lang !== seedLang);
     if (others.length) {
       takeQueuedTrap("Wrong Wiki");
+      appliedWrongWiki = true;
       const pick = others[Math.floor(Math.random() * others.length)];
       state.articleLang = pick.lang;
       displayLang = pick.lang;
@@ -1434,7 +1436,7 @@ async function resolveArticleNavigation(requestedTitle, { countAsClick = false }
     }
   }
 
-  return { displayLang, displayTitle, checkTitle };
+  return { displayLang, displayTitle, checkTitle, appliedWrongWiki };
 }
 
 async function notifyDeathLink(cause) {
@@ -1474,18 +1476,19 @@ function queueTrap(trapName) {
   toast(t("toast.trap", { name: trapName }), "warn", 6500);
 }
 
-function consumeTrapQueueForPage(title, status) {
+function consumeTrapQueueForPage(title, status, { skip = false } = {}) {
   state.activeFoggy = false;
   state.activeMissing = false;
-  if (!state.trapQueue.length) return;
+  if (skip || !state.trapQueue.length) return;
   if (isProtectedNavTitle(title, status)) return;
-  const kept = [];
-  for (const trap of state.trapQueue) {
-    if (trap === "Foggy Links") state.activeFoggy = true;
-    else if (trap === "Missing Links") state.activeMissing = true;
-    else kept.push(trap);
+  const next = state.trapQueue[0];
+  if (next === "Foggy Links") {
+    state.trapQueue.shift();
+    state.activeFoggy = true;
+  } else if (next === "Missing Links") {
+    state.trapQueue.shift();
+    state.activeMissing = true;
   }
-  state.trapQueue = kept;
 }
 
 function applyMissingToLinks(links) {
@@ -4092,7 +4095,7 @@ async function openArticle(title, options = {}) {
   const endLoading = beginArticleLoading();
 
   try {
-    const { displayLang, displayTitle, checkTitle } = await resolveArticleNavigation(title, { countAsClick });
+    const { displayLang, displayTitle, checkTitle, appliedWrongWiki } = await resolveArticleNavigation(title, { countAsClick });
     const prepareKey = wikiHtmlCacheKey(displayTitle, displayLang);
     const prepareWait = state.wikiPrepareInflight.get(prepareKey);
     if (prepareWait) {
@@ -4105,7 +4108,7 @@ async function openArticle(title, options = {}) {
       ? `${displayTitle} · ${displayLang}`
       : displayTitle;
     el.articleBody.scrollTop = 0;
-    consumeTrapQueueForPage(checkTitle, state.status);
+    consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki });
 
     const prepared = takeWikiPreparedCache(displayTitle);
     if (prepared) {

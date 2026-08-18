@@ -682,6 +682,7 @@ class WikipelagoWorld(World):
             return ["Missing Links"] * trap_count
         if trap_type == 3:
             return ["Wrong Wiki"] * trap_count
+        # 0 = all (and deprecated both): mix every trap kind.
         names: list[str] = []
         for _ in range(trap_count):
             names.append(self.random.choice(["Foggy Links", "Missing Links", "Wrong Wiki"]))

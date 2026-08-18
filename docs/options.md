@@ -138,7 +138,7 @@ Death effect: jump to a random article. Round visit tracking is cleared as soon 
 | Option | Default | What it does |
 | --- | --- | --- |
 | `trap_count` | `0` | How many Foggy Links / Missing Links / Wrong Wiki items to add (before Footnote filler). Counts toward mandatory item budget — generation fails if too many. |
-| `trap_type` | `both` | `both` / `only_foggy_links` / `only_missing_links` / `only_wrong_wiki`. |
+| `trap_type` | `all` | `all` / `only_foggy_links` / `only_missing_links` / `only_wrong_wiki`. `both` is deprecated and still selects every trap. |
 | `trap_link` | `false` | Share traps with other Trap Link players (independent of `trap_count`). |
 
 | Trap | Effect |

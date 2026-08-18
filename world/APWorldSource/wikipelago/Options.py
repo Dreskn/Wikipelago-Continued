@@ -296,9 +296,14 @@ class TrapCount(Range):
 
 
 class TrapType(Choice):
-    """Which trap items to generate and accept from Trap Link."""
+    """Which trap items to generate and accept from Trap Link.
+
+    ``all`` includes Foggy Links, Missing Links, and Wrong Wiki.
+    ``both`` is deprecated and has the same effect as ``all``.
+    """
     display_name = "Trap Type"
-    option_both = 0
+    option_all = 0
+    option_both = 0  # deprecated; same as all
     option_only_foggy_links = 1
     option_only_missing_links = 2
     option_only_wrong_wiki = 3
