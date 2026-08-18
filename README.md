@@ -3,15 +3,17 @@
 Wikipelago is a custom [Archipelago](https://archipelago.gg/) world inspired by wiki racing.
 Each round gives you a **Start** article and a **Target** article; navigate Wikipedia links to reach the target, send checks, collect progression, and clear the Grand Goal.
 
+Play in the browser on nine Wikipedia languages, with optional letter-pair bingo, side branches, and a Journey map of your path.
+
 This repository is a continued fork of the [original Wikipelago](https://github.com/Skrumptily69/Wikipelago).
 
 ## What is this?
 
-- **[Overview](docs/overview.md)** — how the game works (rounds, items, goal)
+- **[Overview](docs/overview.md)** — how the game works (rounds, items, goal, client UI)
 - **[Setup guide](docs/setup.md)** — install the apworld, generate a seed, connect and play
-- **[Options](docs/options.md)** — YAML settings explained (length, sanities, lenses, categories, deaths, traps)
+- **[Options](docs/options.md)** — YAML settings explained (length, branches, bingo, sanities, lenses, categories, deaths, traps)
 - **[Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)** — download `wikipelago.apworld` and the player YAML template
-- **[FAQ](docs/faq.md)** — common generate errors and fixes
+- **[FAQ](docs/faq.md)** — common generate errors and play questions
 
 ## Play
 

@@ -50,16 +50,23 @@ For general Archipelago generation help, see the [official setup tutorial](https
 ## Connect and play (player)
 
 1. Open https://wikipelago.dreskn.fr/
-2. Enter server, slot name, and password (if used).
-3. Click connect.
-4. Play available rounds: Start → Target by clicking Wikipedia links.
-5. Collect Knowledge Fragments to unlock the Grand Goal question, then find the answer page.
+2. Optional: pick a **UI language** in the top-right dropdown (menus and toasts only — your YAML still chooses which Wikipedia you race on).
+3. Enter server, slot name, and password (if used).
+4. Click **Connect**. The top badge turns **Connected**.
+5. Play available rounds: Start → Target by clicking Wikipedia links.
+6. Collect Knowledge Fragments to unlock the Grand Goal question, then find the answer page.
+
+**Practice** (no room needed) uses the same client and a random article pool in the UI language. It does not connect to Archipelago and does not send checks.
 
 ### Tips
 
 - Only in-article wiki link clicks count toward checks.
-- If you disconnect, reconnect with the same slot; the client will try to resume. Prefer finishing a round before closing the tab when possible.
-- For how rounds, items, and the goal work, see the [Overview](overview.md).
+- Hover the Target title for a short description of that page.
+- **Journey** (on the Progression card, once you are in a game) shows the path of pages you have marked.
+- Side cards have a small hide control on the header if you want more room for the article.
+- If the badge says **Offline**, you are no longer attached to the room — reconnect with the same slot; the client will try to resume. Prefer finishing a round before closing the tab when possible.
+- File / Template / Wikipedia-namespace pages are blocked on purpose; pick another link.
+- For how rounds, items, branches, bingo, and the goal work, see the [Overview](overview.md).
 
 ## Compatibility
 
