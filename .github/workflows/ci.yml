@@ -30,3 +30,45 @@ jobs:
 
       - name: Validate article pools against Wikipedia (all languages)
         run: python world/validate_article_pool.py --lang all --strict
+
+  generate:
+    name: Generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      AP_REF: "0.6.7"
+    steps:
+      - name: Checkout Wikipelago
+        uses: actions/checkout@v4
+
+      - name: Checkout Archipelago ${{ env.AP_REF }}
+        uses: actions/checkout@v4
+        with:
+          repository: ArchipelagoMW/Archipelago
+          ref: ${{ env.AP_REF }}
+          path: Archipelago
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Archipelago dependencies
+        working-directory: Archipelago
+        run: |
+          python -m pip install --upgrade pip
+          python ModuleUpdate.py --yes --force
+
+      - name: Build wikipelago.apworld
+        shell: pwsh
+        run: ./world/build_apworld.ps1
+
+      - name: Generate EN, FR, and PL seeds
+        env:
+          SKIP_REQUIREMENTS_UPDATE: "1"
+        run: |
+          python world/ci_generate.py \
+            --ap-root Archipelago \
+            --apworld world/APWorld/wikipelago.apworld \
+            --yaml yaml/Wikipelago.yaml \
+            --work-dir generate-work

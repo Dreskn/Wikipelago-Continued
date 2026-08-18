@@ -118,6 +118,11 @@ try {
     Assert-HasPattern $yamlToCheck 'link_bomb_density:\s*(few|more|insane)' 'YAML template is missing link_bomb_density'
     Assert-HasPattern $yamlToCheck '^requires:\s*$' 'YAML template is missing requires block'
     Assert-HasPattern $yamlToCheck '^\s*version:\s*0\.6\.7\s*$' 'YAML template is missing requires.version 0.6.7'
+    $ciPath = Join-Path $repoRoot ".github\workflows\ci.yml"
+    Assert-HasPattern $ciPath 'ArchipelagoMW/Archipelago' 'CI must check out Archipelago to run Generate'
+    Assert-HasPattern $ciPath 'AP_REF: "0\.6\.7"' 'CI Generate must pin Archipelago 0.6.7'
+    Assert-HasPattern $ciPath 'world/ci_generate.py' 'CI must run world/ci_generate.py'
+    Assert-HasPattern ([System.IO.Path]::Combine($Root, "ci_generate.py")) 'wikipelago.apworld' 'world/ci_generate.py must install the built apworld'
     Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0\.0\s*$' 'YAML template is missing requires.game.Wikipelago 1.0.0'
     Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0-beta1"' 'Bridge client version must be 1.0-beta1'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'

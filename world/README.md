@@ -30,7 +30,7 @@ This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/
 
 ### Optional / experimental pool builder
 
-`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. CI validates every language pool with `python world/validate_article_pool.py --lang all --strict`.
+`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. CI validates every language pool with `python world/validate_article_pool.py --lang all --strict`, then generates EN / FR / PL seeds against Archipelago **0.6.7** (`world/ci_generate.py`).
 
 ```powershell
 # Build to 5,000 titles (keeps existing and expands)

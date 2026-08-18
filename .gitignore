@@ -11,6 +11,7 @@ __pycache__/
 world/APWorld/
 world/fuzz_output/
 world/_cache/
+generate-work/
 
 # OS / IDE
 .DS_Store

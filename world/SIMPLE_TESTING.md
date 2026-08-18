@@ -51,6 +51,12 @@ If you want a stronger check:
 .\real_fuzz_test.ps1 -Runs 100
 ```
 
+GitHub CI also generates three fixed seeds (EN default, FR, PL with branches) against Archipelago 0.6.7 via `world/ci_generate.py`. To run that locally after building the apworld:
+
+```powershell
+python .\ci_generate.py --ap-root "PATH_TO_ARCHIPELAGO_SOURCE" --apworld .\APWorld\wikipelago.apworld
+```
+
 ## 5. If something fails
 
 - `smoke_test.ps1` failure:
