@@ -22,6 +22,7 @@ Thumbs.db
 
 # Local-only notes / test configs (not for the repo)
 docs/project-recap.md
+docs/project-before-1.0.md
 yaml/Wikipelago_local_test.yaml
 
 # Draft HUD captures (published screenshot is docs/ui-annotated.png)

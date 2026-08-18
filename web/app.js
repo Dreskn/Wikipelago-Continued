@@ -5,6 +5,9 @@ const I18n = window.WikipelagoI18n;
 function t(key, vars) {
   return I18n?.t ? I18n.t(key, vars) : key;
 }
+function trapLabel(name) {
+  return I18n?.localizeTrapName ? I18n.localizeTrapName(name) : name;
+}
 function uiLanguage() {
   return I18n?.uiLanguage ? I18n.uiLanguage() : "en";
 }
@@ -1473,7 +1476,7 @@ async function applyDeathEffect(reasonText) {
 function queueTrap(trapName) {
   if (trapName !== "Foggy Links" && trapName !== "Missing Links" && trapName !== "Wrong Wiki") return;
   state.trapQueue.push(trapName);
-  toast(t("toast.trap", { name: trapName }), "warn", 6500);
+  toast(t("toast.trap", { name: trapLabel(trapName) }), "warn", 6500);
 }
 
 function consumeTrapQueueForPage(title, status, { skip = false } = {}) {
@@ -1535,8 +1538,8 @@ async function processPendingEvents(events) {
   for (const event of events) {
     if (!event || typeof event !== "object") continue;
     if (event.type === "death") {
-      const who = event.source ? ` (${event.source})` : "";
-      await applyDeathEffect(`DeathLink${who}!`);
+      const who = event.source ? String(event.source) : "";
+      await applyDeathEffect(who ? t("toast.deathLinkFrom", { source: who }) : t("toast.deathLink"));
     } else if (event.type === "trap") {
       queueTrap(event.trap);
     } else if (event.type === "bingo_stamps_updated") {
@@ -2033,7 +2036,11 @@ function renderSanityUnlocks(status) {
         badge.textContent = `${level}/${status.scroll_speed_upgrades || 0}`;
         badge.classList.remove("hidden");
       }
-      scroll.title = `Scroll Speed ${level}/${status.scroll_speed_upgrades || 0}`;
+      scroll.title = t("hud.scrollLevel", {
+        name: t("tool.scroll"),
+        level,
+        max: status.scroll_speed_upgrades || 0,
+      });
       el.scrollIconsRow.appendChild(scroll);
     }
   }
@@ -3826,7 +3833,7 @@ function processArticleLinks(root, options = {}) {
     a.removeAttribute("data-blocked-ns");
     a.dataset.title = title;
     if (foggy) {
-      a.textContent = "[Link]";
+      a.textContent = t("trap.foggyLink");
       a.title = "";
     }
     if (playable) playable.push(a);
@@ -4273,7 +4280,7 @@ el.articleBody.addEventListener("click", async (e) => {
   // Bomb hit (only on forward wiki clicks).
   if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !isProtectedNavTitle(dest, state.status)) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} hit a link bomb`);
-    await applyDeathEffect("Boom! Link bomb — random page.");
+    await applyDeathEffect(t("toast.bombDeath"));
     return;
   }
 
@@ -4284,7 +4291,7 @@ el.articleBody.addEventListener("click", async (e) => {
     && !isProtectedNavTitle(dest, state.status)
   ) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} looped on Wikipedia`);
-    await applyDeathEffect("Loop death! Already visited this round.");
+    await applyDeathEffect(t("toast.loopDeath"));
     return;
   }
 

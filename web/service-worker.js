@@ -1,11 +1,11 @@
-const CACHE_NAME = "wikipelago-shell-2026-08-18-05";
+const CACHE_NAME = "wikipelago-shell-2026-08-18-06";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/static/app.js?v=20260818-05",
-  "/static/style.css?v=20260818-05",
-  "/static/i18n.js?v=20260818-05",
+  "/static/app.js?v=20260818-06",
+  "/static/style.css?v=20260818-06",
+  "/static/i18n.js?v=20260818-06",
   "/icons/icon-192_placeholder.png",
   "/icons/icon-512_placeholder.png",
 ];
