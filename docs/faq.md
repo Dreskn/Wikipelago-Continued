@@ -9,13 +9,9 @@ Fix it by either:
 - **Adding locations** — raise `check_count`, and/or enable bingo / use a larger grid / more boards, and/or enable branches
 - **Removing item pressure** — turn down sanities (especially searchsanity), lenses, traps, unlock counts, or ease Round Access (`start_rounds_unlocked` / `rounds_per_unlock`)
 
-## The top badge says Offline. Am I still in the room?
+## The top badge says Offline.
 
-No. Reconnect with the same server, slot, and password. The client tries to put you back on the last page. Checks you already sent are still in Archipelago; you just need the connection again.
-
-## What is Practice?
-
-**Practice** plays the same web client with random articles and no Archipelago room. Nothing is sent to a multiworld. Use **Connect** when you have a seed.
+Reconnect with the same server, slot, and password. The client tries to put you back on the last page. Checks you already sent are still in Archipelago; you just need the connection again.
 
 ## Why is the Wikipedia language different from the dropdown in the corner?
 
@@ -36,11 +32,3 @@ They are ignored. The Grand Goal is always a closed question from that wiki lang
 ## `trap_type: both` still in my YAML — is that broken?
 
 No. `both` still means every trap kind. The current name is `all`. Prefer `all` on new YAMLs.
-
-## Can I hide the bingo boards / side panels?
-
-Yes. Each HUD card has a hide control on its header. Each bingo board also has **Hide** next to **Board N**. Click a board to open a larger zoomable view. See the [UI map](ui.md).
-
-## The victory screen came back after I reloaded.
-
-You already finished. Close it (Continue, the backdrop, or See your journey). It does not block the rest of the client.
