@@ -4,33 +4,30 @@ Play at https://wikipelago.dreskn.fr/. The page is the Wikipedia article on the 
 
 ![Wikipelago web client with numbered HUD callouts](ui-annotated.png)
 
-Numbered callouts match the list below. Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
+Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
 
 ## Legend
 
-1. **current build** — title, branch/commit tag, and client version.
-2. **UI language** — menus and toasts only; the Wikipedia edition comes from your YAML.
-3. **Connected / Offline / Practice** — room status. Offline means reconnect; Practice is not a seed.
-4. **current page** — article title you are on.
-5. **Wikipedia content** — in-article wiki links are the only moves that count.
-6. **room login** — server, slot, and password. After connect this card shrinks to the room name plus Disconnect.
-7. **join room** — Connect to the Archipelago slot.
-8. **no Archipelago** — Practice with random articles and no room.
-9. **path map** — Journey: pages you have marked this seed.
-10. **collapse card** — shrink a HUD card to its header.
-11. **seed progress** — rounds unlocked and cleared.
-12. **pages to reach** — live Start → Target (main road and any open branch).
-13. **new target** — Reroll the current target (charges per round; not the Grand Goal).
-14. **goal items** — Knowledge Fragments toward revealing the Grand Goal.
-15. **warmer/colder** — Compass hint when you have Wiki Compass.
-16. **unlocked tools** — Back, Reroll, Search, Compass, and similar; locked tools stay grey.
-17. **searchsanity option** — search-letter unlocks when that sanity is on.
-18. **title stamps** — letter-pair bingo boards (click a board to zoom).
-19. **fill cell** — spend a Progressive Bingo Stamp on one empty cell.
-20. **collapse board** — Hide next to **Board N**.
-21. **hidden page parts** — lens toggles (tables, images, infobox, and so on).
-22. **deaths traps bombs** — Deaths, DeathLink, traps, and link bombs when enabled.
-23. **path solver** — external wiki-path helper; it does not send checks.
-24. **donate links** — Support Wikipelago and Support Wikipedia.
+1. **current build**
+2. **UI language** — for menus, practice and toasts only; the Wikipedia edition comes from your YAML.
+3. **Connected / Offline / Practice**
+4. **current page**
+5. **Wikipedia content**
+6. **room login** — server, slot, and password.
+7. **Progression panel** — main game tracker.
+8. **Journey** — A path of pages you have visited this seed.
+9. **progress bar** — each segment is a round. Green segments are checked rounds, highlighted segment is the current round, red segments are locked behind round unlocks. T-shaped segments are crossroads, which start a branch path.
+10. **Reroll** — Changes every target at once (main path + branches).
+11. **Targets** — The pages you need to reach.
+12. **Fragments** — Your progress towards unlocking your seed Grand Goal. Once enough Knowledge Fragments are obtained, your final destination will be known.
+13. **Compass** — Alerts you if you're less than two clicks away from your target.
+14. **Items** — Main game items, grey when locked. In order: Back button, Rerolls, Search (CTRL-F), Compass, Branch Keys.
+15. **Sanities** — Panel for searchsanity (CTRL-F can only uses unlocked letters) or Scrollsanity.
+16. **Bingo** — letter-pair bingo boards, stamp a cell by visiting a page starting with that letter pair. Send checks by stamping a full line (row/column/diagonal), plus the full board.
+17. **Use stamp** — Use a bonus stamp to cross a letter pair without visiting that page. Get rid of that nasty QZ pair!
+18. **Lenses** — If option to hide certain page parts (tables, images, infobox, and so on), lenses are required to restore them.
+19. **Difficulty** — When enabled, shows status of deathlink, traps and traplink.
+20. **path solver** — external wiki-path helper.
+21. **donate links** — Support Wikipelago and Support Wikipedia.
 
-For how rounds, items, and the Grand Goal work, see the [Overview](overview.md). For YAML flags that show or hide these cards, see [Options](options.md).
+For more info about how rounds, items, and the Grand Goal work, see the [Overview](overview.md). For YAML flags that show or hide these cards, see [Options](options.md).
