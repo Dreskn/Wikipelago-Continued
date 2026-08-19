@@ -2,15 +2,9 @@
 
 Play at https://wikipelago.dreskn.fr/. The page is the Wikipedia article on the left and the HUD cards on the right.
 
-<!--
-  When the numbered screenshot is ready:
-  1. Save it as docs/ui-annotated.png (this folder, that filename).
-  2. Replace this comment with:
+![Wikipelago web client with numbered HUD callouts](ui-annotated.png)
 
-     ![Wikipelago web client with numbered HUD callouts](ui-annotated.png)
--->
-
-Callouts **1–24** match the list below. Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
+Numbered callouts match the list below. Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
 
 ## Legend
 
