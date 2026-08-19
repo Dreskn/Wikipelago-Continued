@@ -72,7 +72,15 @@ body {
   gap: 12px;
   flex: 0 0 auto;
 }
-.topbar-brand { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.topbar-brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+.topbar-logo {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 1px #3a5068;
+}
 .topbar h1 { margin: 0; font-size: 2rem; }
 .build-badge {
   font-size: 0.78rem;
