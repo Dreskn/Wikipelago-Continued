@@ -3257,6 +3257,11 @@ class App:
         response.headers["Service-Worker-Allowed"] = "/"
         return response
 
+    async def favicon(self, request: web.Request) -> web.StreamResponse:
+        response = web.FileResponse(self.web_root / "icons" / "icon-192.png")
+        response.content_type = "image/png"
+        return response
+
     async def health(self, request: web.Request) -> web.StreamResponse:
         info = build_info()
         info["sessions"] = len(self.sessions.sessions)
@@ -3480,6 +3485,7 @@ class App:
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
+        app.router.add_get("/favicon.ico", self.favicon)
         app.router.add_get("/manifest.webmanifest", self.manifest)
         app.router.add_get("/service-worker.js", self.service_worker)
         app.router.add_get("/health", self.health)

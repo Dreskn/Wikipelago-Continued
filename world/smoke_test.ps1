@@ -492,7 +492,9 @@ try {
     Assert-HasPattern $bridgePath '"unlocked_rounds": self\.unlocked_rounds\(\)' 'Bridge unlocked rounds status is missing'
     Assert-HasPattern $bridgePath '"/manifest\.webmanifest"' 'Bridge PWA manifest route is missing'
     Assert-HasPattern $bridgePath '"/service-worker\.js"' 'Bridge service worker route is missing'
+    Assert-HasPattern $bridgePath '"/favicon\.ico"' 'Bridge favicon route is missing'
     Assert-HasPattern $bridgePath '"/icons/"' 'Bridge PWA icon route is missing'
+    Assert-HasPattern $webIndexPath 'rel="icon"' 'Web page is missing rel=icon for the tab favicon'
     Write-Pass "Bridge title-matching safeguards are present"
 } catch {
     $failures.Add($_.Exception.Message)
