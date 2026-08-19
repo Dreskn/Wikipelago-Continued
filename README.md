@@ -21,7 +21,7 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 Live web client: https://wikipelago.dreskn.fr/
 
 Recommended Archipelago version: **0.6.7**  
-World version: **1.0-beta1** (`world_version` **1.0.0**)
+World version: **1.0.0**
 
 Looking for more info about Archipelago in general? See the [website](https://archipelago.gg/) or [GitHub](https://github.com/ArchipelagoMW/Archipelago).
 

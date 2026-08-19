@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0-beta1";
+const APP_VERSION = "1.0.0";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
