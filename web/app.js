@@ -141,20 +141,25 @@ const DISPLAY_LOCKS = [
   { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
 ];
 
+function lucideIcon(inner) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+}
+
+// Official Lucide glyphs (https://lucide.dev). Mapping and licenses: LICENSE.
 const TOOL_ICON_SVGS = {
-  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l4.6-4.6L11 5l-7 7 7 7 1.4-1.4L7.8 13H20v-2z"/></svg>',
-  reroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.1A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>',
-  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
-  compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
-  key: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4A5.5 5.5 0 0 0 9 9.5c0 .7.14 1.37.39 2L3 17.9V21h3.1l1.2-1.2 1.2 1.2 2.1-2.1-1.2-1.2 1.2-1.2 1.2 1.2 1.4-1.4-.9-.9 5.1-5.1c.63.25 1.3.39 2 .39A5.5 5.5 0 0 0 14.5 4zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>',
-  scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
-  searchsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10v2H4V6zm0 5h16v2H4v-2zm0 5h12v2H4v-2z"/></svg>',
-  scrollsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
-  deaths: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v1H5v3h1v8h12v-8h1V8h-2V7a5 5 0 0 0-5-5zm-1 10h2v5h-2v-5z"/></svg>',
-  deathlink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a4 4 0 1 1 0 8H7v2h1a6 6 0 1 0 0-12h1v2H8zm8 0h-1V5h1a6 6 0 1 1 0 12h-1v-2h1a4 4 0 1 0 0-8z"/></svg>',
-  traplink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v6h6v2h-6v6h-2v-6H5V9h6V3zm-7 14h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>',
-  bombs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 4.3 13 6H9L7.3 4.3 5.9 5.7 7.2 7H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8a3 3 0 0 0-3-3h-1.2l1.3-1.3-1.4-1.4zM9 11h6v2H9v-2z"/></svg>',
-  traps: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5zm0 9L4.5 7.8 12 4.1l7.5 3.7L12 11zm0 2.2L4 9.5V17l8 4 8-4V9.5l-8 3.7z"/></svg>',
+  back: lucideIcon('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/>'),
+  reroll: lucideIcon('<rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/>'),
+  search: lucideIcon('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>'),
+  compass: lucideIcon('<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>'),
+  key: lucideIcon('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
+  scroll: lucideIcon('<rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/>'),
+  searchsanity: lucideIcon('<path d="m15 16 2.536-7.328a1.02 1.02 1 0 1 1.928 0L22 16"/><path d="M15.697 14h5.606"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/>'),
+  scrollsanity: lucideIcon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>'),
+  deaths: lucideIcon('<path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/>'),
+  deathlink: lucideIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>'),
+  traplink: lucideIcon('<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/>'),
+  bombs: lucideIcon('<circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/>'),
+  traps: lucideIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
 };
 
 function trapTypeLabel(trapType) {

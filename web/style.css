@@ -1143,7 +1143,12 @@ button {
   justify-content: center;
   color: var(--text);
 }
-.item-icon svg { width: 20px; height: 20px; fill: currentColor; }
+.item-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  flex-shrink: 0;
+}
 .item-icon--ok {
   color: #ecf2f8;
   border-color: #40c4ff;
