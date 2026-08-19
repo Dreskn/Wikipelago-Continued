@@ -37,6 +37,6 @@ Callouts **1–24** match the list below. Optional cards (Sanity, Bingo, Lenses,
 21. **hidden page parts** — lens toggles (tables, images, infobox, and so on).
 22. **deaths traps bombs** — Deaths, DeathLink, traps, and link bombs when enabled.
 23. **path solver** — external wiki-path helper; it does not send checks.
-24. **donate links** — support the host and Wikipedia.
+24. **donate links** — Support Wikipelago and Support Wikipedia.
 
 For how rounds, items, and the Grand Goal work, see the [Overview](overview.md). For YAML flags that show or hide these cards, see [Options](options.md).
