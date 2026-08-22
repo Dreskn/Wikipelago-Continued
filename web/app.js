@@ -3094,6 +3094,21 @@ async function ensureSession() {
 }
 
 function updateHUD(status) {
+  const sidePanel = document.querySelector(".side-panel");
+  const sideScroll = sidePanel ? sidePanel.scrollTop : 0;
+  try {
+    applyHUDStatus(status);
+  } finally {
+    if (sidePanel) {
+      sidePanel.scrollTop = sideScroll;
+      requestAnimationFrame(() => {
+        sidePanel.scrollTop = sideScroll;
+      });
+    }
+  }
+}
+
+function applyHUDStatus(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
   const wasPractice = state.status?.practice === true;
