@@ -1,8 +1,7 @@
 name: Pool validate
 
-# GitHub only fires `schedule` from the default branch (`main`). This file
-# therefore needs to exist on `main` for the weekly run to start. The job
-# always checks out `dev`, so it validates the 1.0 pools, not prod 0.6.
+# GitHub only fires `schedule` from the default branch (`main`).
+# This job checks out `main` so it validates the shipped pools.
 # Failures send the same Actions emails as any other CI job (if enabled).
 # No --apply-removals: drifted titles are reported, not rewritten.
 on:
@@ -10,7 +9,7 @@ on:
     - cron: "0 7 * * 1"
   workflow_dispatch:
   push:
-    branches: [dev]
+    branches: [main]
     paths:
       - "world/APWorldSource/wikipelago/data/pool_*.json"
       - "world/validate_article_pool.py"
@@ -22,10 +21,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - name: Checkout dev
+      - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: dev
+          ref: main
 
       - name: Set up Python
         uses: actions/setup-python@v5

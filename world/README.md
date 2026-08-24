@@ -30,7 +30,7 @@ This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/
 
 ### Optional / experimental pool builder
 
-`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. Every commit runs Smoke and Generate (EN / FR / PL seeds against Archipelago **0.6.7**, `world/ci_generate.py`). Pool validation against live Wikipedia (`python world/validate_article_pool.py --lang all --strict`) runs weekly and on pool-file pushes to `dev`; it does not auto-drop titles.
+`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. Every commit runs Smoke and Generate (EN / FR / PL seeds against Archipelago **0.6.7**, `world/ci_generate.py`). Pool validation against live Wikipedia (`python world/validate_article_pool.py --lang all --strict`) runs weekly and on pool-file pushes to `main`; it does not auto-drop titles.
 
 ```powershell
 # Build to 5,000 titles (keeps existing and expands)

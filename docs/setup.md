@@ -68,7 +68,7 @@ Use this when the Archipelago room is reachable from the public internet (`archi
 The hosted site talks to Archipelago **from a public server**. If the room only exists on a LAN, Tailscale, or another private network, that server cannot reach it. Run the same web client on a computer that *can* see the room (usually a PC already on that VPN).
 
 1. Install [Python 3](https://www.python.org/downloads/) from python.org. Tick **Add python.exe to PATH** and the **py** launcher. Microsoft Store Python often fails the starter script.
-2. Get this repository at the **same version as the apworld** (zip or `git clone`). Use `dev` for 1.0; use `main` for 0.6.x.
+2. Get this repository at the **same version as the apworld**: the Source code zip on that [Release](https://github.com/Dreskn/Wikipelago-Continued/releases), or `git clone` and check out the matching tag.
 3. Open the `bridge` folder. First time: double-click `setup_and_start_bridge.bat`. Later: `start_bridge.bat`. Leave that window open.
 4. If it says it cannot find Python, in that same `bridge` folder run:
    ```
