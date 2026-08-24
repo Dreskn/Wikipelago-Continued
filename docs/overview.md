@@ -13,29 +13,28 @@ There is no separate desktop client to install for players — use the [hosted w
 The page is split in two: the **article** on the left, and your **HUD** on the right.
 A numbered map of every control is in the [web client UI](ui.md) guide.
 
-- **Top bar** — game title, a small build tag, the **UI language** dropdown, and a **Connected / Offline / Practice** badge.
-- **Article** — the current Wikipedia page. Only in-article wiki links count as moves. File, Template, Wikipedia-namespace, and similar non-article pages are blocked (you stay in the client with a warning).
-- **Connection** — server, slot, password, **Connect**, and **Practice**. After you connect, this card shrinks to the room and slot, with **Disconnect**.
-- **Progression** — round track, current targets, Knowledge Fragments, Grand Goal, and Compass. **Journey** opens a map of pages you have marked. The whole card can be hidden to its header.
+- **Article** — the current Wikipedia page. Only in-article wiki links count as moves. File, Template, Wikipedia-namespace, and similar non-article pages are blocked.
+- **Connection** — server, slot, password, **Connect**, and **Practice**.
+- **Progression** — round track, current targets, Knowledge Fragments, Grand Goal, and Compass. **Journey** opens a map of pages you have marked.
 - **Items** — tools you have found (Back, Reroll, Search, Compass, Branch Key). Locked tools stay grey.
-- **Bingo / Lenses / Sanity / Difficulty** — extra cards appear when your seed uses those options. Each can be collapsed the same way.
+- **Bingo / Lenses / Sanity / Difficulty** — extra cards appear when your seed uses those options.
 - **Are you really stuck?** — a link to an external wiki-path solver. It does not send checks for you.
 
-UI language (the dropdown) only changes menus and toasts. The Wikipedia edition you race on is set in your YAML (`wikipedia_language`) and does not follow the dropdown.
+UI language (the dropdown) only changes menus, toasts and the language in Practice mode. The Wikipedia edition you play on in an AP game is set in your YAML (`wikipedia_language`) and does not follow the dropdown.
 
-**Practice** loads random articles from the same language pool with no Archipelago room. Use it to learn the client; it does not count as a seed.
+**Practice** loads random articles from the same language pool with no Archipelago room. Use it to learn the client.
 
 ## What does randomization do?
 
-Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, tools (Progressive Back, Progressive Reroll, Ctrl+F Lens, Wiki Compass), optional letter-pair bingo boards / Progressive Bingo Cards / Progressive Bingo Stamps, optional **Branch Keys**, optional lenses, and optional traps when enabled. Completing rounds sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
+Archipelago generates Start → Target rounds for your slot and shuffles items into the multiworld — Round Access, Knowledge Fragments, tools (Progressive Back, Progressive Reroll, Ctrl+F Lens, Wiki Compass), optional letter-pair bingo boards / Progressive Bingo Cards / Progressive Bingo Stamps, optional **Branch Keys**, optional lenses, and optional traps when enabled. Completing rounds and bingo board lines sends checks; receiving items unlocks more rounds and tools until you can finish the Grand Goal.
 
 Optional **deaths** / **DeathLink** / **link bombs** and **Foggy Links** / **Missing Links** / **Wrong Wiki** traps are off by default — see the [Options guide](options.md).
 
 ## How do rounds work?
 
-1. Navigate by clicking in-article Wikipedia links only (typed URLs / free navigation do not count as checks).
+1. Navigate by clicking in-article Wikipedia links only.
 2. Reach the Target article to send the location check.
-3. Optional: **Reroll** the current target (charges per round from YAML start + Progressive Reroll items; including the final round; Grand Goal itself cannot be rerolled).
+3. Receive a new Target, repeat.
 
 Only some rounds are available at the start (`start_rounds_unlocked` in your YAML).
 Additional rounds unlock when you receive **Round Access** items (`rounds_per_unlock` controls how many each one opens).
@@ -56,8 +55,6 @@ The Progression card lists each live branch target under the main road. **Journe
 
 Collect enough **Knowledge Fragments** (count set by `required_fragments`). The pool may contain extras (`additional_fragments_in_pool`); only the required count unlocks the goal. The Grand Goal is then revealed as a **closed question** in your wiki language. Reach the answer article to finish your slot.
 
-The answer title stays hidden until you land on that page. A victory overlay then shows the question and answer; you can close it and keep browsing, or open **Journey** to review the path. Reloading a finished seed may show the overlay once more — close it the same way.
-
 The question comes from that language’s Grand Goal pool (answer page preferred from your enabled categories). Old YAML presets such as `goal_article_preset` are ignored.
 
 ## Useful items
@@ -77,11 +74,9 @@ Optional toggles can also gate search letters, scroll speed, and Wikipedia page 
 
 ## Letter-pair bingo
 
-When bingo is on, page titles stamp letter pairs on your board(s). Completing a row, column, diagonal, or the full card sends a check.
+When bingo is on, page titles stamp letter pairs on your board(s). Completing a row, column, diagonal, or the full card sends a check. First two letters are used, so "1st" will stamp letters ST, accentuated letters (é, ü...) are counted as distinct or same letters following Scrabble rules (eg French treats é, è, ë and ê as E, while Polish treats ź and z as distinct) 
 
-- Each board has its own **Hide** control next to the **Board N** label.
 - Click a board to open a larger overlay with zoom.
-- Stamps are shared across devices on the same slot once you are connected.
 
 ## Deaths and traps (when enabled)
 
