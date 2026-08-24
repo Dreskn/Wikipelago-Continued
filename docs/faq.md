@@ -28,7 +28,3 @@ Non-article namespaces (File, Template, Wikipedia:, Portail, Plik, and the same 
 ## What happened to `goal_article_preset` / `random_goal_article`?
 
 They are ignored. The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs still generate; they just no longer pick a preset series.
-
-## `trap_type: both` still in my YAML — is that broken?
-
-No. `both` still means every trap kind. The current name is `all`. Prefer `all` on new YAMLs.
