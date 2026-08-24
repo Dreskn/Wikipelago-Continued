@@ -1,6 +1,6 @@
 APWorld source lives in `APWorldSource`.
 
-World package version: **0.6.0-ZaWarudo!** (`world_version` **0.6.0** in `APWorldSource/wikipelago/archipelago.json` for Archipelago; marketing tag in `full_version`).
+World package version: **1.0.0** (`world_version` and `full_version` in `APWorldSource/wikipelago/archipelago.json`).
 
 The live runtime article pools are `APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 
@@ -30,7 +30,7 @@ This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/
 
 ### Optional / experimental pool builder
 
-`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. CI validates every language pool with `python world/validate_article_pool.py --lang all --strict`.
+`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. Every commit runs Smoke and Generate (EN / FR / PL seeds against Archipelago **0.6.7**, `world/ci_generate.py`). Pool validation against live Wikipedia (`python world/validate_article_pool.py --lang all --strict`) runs weekly and on pool-file pushes to `main`; it does not auto-drop titles.
 
 ```powershell
 # Build to 5,000 titles (keeps existing and expands)

@@ -1,7 +1,7 @@
 {
   "lang": "nl",
   "source": "pool_annotated_nl.json",
-  "count": 8960,
+  "count": 8924,
   "entries": [
     {
       "title": "'14-'18 (musical)",
@@ -4596,7 +4596,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BIJ1",
@@ -8171,55 +8171,6 @@
       "tags": [
         "famous_people",
         "movies"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Alles",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Land op de Olympische Zomerspelen 2024",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Republikein (Verenigde Staten)",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Vlaams acteur",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Wikipedia:Coördinaten op Wikidata",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Wikipedia:Doorverwijspagina",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categorie:Wikipedia:Plantenlemma",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -12462,13 +12413,6 @@
       "title": "Doe Maar",
       "tags": [
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Dog Man",
-      "tags": [
-        "movies"
       ],
       "sensitive": false
     },
@@ -18015,13 +17959,6 @@
       "sensitive": false
     },
     {
-      "title": "Gebruiker:Wikiklaas/Nuweg",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Gecoördineerde Regionale Incidentbestrijdingsprocedure",
       "tags": [
         "miscellaneous"
@@ -18717,7 +18654,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Getafe CF",
@@ -43570,7 +43507,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Pneumokok",
@@ -43789,42 +43726,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
-    },
-    {
-      "title": "Portaal:Gebruikersportaal",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portaal:Geschiedenis",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portaal:Hulp en beheer",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portaal:Muziek",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portaal:Navigatie",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Portland (band)",
@@ -49570,13 +49472,6 @@
       "tags": [
         "famous_people",
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Sjabloon:Tabel kleuren van draden in elektrische installatie",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -57348,153 +57243,6 @@
       "title": "Wikipedia",
       "tags": [
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bibliografische informatie",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bronvermelding",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:De kroeg",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Doorverwijspagina",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Etalage",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Feestjaar 2026/Gefeliciteerd Wikipedia!",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Verzoekpagina voor moderatoren/RegBlok",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Fashion",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Fashion/DMF",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Gendergap/InternationaleVrouwendag2020",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Gendergap/InternationaleVrouwendag2021/Wikigap 6 maart",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Gendergap/InternationaleVrouwendag2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek Lokaal/Friesland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek Lokaal/Gelderland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek Lokaal/Zeeland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek/Italië",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek/Noorwegen",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Schrijfweek/Oost West",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Themaweek/Maand van Verzet",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiproject/Themaweek/Publiek domein",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wist je dat",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

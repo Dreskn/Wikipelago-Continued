@@ -11,6 +11,7 @@ __pycache__/
 world/APWorld/
 world/fuzz_output/
 world/_cache/
+generate-work/
 
 # OS / IDE
 .DS_Store
@@ -21,4 +22,12 @@ Thumbs.db
 
 # Local-only notes / test configs (not for the repo)
 docs/project-recap.md
+docs/project-before-1.0.md
+docs/grand-goal/questions-en-top100.md
+docs/grand-goal/questions-en-union.md
 yaml/Wikipelago_local_test.yaml
+
+# Draft HUD captures (published screenshot is docs/ui-annotated.png)
+docs/_annotate_ui.py
+docs/_draft_ui*.png
+docs/_bubbles/

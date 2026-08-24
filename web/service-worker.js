@@ -1,13 +1,13 @@
-const CACHE_NAME = "wikipelago-shell-2026-08-08-1";
+const CACHE_NAME = "wikipelago-shell-2026-08-24-02";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",
-  "/static/app.js?v=20260808-1",
-  "/static/style.css?v=20260808-1",
-  "/static/i18n.js?v=20260806-1",
-  "/icons/icon-192_placeholder.png",
-  "/icons/icon-512_placeholder.png",
+  "/static/app.js?v=20260824-02",
+  "/static/style.css?v=20260824-02",
+  "/static/i18n.js?v=20260824-02",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
 ];
 
 self.addEventListener("install", (event) => {

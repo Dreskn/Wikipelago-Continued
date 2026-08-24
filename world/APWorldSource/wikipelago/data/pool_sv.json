@@ -1,7 +1,7 @@
 {
   "lang": "sv",
   "source": "pool_annotated_sv.json",
-  "count": 8508,
+  "count": 8473,
   "entries": [
     {
       "title": "'Ndrangheta",
@@ -4517,7 +4517,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BK Häcken",
@@ -25623,146 +25623,6 @@
       "sensitive": false
     },
     {
-      "title": "Kategori:Alla artiklar som behöver källor",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Amerikanska skådespelare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Amerikanska sångare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Brittiska sångare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Danska popsångare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Danska revyartister",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Danska sångare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Födda 1964",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Gudar i grekisk mytologi",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Insjöar i Jämtland",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Klassiska kompositörer",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Operetter",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska TV-serier",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska dragspelare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska konstnärer",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska konstnärer under 1900-talet",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska målare under 1900-talet",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska skådespelare",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Svenska skådespelare under 1900-talet",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategori:Tyska musikgrupper",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Katerina Janouch",
       "tags": [
         "art_literature",
@@ -32392,34 +32252,6 @@
         "famous_people",
         "movies",
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Mall:Grekiska bokstäver",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Mall:Lista över trafikplatser längs E4",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Mall:Rekord/Friidrott:Tresteg herrar",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Mall:Sveriges största tätorter",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -54642,76 +54474,6 @@
       "sensitive": false
     },
     {
-      "title": "Wikipedia:Bybrunnen",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Hjälp",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kommentarer om administrationen av Wikipedia",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kontakt",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Upphovsrätt",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedias Asien-månad 2017",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedias Asien-månad 2018",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedias Asien-månad 2019",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedias Asien-månad 2020",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikipedias Asien-månad 2021",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Wikipediadiskussion:Kontakt",
       "tags": [
         "miscellaneous"
@@ -55390,13 +55152,6 @@
         "famous_people",
         "movies",
         "tv_shows"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:Huvudsida",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

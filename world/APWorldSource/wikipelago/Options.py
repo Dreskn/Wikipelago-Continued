@@ -42,7 +42,9 @@ class RoundsPerUnlock(Range):
 
 
 class RandomGoalArticle(Toggle):
-    """When enabled, the Grand Goal article is chosen randomly from enabled categories."""
+    """Kept for existing YAMLs. The Grand Goal always comes from that wiki
+    language's goal pool; this toggle is ignored. Knowledge Fragments still
+    unlock the question; landing on the answer page still sends Victory."""
     display_name = "Random Goal Article"
     default = 1
 
@@ -222,17 +224,19 @@ class IncludeBiologyMedicine(Toggle):
 
 class IncludeSensitivePages(Toggle):
     """
-    When off (default), pages flagged sensitive (porn, terrorism, violent/sexual crime,
-    illicit drugs) are excluded even if they match an enabled category.
-    When on, those pages may appear if they also match an enabled category.
+    When off (default), pages flagged sensitive (pornography, BDSM / sadomasochism /
+    sexual roleplay, terrorism, violent/sexual crime, illicit drugs) are excluded
+    from round targets and from the Grand Goal pool even if they match an enabled
+    category. When on, those pages may appear if they also match an enabled category.
     """
     display_name = "Include Sensitive Pages"
     default = 0
 
 
 class GoalArticlePreset(Choice):
-    """Deprecated: prefer random_goal_article. Kept for existing YAMLs."""
-    display_name = "Goal Article Preset (used when random goal is off)"
+    """Deprecated and ignored. Kept so existing YAMLs still parse. The Grand
+    Goal always comes from the language goal pool, not this list."""
+    display_name = "Goal Article Preset (deprecated, ignored)"
     option_minecraft = 0
     option_the_legend_of_zelda = 1
     option_dark_souls = 2
@@ -284,7 +288,7 @@ class LinkBombDensity(Choice):
 
 
 class TrapCount(Range):
-    """Number of trap items (Foggy Links / Missing Links) added to the pool before Footnote filler."""
+    """Number of trap items (Foggy Links / Missing Links / Wrong Wiki) added to the pool before Footnote filler."""
     display_name = "Trap Count"
     range_start = 0
     range_end = 99
@@ -292,11 +296,17 @@ class TrapCount(Range):
 
 
 class TrapType(Choice):
-    """Which trap items to generate and accept from Trap Link."""
+    """Which trap items to generate and accept from Trap Link.
+
+    ``all`` includes Foggy Links, Missing Links, and Wrong Wiki.
+    ``both`` is deprecated and has the same effect as ``all``.
+    """
     display_name = "Trap Type"
-    option_both = 0
+    option_all = 0
+    alias_both = 0  # deprecated YAML name; same as all
     option_only_foggy_links = 1
     option_only_missing_links = 2
+    option_only_wrong_wiki = 3
     default = 0
 
 
@@ -376,6 +386,30 @@ class TargetRerollUnlocks(Range):
     default = 2
 
 
+class BranchCount(Range):
+    """How many main-road rounds are crossroads (Branch N needs N keys plus that finished crossroad). 0 disables branches."""
+    display_name = "Branch Count"
+    range_start = 0
+    range_end = 8
+    default = 2
+
+
+class BranchLength(Range):
+    """Rounds in each unlocked side branch chain."""
+    display_name = "Branch Length"
+    range_start = 1
+    range_end = 20
+    default = 5
+
+
+class AdditionalBranchKeys(Range):
+    """Extra Branch Key items in the pool beyond branch_count. Still progression; extras do not open more branches."""
+    display_name = "Additional Branch Keys"
+    range_start = 0
+    range_end = 8
+    default = 1
+
+
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
@@ -432,3 +466,6 @@ class WikipelagoOptions(PerGameCommonOptions):
     back_depth_unlocks: BackDepthUnlocks
     target_rerolls_start: TargetRerollsStart
     target_reroll_unlocks: TargetRerollUnlocks
+    branch_count: BranchCount
+    branch_length: BranchLength
+    additional_branch_keys: AdditionalBranchKeys

@@ -8,10 +8,11 @@ from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import set_rule
 
 from .Items import TRAP_ITEM_NAMES, item_table
-from .Locations import MAX_BINGO_BOARDS, location_table
+from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
-from .article_pool import SUPPORTED_LANGS, load_article_pool
+from .article_pool import SUPPORTED_LANGS, is_blocked_wiki_title, load_article_pool
+from .grand_goal import pick_grand_goal_card
 from .letter_pairs import (
     bingo_location_count,
     bingo_location_names,
@@ -172,58 +173,6 @@ SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
 SCROLL_SPEED_UPGRADES = 5
 
 
-def _preset_goal_name(option_value: int) -> str:
-    mapping = {
-        0: "Minecraft",
-        1: "The Legend of Zelda",
-        2: "Dark Souls",
-        3: "Elden Ring",
-        4: "Super Mario Bros.",
-        5: "Pokémon Red and Blue",
-        6: "Chess",
-        7: "Catan",
-        8: "The Dark Knight",
-        9: "Star Wars (film)",
-        10: "The Lord of the Rings: The Fellowship of the Ring",
-        11: "The Matrix",
-        12: "Avatar: The Last Airbender",
-        13: "Breaking Bad",
-        14: "Stranger Things",
-        15: "Game of Thrones",
-        16: "The Simpsons",
-        17: "SpongeBob SquarePants",
-        18: "Super Smash Bros. Ultimate",
-        19: "Halo: Combat Evolved",
-    }
-    return mapping.get(option_value, "Minecraft")
-
-
-def _preset_goal_topic(option_value: int) -> str:
-    mapping = {
-        0: "video_games",
-        1: "video_games",
-        2: "video_games",
-        3: "video_games",
-        4: "video_games",
-        5: "video_games",
-        6: "miscellaneous",
-        7: "miscellaneous",
-        8: "movies",
-        9: "movies",
-        10: "movies",
-        11: "movies",
-        12: "tv_shows",
-        13: "tv_shows",
-        14: "tv_shows",
-        15: "tv_shows",
-        16: "tv_shows",
-        17: "tv_shows",
-        18: "video_games",
-        19: "video_games",
-    }
-    return mapping.get(option_value, "video_games")
-
-
 class WikipelagoWeb(WebWorld):
     theme = "stone"
 
@@ -254,8 +203,12 @@ class WikipelagoWorld(World):
 
     round_pairs: list[dict[str, str]]
     goal_article: str
+    goal_question: str
+    goal_qid: str | None
     reroll_pool: list[str]
     bingo_letterpairs_boards: list[list[list[str]]]
+    crossroads: list[dict[str, int]]
+    branches: list[dict[str, Any]]
 
     def _bingo_enabled(self) -> bool:
         return bool(self.options.toggle_bingo_letterpairs.value)
@@ -315,8 +268,10 @@ class WikipelagoWorld(World):
 
     @staticmethod
     def _looks_common_knowledge(title: str) -> bool:
+        if is_blocked_wiki_title(title):
+            return False
         lowered = title.lower().strip()
-        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ", "category:", "template:", "help:", "portal:", "wikipedia:")):
+        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ")):
             return False
         if any(keyword in lowered for keyword in BANNED_TITLE_KEYWORDS):
             return False
@@ -405,6 +360,32 @@ class WikipelagoWorld(World):
     def _search_starting_letters(self) -> set[str]:
         return set(SEARCH_STARTING_LETTERS.get(self.options.search_starting_letters.value, set()))
 
+    def _branch_count(self) -> int:
+        return max(0, min(int(self.options.branch_count.value), MAX_BRANCHES))
+
+    def _branch_length(self) -> int:
+        return max(1, min(int(self.options.branch_length.value), MAX_BRANCH_LENGTH))
+
+    def _additional_branch_keys(self) -> int:
+        if self._branch_count() <= 0:
+            return 0
+        return max(0, int(self.options.additional_branch_keys.value))
+
+    def _branch_key_count(self) -> int:
+        if self._branch_count() <= 0:
+            return 0
+        return self._branch_count() + self._additional_branch_keys()
+
+    def _branch_location_count(self) -> int:
+        return self._branch_count() * self._branch_length()
+
+    def _round_access_needed(self, round_index: int) -> int:
+        round_count = self.options.check_count.value
+        start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
+        per_unlock = max(1, self.options.rounds_per_unlock.value)
+        extra_rounds = max(0, round_index - start_unlocked)
+        return (extra_rounds + per_unlock - 1) // per_unlock
+
     def _display_unlock_items(self) -> list[str]:
         unlocks: list[str] = []
         if self.options.randomize_tables.value:
@@ -439,57 +420,98 @@ class WikipelagoWorld(World):
             raise Exception(f"Wikipelago unsupported wikipedia_language: {lang}")
         include_sensitive = bool(self.options.include_sensitive_pages.value)
         article_entries = load_article_pool(lang)
-        filtered_pool = [
-            entry["title"]
+        sensitive_titles = {
+            str(entry.get("title") or "").strip()
+            for entry in article_entries
+            if entry.get("sensitive")
+        }
+        filtered_entries = [
+            entry
             for entry in article_entries
             if self._is_reasonable_title(entry["title"])
             and self._looks_common_knowledge(entry["title"])
             and self._entry_matches(entry, selected_topics, include_sensitive)
         ]
         # Preserve order, drop dupes.
-        filtered_pool = list(dict.fromkeys(filtered_pool))
+        title_to_tags: dict[str, set[str]] = {}
+        filtered_pool: list[str] = []
+        for entry in filtered_entries:
+            title = entry["title"]
+            if title in title_to_tags:
+                title_to_tags[title].update(entry.get("tags") or ())
+                continue
+            title_to_tags[title] = set(entry.get("tags") or ())
+            filtered_pool.append(title)
 
-        # Unique titles: opening start + one target per round + separate Grand Goal article.
-        needed_total = max(3, round_count + 2)
-        max_rounds_for_pool = max(0, len(filtered_pool) - 2)
+        branch_count = self._branch_count()
+        branch_length = self._branch_length()
+        if branch_count > 0 and round_count < 2:
+            raise Exception(
+                "Wikipelago cannot generate branches: check_count must be at least 2 "
+                f"(got {round_count}) so a crossroad can be placed after round 1."
+            )
+        eligible_crossroads = max(0, round_count - 1)
+        if branch_count > eligible_crossroads:
+            raise Exception(
+                "Wikipelago cannot generate this seed: "
+                f"branch_count={branch_count} needs {branch_count} main-road crossroads "
+                f"(rounds 2..{round_count}), but only {eligible_crossroads} eligible rounds exist. "
+                "Lower branch_count or raise check_count."
+            )
+
+        # Unique titles: opening start + one target per round + Grand Goal + branch_length per branch.
+        extra_branch_titles = branch_count * branch_length
+        needed_total = max(3, round_count + 2 + extra_branch_titles)
+        max_rounds_for_pool = max(0, len(filtered_pool) - 2 - extra_branch_titles)
         if len(filtered_pool) < needed_total:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
-                f"check_count={round_count} needs at least {needed_total} unique usable articles "
+                f"check_count={round_count} and branch_count={branch_count} "
+                f"(length {branch_length}) need at least {needed_total} unique usable articles "
                 f"(including a Grand Goal distinct from round targets), "
                 f"but the enabled categories only provide {len(filtered_pool)} "
-                f"(supports at most {max_rounds_for_pool} rounds). "
-                "Lower check_count or enable more article categories."
+                f"(supports at most {max_rounds_for_pool} main rounds at this branch setting). "
+                "Lower check_count / branch_count / branch_length or enable more article categories."
             )
 
-        if self.options.random_goal_article.value:
-            self.goal_article = self.random.choice(filtered_pool)
+        self.goal_question = ""
+        self.goal_qid = None
+        lang = self._wikipedia_language()
+        # random_goal_article / goal_article_preset are kept so old YAMLs still
+        # parse; generate always picks from this wiki language's goal pool.
+        try:
+            card = pick_grand_goal_card(
+                self.random,
+                lang,
+                selected_topics,
+                filtered_pool,
+                include_sensitive=include_sensitive,
+                sensitive_titles=sensitive_titles,
+            )
+        except FileNotFoundError:
+            card = None
+        if card:
+            self.goal_article = card["answer_title"]
+            self.goal_question = card["question"]
+            self.goal_qid = card.get("qid")
         else:
-            goal_preset_value = self.options.goal_article_preset.value
-            self.goal_article = _preset_goal_name(goal_preset_value)
-            goal_topic = _preset_goal_topic(goal_preset_value)
-            if goal_topic not in selected_topics:
-                raise Exception(
-                    "Wikipelago goal article preset category is disabled. "
-                    f"Goal '{self.goal_article}' is in category '{goal_topic}'. "
-                    "Enable that category or set random_goal_article: true."
-                )
-            if self.goal_article not in filtered_pool:
-                filtered_pool.append(self.goal_article)
+            self.goal_article = self.random.choice(filtered_pool)
+        if self.goal_article not in filtered_pool:
+            filtered_pool.append(self.goal_article)
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
-        # Opening start + one target per round; Grand Goal stays out of round_pairs.
-        needed_from_remaining = round_count + 1
+        # Opening start + one target per round + branch_length extra titles per branch.
+        needed_from_remaining = round_count + 1 + extra_branch_titles
         if len(remaining) < needed_from_remaining:
             raise Exception(
                 "Wikipelago cannot generate this seed: "
-                f"check_count={round_count} needs {needed_from_remaining + 1} unique usable articles "
+                f"check_count={round_count} and branches need {needed_from_remaining + 1} unique usable articles "
                 f"(including a Grand Goal distinct from round targets), "
                 f"but only {len(remaining) + 1} are available after filtering. "
-                "Lower check_count or enable more article categories."
+                "Lower check_count / branch_count or enable more article categories."
             )
 
-        picks = self.random.sample(remaining, needed_from_remaining)
+        picks = self.random.sample(remaining, round_count + 1)
         first_start = picks[0]
         targets = picks[1:]
         starts = [first_start, *targets[:-1]]
@@ -498,6 +520,49 @@ class WikipelagoWorld(World):
             for start, target in zip(starts, targets)
         ]
         used_titles = {first_start, *targets, self.goal_article}
+
+        self.crossroads = []
+        self.branches = []
+        if branch_count > 0:
+            eligible_rounds = list(range(2, round_count + 1))
+            chosen_rounds = sorted(self.random.sample(eligible_rounds, branch_count))
+            leftover = [title for title in remaining if title not in used_titles]
+            for branch_id, main_round in enumerate(chosen_rounds):
+                fork = self.round_pairs[main_round - 1]["target"]
+                tagged_pools: dict[str, list[str]] = {tag: [] for tag in selected_topics}
+                for title in leftover:
+                    for tag in title_to_tags.get(title, ()):
+                        if tag in tagged_pools:
+                            tagged_pools[tag].append(title)
+                viable = [tag for tag, titles in tagged_pools.items() if len(titles) >= branch_length]
+                if viable:
+                    theme_tag = self.random.choice(viable)
+                    theme_titles = tagged_pools[theme_tag]
+                else:
+                    theme_tag = self.random.choice(sorted(selected_topics))
+                    theme_titles = leftover
+                if len(theme_titles) < branch_length:
+                    raise Exception(
+                        "Wikipelago cannot generate this seed: "
+                        f"not enough leftover articles for branch {branch_id + 1} "
+                        f"(need {branch_length}, have {len(theme_titles)}). "
+                        "Lower branch_count / branch_length or enable more article categories."
+                    )
+                branch_targets = self.random.sample(theme_titles, branch_length)
+                branch_starts = [fork, *branch_targets[:-1]]
+                pairs = [
+                    {"start": start, "target": target}
+                    for start, target in zip(branch_starts, branch_targets)
+                ]
+                used_titles.update(branch_targets)
+                leftover = [title for title in leftover if title not in used_titles]
+                self.crossroads.append({"main_round": main_round, "branch_id": branch_id})
+                self.branches.append({
+                    "id": branch_id,
+                    "theme_tag": theme_tag,
+                    "pairs": pairs,
+                })
+
         # Leftover titles for client-side target rerolls (same filtered category pool).
         self.reroll_pool = [title for title in filtered_pool if title not in used_titles]
 
@@ -526,7 +591,8 @@ class WikipelagoWorld(World):
     def create_items(self) -> None:
         round_count = self.options.check_count.value
         bingo_count = self._bingo_check_count()
-        free_locations = round_count + bingo_count
+        branch_loc_count = self._branch_location_count()
+        free_locations = round_count + bingo_count + branch_loc_count
         required_fragments = min(self.options.required_fragments.value, round_count)
         additional_fragments = max(0, int(self.options.additional_fragments_in_pool.value))
         fragment_pool_count = required_fragments + additional_fragments
@@ -542,6 +608,7 @@ class WikipelagoWorld(World):
         reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
         bingo_card_unlocks = self._bingo_card_unlocks()
         bingo_stamp_unlocks = self._bingo_stamp_unlocks()
+        branch_keys = self._branch_key_count()
 
         mandatory_items = (
             fragment_pool_count
@@ -551,6 +618,7 @@ class WikipelagoWorld(World):
             + bingo_card_unlocks
             + bingo_stamp_unlocks
             + round_access_count
+            + branch_keys
             + search_letters_needed
             + scroll_upgrades_needed
             + len(display_unlocks)
@@ -560,10 +628,10 @@ class WikipelagoWorld(World):
             raise Exception(
                 "Wikipelago item math invalid: required progression items exceed free locations. "
                 f"mandatory={mandatory_items}, free_locations={free_locations} "
-                f"(rounds={round_count}, bingo={bingo_count}). "
+                f"(rounds={round_count}, bingo={bingo_count}, branch_rounds={branch_loc_count}). "
                 "Lower required_fragments, additional_fragments_in_pool, trap_count, unlock counts, "
-                "reduce sanity/display unlock load, or lower round access pressure "
-                "(increase start_rounds_unlocked / rounds_per_unlock)."
+                "reduce sanity/display unlock load, lower round access pressure "
+                "(increase start_rounds_unlocked / rounds_per_unlock), or reduce branch_count / additional_branch_keys."
             )
 
         pool: list[WikipelagoItem] = []
@@ -590,6 +658,8 @@ class WikipelagoWorld(World):
             pool.append(self.create_item(unlock_name))
         for _ in range(round_access_count):
             pool.append(self.create_item("Round Access"))
+        for _ in range(branch_keys):
+            pool.append(self.create_item("Branch Key"))
         for trap_name in self._trap_item_names(trap_count):
             pool.append(self.create_item(trap_name))
         while len(pool) < free_locations:
@@ -610,17 +680,17 @@ class WikipelagoWorld(World):
             return ["Foggy Links"] * trap_count
         if trap_type == 2:
             return ["Missing Links"] * trap_count
+        if trap_type == 3:
+            return ["Wrong Wiki"] * trap_count
+        # 0 = all (and deprecated both): mix every trap kind.
         names: list[str] = []
         for _ in range(trap_count):
-            names.append(self.random.choice(["Foggy Links", "Missing Links"]))
+            names.append(self.random.choice(["Foggy Links", "Missing Links", "Wrong Wiki"]))
         return names
 
     def set_rules(self) -> None:
         round_count = self.options.check_count.value
         required_fragments = min(self.options.required_fragments.value, round_count)
-        start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
-        per_unlock = max(1, self.options.rounds_per_unlock.value)
-        early_open = start_unlocked
 
         goal_location = self.multiworld.get_location("Grand Goal", self.player)
         set_rule(
@@ -630,8 +700,7 @@ class WikipelagoWorld(World):
 
         for round_index in range(1, round_count + 1):
             location = self.multiworld.get_location(f"Round {round_index} Complete", self.player)
-            extra_rounds = max(0, round_index - early_open)
-            needed_round_access = (extra_rounds + per_unlock - 1) // per_unlock
+            needed_round_access = self._round_access_needed(round_index)
             set_rule(
                 location,
                 lambda state, need=needed_round_access: state.has("Round Access", self.player, need),
@@ -652,6 +721,27 @@ class WikipelagoWorld(World):
                             "Progressive Bingo Card", self.player, need
                         ),
                     )
+
+        branch_count = self._branch_count()
+        if branch_count > 0:
+            # branch_id is assigned in main_round order in generate_early, matching
+            # client FIFO: Branch N needs N keys and the Round Access of its crossroad.
+            crossroad_round_by_branch = {
+                int(cr["branch_id"]) + 1: int(cr["main_round"])
+                for cr in (getattr(self, "crossroads", None) or [])
+            }
+            for branch in range(1, branch_count + 1):
+                keys_needed = branch
+                main_round = crossroad_round_by_branch.get(branch)
+                need_ra = self._round_access_needed(main_round) if main_round else 0
+                entrance = self.multiworld.get_entrance(f"To Branch {branch}", self.player)
+                set_rule(
+                    entrance,
+                    lambda state, need_keys=keys_needed, need_ra=need_ra: (
+                        state.has("Branch Key", self.player, need_keys)
+                        and (need_ra <= 0 or state.has("Round Access", self.player, need_ra))
+                    ),
+                )
 
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
@@ -682,6 +772,16 @@ class WikipelagoWorld(World):
             location_ids["bingo_letterpairs"] = bingo_slot_location_ids_by_board(
                 self.location_name_to_id, bingo_grid, len(bingo_boards)
             )
+        branch_count = self._branch_count()
+        branch_length = self._branch_length()
+        if branch_count > 0:
+            location_ids["branches"] = [
+                [
+                    self.location_name_to_id[branch_location_name(branch, round_index)]
+                    for round_index in range(1, branch_length + 1)
+                ]
+                for branch in range(1, branch_count + 1)
+            ]
 
         return {
             "check_count": round_count,
@@ -690,7 +790,14 @@ class WikipelagoWorld(World):
             "rounds_per_unlock": per_unlock,
             "wikipedia_language": self._wikipedia_language(),
             "goal_article": self.goal_article,
+            "goal_question": self.goal_question,
+            "goal_qid": self.goal_qid,
             "round_pairs": self.round_pairs,
+            "crossroads": list(getattr(self, "crossroads", []) or []),
+            "branches": list(getattr(self, "branches", []) or []),
+            "branch_count": self._branch_count(),
+            "branch_length": self._branch_length() if self._branch_count() else 0,
+            "additional_branch_keys": self._additional_branch_keys(),
             "reroll_pool": list(getattr(self, "reroll_pool", [])),
             "searchsanity": bool(self.options.searchsanity.value),
             "scrollsanity": bool(self.options.scrollsanity.value),

@@ -14,7 +14,7 @@
   "new_qids_classified": 4353,
   "no_qid": 58,
   "miscellaneous_only": 1184,
-  "sensitive_flagged": 145,
+  "sensitive_flagged": 150,
   "tag_counts": {
     "famous_people": 4390,
     "movies": 1824,
@@ -5936,7 +5936,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Bdsm'"
     },
     {
@@ -6812,7 +6812,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Bea Van der Maat",
@@ -24570,7 +24570,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Getafe CF",
@@ -56685,7 +56685,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Pneumokok",
@@ -56975,7 +56975,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Portaal:Gebruikersportaal",

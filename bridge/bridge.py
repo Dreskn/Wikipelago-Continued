@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "0.6.0-ZaWarudo!"
+CLIENT_VERSION = "1.0.0"
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -33,6 +33,11 @@ def _env_first(*names: str) -> str:
         if value:
             return value
     return ""
+
+
+def debug_menu_enabled() -> bool:
+    """Playtest debug console. Off by default; set WIKIPELAGO_DEBUG_MENU=1 and restart."""
+    return (_env_first("WIKIPELAGO_DEBUG_MENU") or "").lower() in ("1", "true", "yes", "on")
 
 
 def _git_output(*args: str) -> str:
@@ -80,6 +85,7 @@ def build_info() -> dict[str, Any]:
         "commit_full": commit_full,
         "service": service,
         "staging": staging,
+        "debug_menu": debug_menu_enabled(),
     }
 
 DEFAULT_ITEMS = {
@@ -103,15 +109,19 @@ DEFAULT_ITEMS = {
     "Progressive Bingo Stamp": 1_870_019,
     "Foggy Links": 1_870_046,
     "Missing Links": 1_870_047,
+    "Branch Key": 1_870_048,
+    "Wrong Wiki": 1_870_049,
 }
 
-TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links"})
+TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links", "Wrong Wiki"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
 # Fallback max for legacy seeds that omit target_rerolls_start.
 TARGET_REROLLS_PER_ROUND = 3
+MAX_TRAVEL_EVENTS = 5000
 PROGRESSIVE_STACK_ITEMS = frozenset({
     "Knowledge Fragment",
     "Round Access",
+    "Branch Key",
     "Progressive Scroll Speed",
     "Progressive Back",
     "Progressive Reroll",
@@ -125,6 +135,7 @@ DEBUG_TOOL_ITEMS = (
     "Progressive Reroll",
     "Progressive Bingo Card",
     "Progressive Bingo Stamp",
+    "Branch Key",
     "Wiki Compass",
     "Ctrl+F Lens",
 )
@@ -320,22 +331,33 @@ class SessionState:
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     goal_article_title: str = ""
+    goal_question: str = ""
     wikipedia_language: str = "en"
     reroll_pool: list[str] = field(default_factory=list)
     target_rerolls_start: int = TARGET_REROLLS_PER_ROUND
     target_rerolls_used: int = 0
-    target_rerolls_round: int = -1
+    target_rerolls_round: str = ""
     back_depth_start: int = 0
     backs_used: int = 0
-    backs_round: int = -1
+    backs_round: str = ""
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
+    location_branch_ids: list[list[int]] = field(default_factory=list)
     item_ids: dict[str, int] = field(default_factory=lambda: DEFAULT_ITEMS.copy())
     received_items: list[int] = field(default_factory=list)
     checked_locations: set[int] = field(default_factory=set)
     round_index: int = 0
     clicks_used: int = 0
+    clicks_storage_ready: bool = False
     last_page: str = ""
+    path_last_page: dict[str, str] = field(default_factory=dict)
+    active_path: str = "main"
+    crossroads: list[dict[str, Any]] = field(default_factory=list)
+    branches: list[dict[str, Any]] = field(default_factory=list)
+    branch_round_index: dict[int, int] = field(default_factory=dict)
+    travel_events: list[dict[str, Any]] = field(default_factory=list)
+    visit_counts: dict[str, int] = field(default_factory=dict)
+    travel_storage_ready: bool = False
     warmer_colder: str | None = None
     last_distance_estimate: int | None = None
     boss_completed: bool = False
@@ -348,6 +370,29 @@ class SessionState:
     slot_games: dict[int, str] = field(default_factory=dict)
     item_id_to_name: dict[str, dict[int, str]] = field(default_factory=dict)
 
+    def active_branch_id(self) -> int | None:
+        if not str(self.active_path or "").startswith("branch:"):
+            return None
+        try:
+            return int(str(self.active_path).split(":", 1)[1])
+        except Exception:
+            return None
+
+    def current_branch(self) -> dict[str, Any] | None:
+        bid = self.active_branch_id()
+        if bid is None:
+            return None
+        for branch in self.branches:
+            try:
+                if int(branch.get("id", -1)) == bid:
+                    return branch
+            except Exception:
+                continue
+        return None
+
+    def progress_key(self) -> str:
+        return f"main:{self.round_index}"
+
     def current_target(self) -> str:
         if self.round_index >= len(self.round_pairs):
             return self.goal_article()
@@ -357,7 +402,6 @@ class SessionState:
         if not self.round_pairs:
             return ""
         if self.round_index >= len(self.round_pairs):
-            # Boss hunt begins from the final round's completed target page.
             return self.round_pairs[-1]["target"]
         return self.round_pairs[self.round_index]["start"]
 
@@ -426,9 +470,16 @@ class SessionState:
         return max(0, self.back_depth_start) + self.item_count("Progressive Back")
 
     def sync_back_counter(self) -> None:
-        if self.backs_round != self.round_index:
-            self.backs_round = self.round_index
+        key = self.progress_key()
+        if self.backs_round != key:
+            self.backs_round = key
             self.backs_used = 0
+
+    def sync_target_reroll_counter(self) -> None:
+        key = self.progress_key()
+        if self.target_rerolls_round != key:
+            self.target_rerolls_round = key
+            self.target_rerolls_used = 0
 
     def backs_remaining(self) -> int:
         self.sync_back_counter()
@@ -443,11 +494,6 @@ class SessionState:
     def target_rerolls_max(self) -> int:
         return max(0, self.target_rerolls_start) + self.item_count("Progressive Reroll")
 
-    def sync_target_reroll_counter(self) -> None:
-        if self.target_rerolls_round != self.round_index:
-            self.target_rerolls_round = self.round_index
-            self.target_rerolls_used = 0
-
     def target_rerolls_remaining(self) -> int:
         self.sync_target_reroll_counter()
         return max(0, self.target_rerolls_max() - self.target_rerolls_used)
@@ -456,13 +502,217 @@ class SessionState:
         self.sync_target_reroll_counter()
         if not self.is_playable() or self.boss_completed:
             return False
-        # Reroll is available for every normal round, including the final one.
-        # Boss hunt (past all rounds) cannot reroll the Grand Goal.
-        if not self.practice and self.round_index >= self.check_count:
-            return False
         if self.target_rerolls_remaining() <= 0:
             return False
-        return bool(self.reroll_pool)
+        if not self.reroll_pool:
+            return False
+        return bool(self.rerollable_target_slots())
+
+    def rerollable_target_slots(self) -> list[dict[str, Any]]:
+        slots: list[dict[str, Any]] = []
+        if self.round_index < len(self.round_pairs):
+            target = str(self.round_pairs[self.round_index].get("target") or "")
+            if target:
+                slots.append({"kind": "main", "old_target": target})
+        for item in self.live_branch_targets():
+            target = str(item.get("target") or "")
+            if not target:
+                continue
+            slots.append({
+                "kind": "branch",
+                "branch_id": int(item.get("id") or 0),
+                "fork": int(item.get("fork") or 0),
+                "old_target": target,
+            })
+        return slots
+
+    def branch_key_count(self) -> int:
+        return self.item_count("Branch Key")
+
+    def branch_keys_available(self) -> int:
+        return max(0, self.branch_key_count() - len(self.unlocked_branch_ids()))
+
+    def reached_main_round(self) -> int:
+        if self.boss_completed:
+            return max(self.check_count, 1)
+        return min(self.round_index + 1, max(self.check_count, 1))
+
+    def completed_crossroad_branch_ids(self) -> list[int]:
+        completed: list[tuple[int, int]] = []
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+                branch_id = int(cr.get("branch_id") or 0)
+            except Exception:
+                continue
+            if main_round < 1 or main_round > len(self.location_round_ids):
+                continue
+            loc_id = self.location_round_ids[main_round - 1]
+            if loc_id in self.checked_locations:
+                completed.append((main_round, branch_id))
+        completed.sort(key=lambda item: item[0])
+        return [branch_id for _main, branch_id in completed]
+
+    def unlocked_branch_ids(self) -> list[int]:
+        keys = self.branch_key_count()
+        if keys <= 0:
+            return []
+        completed = self.completed_crossroad_branch_ids()
+        return completed[: min(keys, len(completed), len(self.branches))]
+
+    def is_branch_unlocked(self, branch_id: int) -> bool:
+        return int(branch_id) in set(self.unlocked_branch_ids())
+
+    def revealed_crossroad(self) -> dict[str, Any] | None:
+        current_round = self.reached_main_round()
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+                branch_id = int(cr.get("branch_id") or 0)
+            except Exception:
+                continue
+            if main_round != current_round:
+                continue
+            unlocked = self.is_branch_unlocked(branch_id)
+            branch = self.branch_by_id(branch_id)
+            return {
+                "main_round": main_round,
+                "branch_id": branch_id,
+                "fork": branch_id + 1,
+                "theme_tag": str((branch or {}).get("theme_tag") or ""),
+                "unlocked": unlocked,
+                "needs_key": not unlocked,
+            }
+        return None
+
+    def crossroad_rounds(self) -> list[int]:
+        current = self.reached_main_round()
+        rounds: list[int] = []
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+            except Exception:
+                continue
+            if 1 <= main_round <= current:
+                rounds.append(main_round)
+        return rounds
+
+    def unlocked_crossroad_rounds(self) -> list[int]:
+        reached = set(self.crossroad_rounds())
+        unlocked = set(self.unlocked_branch_ids())
+        rounds: list[int] = []
+        for cr in self.crossroads:
+            try:
+                main_round = int(cr.get("main_round") or 0)
+                branch_id = int(cr.get("branch_id") or 0)
+            except Exception:
+                continue
+            if main_round in reached and branch_id in unlocked:
+                rounds.append(main_round)
+        return rounds
+
+    def branch_by_id(self, branch_id: int) -> dict[str, Any] | None:
+        try:
+            bid = int(branch_id)
+        except Exception:
+            return None
+        for branch in self.branches:
+            try:
+                if int(branch.get("id", -1)) == bid:
+                    return branch
+            except Exception:
+                continue
+        return None
+
+    def branch_pairs(self, branch_id: int) -> list[dict[str, str]]:
+        branch = self.branch_by_id(branch_id)
+        if branch is None:
+            return []
+        pairs = branch.get("pairs") or []
+        return pairs if isinstance(pairs, list) else []
+
+    def branch_current_target(self, branch_id: int) -> str:
+        pairs = self.branch_pairs(branch_id)
+        try:
+            idx = int(self.branch_round_index.get(int(branch_id), 0) or 0)
+        except Exception:
+            idx = 0
+        if idx < 0 or idx >= len(pairs):
+            return ""
+        return str(pairs[idx].get("target") or "")
+
+    def live_branch_targets(self) -> list[dict[str, Any]]:
+        live: list[dict[str, Any]] = []
+        for bid in self.unlocked_branch_ids():
+            branch = self.branch_by_id(bid)
+            if branch is None:
+                continue
+            pairs = self.branch_pairs(bid)
+            idx = int(self.branch_round_index.get(bid, 0) or 0)
+            if idx >= len(pairs):
+                continue
+            live.append({
+                "id": bid,
+                "fork": bid + 1,
+                "theme_tag": str(branch.get("theme_tag") or ""),
+                "target": str(pairs[idx].get("target") or ""),
+                "round": min(idx + 1, max(len(pairs), 1)),
+                "length": len(pairs),
+                "completed": min(idx, len(pairs)),
+            })
+        return live
+
+    def path_payload(self) -> list[dict[str, Any]]:
+        unlocked = set(self.unlocked_branch_ids())
+        paths: list[dict[str, Any]] = [{
+            "id": "main",
+            "label": "Main road",
+            "theme_tag": "",
+            "unlocked": True,
+            "round": min(self.round_index + 1, self.check_count),
+            "length": self.check_count,
+            "completed": min(self.round_index, self.check_count),
+            "current_target": self.current_target(),
+        }]
+        for branch in self.branches:
+            try:
+                bid = int(branch.get("id") or 0)
+            except Exception:
+                continue
+            if bid not in unlocked:
+                continue
+            pairs = branch.get("pairs") or []
+            length = len(pairs) if isinstance(pairs, list) else 0
+            idx = int(self.branch_round_index.get(bid, 0) or 0)
+            current_target = ""
+            if isinstance(pairs, list) and 0 <= idx < length:
+                current_target = str(pairs[idx].get("target") or "")
+            paths.append({
+                "id": f"branch:{bid}",
+                "fork": bid + 1,
+                "label": str(branch.get("theme_tag") or f"Branch {bid + 1}"),
+                "theme_tag": str(branch.get("theme_tag") or ""),
+                "unlocked": bid in unlocked,
+                "round": min(idx + 1, max(length, 1)),
+                "length": length,
+                "completed": min(idx, length),
+                "current_target": current_target,
+            })
+        return paths
+
+    def travel_payload(self) -> dict[str, Any]:
+        return {
+            "events": list(self.travel_events),
+            "visit_counts": dict(self.visit_counts),
+        }
+
+    def merge_clicks(self, reported: int) -> int:
+        try:
+            incoming = max(0, int(reported))
+        except Exception:
+            incoming = 0
+        self.clicks_used = max(int(self.clicks_used or 0), incoming)
+        return self.clicks_used
 
     def bingo_board_for_key(self, board_key: str) -> list[list[str]]:
         try:
@@ -535,6 +785,7 @@ class SessionState:
             "current_start": self.current_start(),
             "current_target": self.current_target(),
             "goal_article": self.goal_article(),
+            "goal_question": self.goal_question,
             "wikipedia_language": self.wikipedia_language or "en",
             "round": min(self.round_index + 1, self.check_count),
             "rounds_completed": min(self.round_index, self.check_count),
@@ -544,6 +795,7 @@ class SessionState:
             "target_rerolls_remaining": self.target_rerolls_remaining(),
             "can_reroll_target": self.can_reroll_target(),
             "clicks_used": self.clicks_used,
+            "clicks_storage_ready": self.clicks_storage_ready,
             "fragments": self.fragments(),
             "required_fragments": self.required_fragments,
             "start_rounds_unlocked": self.start_rounds_unlocked,
@@ -605,6 +857,19 @@ class SessionState:
             "boss_completed": self.boss_completed,
             "last_page": self.last_page,
             "last_error": self.last_error,
+            "active_path": "main",
+            "paths": self.path_payload(),
+            "crossroads": list(self.crossroads),
+            "crossroad_rounds": self.crossroad_rounds(),
+            "unlocked_crossroad_rounds": self.unlocked_crossroad_rounds(),
+            "branches": list(self.branches),
+            "unlocked_branch_ids": self.unlocked_branch_ids(),
+            "live_branch_targets": self.live_branch_targets(),
+            "branch_key_count": self.branch_key_count(),
+            "branch_keys_available": self.branch_keys_available(),
+            "revealed_crossroad": self.revealed_crossroad(),
+            "travel_event_count": len(self.travel_events),
+            "travel_storage_ready": self.travel_storage_ready,
         }
 
 
@@ -643,8 +908,10 @@ class APConnection:
             if not candidates:
                 raise RuntimeError("Practice pool has no alternate targets.")
             target = random.choice(candidates)
+            fresh_race = False
         else:
             start, target = random.sample(titles, 2)
+            fresh_race = True
 
         blocked = {_norm(start), _norm(target)}
         rest = [title for title in titles if _norm(title) not in blocked]
@@ -654,12 +921,24 @@ class APConnection:
         self.state.check_count = 1
         self.state.reroll_pool = rest
         self.state.goal_article_title = ""
-        self.state.clicks_used = 0
+        self.state.goal_question = ""
         self.state.backs_used = 0
-        self.state.backs_round = 0
+        self.state.backs_round = ""
         self.state.target_rerolls_used = 0
-        self.state.target_rerolls_round = 0
+        self.state.target_rerolls_round = ""
         self.state.last_page = start
+        self.state.path_last_page["main"] = start
+        self.state.active_path = "main"
+        self.state.crossroads = []
+        self.state.branches = []
+        self.state.branch_round_index = {}
+        if fresh_race:
+            self.state.clicks_used = 0
+            self.state.path_last_page = {"main": start}
+            self.state.travel_events = []
+            self.state.visit_counts = {}
+            self.state.travel_storage_ready = False
+            self.state.clicks_storage_ready = False
         self.state.warmer_colder = None
         self.state.last_distance_estimate = None
         self.state.boss_completed = False
@@ -765,12 +1044,20 @@ class APConnection:
         self.state.bingo_stamped_pairs.clear()
         self.state.bingo_stamps_used = 0
         self.state.bingo_storage_ready = False
+        self.state.clicks_storage_ready = False
+        self.state.travel_storage_ready = False
         self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
         self.state.target_rerolls_used = 0
-        self.state.target_rerolls_round = -1
+        self.state.target_rerolls_round = ""
         self.state.back_depth_start = 0
         self.state.backs_used = 0
-        self.state.backs_round = -1
+        self.state.backs_round = ""
+        self.state.active_path = "main"
+        self.state.crossroads = []
+        self.state.branches = []
+        self.state.branch_round_index = {}
+        self.state.location_branch_ids = []
+        self.state.path_last_page = {}
         self.state.slot = 0
         self.state.team = 0
         self.state.player_names.clear()
@@ -780,10 +1067,14 @@ class APConnection:
         if slot_changed:
             self.state.last_page = ""
             self.state.clicks_used = 0
+            self.state.travel_events = []
+            self.state.visit_counts = {}
             self.state.wikipedia_language = "en"
             self.state.round_pairs = []
             self.state.goal_article_title = ""
+            self.state.goal_question = ""
             self.state.reroll_pool = []
+            self.state.path_last_page = {}
         self.items_seen = 0
         self.link_cache.clear()
         self.resolved_title_cache.clear()
@@ -813,11 +1104,18 @@ class APConnection:
             self.state.round_pairs = []
             self.state.reroll_pool = []
             self.state.goal_article_title = ""
+            self.state.goal_question = ""
             self.state.received_items.clear()
             self.state.back_depth_start = 0
             self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
             self.state.clicks_used = 0
             self.state.last_page = ""
+            self.state.path_last_page = {}
+            self.state.travel_events = []
+            self.state.visit_counts = {}
+            self.state.active_path = "main"
+            self.state.crossroads = []
+            self.state.branches = []
             self.state.warmer_colder = None
             self.state.last_distance_estimate = None
         if self.reader_task and not self.reader_task.done():
@@ -929,6 +1227,8 @@ class APConnection:
                 await self._canonicalize_active_targets()
                 await self._request_data_package()
                 await self._request_bingo_stamps_from_storage()
+                await self._request_clicks_from_storage()
+                await self._request_travel_from_storage()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
                 raise RuntimeError(self.state.last_error)
@@ -1008,12 +1308,64 @@ class APConnection:
             if normalized_pairs:
                 self.state.round_pairs = normalized_pairs
 
+        self.state.crossroads = []
+        self.state.branches = []
+        self.state.branch_round_index = {}
+        self.state.active_path = "main"
+        crossroads_raw = slot_data.get("crossroads")
+        if isinstance(crossroads_raw, list):
+            parsed_cross: list[dict[str, Any]] = []
+            for item in crossroads_raw:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    parsed_cross.append({
+                        "main_round": int(item.get("main_round")),
+                        "branch_id": int(item.get("branch_id")),
+                    })
+                except Exception:
+                    continue
+            self.state.crossroads = parsed_cross
+        branches_raw = slot_data.get("branches")
+        if isinstance(branches_raw, list):
+            parsed_branches: list[dict[str, Any]] = []
+            for item in branches_raw:
+                if not isinstance(item, dict):
+                    continue
+                try:
+                    bid = int(item.get("id"))
+                except Exception:
+                    continue
+                pairs_raw = item.get("pairs") or []
+                pairs: list[dict[str, str]] = []
+                if isinstance(pairs_raw, list):
+                    for pair in pairs_raw:
+                        if not isinstance(pair, dict):
+                            continue
+                        start = self._canonicalize_known_title(str(pair.get("start", "")).strip())
+                        target = self._canonicalize_known_title(str(pair.get("target", "")).strip())
+                        if start and target:
+                            pairs.append({"start": start, "target": target})
+                parsed_branches.append({
+                    "id": bid,
+                    "theme_tag": str(item.get("theme_tag") or ""),
+                    "pairs": pairs,
+                })
+                self.state.branch_round_index[bid] = 0
+            self.state.branches = parsed_branches
+
         goal_from_slot = slot_data.get("goal_article")
         if isinstance(goal_from_slot, str) and goal_from_slot.strip():
             self.state.goal_article_title = self._canonicalize_known_title(goal_from_slot.strip())
         elif self.state.round_pairs:
             # Legacy seeds: last round target was the Grand Goal.
             self.state.goal_article_title = self.state.round_pairs[-1]["target"]
+
+        question_from_slot = slot_data.get("goal_question")
+        if isinstance(question_from_slot, str) and question_from_slot.strip():
+            self.state.goal_question = question_from_slot.strip()
+        else:
+            self.state.goal_question = ""
 
         wiki_lang = slot_data.get("wikipedia_language", "en")
         if isinstance(wiki_lang, str) and wiki_lang.strip():
@@ -1067,9 +1419,9 @@ class APConnection:
         else:
             self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
         self.state.backs_used = 0
-        self.state.backs_round = -1
+        self.state.backs_round = ""
         self.state.target_rerolls_used = 0
-        self.state.target_rerolls_round = -1
+        self.state.target_rerolls_round = ""
 
         boards: list[list[list[str]]] = []
         boards_raw = slot_data.get("bingo_letterpairs_boards")
@@ -1105,6 +1457,20 @@ class APConnection:
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
         grand_goal = location_ids.get("grand_goal")
         self.state.location_grand_goal = int(grand_goal) if grand_goal is not None else None
+        branch_ids_raw = location_ids.get("branches") if isinstance(location_ids, dict) else None
+        branch_loc_ids: list[list[int]] = []
+        if isinstance(branch_ids_raw, list):
+            for group in branch_ids_raw:
+                if not isinstance(group, list):
+                    continue
+                parsed_ids: list[int] = []
+                for value in group:
+                    try:
+                        parsed_ids.append(int(value))
+                    except Exception:
+                        continue
+                branch_loc_ids.append(parsed_ids)
+        self.state.location_branch_ids = branch_loc_ids
         bingo_ids_raw = location_ids.get("bingo_letterpairs") if isinstance(location_ids, dict) else None
         bingo_ids: dict[str, dict[str, int]] = {}
         if isinstance(bingo_ids_raw, dict):
@@ -1172,6 +1538,15 @@ class APConnection:
                 else:
                     break
             self.state.round_index = min(restored_round_index, self.state.check_count)
+
+            for bid, loc_ids in enumerate(self.state.location_branch_ids):
+                restored_branch_index = 0
+                for loc_id in loc_ids:
+                    if loc_id in restored_checked:
+                        restored_branch_index += 1
+                    else:
+                        break
+                self.state.branch_round_index[bid] = restored_branch_index
 
             if self.state.location_grand_goal and self.state.location_grand_goal in restored_checked:
                 self.state.boss_completed = True
@@ -1343,6 +1718,8 @@ class APConnection:
             return trap_name == "Foggy Links"
         if self.state.trap_type == 2:
             return trap_name == "Missing Links"
+        if self.state.trap_type == 3:
+            return trap_name == "Wrong Wiki"
         return True
 
     def _queue_event(self, event: dict[str, Any]) -> None:
@@ -1519,6 +1896,8 @@ class APConnection:
         events = await self._flush_bingo_line_checks()
         if self._bingo_stamps_snapshot() != before:
             await self._persist_bingo_stamps()
+            extra = {"pair": pair} if pair else None
+            await self._append_travel_event("bingo_cell", page_title, extra=extra)
         return events
 
     async def merge_bingo_stamps(self, stamped_pairs: Any) -> list[dict[str, Any]]:
@@ -1556,24 +1935,35 @@ class APConnection:
     def _bingo_storage_key(self) -> str:
         return f"wikipelago_bingo_letterpairs_{self.state.team}_{self.state.slot}"
 
+    def _clicks_storage_key(self) -> str:
+        return f"wikipelago_clicks_{self.state.team}_{self.state.slot}"
+
+    def _travel_storage_key(self) -> str:
+        return f"wikipelago_travel_{self.state.team}_{self.state.slot}"
+
     def _resolve_retrieved(self, packet: dict[str, Any]) -> None:
         keys = packet.get("keys")
         if not isinstance(keys, dict):
             return
-        storage_key = self._bingo_storage_key()
-        # Only handle our bingo Get. Key may be present with null when empty.
-        if storage_key not in keys:
-            return
-        raw = keys.get(storage_key)
-        asyncio.create_task(self._apply_bingo_storage_payload(raw, source="Retrieved"))
+        bingo_key = self._bingo_storage_key()
+        clicks_key = self._clicks_storage_key()
+        travel_key = self._travel_storage_key()
+        if bingo_key in keys:
+            asyncio.create_task(self._apply_bingo_storage_payload(keys.get(bingo_key), source="Retrieved"))
+        if clicks_key in keys:
+            asyncio.create_task(self._apply_clicks_storage_payload(keys.get(clicks_key), source="Retrieved"))
+        if travel_key in keys:
+            asyncio.create_task(self._apply_travel_storage_payload(keys.get(travel_key), source="Retrieved"))
 
     def _resolve_set_reply(self, packet: dict[str, Any]) -> None:
-        storage_key = self._bingo_storage_key()
-        if packet.get("key") != storage_key:
-            return
-        # SetNotify / want_reply: value is the post-operation DataStorage payload.
+        key = packet.get("key")
         raw = packet.get("value")
-        asyncio.create_task(self._apply_bingo_storage_payload(raw, source="SetReply"))
+        if key == self._bingo_storage_key():
+            asyncio.create_task(self._apply_bingo_storage_payload(raw, source="SetReply"))
+        elif key == self._clicks_storage_key():
+            asyncio.create_task(self._apply_clicks_storage_payload(raw, source="SetReply"))
+        elif key == self._travel_storage_key():
+            asyncio.create_task(self._apply_travel_storage_payload(raw, source="SetReply"))
 
     async def _request_bingo_stamps_from_storage(self) -> None:
         """Subscribe + Get stamped pairs from Archipelago DataStorage."""
@@ -1661,6 +2051,231 @@ class APConnection:
         except Exception as exc:
             LOG.info("Bingo DataStorage Set failed for %s: %s", key, exc)
 
+    def _remember_page(self, page_title: str) -> None:
+        title = str(page_title or "").strip()
+        if not title:
+            return
+        self.state.last_page = title
+        self.state.path_last_page[self.state.active_path or "main"] = title
+
+    def _travel_event_key(self, event: dict[str, Any]) -> tuple[Any, ...]:
+        return (
+            event.get("t"),
+            str(event.get("kind") or ""),
+            str(event.get("title") or ""),
+            str(event.get("path") or ""),
+        )
+
+    def _parse_clicks_storage_payload(self, raw: Any) -> int:
+        if isinstance(raw, dict):
+            try:
+                return max(0, int(raw.get("clicks_used") or 0))
+            except Exception:
+                return 0
+        if isinstance(raw, (int, float)):
+            try:
+                return max(0, int(raw))
+            except Exception:
+                return 0
+        return 0
+
+    def _parse_travel_storage_payload(self, raw: Any) -> tuple[list[dict[str, Any]], dict[str, int]]:
+        if not isinstance(raw, dict):
+            return [], {}
+        events_raw = raw.get("events")
+        events: list[dict[str, Any]] = []
+        if isinstance(events_raw, list):
+            for item in events_raw:
+                if isinstance(item, dict) and item.get("kind"):
+                    events.append(item)
+        visits_raw = raw.get("visit_counts")
+        visits: dict[str, int] = {}
+        if isinstance(visits_raw, dict):
+            for title, count in visits_raw.items():
+                try:
+                    visits[str(title)] = max(0, int(count))
+                except Exception:
+                    continue
+        return events, visits
+
+    def _merge_travel_state(self, events: list[dict[str, Any]], visits: dict[str, int]) -> None:
+        seen = {
+            self._travel_event_key(item): item
+            for item in self.state.travel_events
+            if isinstance(item, dict)
+        }
+        for item in events:
+            if isinstance(item, dict) and item.get("kind"):
+                seen[self._travel_event_key(item)] = item
+        merged = sorted(seen.values(), key=lambda item: float(item.get("t") or 0))
+        if len(merged) > MAX_TRAVEL_EVENTS:
+            merged = merged[-MAX_TRAVEL_EVENTS:]
+        self.state.travel_events = merged
+        for title, count in visits.items():
+            key = str(title)
+            self.state.visit_counts[key] = max(int(self.state.visit_counts.get(key, 0) or 0), int(count))
+
+    async def _request_clicks_from_storage(self) -> None:
+        if self.ws is None or not self.state.connected_to_ap or self.state.practice:
+            return
+        self.state.clicks_storage_ready = False
+        key = self._clicks_storage_key()
+        payload = [
+            {"cmd": "SetNotify", "keys": [key]},
+            {"cmd": "Get", "keys": [key]},
+        ]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Clicks DataStorage Get/SetNotify request failed: %s", exc)
+
+    async def _apply_clicks_storage_payload(self, raw: Any, *, source: str = "") -> None:
+        if self.state.practice:
+            self.state.clicks_storage_ready = True
+            return
+        remote = self._parse_clicks_storage_payload(raw)
+        self.state.merge_clicks(remote)
+        self.state.clicks_storage_ready = True
+        if self.state.clicks_used > remote:
+            await self._persist_clicks(force=True)
+
+    async def _persist_clicks(self, *, force: bool = False) -> None:
+        if self.state.practice or self.ws is None or not self.state.connected_to_ap:
+            return
+        if not force and not self.state.clicks_storage_ready:
+            return
+        key = self._clicks_storage_key()
+        value = {"clicks_used": max(0, int(self.state.clicks_used or 0))}
+        payload = [{
+            "cmd": "Set",
+            "key": key,
+            "default": {"clicks_used": 0},
+            "want_reply": True,
+            "operations": [{
+                "operation": "replace",
+                "value": value,
+            }],
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Clicks DataStorage Set failed for %s: %s", key, exc)
+
+    async def _request_travel_from_storage(self) -> None:
+        if self.ws is None or not self.state.connected_to_ap or self.state.practice:
+            return
+        self.state.travel_storage_ready = False
+        key = self._travel_storage_key()
+        payload = [
+            {"cmd": "SetNotify", "keys": [key]},
+            {"cmd": "Get", "keys": [key]},
+        ]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Travel DataStorage Get/SetNotify request failed: %s", exc)
+
+    async def _apply_travel_storage_payload(self, raw: Any, *, source: str = "") -> None:
+        if self.state.practice:
+            self.state.travel_storage_ready = True
+            return
+        incoming_events, incoming_visits = self._parse_travel_storage_payload(raw)
+        self._merge_travel_state(incoming_events, incoming_visits)
+        self.state.travel_storage_ready = True
+        merged_events, merged_visits = self.state.travel_events, self.state.visit_counts
+        incoming_keys = {self._travel_event_key(item) for item in incoming_events}
+        merged_keys = {self._travel_event_key(item) for item in merged_events if isinstance(item, dict)}
+        visits_changed = any(
+            int(merged_visits.get(title, 0) or 0) > int(incoming_visits.get(title, 0) or 0)
+            for title in set(merged_visits) | set(incoming_visits)
+        )
+        if merged_keys != incoming_keys or visits_changed:
+            await self._persist_travel(force=True)
+
+    async def _persist_travel(self, *, force: bool = False) -> None:
+        if self.state.practice or self.ws is None or not self.state.connected_to_ap:
+            return
+        if not force and not self.state.travel_storage_ready:
+            return
+        key = self._travel_storage_key()
+        value = {
+            "events": list(self.state.travel_events),
+            "visit_counts": dict(self.state.visit_counts),
+        }
+        payload = [{
+            "cmd": "Set",
+            "key": key,
+            "default": {"events": [], "visit_counts": {}},
+            "want_reply": True,
+            "operations": [{
+                "operation": "replace",
+                "value": value,
+            }],
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Travel DataStorage Set failed for %s: %s", key, exc)
+
+    async def _append_travel_event(
+        self,
+        kind: str,
+        title: str,
+        extra: dict[str, Any] | None = None,
+    ) -> None:
+        event: dict[str, Any] = {
+            "t": int(time.time() * 1000),
+            "kind": str(kind or "").strip() or "nav",
+            "title": str(title or "").strip(),
+            "path": str((extra or {}).get("path") or "main"),
+        }
+        if extra:
+            event["extra"] = extra
+        self.state.travel_events.append(event)
+        if len(self.state.travel_events) > MAX_TRAVEL_EVENTS:
+            self.state.travel_events = self.state.travel_events[-MAX_TRAVEL_EVENTS:]
+        if event["kind"] == "nav" and event["title"]:
+            key = event["title"]
+            self.state.visit_counts[key] = int(self.state.visit_counts.get(key, 0) or 0) + 1
+        await self._persist_travel()
+
+    def _set_active_pair_target(self, new_target: str) -> bool:
+        title = str(new_target or "").strip()
+        if not title:
+            return False
+        idx = self.state.round_index
+        if idx < 0 or idx >= len(self.state.round_pairs):
+            return False
+        self.state.round_pairs[idx]["target"] = title
+        return True
+
+    def _set_branch_pair_target(self, branch_id: int, new_target: str) -> bool:
+        title = str(new_target or "").strip()
+        if not title:
+            return False
+        pairs = self.state.branch_pairs(branch_id)
+        try:
+            idx = int(self.state.branch_round_index.get(int(branch_id), 0) or 0)
+        except Exception:
+            idx = 0
+        if idx < 0 or idx >= len(pairs):
+            return False
+        pairs[idx]["target"] = title
+        return True
+
+    def _branch_location_ids(self, branch_id: int) -> list[int]:
+        try:
+            bid = int(branch_id)
+        except Exception:
+            return []
+        if bid < 0 or bid >= len(self.state.location_branch_ids):
+            return []
+        return list(self.state.location_branch_ids[bid] or [])
+
     async def use_bingo_stamp(self, board: Any, row: Any, col: Any) -> dict[str, Any]:
         """Spend one Progressive Bingo Stamp to stamp a single unlocked empty cell."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
@@ -1696,6 +2311,11 @@ class APConnection:
         self.state.bingo_stamps_used = max(0, self.state.bingo_stamps_used) + 1
         bingo_completed = await self._flush_bingo_line_checks()
         await self._persist_bingo_stamps(force=True)
+        await self._append_travel_event(
+            "bingo_stamp",
+            self.state.last_page or pair,
+            extra={"board": board_key, "pair": pair},
+        )
         LOG.info(
             "Bingo stamp used board=%s cell=%s,%s pair=%s used=%s/%s",
             board_key,
@@ -1975,38 +2595,45 @@ class APConnection:
                 "locked": False,
                 "not_connected": True,
                 "boss_completed": self.state.boss_completed,
+                "hits": [],
                 "status": self.state.to_status(),
                 "next_target": self.state.current_target(),
             }
 
-        self.state.last_page = page_title
-        self.state.clicks_used = clicks_used
+        self.state.merge_clicks(clicks_used)
+        await self._persist_clicks()
+        self._remember_page(page_title)
 
         target = await self._canonicalize_title(self.state.current_target())
-        if self.state.round_index < len(self.state.round_pairs):
-            self.state.round_pairs[self.state.round_index]["target"] = target
+        self._set_active_pair_target(target)
         await self._update_compass_hint(page_title, target)
-        matched = await self._titles_match(page_title, target)
+        matched_main = await self._titles_match(page_title, target)
 
         result: dict[str, Any] = {
-            "matched": matched,
+            "matched": matched_main,
             "target": target,
             "advanced": False,
             "locked": False,
             "boss_completed": self.state.boss_completed,
+            "hits": [],
         }
 
         if self.state.practice:
-            if matched:
+            if matched_main:
+                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
                 # Chain like AP: keep the player on the cleared target; only roll a new target.
                 self._roll_practice_race(continue_from=page_title)
                 result["advanced"] = True
                 result["practice_rolled"] = True
+                result["hits"] = [{"kind": "main", "target": target}]
             result["status"] = self.state.to_status()
             result["next_target"] = self.state.current_target()
             return result
 
-        if matched and self.state.round_index < self.state.check_count and self.state.location_round_ids:
+        sent_bits: list[str] = []
+        hits: list[dict[str, Any]] = []
+
+        if matched_main and self.state.round_index < self.state.check_count and self.state.location_round_ids:
             round_number = self.state.round_index + 1
             if round_number > self.state.unlocked_rounds():
                 result["locked"] = True
@@ -2018,11 +2645,57 @@ class APConnection:
                 self.state.sync_target_reroll_counter()
                 self.state.sync_back_counter()
                 result["advanced"] = True
+                hit: dict[str, Any] = {"kind": "main", "target": target, "round": round_number}
                 network_item = scouted.get(round_id)
                 if network_item:
                     sent_text = self._format_send_text(network_item)
                     if sent_text:
-                        result["sent_text"] = sent_text
+                        hit["sent_text"] = sent_text
+                        sent_bits.append(sent_text)
+                hits.append(hit)
+                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
+
+        for bid in list(self.state.unlocked_branch_ids()):
+            loc_ids = self._branch_location_ids(bid)
+            idx = int(self.state.branch_round_index.get(bid, 0) or 0)
+            if idx < 0 or idx >= len(loc_ids):
+                continue
+            branch_target = await self._canonicalize_title(self.state.branch_current_target(bid))
+            if not branch_target or not await self._titles_match(page_title, branch_target):
+                continue
+            loc_id = loc_ids[idx]
+            scouted = await self.scout_locations([loc_id])
+            await self.send_location_checks([loc_id])
+            self.state.branch_round_index[bid] = idx + 1
+            result["advanced"] = True
+            result["matched"] = True
+            hit = {
+                "kind": "branch",
+                "branch_id": bid,
+                "fork": bid + 1,
+                "target": branch_target,
+                "round": idx + 1,
+            }
+            branch = self.state.branch_by_id(bid)
+            if branch:
+                hit["theme_tag"] = str(branch.get("theme_tag") or "")
+            network_item = scouted.get(loc_id)
+            if network_item:
+                sent_text = self._format_send_text(network_item)
+                if sent_text:
+                    hit["sent_text"] = sent_text
+                    sent_bits.append(sent_text)
+            hits.append(hit)
+            await self._append_travel_event(
+                "round_complete",
+                page_title,
+                extra={"path": f"branch:{bid}"},
+            )
+
+        if sent_bits:
+            result["sent_text"] = sent_bits[-1]
+        result["hits"] = hits
+        result["matched"] = bool(hits)
 
         await self.try_finish_boss()
         await self.ensure_goal_status_if_complete()
@@ -2038,7 +2711,8 @@ class APConnection:
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
-        if not self.state.practice and self.state.round_index >= self.state.check_count:
+        slots = self.state.rerollable_target_slots()
+        if not slots:
             return {
                 "ok": False,
                 "error": "cannot reroll the Grand Goal",
@@ -2054,60 +2728,101 @@ class APConnection:
         def _norm(title: str) -> str:
             return str(title or "").replace("_", " ").strip().casefold()
 
+        def _title_still_used(title: str) -> bool:
+            needle = _norm(title)
+            if not needle:
+                return False
+            for pair in self.state.round_pairs:
+                if _norm(pair.get("target", "")) == needle:
+                    return True
+            for branch in self.state.branches:
+                for pair in (branch.get("pairs") or []):
+                    if isinstance(pair, dict) and _norm(pair.get("target", "")) == needle:
+                        return True
+            return False
+
         start = self.state.current_start()
-        old_target = self.state.current_target()
-        blocked = {_norm(start), _norm(old_target), _norm(self.state.goal_article())}
+        blocked = {_norm(start), _norm(self.state.goal_article())}
         for pair in self.state.round_pairs:
             blocked.add(_norm(pair.get("target", "")))
+        for branch in self.state.branches:
+            for pair in (branch.get("pairs") or []):
+                if isinstance(pair, dict):
+                    blocked.add(_norm(pair.get("target", "")))
 
-        candidates = [title for title in self.state.reroll_pool if _norm(title) not in blocked]
-        if not candidates:
-            return {
-                "ok": False,
-                "error": "no alternate targets left in the seed pool",
-                "status": self.state.to_status(),
-            }
+        pool = list(self.state.reroll_pool)
 
-        picked = random.choice(candidates)
-        new_target = await self._canonicalize_title(picked)
-        if _norm(new_target) in blocked or not new_target:
-            # Canonicalization collided with a blocked title; try a few more.
+        async def _pick(blocked_titles: set[str]) -> tuple[str, str] | None:
+            candidates = [title for title in pool if _norm(title) not in blocked_titles]
+            if not candidates:
+                return None
+            picked = random.choice(candidates)
+            resolved = await self._canonicalize_title(picked)
+            if resolved and _norm(resolved) not in blocked_titles:
+                return picked, resolved
             random.shuffle(candidates)
-            new_target = ""
             for candidate in candidates[:12]:
                 resolved = await self._canonicalize_title(candidate)
-                if resolved and _norm(resolved) not in blocked:
-                    new_target = resolved
-                    picked = candidate
-                    break
-            if not new_target:
+                if resolved and _norm(resolved) not in blocked_titles:
+                    return candidate, resolved
+            return None
+
+        picks: list[tuple[dict[str, Any], str, str]] = []
+        for slot in slots:
+            chosen = await _pick(blocked)
+            if not chosen:
                 return {
                     "ok": False,
-                    "error": "no usable alternate targets after title resolution",
+                    "error": "no alternate targets left in the seed pool",
                     "status": self.state.to_status(),
                 }
+            picked, new_target = chosen
+            picks.append((slot, picked, new_target))
+            blocked.add(_norm(picked))
+            blocked.add(_norm(new_target))
+            pool = [title for title in pool if _norm(title) != _norm(picked)]
 
-        self.state.round_pairs[self.state.round_index]["target"] = new_target
-        self.state.reroll_pool = [title for title in self.state.reroll_pool if _norm(title) != _norm(picked)]
-        # Return the discarded target to the pool for later rounds / rerolls.
-        if old_target and _norm(old_target) != _norm(self.state.goal_article()):
-            still_used = any(
-                _norm(pair.get("target", "")) == _norm(old_target)
-                for idx, pair in enumerate(self.state.round_pairs)
-                if idx != self.state.round_index
-            )
-            if not still_used and all(_norm(title) != _norm(old_target) for title in self.state.reroll_pool):
-                self.state.reroll_pool.append(old_target)
+        changes: list[dict[str, Any]] = []
+        recycled: list[str] = []
+        for slot, picked, new_target in picks:
+            old_target = str(slot.get("old_target") or "")
+            if slot.get("kind") == "branch":
+                if not self._set_branch_pair_target(int(slot.get("branch_id") or 0), new_target):
+                    return {"ok": False, "error": "no active branch round", "status": self.state.to_status()}
+            elif not self._set_active_pair_target(new_target):
+                return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+            change = {
+                "kind": str(slot.get("kind") or "main"),
+                "old_target": old_target,
+                "new_target": new_target,
+            }
+            if slot.get("kind") == "branch":
+                change["branch_id"] = int(slot.get("branch_id") or 0)
+                change["fork"] = int(slot.get("fork") or 0)
+            changes.append(change)
+            if old_target and _norm(old_target) != _norm(self.state.goal_article()):
+                recycled.append(old_target)
 
+        for old_target in recycled:
+            if _title_still_used(old_target):
+                continue
+            if all(_norm(title) != _norm(old_target) for title in pool):
+                pool.append(old_target)
+
+        self.state.reroll_pool = pool
         self.state.target_rerolls_used += 1
-        self.state.warmer_colder = None
-        self.state.last_distance_estimate = None
+        if any(change.get("kind") == "main" for change in changes):
+            self.state.warmer_colder = None
+            self.state.last_distance_estimate = None
 
+        main_change = next((item for item in changes if item.get("kind") == "main"), None)
+        first = main_change or (changes[0] if changes else {})
         return {
             "ok": True,
             "rerolled": True,
-            "old_target": old_target,
-            "new_target": new_target,
+            "changes": changes,
+            "old_target": first.get("old_target") or "",
+            "new_target": first.get("new_target") or "",
             "rerolls_used": self.state.target_rerolls_used,
             "rerolls_remaining": self.state.target_rerolls_remaining(),
             "status": self.state.to_status(),
@@ -2128,6 +2843,7 @@ class APConnection:
             }
 
         self.state.backs_used += 1
+        await self._append_travel_event("back", self.state.last_page)
         return {
             "ok": True,
             "used_back": True,
@@ -2156,6 +2872,11 @@ class APConnection:
 
         self.state.boss_completed = True
         await self.send_goal_status()
+        await self._append_travel_event(
+            "grand_goal",
+            self.state.last_page or goal_title,
+            extra={"path": "main"},
+        )
 
     def _debug_item_id(self, name: str) -> int | None:
         if name in self.state.item_ids:
@@ -2217,8 +2938,44 @@ class APConnection:
                 result["sent_text"] = sent_text
         return result
 
+    async def _debug_complete_branch_at(self, branch_id: int, round_index: int) -> dict[str, Any]:
+        loc_ids = self._branch_location_ids(branch_id)
+        if round_index < 0 or round_index >= len(loc_ids):
+            return {"advanced": False, "error": "no branch location for index"}
+        if self.state.boss_completed:
+            return {"advanced": False, "error": "seed already complete"}
+        loc_id = loc_ids[round_index]
+        if loc_id in self.state.checked_locations:
+            current = int(self.state.branch_round_index.get(branch_id, 0) or 0)
+            if current <= round_index:
+                self.state.branch_round_index[branch_id] = min(round_index + 1, len(loc_ids))
+                self.state.sync_target_reroll_counter()
+                self.state.sync_back_counter()
+            return {"advanced": False, "already_checked": True}
+        scouted = await self.scout_locations([loc_id])
+        await self.send_location_checks([loc_id])
+        self.state.branch_round_index[branch_id] = max(
+            int(self.state.branch_round_index.get(branch_id, 0) or 0),
+            min(round_index + 1, len(loc_ids)),
+        )
+        self.state.sync_target_reroll_counter()
+        self.state.sync_back_counter()
+        result: dict[str, Any] = {
+            "advanced": True,
+            "branch_id": branch_id,
+            "round_completed": round_index + 1,
+        }
+        network_item = scouted.get(loc_id)
+        if network_item:
+            sent_text = self._format_send_text(network_item)
+            if sent_text:
+                result["sent_text"] = sent_text
+        return result
+
     async def debug_action(self, action: str, data: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Full AP/session debug mutators for playtesting. Unauthenticated for 0.4."""
+        """Full AP/session debug mutators for playtesting.
+        The HTTP route is only registered when WIKIPELAGO_DEBUG_MENU is set.
+        """
         data = data or {}
         self.state.last_seen = time.time()
         action = str(action or "").strip()
@@ -2272,6 +3029,17 @@ class APConnection:
                     "action": action,
                     "round_access_count": self.state.round_access_count(),
                     "unlocked_rounds": self.state.unlocked_rounds(),
+                    "status": self.state.to_status(),
+                }
+
+            if action == "unlock_all_branches":
+                need = max(0, len(self.state.branches))
+                while self.state.item_count("Branch Key") < need:
+                    await self._debug_grant_named("Branch Key", unique=False, fire_trap=False)
+                return {
+                    "ok": True,
+                    "action": action,
+                    "branch_key_count": self.state.branch_key_count(),
                     "status": self.state.to_status(),
                 }
 
@@ -2347,10 +3115,9 @@ class APConnection:
                 title = str(data.get("title") or "").strip()
                 if not title:
                     return {"ok": False, "error": "title is required", "status": self.state.to_status()}
-                if self.state.round_index >= len(self.state.round_pairs):
-                    return {"ok": False, "error": "no active round", "status": self.state.to_status()}
                 new_target = await self._canonicalize_title(title)
-                self.state.round_pairs[self.state.round_index]["target"] = new_target
+                if not self._set_active_pair_target(new_target):
+                    return {"ok": False, "error": "no active round", "status": self.state.to_status()}
                 self.state.warmer_colder = None
                 self.state.last_distance_estimate = None
                 return {
@@ -2362,12 +3129,12 @@ class APConnection:
 
             if action == "reset_rerolls":
                 self.state.target_rerolls_used = 0
-                self.state.target_rerolls_round = self.state.round_index
+                self.state.target_rerolls_round = self.state.progress_key()
                 return {"ok": True, "action": action, "status": self.state.to_status()}
 
             if action == "reset_backs":
                 self.state.backs_used = 0
-                self.state.backs_round = self.state.round_index
+                self.state.backs_round = self.state.progress_key()
                 return {"ok": True, "action": action, "status": self.state.to_status()}
 
             if action == "set_options":
@@ -2386,7 +3153,7 @@ class APConnection:
             if action == "queue_trap":
                 trap = str(data.get("trap") or "").strip()
                 if trap not in TRAP_ITEM_NAMES:
-                    return {"ok": False, "error": "trap must be Foggy Links or Missing Links", "status": self.state.to_status()}
+                    return {"ok": False, "error": "trap must be Foggy Links, Missing Links, or Wrong Wiki", "status": self.state.to_status()}
                 # Inject as a received trap item so inventory + TrapLink stay consistent.
                 await self._debug_grant_named(trap, unique=False, fire_trap=True)
                 return {"ok": True, "action": action, "trap": trap, "status": self.state.to_status()}
@@ -2490,6 +3257,11 @@ class App:
         response.headers["Service-Worker-Allowed"] = "/"
         return response
 
+    async def favicon(self, request: web.Request) -> web.StreamResponse:
+        response = web.FileResponse(self.web_root / "icons" / "icon-192.png")
+        response.content_type = "image/png"
+        return response
+
     async def health(self, request: web.Request) -> web.StreamResponse:
         info = build_info()
         info["sessions"] = len(self.sessions.sessions)
@@ -2576,18 +3348,27 @@ class App:
         # Strict mode: display/restore callers must not score. Only intentional
         # in-article clicks should send submit_check=true (client default).
         submit_check = bool(data.get("submit_check", True))
+        travel_kind = str(data.get("travel_kind") or "").strip().lower()
+        if travel_kind not in {"nav", "back", "restore", "death"}:
+            travel_kind = "nav" if submit_check else "restore"
 
         if not page_title:
             return web.json_response({"ok": False, "error": "page_title is required"}, status=400)
 
         session.conn.state.last_seen = time.time()
+        session.conn.state.merge_clicks(clicks_used)
+        await session.conn._persist_clicks()
+        session.conn._remember_page(page_title)
         bingo_completed: list[dict[str, Any]] = []
         if session.state.connected_to_ap:
             bingo_completed = await session.conn.apply_bingo_visit(page_title)
 
+        if travel_kind == "nav":
+            await session.conn._append_travel_event("nav", page_title)
+        elif travel_kind == "death":
+            await session.conn._append_travel_event("death", page_title)
+
         if not submit_check:
-            session.conn.state.last_page = page_title
-            session.conn.state.clicks_used = clicks_used
             return web.json_response({
                 "ok": True,
                 "matched": False,
@@ -2622,6 +3403,21 @@ class App:
         result = await session.conn.use_back()
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
+
+    async def session_journey(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        payload = session.state.travel_payload()
+        return web.json_response({
+            "ok": True,
+            "events": payload.get("events") or [],
+            "visit_counts": payload.get("visit_counts") or {},
+            "paths": session.state.path_payload(),
+            "active_path": session.state.active_path or "main",
+            "travel_storage_ready": session.state.travel_storage_ready,
+        })
 
     async def session_bingo_stamps(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
@@ -2666,6 +3462,8 @@ class App:
         return web.json_response(result, status=status_code)
 
     async def session_debug(self, request: web.Request) -> web.StreamResponse:
+        if not debug_menu_enabled():
+            return web.json_response({"ok": False, "error": "not found"}, status=404)
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
         if not session:
@@ -2687,6 +3485,7 @@ class App:
     def build(self) -> web.Application:
         app = web.Application()
         app.router.add_get("/", self.index)
+        app.router.add_get("/favicon.ico", self.favicon)
         app.router.add_get("/manifest.webmanifest", self.manifest)
         app.router.add_get("/service-worker.js", self.service_worker)
         app.router.add_get("/health", self.health)
@@ -2701,7 +3500,9 @@ class App:
         app.router.add_post("/api/session/{sid}/bingo-stamp", self.session_use_bingo_stamp)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
-        app.router.add_post("/api/session/{sid}/debug", self.session_debug)
+        app.router.add_get("/api/session/{sid}/journey", self.session_journey)
+        if debug_menu_enabled():
+            app.router.add_post("/api/session/{sid}/debug", self.session_debug)
         app.router.add_static("/icons/", str(self.web_root / "icons"), show_index=False, append_version=True)
         app.router.add_static("/static/", str(self.web_root), show_index=False, append_version=True)
 
@@ -2732,6 +3533,8 @@ async def main_async(args: argparse.Namespace) -> None:
     await site.start()
 
     LOG.info(f"Wikipelago cloud app running on http://{args.host}:{args.port}")
+    if debug_menu_enabled():
+        LOG.info("Debug menu enabled (WIKIPELAGO_DEBUG_MENU)")
     while True:
         await asyncio.sleep(3600)
 
@@ -2740,11 +3543,18 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Wikipelago cloud app")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "5000")))
+    parser.add_argument(
+        "--debug-menu",
+        action="store_true",
+        help="Enable the playtest debug console (same as WIKIPELAGO_DEBUG_MENU=1)",
+    )
     return parser.parse_args()
 
 
 def launch() -> None:
     args = parse_args()
+    if args.debug_menu:
+        os.environ["WIKIPELAGO_DEBUG_MENU"] = "1"
     asyncio.run(main_async(args))
 
 

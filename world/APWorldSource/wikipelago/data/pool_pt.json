@@ -1,7 +1,7 @@
 {
   "lang": "pt",
   "source": "pool_annotated_pt.json",
-  "count": 8545,
+  "count": 8444,
   "entries": [
     {
       "title": "1.ª Companhia",
@@ -4274,13 +4274,6 @@
       "sensitive": true
     },
     {
-      "title": "Assembleia da República",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Assexualidade",
       "tags": [
         "miscellaneous"
@@ -4772,7 +4765,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BGM-109 Tomahawk",
@@ -18420,55 +18413,6 @@
     },
     {
       "title": "Feudalismo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:CONMEBOL logo (2017).png",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:Estrela da Casa - Globo.jpg",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:Ghostrider cartaz.jpg",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:Liga de Futebol Nacional do Brasil.png",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:MOEDA COMEMORATIVA DO CENTENÁRIO DA IMIGRAÇÃO JAPONESA NO BRASIL.JPG",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:Sergipão - Série A2 Logotipo.png",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ficheiro:Seven 1995.jpg",
       "tags": [
         "miscellaneous"
       ],
@@ -40805,7 +40749,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Porta dos Fundos",
@@ -40923,132 +40867,6 @@
       "title": "Power Rangers",
       "tags": [
         "movies"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Dados da pandemia de COVID-19",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco Futbol Club Barcelona",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco Paris Saint-Germain Football Club",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco da Associação Chapecoense de Futebol",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco da Juventus Football Club",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco da Sociedade Esportiva Palmeiras",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Clube de Regatas do Flamengo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Cruzeiro Esporte Clube",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Santos Futebol Clube",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do Sport Club Corinthians Paulista",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Elenco do São Paulo Futebol Clube",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Referências-discussão",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Referências-discussão/doc",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Tabela do Campeonato Brasileiro da Série A - 2022",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Tabela do Campeonato Brasileiro da Série A - 2023",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Tabela do Campeonato Brasileiro da Série A - 2024",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Tabela do Campeonato Brasileiro da Série A - 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Predefinição:Tabela do Campeonato Brasileiro da Série B - 2026",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -42711,7 +42529,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Relações internacionais do Irã",
@@ -44928,7 +44746,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sage Stallone",
@@ -46174,7 +45992,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo não penetrativo",
@@ -46195,7 +46013,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexta-feira 13",
@@ -50769,167 +50587,6 @@
       "sensitive": false
     },
     {
-      "title": "Usuário Discussão:Agent010",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:DarwIn",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Darwinius",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:EVinente",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:Eric Duff",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:Jbribeiro1",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:Jbribeiro1/Arquivo 2010",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:Jbribeiro1/PDU",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:O revolucionário aliado",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:RadiX",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário Discussão:Érico",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Egli Diana Pinto",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Egli Diana Pinto Neta",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Itamar Serpa Fernandes",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Lelio Vieira Carneiro",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Lelio Vieira Carneiro Junior",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Lelio Vieira Carneiro Neto",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Luiz Fernando Monteiro Bittencourt Filho",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Luiz Gastao Bittencourt da Silva",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Luiz Gastao Bittencourt da Silva Filho",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Luiz Gastao Bittencourt da Silva Neto",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a) Discussão:Silvia Odete Morani Massad",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuário(a):Augusto de Arruda Botelho",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "V (artista)",
       "tags": [
         "famous_people",
@@ -52161,13 +51818,6 @@
       "sensitive": false
     },
     {
-      "title": "Wikipédia:Página principal",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Wikipédia",
       "tags": [
         "technology"
@@ -52176,363 +51826,6 @@
     },
     {
       "title": "Wikipédia Discussão:Burocratas/Pedidos de remoção/Érico",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Campanha Jogos Paralímpicos na Wikipédia",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Comunicado sobre o Museu Nacional",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Comunicado sobre vinte anos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Contato",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Edit-a-thon/Cada Livro Seu Público 2026",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Edit-a-thon/cada livro seu público 2024",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Edit-a-thon/cada livro seu público 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Esplanada",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Fontes confiáveis",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Fontes independentes",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Ajuda:Informe um erro",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Livro de estilo/Cite as fontes",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais Diversidade",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais Diversidade 2024",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais Negres",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais Povos Originários",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais Pretas",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais mulheres",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Mais povos originários",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Wikiconcurso chuva de bytes",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Projeto Mais Teoria da História na Wiki/Wikiconcurso verbetes fantásticos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Livro de estilo/Referências e notas de rodapé",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Comunicado sobre um milhão de artigos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Verificabilidade",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Cultura Popular 2024/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Cultura Popular 2025/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Cultura Popular 2026/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Earth Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2016/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2019/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2020/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2021/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2022/Brasil/Sobre",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2023/Brasil/Sobre",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2024/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2024/Brasil/Sobre",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2025/Brasil",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2025/Brasil/Sobre",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wiki Loves Monuments 2020/Portugal",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Arquivo Nacional",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Casa Brasileira",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Justiça Climática e Amazônia",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Mulheres Brasileiras no Esporte",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Novo Museu do Ipiranga",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Música Brasileira",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Wiki Loves Espírito Santo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Wiki Loves Maranhão",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Wiki Loves Mato Grosso",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Wiki Loves Minas Gerais",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikiconcurso Wiki Loves Pará",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipédia:Wikipedia Asian Month",
       "tags": [
         "miscellaneous"
       ],

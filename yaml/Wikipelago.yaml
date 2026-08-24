@@ -7,10 +7,11 @@ description: Default Wikipelago player template
 
 # Fail generation if the host Archipelago / Wikipelago apworld is too old for this
 # template (avoids silent ignores of newer options like progressive tools).
+# Archipelago only accepts dotted integers here (1.0.0).
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 0.6.0
+    Wikipelago: 1.0.0
 
 Wikipelago:
 
@@ -21,7 +22,8 @@ Wikipelago:
   # check_count: how many Start → Target rounds (checks) are generated (10–999, default 40).
   # required_fragments / additional_fragments_in_pool: 1–200 / 0–200.
   # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access unlocks this many more (1–999).
-  # random_goal_article: true = random goal from enabled categories; false = use goal_article_preset.
+  # Grand Goal is always a closed question from that wiki language's goal pool
+  # (answer page preferred from enabled categories).
   progression_balancing: 50
   check_count: 40
   required_fragments: 7
@@ -29,10 +31,8 @@ Wikipelago:
   start_rounds_unlocked: 10
   rounds_per_unlock: 5
   random_goal_article: true
-  # Used only when random_goal_article is false. Valid values:
-  #   minecraft | the_legend_of_zelda | dark_souls | elden_ring | super_mario_bros | pokemon_red_and_blue | chess | catan
-  #   the_dark_knight | star_wars_film | lord_of_the_rings_fellowship | the_matrix | avatar_the_last_airbender | breaking_bad | stranger_things
-  #   game_of_thrones | the_simpsons | spongebob_squarepants | super_smash_bros_ultimate | halo_combat_evolved
+  # Deprecated and ignored. Kept so older YAMLs still generate. The Grand Goal
+  # always comes from the language goal pool, not this list.
   goal_article_preset: dark_souls
 
   # =============================================================================
@@ -61,6 +61,22 @@ Wikipelago:
   bingo_cards_start: 1
   bingo_card_unlocks: 2
   bingo_stamp_unlocks: 2
+
+  # =============================================================================
+  # Crossroads & side branches
+  # =============================================================================
+  # Selected main-road rounds (never round 1) become crossroads.
+  # Keys auto-spend on the earliest finished crossroad first: Branch N needs
+  # N Branch Keys plus that completed crossroad (either order). All unlocked
+  # branches stay live at once: every page visit can clear the main target
+  # and/or a branch target (and still stamp bingo). Extra keys beyond
+  # branch_count still count as progression but do not open more branches.
+  # 0 disables the whole system.
+  # branch_count: 0–8 (default 2). branch_length: 1–20 rounds per branch (default 5).
+  # additional_branch_keys: 0–8 extra keys in the pool (default 1).
+  branch_count: 2
+  branch_length: 5
+  additional_branch_keys: 1
 
   # =============================================================================
   # Wikipedia language & article pool
@@ -133,9 +149,10 @@ Wikipelago:
   # =============================================================================
   # Traps
   # =============================================================================
-  # trap_count: Foggy Links / Missing Links items in the pool (0–99)
-  # trap_type: both | only_foggy_links | only_missing_links
+  # trap_count: Foggy Links / Missing Links / Wrong Wiki items in the pool (0–99)
+  # trap_type: all | only_foggy_links | only_missing_links | only_wrong_wiki
+  # both is deprecated and still selects every trap (same as all).
   # trap_link: share traps with other Trap Link players (independent of count).
   trap_count: 0
-  trap_type: both
+  trap_type: all
   trap_link: false

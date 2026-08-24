@@ -1,7 +1,7 @@
 {
   "lang": "es",
   "source": "pool_annotated_es.json",
-  "count": 8753,
+  "count": 8720,
   "entries": [
     {
       "title": ".aero",
@@ -6035,7 +6035,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BRICS",
@@ -9865,48 +9865,6 @@
       "title": "Categoría Primera A",
       "tags": [
         "sports"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Apellidos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Nombres femeninos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Nombres masculinos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Países en los Juegos Olímpicos de Río de Janeiro 2016",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Películas de Star Wars",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Categoría:Telenovelas juveniles de Argentina",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -31196,13 +31154,6 @@
       "sensitive": true
     },
     {
-      "title": "La ballena",
-      "tags": [
-        "movies"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "La bella y la bestia (película de 2017)",
       "tags": [
         "movies"
@@ -43067,7 +43018,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Pornografía en Internet",
@@ -43078,13 +43029,6 @@
     },
     {
       "title": "Porro (grupo de choque)",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:México/Efemérides/enero",
       "tags": [
         "miscellaneous"
       ],
@@ -44796,7 +44740,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Relieve terrestre",
@@ -52402,20 +52346,6 @@
       "sensitive": false
     },
     {
-      "title": "Usuario:Abián",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Usuario:Lyssettte López/Neoliberalismo",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Uzbekistán",
       "tags": [
         "geography",
@@ -53741,167 +53671,6 @@
       "tags": [
         "art_literature",
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Encuentros/1bib1ref 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Acerca de",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Bienvenidos",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Celebración del 20.º aniversario de Wikipedia en español",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Comunicado del 4 de julio de 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Contacto",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Efemérides/Octubre",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Encuentros/Editaton Wiki Loves Andes 2020",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Encuentros/Editatón Cultura y Ecología en Perú 2021",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Encuentros/¡Alto! Mujeres trabajando",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Encuentros/¡Alto! Mujeres trabajando 2023",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Limitación general de responsabilidad",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mes de Asia",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mes de Asia/2019",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mes de Asia/2024",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mes de Asia/2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Mes de la Antártida",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Reto del Orgullo Barroco",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Verificabilidad",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiconcurso/La mujer que nunca conociste 2017",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiconcurso/La mujer que nunca conociste 2018",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiconcurso/WikiPorLaEducación Latinoamérica y el Caribe",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wikiconcurso/WikiPorLosDerechosHumanos2022",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

@@ -83,9 +83,29 @@ function Test-LocalSettings([hashtable]$Settings) {
     }
 
     $roundAccessCount = [Math]::Max(0, [int][Math]::Ceiling(($checkCount - $startUnlocked) / [double]$perUnlock))
-    $mandatoryItems = $required + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded + $displayUnlocksNeeded
-    if ($mandatoryItems -gt $checkCount) {
-        return "mandatory progression items exceed available round checks"
+    $branchCount = 0
+    if ($null -ne $Settings.branch_count) {
+        $branchCount = [Math]::Max(0, [int]$Settings.branch_count)
+    }
+    $branchLength = 3
+    if ($null -ne $Settings.branch_length) {
+        $branchLength = [Math]::Max(1, [int]$Settings.branch_length)
+    }
+    $additionalBranchKeys = 0
+    if ($null -ne $Settings.additional_branch_keys) {
+        $additionalBranchKeys = [Math]::Max(0, [int]$Settings.additional_branch_keys)
+    }
+    if ($branchCount -gt 0 -and $checkCount -lt 2) {
+        return "branch_count requires check_count of at least 2"
+    }
+    if ($branchCount -gt [Math]::Max(0, $checkCount - 1)) {
+        return "branch_count exceeds eligible main-road crossroads"
+    }
+    $branchKeys = if ($branchCount -gt 0) { $branchCount + $additionalBranchKeys } else { 0 }
+    $freeLocations = $checkCount + ($branchCount * $branchLength)
+    $mandatoryItems = $required + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded + $displayUnlocksNeeded + $branchKeys
+    if ($mandatoryItems -gt $freeLocations) {
+        return "mandatory progression items exceed available checks"
     }
 
     return $null
@@ -138,6 +158,16 @@ function New-WikipelagoSettings {
             include_biology_medicine = Get-RandomBool
             include_miscellaneous = Get-RandomBool
             include_sensitive_pages = Get-RandomBool
+            branch_count = 0
+            branch_length = 3
+            additional_branch_keys = 0
+        }
+
+        if ((Get-Random -Minimum 0 -Maximum 100) -lt 35 -and $checkCount -ge 8) {
+            $maxBranches = [Math]::Min(3, $checkCount - 1)
+            $settings.branch_count = Get-Random -Minimum 1 -Maximum ($maxBranches + 1)
+            $settings.branch_length = Get-Random -Minimum 1 -Maximum 5
+            $settings.additional_branch_keys = Get-Random -Minimum 0 -Maximum 3
         }
 
         if (-not ($settings.GetEnumerator() | Where-Object { $_.Key -like 'include_*' -and $_.Value }).Count) {
@@ -195,6 +225,9 @@ Wikipelago:
   include_biology_medicine: $([string]$Settings.include_biology_medicine).ToLower()
   include_miscellaneous: $([string]$Settings.include_miscellaneous).ToLower()
   include_sensitive_pages: $([string]$Settings.include_sensitive_pages).ToLower()
+  branch_count: $($Settings.branch_count)
+  branch_length: $($Settings.branch_length)
+  additional_branch_keys: $($Settings.additional_branch_keys)
 "@
 }
 

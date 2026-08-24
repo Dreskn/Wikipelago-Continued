@@ -1,7 +1,7 @@
 {
   "lang": "en",
   "source": "pool_annotated_en.json",
-  "count": 11179,
+  "count": 11155,
   "entries": [
     {
       "title": "Wikipedia",
@@ -4418,13 +4418,6 @@
       "tags": [
         "famous_people",
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "AMGTV",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -9335,7 +9328,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BRICS",
@@ -51251,21 +51244,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Contents",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Portal:Current events",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Portia de Rossi",
@@ -57375,7 +57354,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sha'Carri Richardson",
@@ -61768,41 +61747,6 @@
       "title": "Telugu Desam Party",
       "tags": [
         "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Template:COVID-19 pandemic data",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Template:Ethiopian wars and insurgencies detailed map",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Template:Pornography",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Template:Russo-Ukrainian war detailed map",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Template:Syrian Civil War detailed map",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -70415,118 +70359,6 @@
       "title": "Wikimedia Foundation",
       "tags": [
         "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:About",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Articles for deletion/Adam Weitsman",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asian Month/2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Citation needed",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Community portal",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Contact us",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Contents/Portals",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Featured articles",
-      "tags": [
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Featured pictures",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:New user landing page",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Picture of the day",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Requested articles/Business and economics/Companies/M-S",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Loves Ramadan 2026",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Science Competition 2025 in the United States",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asian Month",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Asian Month/2019",
-      "tags": [
-        "politics"
       ],
       "sensitive": false
     },

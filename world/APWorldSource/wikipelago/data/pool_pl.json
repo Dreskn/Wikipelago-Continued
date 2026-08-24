@@ -1,7 +1,7 @@
 {
   "lang": "pl",
   "source": "pool_annotated_pl.json",
-  "count": 8222,
+  "count": 8190,
   "entries": [
     {
       "title": "07 zgłoś się",
@@ -4309,7 +4309,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BGM-109 Tomahawk",
@@ -9879,13 +9879,6 @@
     },
     {
       "title": "Dyskusja Wikipedii:Kontakt z wikipedystami",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Dyskusja wikipedysty:Masti",
       "tags": [
         "miscellaneous"
       ],
@@ -20930,48 +20923,6 @@
       "sensitive": false
     },
     {
-      "title": "Kategoria:Marki samochodów",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategoria:Niezweryfikowane martwe linki",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategoria:Niezweryfikowane martwe linki niezarchiwizowane przez Internet Archive",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategoria:Niezweryfikowane martwe linki zarchiwizowane przez Internet Archive",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategoria:Polscy malarze",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kategoria:Polskie nazwiska",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Katolicyzm",
       "tags": [
         "miscellaneous"
@@ -23286,13 +23237,6 @@
     },
     {
       "title": "Kultura",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Kundalinijoga",
       "tags": [
         "miscellaneous"
       ],
@@ -36502,34 +36446,6 @@
       "sensitive": false
     },
     {
-      "title": "Pomoc:FAQ",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Pomoc:Pierwsze kroki",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Pomoc:Przypisy",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Pomoc:Spis treści",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Pompeje (stanowisko archeologiczne)",
       "tags": [
         "geography",
@@ -36592,13 +36508,6 @@
       "title": "Porozumienie",
       "tags": [
         "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kategorie Główne",
-      "tags": [
-        "technology"
       ],
       "sensitive": false
     },
@@ -42829,7 +42738,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Stowarzyszenie Roty Niepodległości",
@@ -43290,13 +43199,6 @@
       "title": "System operacyjny",
       "tags": [
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Szablon:Cytuj",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },
@@ -47182,133 +47084,6 @@
       "title": "Wikipedia",
       "tags": [
         "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kawiarenka pod Wesołym Encyklopedystą",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Kontakt z wikipedystami",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Korzystasz z Wikipedii tylko na własną odpowiedzialność",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Lista wersji językowych",
-      "tags": [
-        "art_literature",
-        "technology"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:O Wikipedii",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Portal wikipedystów",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Prośby do administratorów",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Półtora miliona artykułów w polskojęzycznej Wikipedii",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Rekord Guinnessa 2023",
-      "tags": [
-        "politics"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Strona główna",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Strona zabezpieczona",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Tablica ogłoszeń",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Weryfikacja martwych linków",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Lubi Zabytki 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wiki Science Competition 2025",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Wyróżniona zawartość Wikipedii",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Zasady",
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Wikipedia:Zgłoś błąd w artykule",
-      "tags": [
-        "miscellaneous"
       ],
       "sensitive": false
     },

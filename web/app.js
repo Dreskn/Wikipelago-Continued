@@ -1,9 +1,12 @@
-const APP_VERSION = "2026.08.04.02";
+const APP_VERSION = "1.0.0";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
 function t(key, vars) {
   return I18n?.t ? I18n.t(key, vars) : key;
+}
+function trapLabel(name) {
+  return I18n?.localizeTrapName ? I18n.localizeTrapName(name) : name;
 }
 function uiLanguage() {
   return I18n?.uiLanguage ? I18n.uiLanguage() : "en";
@@ -22,14 +25,19 @@ function wikipediaLanguage() {
   return lang || "en";
 }
 
-function wikipediaOrigin() {
-  return `https://${wikipediaLanguage()}.wikipedia.org`;
+function wikipediaOrigin(lang = wikipediaLanguage()) {
+  return `https://${lang}.wikipedia.org`;
+}
+
+function articleLanguage() {
+  return state.articleLang || wikipediaLanguage();
 }
 
 /**
  * Non-article namespaces blocked for navigation (toast; never leave the SPA).
  * Includes English + localized prefixes/aliases for en/fr/de/es/it/pt/nl/sv/pl.
  * Matching uses the title segment before the first ":".
+ * Keep in sync with world/APWorldSource/wikipelago/article_pool.py BLOCKED_WIKI_NAMESPACES.
  */
 const BLOCKED_WIKI_NAMESPACES = new Set([
   // English / canonical
@@ -108,9 +116,17 @@ const WIKI_SECTION_HEADINGS = {
 
 /** Plain segment min width + gap used to estimate how many bars fit in the side panel. */
 const TRACK_SEG_MIN_PX = 4;
+/** Idle bars may grow to fill, but never past this — current stays visually larger. */
+const TRACK_SEG_MAX_PX = 16;
 const TRACK_SEG_GAP_PX = 2;
-/** Current-round / emphasis segment — matches a typical +N overflow chip. */
-const TRACK_EMPHASIS_MIN_PX = 28;
+/** Do not squash a run into +N unless at least this many like-segments would hide. */
+const TRACK_OVERFLOW_MIN = 5;
+/** Fork spurs are short, so they may collapse from 3 like-segments. */
+const TRACK_FORK_OVERFLOW_MIN = 3;
+/** Current-round / +N chip width. */
+const TRACK_EMPHASIS_MIN_PX = 24;
+/** Crossroad chip width on the main road. */
+const TRACK_CROSSROAD_PX = 48;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
 const TRACK_PAD_X_PX = 4;
 
@@ -125,27 +141,34 @@ const DISPLAY_LOCKS = [
   { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
 ];
 
+function lucideIcon(inner) {
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+}
+
+// Official Lucide glyphs (https://lucide.dev). Mapping and licenses: LICENSE.
 const TOOL_ICON_SVGS = {
-  back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11H7.8l4.6-4.6L11 5l-7 7 7 7 1.4-1.4L7.8 13H20v-2z"/></svg>',
-  reroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.1A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>',
-  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.8l-.3-.3A6.5 6.5 0 1 0 14 15.5l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>',
-  compass: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm3.7 14.3-2.8-6.3-6.3-2.8 2.8 6.3 6.3 2.8zM12 13.2A1.2 1.2 0 1 1 13.2 12 1.2 1.2 0 0 1 12 13.2z"/></svg>',
-  scroll: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
-  searchsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h10v2H4V6zm0 5h16v2H4v-2zm0 5h12v2H4v-2z"/></svg>',
-  scrollsanity: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 7 9h3v6H7l5 5 5-5h-3V9h3L12 4z"/></svg>',
-  deaths: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 0 0-5 5v1H5v3h1v8h12v-8h1V8h-2V7a5 5 0 0 0-5-5zm-1 10h2v5h-2v-5z"/></svg>',
-  deathlink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a4 4 0 1 1 0 8H7v2h1a6 6 0 1 0 0-12h1v2H8zm8 0h-1V5h1a6 6 0 1 1 0 12h-1v-2h1a4 4 0 1 0 0-8z"/></svg>',
-  traplink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v6h6v2h-6v6h-2v-6H5V9h6V3zm-7 14h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/></svg>',
-  bombs: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 4.3 13 6H9L7.3 4.3 5.9 5.7 7.2 7H6a3 3 0 0 0-3 3v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8a3 3 0 0 0-3-3h-1.2l1.3-1.3-1.4-1.4zM9 11h6v2H9v-2z"/></svg>',
-  traps: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 7l10 5 10-5-10-5zm0 9L4.5 7.8 12 4.1l7.5 3.7L12 11zm0 2.2L4 9.5V17l8 4 8-4V9.5l-8 3.7z"/></svg>',
+  back: lucideIcon('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/>'),
+  reroll: lucideIcon('<rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/>'),
+  search: lucideIcon('<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>'),
+  compass: lucideIcon('<circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"/>'),
+  key: lucideIcon('<path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/>'),
+  scroll: lucideIcon('<rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/>'),
+  searchsanity: lucideIcon('<path d="m15 16 2.536-7.328a1.02 1.02 1 0 1 1.928 0L22 16"/><path d="M15.697 14h5.606"/><path d="m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"/><path d="M3.304 13h6.392"/>'),
+  scrollsanity: lucideIcon('<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>'),
+  deaths: lucideIcon('<path d="m12.5 17-.5-1-.5 1h1z"/><path d="M15 22a1 1 0 0 0 1-1v-1a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20v1a1 1 0 0 0 1 1z"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="12" r="1"/>'),
+  deathlink: lucideIcon('<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>'),
+  traplink: lucideIcon('<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/>'),
+  bombs: lucideIcon('<circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/>'),
+  traps: lucideIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
 };
 
 function trapTypeLabel(trapType) {
   const key = {
-    0: "diff.trapType.both",
+    0: "diff.trapType.all",
     1: "diff.trapType.foggy",
     2: "diff.trapType.missing",
-  }[Number(trapType) || 0] || "diff.trapType.both";
+    3: "diff.trapType.wrongWiki",
+  }[Number(trapType) || 0] || "diff.trapType.all";
   return t(key);
 }
 
@@ -161,7 +184,7 @@ function bombDensityLabel(density) {
   return t(`diff.density.${bombDensityKey(density)}`);
 }
 
-let debugDisplayEnabled = new URLSearchParams(window.location.search).has("debug");
+let debugDisplayEnabled = false;
 let debugPanelReady = false;
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
@@ -189,13 +212,22 @@ const state = {
   searchOpen: false,
   roundVisitSet: new Set(),
   roundVisitRound: 0,
+  roundVisitPath: "",
+  journeyOpen: false,
+  journeyPayload: null,
+  journeyLayoutKey: "",
+  announcedJourneyCredits: false,
+  victoryOpen: false,
   rerollBusy: false,
   targetSummaryCache: new Map(),
   targetSummaryTitle: "",
+  targetTooltipTitle: "",
+  targetTooltipAnchor: null,
   targetTooltipVisible: false,
   trapQueue: [],
   activeFoggy: false,
   activeMissing: false,
+  articleLang: "",
   bombTitles: new Set(),
   handlingDeath: false,
   /** After slot/language switch, open current_start instead of sticky hash/last_page. */
@@ -238,10 +270,11 @@ const el = {
   connectBtn: document.getElementById("connectBtn"),
   practiceBtn: document.getElementById("practiceBtn"),
   disconnectBtn: document.getElementById("disconnectBtn"),
+  connectionCard: document.getElementById("connectionCard"),
   connectionForm: document.getElementById("connectionForm"),
   connectionSummary: document.getElementById("connectionSummary"),
-  connectionSummaryLabel: document.getElementById("connectionSummaryLabel"),
   connectedServerText: document.getElementById("connectedServerText"),
+  connectedSlotText: document.getElementById("connectedSlotText"),
   roundsBlock: document.getElementById("roundsBlock"),
   roundText: document.getElementById("roundText"),
   roundsTrack: document.getElementById("roundsTrack"),
@@ -252,7 +285,26 @@ const el = {
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
-  clicksText: document.getElementById("clicksText"),
+  goalHover: document.getElementById("goalHover"),
+  goalAnswer: document.getElementById("goalAnswer"),
+  journeyBtn: document.getElementById("journeyBtn"),
+  branchTracks: document.getElementById("branchTracks"),
+  branchTargets: document.getElementById("branchTargets"),
+  crossroadBadge: document.getElementById("crossroadBadge"),
+  journeyOverlay: document.getElementById("journeyOverlay"),
+  journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
+  journeyOverlayTitle: document.getElementById("journeyOverlayTitle"),
+  journeyOverlayClose: document.getElementById("journeyOverlayClose"),
+  journeyPath: document.getElementById("journeyPath"),
+  journeyTip: document.getElementById("journeyTip"),
+  victoryOverlay: document.getElementById("victoryOverlay"),
+  victoryOverlayBackdrop: document.getElementById("victoryOverlayBackdrop"),
+  victoryOverlayTitle: document.getElementById("victoryOverlayTitle"),
+  victoryQuestion: document.getElementById("victoryQuestion"),
+  victoryAnswer: document.getElementById("victoryAnswer"),
+  victoryMessage: document.getElementById("victoryMessage"),
+  victoryJourneyBtn: document.getElementById("victoryJourneyBtn"),
+  victoryCloseBtn: document.getElementById("victoryCloseBtn"),
   fragmentsBlock: document.getElementById("fragmentsBlock"),
   fragmentsText: document.getElementById("fragmentsText"),
   fragmentsTrack: document.getElementById("fragmentsTrack"),
@@ -340,6 +392,7 @@ function readEmbeddedBuildInfo() {
 }
 
 function applyBuildBadge(info) {
+  applyDebugMenuAvailability(info);
   if (!el.buildBadge || !info) return;
   const branch = String(info.branch || "").trim();
   const staging = Boolean(info.staging) || (branch !== "" && !["main", "master"].includes(branch));
@@ -446,17 +499,28 @@ function updateConnectionPanel(status) {
   const connected = Boolean(status?.connected_to_ap);
   const practice = Boolean(status?.practice);
   const active = connected || practice;
+  if (el.connectionCard) el.connectionCard.classList.toggle("is-active", active);
   if (el.connectionForm) el.connectionForm.classList.toggle("hidden", active);
   if (el.connectionSummary) el.connectionSummary.classList.toggle("hidden", !active);
-  if (el.connectionSummaryLabel) {
-    el.connectionSummaryLabel.textContent = practice ? t("conn.modeLabel") : t("conn.serverLabel");
-  }
   if (el.connectedServerText) {
-    if (practice) el.connectedServerText.textContent = t("conn.practiceMode");
-    else if (connected) el.connectedServerText.textContent = status.ap_server || el.serverInput?.value?.trim() || "—";
-    else el.connectedServerText.textContent = "-";
+    const server = practice
+      ? t("conn.practiceMode")
+      : connected
+        ? (status.ap_server || el.serverInput?.value?.trim() || "—")
+        : "-";
+    el.connectedServerText.textContent = server;
+    el.connectedServerText.title = server;
+  }
+  if (el.connectedSlotText) {
+    const slot = connected && !practice
+      ? (status.slot_name || el.slotInput?.value?.trim() || "")
+      : "";
+    el.connectedSlotText.textContent = slot;
+    el.connectedSlotText.title = slot;
+    el.connectedSlotText.classList.toggle("hidden", !slot);
   }
   if (el.disconnectBtn) {
+    el.disconnectBtn.classList.toggle("hidden", !active);
     el.disconnectBtn.disabled = !active;
     el.disconnectBtn.textContent = practice ? t("conn.exitPractice") : t("conn.disconnect");
   }
@@ -490,7 +554,9 @@ function onUiLanguageChanged(code) {
       el.connBadge.className = "badge offline";
     }
   }
+  if (state.victoryOpen) fillVictoryOverlay(state.status);
   refreshSearchChrome();
+  refreshSidePanelToggles();
 }
 
 function bindUiLanguageControls() {
@@ -569,8 +635,9 @@ async function fetchTargetSummary(title) {
 }
 
 function positionTargetTooltip() {
-  if (!el.targetTooltip || !el.targetHover || el.targetTooltip.classList.contains("hidden")) return;
-  const anchor = el.targetHover.getBoundingClientRect();
+  const anchorEl = state.targetTooltipAnchor;
+  if (!el.targetTooltip || !anchorEl || el.targetTooltip.classList.contains("hidden")) return;
+  const anchor = anchorEl.getBoundingClientRect();
   const tip = el.targetTooltip;
   const margin = 8;
   const width = Math.min(tip.offsetWidth || 320, window.innerWidth - margin * 2);
@@ -593,6 +660,8 @@ function positionTargetTooltip() {
 
 function hideTargetTooltip() {
   state.targetTooltipVisible = false;
+  state.targetTooltipTitle = "";
+  state.targetTooltipAnchor = null;
   if (!el.targetTooltip) return;
   el.targetTooltip.classList.add("hidden");
   el.targetTooltip.classList.remove("loading");
@@ -601,9 +670,11 @@ function hideTargetTooltip() {
   el.targetTooltip.style.top = "";
 }
 
-async function showTargetTooltip(title) {
-  if (!el.targetTooltip || !title) return;
+async function showTargetTooltip(title, anchorEl) {
+  if (!el.targetTooltip || !title || !anchorEl) return;
   state.targetTooltipVisible = true;
+  state.targetTooltipTitle = title;
+  state.targetTooltipAnchor = anchorEl;
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
@@ -613,7 +684,7 @@ async function showTargetTooltip(title) {
   positionTargetTooltip();
   try {
     const summary = await fetchTargetSummary(title);
-    if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetSummaryTitle)) {
+    if (!state.targetTooltipVisible || normalizeTitle(title) !== normalizeTitle(state.targetTooltipTitle)) {
       return;
     }
     el.targetTooltip.classList.remove("loading");
@@ -627,52 +698,90 @@ async function showTargetTooltip(title) {
   }
 }
 
+function hoverWikiTitle(hoverEl) {
+  const raw = String(hoverEl?.dataset?.wikiTitle || "").trim();
+  if (!raw || raw === "..." || raw === "GOAL COMPLETE") return "";
+  return raw;
+}
+
+function enterTargetHover(hover) {
+  const title = hoverWikiTitle(hover);
+  if (!title) return;
+  if (
+    state.targetTooltipVisible
+    && state.targetTooltipAnchor === hover
+    && normalizeTitle(state.targetTooltipTitle) === normalizeTitle(title)
+  ) {
+    return;
+  }
+  showTargetTooltip(title, hover);
+}
+
+function leaveTargetHover(hover, related) {
+  if (related && hover.contains(related)) return;
+  if (state.targetTooltipAnchor === hover) hideTargetTooltip();
+}
+
 function bindTargetTooltip() {
-  if (!el.targetHover || !el.targetTooltip) return;
+  if (!el.targetTooltip) return;
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
-  el.targetHover.addEventListener("mouseenter", () => {
-    const title = state.targetSummaryTitle;
-    if (!title) return;
-    showTargetTooltip(title);
+  const root = document.querySelector(".side-panel") || document;
+  root.addEventListener("mouseover", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (!hover || !root.contains(hover)) return;
+    const from = event.relatedTarget;
+    if (from && hover.contains(from)) return;
+    enterTargetHover(hover);
   });
-  el.targetHover.addEventListener("mouseleave", () => {
-    hideTargetTooltip();
+  root.addEventListener("mouseout", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (!hover) return;
+    leaveTargetHover(hover, event.relatedTarget);
   });
-  el.targetHover.addEventListener("focusin", () => {
-    const title = state.targetSummaryTitle;
-    if (!title) return;
-    showTargetTooltip(title);
+  root.addEventListener("focusin", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (hover) enterTargetHover(hover);
   });
-  el.targetHover.addEventListener("focusout", () => {
-    hideTargetTooltip();
+  root.addEventListener("focusout", (event) => {
+    const hover = event.target.closest?.(".target-hover");
+    if (hover) leaveTargetHover(hover, event.relatedTarget);
   });
   window.addEventListener("resize", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   });
   // Side panel scroll would otherwise leave a stale fixed position.
-  document.querySelector(".side-panel")?.addEventListener("scroll", () => {
+  root.addEventListener("scroll", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   }, { passive: true });
+}
+
+function setHoverWikiTitle(hoverEl, title) {
+  if (!hoverEl) return;
+  const next = String(title || "").trim();
+  if (!next || next === "..." || next === "GOAL COMPLETE") {
+    hoverEl.dataset.wikiTitle = "";
+    hoverEl.removeAttribute("tabindex");
+    return;
+  }
+  hoverEl.dataset.wikiTitle = next;
+  hoverEl.tabIndex = 0;
+  fetchTargetSummary(next).catch(() => {});
 }
 
 function setTargetSummaryTitle(title) {
   const next = String(title || "").trim();
   if (next === "GOAL COMPLETE" || next === "..." || !next) {
     state.targetSummaryTitle = "";
-    hideTargetTooltip();
-    if (el.targetHover) el.targetHover.removeAttribute("tabindex");
+    setHoverWikiTitle(el.targetHover, "");
+    if (state.targetTooltipAnchor === el.targetHover) hideTargetTooltip();
     return;
   }
   const changed = normalizeTitle(next) !== normalizeTitle(state.targetSummaryTitle);
   state.targetSummaryTitle = next;
-  if (el.targetHover) el.targetHover.tabIndex = 0;
-  if (changed) {
-    hideTargetTooltip();
-    // Prefetch so hover feels instant.
-    fetchTargetSummary(next).catch(() => {});
-  }
+  setHoverWikiTitle(el.targetHover, next);
+  if (changed && state.targetTooltipAnchor === el.targetHover) hideTargetTooltip();
 }
 
 function updateRerollTargetControls(status) {
@@ -704,7 +813,12 @@ async function rerollCurrentTarget() {
   try {
     const result = await api(`/api/session/${state.sessionId}/reroll-target`, "POST", {});
     if (result.status) updateHUD(result.status);
-    toast(t("toast.rerolled", { title: result.new_target }), "ok", 6500);
+    const changes = Array.isArray(result.changes) ? result.changes : [];
+    if (changes.length > 1) {
+      toast(t("toast.rerolledAll", { n: changes.length }), "ok", 6500);
+    } else {
+      toast(t("toast.rerolled", { title: result.new_target || changes[0]?.new_target || "" }), "ok", 6500);
+    }
   } catch (err) {
     toast(t("toast.rerollFailed", { error: err.message || err }), "warn", 6500);
     try { await pollStatus(); } catch { /* ignore */ }
@@ -736,6 +850,512 @@ function syncRoundVisitTracking(status) {
   }
 }
 
+function formatThemeTag(tag) {
+  const raw = String(tag || "").trim();
+  return raw ? raw.replace(/_/g, " ") : "";
+}
+
+function pathLabel(path) {
+  if (!path) return t("path.main");
+  if (path.id === "main") return t("path.main");
+  return t("hud.forkTarget", { n: forkNumber(path) });
+}
+
+function forkNumber(item) {
+  const n = Number(item?.fork);
+  if (Number.isFinite(n) && n > 0) return Math.trunc(n);
+  const rawId = item?.id;
+  if (typeof rawId === "number" && Number.isFinite(rawId)) return Math.trunc(rawId) + 1;
+  const match = String(rawId || "").match(/branch:(\d+)/);
+  if (match) return Number(match[1]) + 1;
+  const branchId = Number(item?.branch_id);
+  if (Number.isFinite(branchId)) return Math.trunc(branchId) + 1;
+  return 1;
+}
+
+function forkProgressTitle(item) {
+  return t("hud.forkTarget", { n: forkNumber(item) });
+}
+
+function liveTargetTitles(status) {
+  const titles = [status?.current_target];
+  if (status?.boss_completed) titles.push(status?.goal_article);
+  const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
+  for (const item of live) titles.push(item?.target);
+  return titles.filter(Boolean);
+}
+
+function isLiveTargetTitle(title, status) {
+  return liveTargetTitles(status).some((item) => titlesMatch(title, item));
+}
+
+function isGoalArticleTitle(title, status) {
+  return Boolean(status?.goal_article) && titlesMatch(title, status.goal_article);
+}
+
+function isProtectedNavTitle(title, status) {
+  return isLiveTargetTitle(title, status) || isGoalArticleTitle(title, status);
+}
+
+function unlockedBranchPaths(status) {
+  const paths = Array.isArray(status?.paths) ? status.paths : [];
+  return paths.filter((path) => path && path.id && path.id !== "main" && path.unlocked);
+}
+
+function renderBranchTargets(status) {
+  if (!el.branchTargets) return;
+  const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
+  const show = !status?.practice && !status?.boss_completed && live.length > 0;
+  el.branchTargets.classList.toggle("hidden", !show);
+  el.branchTargets.innerHTML = "";
+  if (!show) return;
+  for (const item of live) {
+    const row = document.createElement("p");
+    row.className = "target-row branch-target-row";
+    const label = document.createElement("strong");
+    label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
+    const title = document.createElement("span");
+    title.className = "target-hover target-page";
+    title.textContent = item.target || "…";
+    setHoverWikiTitle(title, item.target || "");
+    row.appendChild(label);
+    row.appendChild(title);
+    el.branchTargets.appendChild(row);
+  }
+}
+
+function renderBranchTracks(status) {
+  if (el.branchTracks) el.branchTracks.innerHTML = "";
+}
+
+function forkProgressByNumber(status) {
+  const map = new Map();
+  for (const path of unlockedBranchPaths(status)) {
+    const fork = forkNumber(path);
+    const total = Math.max(0, Number(path.length) || 0);
+    const current = Math.max(1, Number(path.round) || 1);
+    const completed = Math.max(0, Number(path.completed) || 0);
+    map.set(fork, {
+      total,
+      current,
+      completed,
+      done: total > 0 && completed >= total,
+    });
+  }
+  return map;
+}
+
+function renderForkSpur(parentSeg, progress, fork) {
+  const total = Math.max(0, Number(progress?.total) || 0);
+  if (!parentSeg || total <= 0) return;
+  const current = Math.max(1, Number(progress.current) || 1);
+  const completed = Math.max(0, Number(progress.completed) || 0);
+  const done = Boolean(progress.done) || completed >= total;
+  const items = [];
+  for (let i = 1; i <= total; i += 1) {
+    let stateName = "open";
+    if (done || i <= completed) stateName = "done";
+    items.push({
+      state: stateName,
+      current: !done && i === current && i > completed,
+      label: String(i),
+    });
+  }
+  const spur = document.createElement("div");
+  spur.className = "fork-spur";
+  const kind = forkProgressTitle({ fork });
+  spur.setAttribute("aria-label", done ? `${kind} ${t("hud.complete")}` : `${kind} ${current}/${total}`);
+  const runs = rleTrackItems(items);
+  for (const run of runs) {
+    const startNum = Number(String(run.startLabel).match(/\d+/)?.[0] || 1);
+    if (run.current || run.count < TRACK_FORK_OVERFLOW_MIN) {
+      for (let i = 0; i < run.count; i += 1) {
+        appendTrackSeg(spur, {
+          state: run.state,
+          current: Boolean(run.current) && i === 0,
+          title: `${kind} ${startNum + i}`,
+        });
+      }
+    } else {
+      appendTrackSeg(spur, {
+        state: run.state,
+        overflowCount: run.count,
+        title: t("track.moreLikeThis", {
+          kind, start: run.startLabel, end: run.endLabel, overflow: run.count,
+        }),
+      });
+    }
+  }
+  parentSeg.appendChild(spur);
+}
+
+function syncCrossroadTrackSpace(trackEl) {
+  if (!trackEl) return;
+  const labelTop = 18;
+  let extra = 12;
+  trackEl.querySelectorAll(".fork-spur").forEach((spur) => {
+    extra = Math.max(extra, 12 + spur.offsetHeight);
+    const parent = spur.closest(".seg.crossroad") || spur.parentElement;
+    if (parent) {
+      parent.style.setProperty("--hook-thick", `${Math.max(24, spur.offsetWidth)}px`);
+    }
+  });
+  if (trackEl.classList.contains("has-crossroads") || trackEl.querySelector(".seg.crossroad")) {
+    trackEl.style.paddingTop = `${labelTop}px`;
+    trackEl.style.paddingBottom = `${extra}px`;
+    trackEl.style.minHeight = `${18 + labelTop + extra}px`;
+  } else {
+    trackEl.style.paddingTop = "";
+    trackEl.style.paddingBottom = "";
+    trackEl.style.minHeight = "";
+  }
+}
+
+function renderCrossroadBadge(status) {
+  if (!el.crossroadBadge) return;
+  const info = status?.revealed_crossroad;
+  if (!info || status?.practice) {
+    el.crossroadBadge.classList.add("hidden");
+    el.crossroadBadge.textContent = "";
+    return;
+  }
+  el.crossroadBadge.classList.remove("hidden");
+  el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
+  const fork = Number(info.fork) > 0 ? Math.trunc(Number(info.fork)) : Number(info.branch_id) + 1;
+  if (info.unlocked) {
+    el.crossroadBadge.textContent = t("crossroad.unlocked", { n: fork });
+  } else if (Number(status.branch_keys_available) > 0) {
+    el.crossroadBadge.textContent = t("crossroad.ready", { n: fork });
+  } else {
+    el.crossroadBadge.textContent = t("crossroad.needKey");
+  }
+}
+
+function journeyKindLabel(kind) {
+  const key = `journey.kind.${kind}`;
+  const label = t(key);
+  return label === key ? kind : label;
+}
+
+function journeyEventPath(event) {
+  return String(event?.path || event?.extra?.path || "main");
+}
+
+function journeyPageNodes(events) {
+  const nodes = [];
+  for (const event of events) {
+    const title = String(event?.title || "").trim();
+    const kind = String(event?.kind || "").trim();
+    if (!title || kind === "branch_switch") continue;
+    const last = nodes[nodes.length - 1];
+    const node = last && last.title === title
+      ? last
+      : {
+          title,
+          kinds: new Set(),
+          mainRound: false,
+          forks: new Set(),
+          stamp: false,
+          grandGoal: false,
+        };
+    node.kinds.add(kind);
+    if (kind === "round_complete") {
+      const pathId = journeyEventPath(event);
+      if (String(pathId).startsWith("branch:")) {
+        node.forks.add(forkNumber({ id: pathId }));
+      } else {
+        node.mainRound = true;
+      }
+    }
+    if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
+    if (kind === "grand_goal") node.grandGoal = true;
+    if (node !== last) nodes.push(node);
+  }
+  return nodes.map((node) => {
+    const milestone = Boolean(node.mainRound || node.forks.size || node.stamp || node.grandGoal);
+    return {
+      title: node.title,
+      kinds: node.kinds,
+      mainRound: node.mainRound,
+      forks: [...node.forks].sort((a, b) => a - b),
+      stamp: node.stamp,
+      grandGoal: node.grandGoal,
+      milestone,
+    };
+  });
+}
+
+function layoutJourneyNodes(nodes, width) {
+  const padX = 28;
+  const padY = 44;
+  const stepX = 54;
+  const rowH = 78;
+  const inner = Math.max(160, width - padX * 2);
+  const cols = Math.max(3, Math.floor(inner / stepX) + 1);
+  const gap = cols <= 1 ? 0 : inner / (cols - 1);
+  return nodes.map((node, i) => {
+    const row = Math.floor(i / cols);
+    let col = i % cols;
+    if (row % 2 === 1) col = cols - 1 - col;
+    return {
+      ...node,
+      row,
+      x: padX + col * gap,
+      y: padY + row * rowH,
+      r: node.milestone ? (node.grandGoal || (node.stamp && (node.mainRound || node.forks.length)) ? 11 : 9) : 4.5,
+    };
+  });
+}
+
+function journeyTrailD(points) {
+  if (!points.length) return "";
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  const minX = Math.min(...points.map((p) => p.x));
+  const maxX = Math.max(...points.map((p) => p.x));
+  const midX = (minX + maxX) / 2;
+  let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length; i += 1) {
+    const a = points[i - 1];
+    const b = points[i];
+    const mx = (a.x + b.x) / 2;
+    const my = (a.y + b.y) / 2;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    // Horizontals keep the u/n chain (first hop is a "u"). Vertical wraps
+    // bulge like "(" on the left and ")" on the right, independent of that chain.
+    let sign = i % 2 === 0 ? -1 : 1;
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      const onRight = mx >= midX;
+      sign = onRight ? -1 : 1;
+      if (dy < 0) sign = -sign;
+    }
+    const bend = sign * Math.min(18, len * 0.24);
+    const cx = mx - (dy / len) * bend;
+    const cy = my + (dx / len) * bend;
+    d += ` Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+  }
+  return d;
+}
+
+function journeyNodeFill(node) {
+  if (node.grandGoal) return { fill: "#ffd76a", stroke: "#c4922a" };
+  if (node.mainRound) return { fill: "#1ecb70", stroke: "#148a4c" };
+  if (node.forks.length) return { fill: "#40c4ff", stroke: "#1a7aa0" };
+  if (node.stamp) return { fill: "#b57bff", stroke: "#7a3fd4" };
+  return { fill: "#0d1620", stroke: "#6a849c" };
+}
+
+function journeyNodeTipLines(node) {
+  const lines = [];
+  if (node.mainRound) lines.push(t("journey.roundMain"));
+  for (const fork of node.forks) lines.push(t("journey.roundFork", { n: fork }));
+  if (node.grandGoal) lines.push(t("journey.grandGoal"));
+  if (node.stamp) lines.push(t("journey.stamp"));
+  if (!lines.length && node.kinds.has("back")) lines.push(journeyKindLabel("back"));
+  if (!lines.length && node.kinds.has("death")) lines.push(journeyKindLabel("death"));
+  return lines;
+}
+
+function hideJourneyTip() {
+  if (!el.journeyTip) return;
+  el.journeyTip.classList.add("hidden");
+  el.journeyTip.innerHTML = "";
+}
+
+function showJourneyTip(node, clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath) return;
+  const lines = journeyNodeTipLines(node);
+  el.journeyTip.innerHTML = "";
+  const title = document.createElement("strong");
+  title.textContent = node.title;
+  el.journeyTip.appendChild(title);
+  for (const line of lines) {
+    const kind = document.createElement("div");
+    kind.className = "journey-tip-kind";
+    kind.textContent = line;
+    el.journeyTip.appendChild(kind);
+  }
+  el.journeyTip.classList.remove("hidden");
+  const originEl = el.journeyPath.parentElement || el.journeyPath;
+  const wrap = originEl.getBoundingClientRect();
+  const tipW = el.journeyTip.offsetWidth || 160;
+  const tipH = el.journeyTip.offsetHeight || 40;
+  let left = clientX - wrap.left + originEl.scrollLeft + 12;
+  let top = clientY - wrap.top + originEl.scrollTop + 12;
+  const maxLeft = Math.max(8, originEl.clientWidth - tipW - 8);
+  const maxTop = Math.max(8, originEl.scrollHeight - tipH - 8);
+  left = Math.max(8, Math.min(left, maxLeft));
+  top = Math.max(8, Math.min(top, maxTop));
+  el.journeyTip.style.left = `${left}px`;
+  el.journeyTip.style.top = `${top}px`;
+}
+
+function drawJourneyPath(payload) {
+  const host = el.journeyPath;
+  if (!host) return;
+  const events = Array.isArray(payload?.events) ? payload.events : [];
+  const nodes = journeyPageNodes(events);
+  const width = Math.max(host.clientWidth || 0, 0);
+  if (width < 40) {
+    if (state.journeyOpen) requestAnimationFrame(() => drawJourneyPath(payload));
+    return;
+  }
+  const lastTitle = nodes.length ? nodes[nodes.length - 1].title : "";
+  const layoutKey = `${width}|${nodes.length}|${nodes[0]?.title || ""}|${lastTitle}|${nodes.filter((n) => n.milestone).length}`;
+  if (layoutKey === state.journeyLayoutKey && host.querySelector("svg")) return;
+  state.journeyLayoutKey = layoutKey;
+  hideJourneyTip();
+  host.innerHTML = "";
+  if (!nodes.length) {
+    const empty = document.createElement("p");
+    empty.className = "journey-empty";
+    empty.textContent = t("journey.empty");
+    host.appendChild(empty);
+    return;
+  }
+
+  const points = layoutJourneyNodes(nodes, width);
+  const height = Math.max(...points.map((p) => p.y + p.r), 80) + 56;
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("class", "journey-path-svg");
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("width", String(width));
+  svg.setAttribute("height", String(height));
+  svg.setAttribute("aria-hidden", "true");
+
+  const trail = document.createElementNS(NS, "path");
+  trail.setAttribute("class", "journey-trail");
+  trail.setAttribute("d", journeyTrailD(points));
+  svg.appendChild(trail);
+
+  const labels = document.createElement("div");
+  labels.style.pointerEvents = "none";
+  let milestoneLabel = 0;
+  for (let i = 0; i < points.length; i += 1) {
+    const node = points[i];
+    const colors = journeyNodeFill(node);
+    if (node.stamp && (node.mainRound || node.forks.length || node.grandGoal)) {
+      const ring = document.createElementNS(NS, "circle");
+      ring.setAttribute("cx", String(node.x));
+      ring.setAttribute("cy", String(node.y));
+      ring.setAttribute("r", String(node.r + 3));
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", "#b57bff");
+      ring.setAttribute("stroke-width", "2.5");
+      svg.appendChild(ring);
+    }
+    const dot = document.createElementNS(NS, "circle");
+    dot.setAttribute("cx", String(node.x));
+    dot.setAttribute("cy", String(node.y));
+    dot.setAttribute("r", String(node.r));
+    dot.setAttribute("fill", colors.fill);
+    dot.setAttribute("stroke", colors.stroke);
+    dot.setAttribute("stroke-width", node.milestone ? "2" : "1.5");
+    svg.appendChild(dot);
+    const hit = document.createElementNS(NS, "circle");
+    hit.setAttribute("class", "journey-node-hit");
+    hit.setAttribute("cx", String(node.x));
+    hit.setAttribute("cy", String(node.y));
+    hit.setAttribute("r", String(Math.max(node.r + 6, 11)));
+    hit.setAttribute("fill", "transparent");
+    hit.setAttribute("tabindex", "0");
+    hit.setAttribute("role", "img");
+    hit.setAttribute("aria-label", [node.title, ...journeyNodeTipLines(node)].join(", "));
+    hit.addEventListener("pointerenter", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
+    hit.addEventListener("pointermove", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
+    hit.addEventListener("pointerleave", hideJourneyTip);
+    hit.addEventListener("focus", () => showJourneyTip(node, host.getBoundingClientRect().left + node.x, host.getBoundingClientRect().top + node.y));
+    hit.addEventListener("blur", hideJourneyTip);
+    svg.appendChild(hit);
+    if (node.milestone) {
+      const label = document.createElement("span");
+      label.className = "journey-node-label";
+      if (milestoneLabel % 2 === 1) label.classList.add("above");
+      milestoneLabel += 1;
+      label.textContent = node.title;
+      label.style.left = `${node.x}px`;
+      label.style.top = `${node.y}px`;
+      labels.appendChild(label);
+    }
+  }
+  host.appendChild(svg);
+  host.appendChild(labels);
+}
+
+function renderJourneyView(payload) {
+  state.journeyPayload = payload;
+  state.journeyLayoutKey = "";
+  drawJourneyPath(payload);
+}
+
+async function openJourneyOverlay({ credits = false } = {}) {
+  if (!el.journeyOverlay || !state.sessionId) return;
+  state.journeyOpen = true;
+  el.journeyOverlay.classList.remove("hidden");
+  if (el.journeyOverlayTitle) {
+    el.journeyOverlayTitle.textContent = credits ? t("journey.credits") : t("journey.title");
+  }
+  try {
+    const payload = await api(`/api/session/${state.sessionId}/journey`);
+    renderJourneyView(payload);
+  } catch {
+    renderJourneyView({ events: [], visit_counts: {}, paths: [] });
+  }
+}
+
+function closeJourneyOverlay() {
+  state.journeyOpen = false;
+  el.journeyOverlay?.classList.add("hidden");
+}
+
+function fillVictoryOverlay(status) {
+  const question = String(status?.goal_question || "").trim();
+  const title = status?.goal_article || "";
+  if (el.victoryQuestion) {
+    el.victoryQuestion.textContent = question;
+    el.victoryQuestion.classList.toggle("hidden", !question);
+  }
+  if (el.victoryAnswer) {
+    el.victoryAnswer.textContent = title ? t("victory.answer", { title }) : "";
+    el.victoryAnswer.classList.toggle("hidden", !title);
+  }
+  if (el.victoryMessage) el.victoryMessage.textContent = t("victory.message");
+  if (el.victoryOverlayTitle) el.victoryOverlayTitle.textContent = t("victory.title");
+  if (el.victoryJourneyBtn) el.victoryJourneyBtn.textContent = t("victory.seeJourney");
+  if (el.victoryCloseBtn) el.victoryCloseBtn.textContent = t("victory.continue");
+}
+
+function openVictoryOverlay(status) {
+  if (!el.victoryOverlay) return;
+  state.victoryOpen = true;
+  fillVictoryOverlay(status || state.status);
+  el.victoryOverlay.classList.remove("hidden");
+}
+
+function closeVictoryOverlay() {
+  state.victoryOpen = false;
+  el.victoryOverlay?.classList.add("hidden");
+}
+
+function bindVictoryOverlayUi() {
+  el.victoryJourneyBtn?.addEventListener("click", () => {
+    closeVictoryOverlay();
+    void openJourneyOverlay({ credits: true });
+  });
+  el.victoryCloseBtn?.addEventListener("click", closeVictoryOverlay);
+  el.victoryOverlayBackdrop?.addEventListener("click", closeVictoryOverlay);
+}
+
+function bindJourneyOverlayUi() {
+  el.journeyBtn?.addEventListener("click", () => {
+    void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
+  });
+  el.journeyOverlayClose?.addEventListener("click", closeJourneyOverlay);
+  el.journeyOverlayBackdrop?.addEventListener("click", closeJourneyOverlay);
+}
+
 function titlesMatch(a, b) {
   return normalizeTitle(a) === normalizeTitle(b);
 }
@@ -747,6 +1367,84 @@ async function fetchRandomWikiTitle() {
   const title = data?.query?.random?.[0]?.title;
   if (!title) throw new Error("No random article");
   return title;
+}
+
+async function fetchLangLinks(title, fromLang) {
+  const params = new URLSearchParams({
+    action: "query",
+    prop: "langlinks",
+    lllimit: "500",
+    titles: title,
+    redirects: "true",
+    format: "json",
+    origin: "*",
+    formatversion: "2",
+  });
+  const url = `${wikipediaOrigin(fromLang)}/w/api.php?${params}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const page = data?.query?.pages?.[0];
+  if (!page || page.missing) return [];
+  const links = Array.isArray(page.langlinks) ? page.langlinks : [];
+  return links
+    .map((item) => ({
+      lang: String(item?.lang || "").trim().toLowerCase(),
+      title: String(item?.title || "").trim(),
+    }))
+    .filter((item) => item.lang && item.title);
+}
+
+function langLinkTitle(links, lang) {
+  const want = String(lang || "").trim().toLowerCase();
+  const hit = links.find((item) => item.lang === want);
+  return hit?.title || "";
+}
+
+function takeQueuedTrap(name) {
+  const idx = state.trapQueue.indexOf(name);
+  if (idx < 0) return false;
+  state.trapQueue.splice(idx, 1);
+  return true;
+}
+
+async function resolveArticleNavigation(requestedTitle, { countAsClick = false } = {}) {
+  const seedLang = wikipediaLanguage();
+  let displayLang = state.articleLang || seedLang;
+  let displayTitle = requestedTitle;
+  let checkTitle = requestedTitle;
+
+  if (displayLang !== seedLang) {
+    const links = await fetchLangLinks(displayTitle, displayLang);
+    const homeTitle = langLinkTitle(links, seedLang);
+    if (homeTitle) {
+      displayLang = seedLang;
+      displayTitle = homeTitle;
+      checkTitle = homeTitle;
+      state.articleLang = "";
+      toast(t("toast.wrongWikiBack", { lang: seedLang }), "ok", 5000);
+    } else {
+      toast(t("toast.wrongWikiStay", { lang: seedLang, current: displayLang }), "warn", 5000);
+    }
+  }
+
+  let appliedWrongWiki = false;
+  if (countAsClick && displayLang === seedLang && state.trapQueue[0] === "Wrong Wiki") {
+    const links = await fetchLangLinks(displayTitle, seedLang);
+    const others = links.filter((item) => item.lang !== seedLang);
+    if (others.length) {
+      takeQueuedTrap("Wrong Wiki");
+      appliedWrongWiki = true;
+      const pick = others[Math.floor(Math.random() * others.length)];
+      state.articleLang = pick.lang;
+      displayLang = pick.lang;
+      displayTitle = pick.title;
+      checkTitle = requestedTitle;
+      toast(t("toast.wrongWiki", { lang: pick.lang }), "warn", 7000);
+    }
+  }
+
+  return { displayLang, displayTitle, checkTitle, appliedWrongWiki };
 }
 
 async function notifyDeathLink(cause) {
@@ -765,11 +1463,12 @@ async function applyDeathEffect(reasonText) {
   // loop-deaths / no-op clicks while handlingDeath blocks applyDeathEffect.
   resetRoundVisits("");
   state.bombTitles = new Set();
+  state.articleLang = "";
   try {
     toast(reasonText || t("toast.deathJump"), "warn", 7000);
     const title = await fetchRandomWikiTitle();
     resetRoundVisits(title);
-    await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true, travelKind: "death" });
   } catch {
     // Still leave visits cleared; seed current page if we never left it.
     resetRoundVisits(state.currentTitle || "");
@@ -780,20 +1479,24 @@ async function applyDeathEffect(reasonText) {
 }
 
 function queueTrap(trapName) {
-  if (trapName !== "Foggy Links" && trapName !== "Missing Links") return;
+  if (trapName !== "Foggy Links" && trapName !== "Missing Links" && trapName !== "Wrong Wiki") return;
   state.trapQueue.push(trapName);
-  toast(t("toast.trap", { name: trapName }), "warn", 6500);
+  toast(t("toast.trap", { name: trapLabel(trapName) }), "warn", 6500);
 }
 
-function consumeTrapQueueForPage(title, status) {
+function consumeTrapQueueForPage(title, status, { skip = false } = {}) {
   state.activeFoggy = false;
   state.activeMissing = false;
-  if (!state.trapQueue.length) return;
-  const target = status?.current_target || "";
-  if (titlesMatch(title, target)) return;
-  const queued = state.trapQueue.splice(0, state.trapQueue.length);
-  state.activeFoggy = queued.includes("Foggy Links");
-  state.activeMissing = queued.includes("Missing Links");
+  if (skip || !state.trapQueue.length) return;
+  if (isProtectedNavTitle(title, status)) return;
+  const next = state.trapQueue[0];
+  if (next === "Foggy Links") {
+    state.trapQueue.shift();
+    state.activeFoggy = true;
+  } else if (next === "Missing Links") {
+    state.trapQueue.shift();
+    state.activeMissing = true;
+  }
 }
 
 function applyMissingToLinks(links) {
@@ -816,12 +1519,10 @@ function applyMissingToLinks(links) {
 function armBombsOnPage(root, status) {
   state.bombTitles = new Set();
   if (!linkBombsEnabled()) return;
-  const target = status?.current_target || "";
-  const goal = status?.goal_article || "";
   const eligible = [...root.querySelectorAll("a[data-title]")].filter((a) => {
     const dest = a.dataset.title || "";
     if (!dest) return false;
-    if (titlesMatch(dest, target) || titlesMatch(dest, goal)) return false;
+    if (isProtectedNavTitle(dest, status)) return false;
     return true;
   });
   if (!eligible.length) return;
@@ -842,8 +1543,8 @@ async function processPendingEvents(events) {
   for (const event of events) {
     if (!event || typeof event !== "object") continue;
     if (event.type === "death") {
-      const who = event.source ? ` (${event.source})` : "";
-      await applyDeathEffect(`DeathLink${who}!`);
+      const who = event.source ? String(event.source) : "";
+      await applyDeathEffect(who ? t("toast.deathLinkFrom", { source: who }) : t("toast.deathLink"));
     } else if (event.type === "trap") {
       queueTrap(event.trap);
     } else if (event.type === "bingo_stamps_updated") {
@@ -915,21 +1616,21 @@ function makeIconNode({ id, title, svg, extraClass = "" }) {
 }
 
 function ensureToolIcons() {
-  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "3") return;
+  if (!el.toolIconsRow || el.toolIconsRow.dataset.ready === "4") return;
   const tools = [
     { id: "back", title: t("tool.back"), svg: TOOL_ICON_SVGS.back },
     { id: "reroll", title: t("tool.reroll"), svg: TOOL_ICON_SVGS.reroll },
     { id: "search", title: t("tool.search"), svg: TOOL_ICON_SVGS.search },
     { id: "compass", title: t("tool.compass"), svg: TOOL_ICON_SVGS.compass },
+    { id: "key", title: t("tool.key"), svg: TOOL_ICON_SVGS.key },
   ];
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
-  el.toolIconsRow.dataset.ready = "3";
+  el.toolIconsRow.dataset.ready = "4";
 }
 
 function overflowChipWidthPx(count) {
-  // Padding/border (~12px) + "+123" at ~7px/char — keep full labels visible.
-  return 12 + (1 + String(Math.max(0, count)).length) * 7;
+  return Math.max(TRACK_EMPHASIS_MIN_PX, 12 + (1 + String(Math.max(0, count)).length) * 9);
 }
 
 function trackChipMinPx(plan) {
@@ -947,7 +1648,7 @@ function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
       // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += p.run.current ? chipMinPx : TRACK_SEG_MIN_PX;
+      width += p.run.crossroad ? TRACK_CROSSROAD_PX : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
       parts += 1;
     }
     if (p.overflow > 0) {
@@ -967,7 +1668,9 @@ function rleTrackItems(items) {
       prev &&
       prev.state === item.state &&
       !prev.current &&
-      !item.current;
+      !item.current &&
+      !prev.crossroad &&
+      !item.crossroad;
     if (same) {
       prev.count += 1;
       prev.endLabel = item.label;
@@ -975,6 +1678,10 @@ function rleTrackItems(items) {
       runs.push({
         state: item.state,
         current: Boolean(item.current),
+        crossroad: Boolean(item.crossroad),
+        unlocked: Boolean(item.unlocked),
+        fork: Number(item.fork) || 0,
+        forkProgress: item.forkProgress || null,
         count: 1,
         startLabel: item.label,
         endLabel: item.label,
@@ -1004,7 +1711,7 @@ function buildTrackPlan(items, trackEl) {
   const avail = trackContentWidthPx(trackEl);
   const runs = rleTrackItems(items);
   const plan = runs.map((run) => {
-    if (run.current || run.count === 1) {
+    if (run.current || run.crossroad || run.count < TRACK_OVERFLOW_MIN) {
       return { run, individuals: run.count, overflow: 0 };
     }
     return { run, individuals: 0, overflow: run.count };
@@ -1042,19 +1749,30 @@ function buildTrackPlan(items, trackEl) {
     }
   }
 
+  for (const p of plan) {
+    if (p.overflow > 0 && p.overflow < TRACK_OVERFLOW_MIN) {
+      p.individuals += p.overflow;
+      p.overflow = 0;
+    }
+  }
+
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "" }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, forkProgress = null }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
   if (current) seg.classList.add("current");
+  if (crossroad) seg.classList.add("crossroad");
+  if (crossroad && unlocked) seg.classList.add("unlocked");
+  if (crossroad && fork > 0) seg.dataset.fork = String(fork);
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
   }
   if (title) seg.title = title;
+  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork);
   trackEl.appendChild(seg);
 }
 
@@ -1087,6 +1805,10 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
         appendTrackSeg(trackEl, {
           state: run.state,
           current: Boolean(run.current),
+          crossroad: Boolean(run.crossroad),
+          unlocked: Boolean(run.unlocked),
+          fork: Number(run.fork) || 0,
+          forkProgress: run.forkProgress || null,
           title: `${kind} ${individualStart + i}`,
         });
       }
@@ -1108,6 +1830,7 @@ function renderRoundsTrack(status) {
     if (el.roundsBlock) el.roundsBlock.classList.add("hidden");
     el.roundsTrack.innerHTML = "";
     if (el.roundText) el.roundText.textContent = "";
+    if (el.branchTracks) el.branchTracks.innerHTML = "";
     return;
   }
   if (el.roundsBlock) el.roundsBlock.classList.remove("hidden");
@@ -1116,23 +1839,48 @@ function renderRoundsTrack(status) {
   const completed = Math.max(0, Number(status.rounds_completed) || 0);
   const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
   const complete = Boolean(status.boss_completed);
+  const crossroads = new Set(
+    (Array.isArray(status.crossroad_rounds) ? status.crossroad_rounds : []).map((n) => Number(n))
+  );
+  const unlockedCross = new Set(
+    (Array.isArray(status.unlocked_crossroad_rounds) ? status.unlocked_crossroad_rounds : []).map((n) => Number(n))
+  );
+  const forkByRound = new Map();
+  for (const cr of Array.isArray(status.crossroads) ? status.crossroads : []) {
+    const round = Number(cr?.main_round);
+    if (!crossroads.has(round)) continue;
+    const explicit = Number(cr?.fork);
+    const fork = Number.isFinite(explicit) && explicit > 0
+      ? Math.trunc(explicit)
+      : Math.trunc(Number(cr?.branch_id)) + 1;
+    if (fork > 0) forkByRound.set(round, fork);
+  }
+  const progressByFork = forkProgressByNumber(status);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
-    let state = "locked";
-    if (complete || i <= completed) state = "done";
-    else if (i <= unlocked) state = "open";
+    let stateName = "locked";
+    if (complete || i <= completed) stateName = "done";
+    else if (i <= unlocked) stateName = "open";
+    const fork = forkByRound.get(i) || 0;
     items.push({
-      state,
+      state: stateName,
       current: !complete && i === current && i > completed,
+      crossroad: crossroads.has(i),
+      unlocked: unlockedCross.has(i),
+      fork,
+      forkProgress: fork ? (progressByFork.get(fork) || null) : null,
       label: `${t("track.kindRound")} ${i}`,
     });
   }
+  el.roundsTrack.classList.toggle("has-crossroads", crossroads.size > 0);
   el.roundsTrack.style.gap = `${TRACK_SEG_GAP_PX}px`;
   const roundsPlan = buildTrackPlan(items, el.roundsTrack);
   renderPlannedTrack(el.roundsTrack, roundsPlan.plan, t("track.kindRound"), roundsPlan.chipMinPx);
+  syncCrossroadTrackSpace(el.roundsTrack);
   if (el.roundText) {
     el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
+  renderBranchTracks(status);
 }
 
 function renderFragmentsTrack(status) {
@@ -1140,6 +1888,7 @@ function renderFragmentsTrack(status) {
   if (status?.practice) {
     if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
     if (el.goalRow) el.goalRow.classList.add("hidden");
+    setHoverWikiTitle(el.goalHover, "");
     el.fragmentsTrack.innerHTML = "";
     if (el.fragmentsText) el.fragmentsText.textContent = "";
     return;
@@ -1151,10 +1900,29 @@ function renderFragmentsTrack(status) {
   if (el.fragmentsBlock) el.fragmentsBlock.classList.toggle("hidden", showGoal);
   if (el.goalRow) el.goalRow.classList.toggle("hidden", !showGoal);
   if (el.goalText && showGoal) {
-    const goal = status.goal_article || "...";
-    el.goalText.textContent = status.boss_completed
-      ? `${goal} ${t("hud.goalCompleteSuffix")}`
-      : goal;
+    const question = String(status.goal_question || "").trim();
+    const title = status.goal_article || "";
+    if (question) {
+      el.goalText.textContent = question;
+      if (el.goalHover) el.goalHover.classList.toggle("hidden", !status.boss_completed);
+      if (el.goalAnswer) {
+        el.goalAnswer.textContent = status.boss_completed
+          ? `${t("hud.goalAnswer", { title })} ${t("hud.goalCompleteSuffix")}`
+          : "";
+      }
+      setHoverWikiTitle(el.goalHover, status.boss_completed ? title : "");
+    } else {
+      el.goalText.textContent = "";
+      if (el.goalHover) el.goalHover.classList.remove("hidden");
+      if (el.goalAnswer) {
+        el.goalAnswer.textContent = status.boss_completed
+          ? `${title || "..."} ${t("hud.goalCompleteSuffix")}`
+          : (title || "...");
+      }
+      setHoverWikiTitle(el.goalHover, title);
+    }
+  } else {
+    setHoverWikiTitle(el.goalHover, "");
   }
   if (showGoal) return;
 
@@ -1211,6 +1979,15 @@ function renderToolIcons(status) {
 
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
+  const key = el.toolIconsRow.querySelector('[data-tool="key"]');
+  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0;
+  const keyCount = Math.max(0, Number(status.branch_keys_available) || 0);
+  if (key) {
+    key.classList.toggle("hidden", !hasBranches);
+    setIconState(key, keyCount > 0 ? "ok" : "locked");
+    setToolBadge(key, hasBranches ? String(keyCount) : "");
+    key.title = hasBranches ? `${t("tool.key")} ×${keyCount}` : t("tool.key");
+  }
 }
 
 function renderLensIcons(status) {
@@ -1264,7 +2041,11 @@ function renderSanityUnlocks(status) {
         badge.textContent = `${level}/${status.scroll_speed_upgrades || 0}`;
         badge.classList.remove("hidden");
       }
-      scroll.title = `Scroll Speed ${level}/${status.scroll_speed_upgrades || 0}`;
+      scroll.title = t("hud.scrollLevel", {
+        name: t("tool.scroll"),
+        level,
+        max: status.scroll_speed_upgrades || 0,
+      });
       el.scrollIconsRow.appendChild(scroll);
     }
   }
@@ -1484,11 +2265,11 @@ function mergeBingoStampMaps(...maps) {
 }
 
 /** Minimum readable cell size (px) before a sidebar board becomes a scaled preview. */
-const BINGO_MIN_SIDE_CELL_PX = 18;
-/** Preferred max board width in the sidebar for small grids (~10.5rem). */
-const BINGO_SIDE_PREF_MAX_PX = 168;
+const BINGO_MIN_SIDE_CELL_PX = 22;
+/** Preferred max board width in the sidebar for small grids (~12.6rem). */
+const BINGO_SIDE_PREF_MAX_PX = 202;
 /** Base cell size (px) for the expanded overlay board before user zoom. */
-const BINGO_OVERLAY_CELL_PX = 36;
+const BINGO_OVERLAY_CELL_PX = 43;
 const BINGO_ZOOM_MIN = 0.4;
 const BINGO_ZOOM_MAX = 4;
 
@@ -1966,12 +2747,15 @@ function renderBingoHud(status) {
     const header = document.createElement("div");
     header.className = "bingo-board-header";
 
+    const title = document.createElement("div");
+    title.className = "bingo-board-title";
+
     const label = document.createElement("p");
     label.className = "bingo-board-label";
     label.textContent = complete
       ? t("bingo.boardComplete", { n: boardKey })
       : t("bingo.board", { n: boardKey });
-    header.appendChild(label);
+    title.appendChild(label);
 
     const toggle = document.createElement("button");
     toggle.type = "button";
@@ -1982,7 +2766,8 @@ function renderBingoHud(status) {
       setBingoBoardCollapsed(status, boardKey, !collapsed);
       renderBingoHud(state.status || status);
     });
-    header.appendChild(toggle);
+    title.appendChild(toggle);
+    header.appendChild(title);
     block.appendChild(header);
 
     const { grid, n, lines: lineMap } = renderBingoBoardGrid(
@@ -2309,12 +3094,37 @@ async function ensureSession() {
 }
 
 function updateHUD(status) {
+  const sidePanel = document.querySelector(".side-panel");
+  const sideScroll = sidePanel ? sidePanel.scrollTop : 0;
+  try {
+    applyHUDStatus(status);
+  } finally {
+    if (sidePanel) {
+      sidePanel.scrollTop = sideScroll;
+      requestAnimationFrame(() => {
+        sidePanel.scrollTop = sideScroll;
+      });
+    }
+  }
+}
+
+function applyHUDStatus(status) {
   const wasComplete = state.status?.boss_completed === true;
   const wasConnected = state.status?.connected_to_ap === true;
   const wasPractice = state.status?.practice === true;
+  const prevUnlocked = Array.isArray(state.status?.unlocked_branch_ids)
+    ? state.status.unlocked_branch_ids.map((id) => Number(id))
+    : [];
   noteResumeIdentityFromStatus(status);
   state.status = status;
-  state.clicksUsed = Number.isFinite(status.clicks_used) ? status.clicks_used : state.clicksUsed;
+  const remoteClicks = Number(status.clicks_used);
+  if (status.practice) {
+    state.clicksUsed = Number.isFinite(remoteClicks) ? remoteClicks : state.clicksUsed;
+  } else {
+    const saved = loadSavedClicks();
+    const remote = Number.isFinite(remoteClicks) ? remoteClicks : 0;
+    state.clicksUsed = Math.max(Number(state.clicksUsed) || 0, saved, remote);
+  }
   syncRoundVisitTracking(status);
   if (status.practice) {
     el.connBadge.textContent = t("badge.practice");
@@ -2333,6 +3143,7 @@ function updateHUD(status) {
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
+    state.articleLang = "";
   }
   if (wasPractice && !status.practice && !status.connected_to_ap) {
     clearStickyConnectionError();
@@ -2353,8 +3164,12 @@ function updateHUD(status) {
   updateRerollTargetControls(status);
   renderRoundsTrack(status);
   renderFragmentsTrack(status);
+  renderBranchTargets(status);
+  renderCrossroadBadge(status);
+  if (el.journeyBtn) {
+    el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
+  }
 
-  el.clicksText.textContent = String(state.clicksUsed);
   el.compassHint.textContent = status.compass_unlocked
     ? (I18n?.localizeCompassHint
       ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
@@ -2372,9 +3187,22 @@ function updateHUD(status) {
   applyDisplayLocks();
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
-  if (status.boss_completed && !wasComplete && !state.announcedGoalComplete) {
-    toast(t("toast.goalComplete"), "ok", 8000);
+  if (!status.boss_completed) {
+    state.announcedGoalComplete = false;
+    if (state.victoryOpen) closeVictoryOverlay();
+  } else if (!wasComplete && !state.announcedGoalComplete) {
     state.announcedGoalComplete = true;
+    openVictoryOverlay(status);
+  }
+  const nextUnlocked = Array.isArray(status.unlocked_branch_ids)
+    ? status.unlocked_branch_ids.map((id) => Number(id))
+    : [];
+  for (const id of nextUnlocked) {
+    if (prevUnlocked.includes(id)) continue;
+    const path = (Array.isArray(status.paths) ? status.paths : []).find(
+      (item) => item && item.id === `branch:${id}`
+    );
+    toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
   if (status.last_error) {
@@ -2413,6 +3241,21 @@ function renderLensStatus(status) {
   el.lensesItem.textContent = parts.length ? parts.join(" · ") : t("lens.native");
 }
 
+function isDebugMenuAllowed(info) {
+  if (info && typeof info.debug_menu === "boolean") return info.debug_menu;
+  const embedded = readEmbeddedBuildInfo();
+  return Boolean(embedded?.debug_menu);
+}
+
+function applyDebugMenuAvailability(info) {
+  const allowed = isDebugMenuAllowed(info);
+  const wrap = document.getElementById("debugUnlockWrap");
+  if (wrap) wrap.classList.toggle("hidden", !allowed);
+  if (!allowed && (debugDisplayEnabled || debugPanelReady)) {
+    disableDebugDisplayMenu();
+  }
+}
+
 function setDebugQueryParam(enabled) {
   const url = new URL(window.location.href);
   if (enabled) url.searchParams.set("debug", "");
@@ -2434,6 +3277,7 @@ function setDebugConsentOpen(open) {
 }
 
 function enableDebugDisplayMenu() {
+  if (!isDebugMenuAllowed()) return;
   debugDisplayEnabled = true;
   setDebugQueryParam(true);
   if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
@@ -2451,6 +3295,7 @@ function disableDebugDisplayMenu() {
 }
 
 async function runDebugAction(action, payload = {}) {
+  if (!isDebugMenuAllowed()) return null;
   if (!state.sessionId) await ensureSession();
   if (!isApConnected()) {
     toast(t("toast.debugNeedAp"), "warn");
@@ -2520,8 +3365,24 @@ function initDebugDisplayPanel() {
   ]));
   progress.appendChild(debugRow([
     debugBtn("Unlock all rounds", () => runDebugAction("unlock_all_rounds")),
+    debugBtn("Unlock all branches", () => runDebugAction("unlock_all_branches")),
     debugBtn("Finish Grand Goal", () => runDebugAction("finish_boss")),
+  ]));
+  progress.appendChild(debugRow([
     debugBtn("Reset rerolls", () => runDebugAction("reset_rerolls")),
+    debugBtn("Reset backs", () => runDebugAction("reset_backs")),
+  ]));
+  const roundInput = document.createElement("input");
+  roundInput.type = "number";
+  roundInput.min = "1";
+  roundInput.className = "debug-input";
+  roundInput.placeholder = "Round #";
+  progress.appendChild(debugRow([
+    roundInput,
+    debugBtn("Set round", () => {
+      const round = Number(roundInput.value) || 1;
+      runDebugAction("set_round", { round });
+    }),
   ]));
   card.appendChild(progress);
 
@@ -2531,6 +3392,7 @@ function initDebugDisplayPanel() {
     debugBtn("Reroll", () => runDebugAction("grant_item", { item: "Progressive Reroll" })),
     debugBtn("Bingo Card", () => runDebugAction("grant_item", { item: "Progressive Bingo Card" })),
     debugBtn("Bingo Stamp", () => runDebugAction("grant_item", { item: "Progressive Bingo Stamp" })),
+    debugBtn("Branch Key", () => runDebugAction("grant_item", { item: "Branch Key" })),
     debugBtn("Compass", () => runDebugAction("grant_item", { item: "Wiki Compass" })),
     debugBtn("Ctrl+F", () => runDebugAction("grant_item", { item: "Ctrl+F Lens" })),
     debugBtn("All tools", () => runDebugAction("grant_tools")),
@@ -2542,11 +3404,12 @@ function initDebugDisplayPanel() {
   itemSelect.className = "debug-input";
   for (const name of [
     "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
+    "Branch Key",
     "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
     "Table Lens", "Picture Lens", "Lead Lens", "Infobox Lens",
     "Contents Lens", "Navbox Lens", "Hatnote Lens", "Reference Lens",
     "Knowledge Fragment", "Round Access", "Footnote",
-    "Foggy Links", "Missing Links",
+    "Foggy Links", "Missing Links", "Wrong Wiki",
     ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map((letter) => `Search Letter ${letter}`),
   ]) {
     const opt = document.createElement("option");
@@ -2564,11 +3427,20 @@ function initDebugDisplayPanel() {
   travel.appendChild(debugRow([
     debugBtn("Target", async () => {
       const title = state.status?.current_target;
+      state.articleLang = "";
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
     debugBtn("Grand Goal", async () => {
       const title = state.status?.goal_article;
+      state.articleLang = "";
       if (title) await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
+    }),
+    debugBtn("Journey", () => {
+      void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
+    }),
+    debugBtn("Victory", () => {
+      if (state.status?.boss_completed) openVictoryOverlay(state.status);
+      else toast("Finish Grand Goal first", "warn", 3000);
     }),
   ]));
   const pageInput = document.createElement("input");
@@ -2583,6 +3455,7 @@ function initDebugDisplayPanel() {
         toast(t("toast.enterTitle"), "warn", 3000);
         return;
       }
+      state.articleLang = "";
       await openArticle(title, { countAsClick: false, submitCheck: false, replaceHistory: true });
     }),
   ]));
@@ -2631,15 +3504,98 @@ function initDebugDisplayPanel() {
       toast(t("toast.visitsCleared"), "ok", 3000);
     }),
     debugBtn("Receive death", () => runDebugAction("receive_death", { cause: "Debug death" })),
+    debugBtn("Send DeathLink", () => runDebugAction("send_death_link", { cause: "Debug DeathLink" })),
   ]));
   challenge.appendChild(debugRow([
     debugBtn("Trigger Foggy", () => runDebugAction("queue_trap", { trap: "Foggy Links" })),
     debugBtn("Trigger Missing", () => runDebugAction("queue_trap", { trap: "Missing Links" })),
+    debugBtn("Trigger Wrong Wiki", () => runDebugAction("queue_trap", { trap: "Wrong Wiki" })),
   ]));
   card.appendChild(challenge);
 
+  card.setAttribute("data-panel", "debug");
+  const debugHead = document.createElement("div");
+  debugHead.className = "card-head";
+  const debugTitle = card.querySelector("h2");
+  if (debugTitle) debugHead.appendChild(debugTitle);
+  const debugToggle = document.createElement("button");
+  debugToggle.type = "button";
+  debugToggle.className = "card-toggle btn-quiet";
+  debugToggle.setAttribute("data-panel-toggle", "");
+  debugToggle.setAttribute("aria-expanded", "true");
+  debugHead.appendChild(debugToggle);
+  const debugBody = document.createElement("div");
+  debugBody.className = "card-body";
+  while (card.firstChild) debugBody.appendChild(card.firstChild);
+  card.appendChild(debugHead);
+  card.appendChild(debugBody);
   document.querySelector(".side-panel")?.appendChild(card);
+  bindSidePanel(card);
   syncDebugOptionToggles(card);
+}
+
+const SIDE_PANEL_STORAGE_KEY = "wikipelago_side_panels";
+
+function loadCollapsedPanels() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(SIDE_PANEL_STORAGE_KEY) || "{}");
+    return raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCollapsedPanels(map) {
+  try {
+    localStorage.setItem(SIDE_PANEL_STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function isPanelCollapsed(id) {
+  return Boolean(loadCollapsedPanels()[id]);
+}
+
+function setPanelCollapsed(id, collapsed) {
+  const map = loadCollapsedPanels();
+  if (collapsed) map[id] = true;
+  else delete map[id];
+  saveCollapsedPanels(map);
+}
+
+function syncPanelToggle(panel) {
+  const id = panel?.getAttribute("data-panel");
+  if (!id) return;
+  const collapsed = isPanelCollapsed(id);
+  panel.classList.toggle("is-collapsed", collapsed);
+  const btn = panel.querySelector("[data-panel-toggle]");
+  if (!btn) return;
+  const label = collapsed ? t("panel.show") : t("panel.hide");
+  btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+function bindSidePanel(panel) {
+  if (!panel || panel.dataset.panelBound === "1") return;
+  const id = panel.getAttribute("data-panel");
+  const btn = panel.querySelector("[data-panel-toggle]");
+  if (!id || !btn) return;
+  panel.dataset.panelBound = "1";
+  btn.addEventListener("click", () => {
+    setPanelCollapsed(id, !isPanelCollapsed(id));
+    syncPanelToggle(panel);
+  });
+  syncPanelToggle(panel);
+}
+
+function initSidePanelToggles() {
+  document.querySelectorAll("[data-panel]").forEach(bindSidePanel);
+}
+
+function refreshSidePanelToggles() {
+  document.querySelectorAll("[data-panel]").forEach(syncPanelToggle);
 }
 
 function bindStuckHelper() {
@@ -2652,6 +3608,10 @@ function bindStuckHelper() {
   }
   if (el.enableDebugMenuChk) {
     el.enableDebugMenuChk.addEventListener("change", () => {
+      if (!isDebugMenuAllowed()) {
+        el.enableDebugMenuChk.checked = false;
+        return;
+      }
       if (el.enableDebugMenuChk.checked) {
         setDebugConsentOpen(true);
       } else {
@@ -2662,6 +3622,7 @@ function bindStuckHelper() {
   }
   if (el.showDebugMenuBtn) {
     el.showDebugMenuBtn.addEventListener("click", () => {
+      if (!isDebugMenuAllowed()) return;
       if (!el.enableDebugMenuChk?.checked) {
         if (el.enableDebugMenuChk) el.enableDebugMenuChk.checked = true;
         setDebugConsentOpen(true);
@@ -2670,7 +3631,8 @@ function bindStuckHelper() {
       toast(t("toast.debugEnabled"), "ok", 4000);
     });
   }
-  if (debugDisplayEnabled) {
+  applyDebugMenuAvailability();
+  if (isDebugMenuAllowed() && new URLSearchParams(window.location.search).has("debug")) {
     setStuckPanelOpen(true);
     enableDebugDisplayMenu();
   }
@@ -2891,7 +3853,7 @@ function processArticleLinks(root, options = {}) {
     a.removeAttribute("data-blocked-ns");
     a.dataset.title = title;
     if (foggy) {
-      a.textContent = "[Link]";
+      a.textContent = t("trap.foggyLink");
       a.title = "";
     }
     if (playable) playable.push(a);
@@ -2900,8 +3862,8 @@ function processArticleLinks(root, options = {}) {
   if (playable) applyMissingToLinks(playable);
 }
 
-function wikiHtmlCacheKey(title) {
-  return `${wikipediaLanguage()}::${normalizeTitle(title)}`;
+function wikiHtmlCacheKey(title, lang = articleLanguage()) {
+  return `${lang}::${normalizeTitle(title)}`;
 }
 
 function clearWikiHtmlCache() {
@@ -2933,9 +3895,9 @@ function ensureWikiHtmlCacheLanguage() {
   if (!state.wikiCacheLanguage) state.wikiCacheLanguage = lang;
 }
 
-function storeWikiHtmlCache(title, html) {
+function storeWikiHtmlCache(title, html, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
   state.wikiHtmlCache.set(key, { html: String(html || "") });
   while (state.wikiHtmlCache.size > WIKI_PREFETCH_MAX_CACHE) {
@@ -2944,9 +3906,9 @@ function storeWikiHtmlCache(title, html) {
   }
 }
 
-function takeWikiHtmlCache(title) {
+function takeWikiHtmlCache(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   const hit = state.wikiHtmlCache.get(key);
   if (!hit) return null;
   // Refresh LRU order.
@@ -2955,7 +3917,7 @@ function takeWikiHtmlCache(title) {
   return hit.html;
 }
 
-async function fetchWikiHtmlUncached(title) {
+async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
   const params = new URLSearchParams({
     action: "parse",
     page: title,
@@ -2965,30 +3927,30 @@ async function fetchWikiHtmlUncached(title) {
     origin: "*",
     redirects: "true",
   });
-  const url = `${wikipediaOrigin()}/w/api.php?${params}`;
+  const url = `${wikipediaOrigin(lang)}/w/api.php?${params}`;
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${wikipediaLanguage()})`);
+  if (!res.ok) throw new Error(`Wikipedia HTTP ${res.status} (${lang})`);
   const data = await res.json();
   if (data?.error) {
     const info = data.error.info || data.error.code || "Article unavailable";
-    throw new Error(`${info} [${wikipediaLanguage()}]`);
+    throw new Error(`${info} [${lang}]`);
   }
-  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${wikipediaLanguage()}]`);
+  if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${lang}]`);
   return data.parse.text;
 }
 
-async function fetchWikiHtml(title) {
+async function fetchWikiHtml(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const cached = takeWikiHtmlCache(title);
+  const cached = takeWikiHtmlCache(title, lang);
   if (cached != null) return cached;
 
-  const key = wikiHtmlCacheKey(title);
+  const key = wikiHtmlCacheKey(title, lang);
   let inflight = state.wikiHtmlInflight.get(key);
   if (!inflight) {
     inflight = (async () => {
       try {
-        const html = await fetchWikiHtmlUncached(title);
-        storeWikiHtmlCache(title, html);
+        const html = await fetchWikiHtmlUncached(title, lang);
+        storeWikiHtmlCache(title, html, lang);
         return html;
       } finally {
         state.wikiHtmlInflight.delete(key);
@@ -3149,6 +4111,7 @@ async function openArticle(title, options = {}) {
     submitCheck = countAsClick,
     replaceHistory = false,
     requireConnection = false,
+    travelKind = "",
   } = options;
   if (requireConnection && !requirePlayable()) return;
   if (isBlockedWikiTitle(title)) {
@@ -3157,19 +4120,24 @@ async function openArticle(title, options = {}) {
   }
 
   const endLoading = beginArticleLoading();
-  const prepareKey = wikiHtmlCacheKey(title);
-  const prepareWait = state.wikiPrepareInflight.get(prepareKey);
-  if (prepareWait) {
-    try { await prepareWait; } catch { /* fall through */ }
-  }
 
   try {
-    state.currentTitle = title;
-    el.articleTitle.textContent = title;
-    el.articleBody.scrollTop = 0;
-    consumeTrapQueueForPage(title, state.status);
+    const { displayLang, displayTitle, checkTitle, appliedWrongWiki } = await resolveArticleNavigation(title, { countAsClick });
+    const prepareKey = wikiHtmlCacheKey(displayTitle, displayLang);
+    const prepareWait = state.wikiPrepareInflight.get(prepareKey);
+    if (prepareWait) {
+      try { await prepareWait; } catch { /* fall through */ }
+    }
 
-    const prepared = takeWikiPreparedCache(title);
+    state.currentTitle = displayTitle;
+    const seedLang = wikipediaLanguage();
+    el.articleTitle.textContent = displayLang !== seedLang
+      ? `${displayTitle} · ${displayLang}`
+      : displayTitle;
+    el.articleBody.scrollTop = 0;
+    consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki });
+
+    const prepared = takeWikiPreparedCache(displayTitle);
     if (prepared) {
       el.articleBody.replaceChildren(...prepared.childNodes);
       // Re-apply current fog/missing on the live tree (pre-prepare used neutral flags).
@@ -3182,11 +4150,11 @@ async function openArticle(title, options = {}) {
     } else {
       let html;
       try {
-        html = await fetchWikiHtml(title);
+        html = await fetchWikiHtml(displayTitle, displayLang);
       } catch (err) {
         endLoading();
         const detail = err?.message ? ` (${err.message})` : "";
-        toast(t("toast.openFailed", { title, detail }), "warn");
+        toast(t("toast.openFailed", { title: displayTitle, detail }), "warn");
         return;
       }
       el.articleBody.innerHTML = html;
@@ -3197,9 +4165,9 @@ async function openArticle(title, options = {}) {
     }
     armBombsOnPage(el.articleBody, state.status);
     if (countAsClick || !state.roundVisitSet.size) {
-      state.roundVisitSet.add(normalizeTitle(title));
+      state.roundVisitSet.add(normalizeTitle(displayTitle));
     } else if (!submitCheck) {
-      state.roundVisitSet.add(normalizeTitle(title));
+      state.roundVisitSet.add(normalizeTitle(displayTitle));
     }
     // Drop prior page snapshot; a new one is cloned lazily if Ctrl+F is used.
     state.baseArticleClone = null;
@@ -3210,13 +4178,12 @@ async function openArticle(title, options = {}) {
     }
 
     if (countAsClick) state.clicksUsed += 1;
-    el.clicksText.textContent = String(state.clicksUsed);
     saveLocalProgress();
 
     if (replaceHistory) {
-      history.replaceState({ title }, "", `#${encodeURIComponent(title)}`);
+      history.replaceState({ title: checkTitle }, "", `#${encodeURIComponent(checkTitle)}`);
     } else {
-      history.pushState({ title }, "", `#${encodeURIComponent(title)}`);
+      history.pushState({ title: checkTitle }, "", `#${encodeURIComponent(checkTitle)}`);
     }
 
     // Show the page as soon as DOM work is done; bridge check can finish after.
@@ -3230,28 +4197,44 @@ async function openArticle(title, options = {}) {
 
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
-      page_title: title,
+      page_title: checkTitle,
       clicks_used: state.clicksUsed,
       submit_check: Boolean(submitCheck),
+      travel_kind: travelKind || (submitCheck ? "nav" : "restore"),
     });
 
     if (submitCheck) {
       if (result.matched && (result.status?.practice || result.practice_rolled)) {
         // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
-        resetRoundVisits(title);
-        state.clicksUsed = Number(result.status?.clicks_used) || 0;
-        el.clicksText.textContent = String(state.clicksUsed);
+        resetRoundVisits(displayTitle);
+        const nextClicks = Number(result.status?.clicks_used);
+        if (Number.isFinite(nextClicks)) {
+          state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
+        }
         saveLocalProgress();
         return;
       }
       if (result.matched) {
-        let msg = `Target hit: ${result.target}`;
-        if (result.sent_text) msg += ` — ${result.sent_text}`;
+        const hits = Array.isArray(result.hits) ? result.hits : [];
+        const parts = hits.length
+          ? hits.map((hit) => {
+            const title = hit.target || result.target;
+            const base = hit.kind === "branch"
+              ? t("toast.branchHit", {
+                n: forkNumber(hit),
+                title,
+              })
+              : t("toast.targetHit", { title });
+            return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
+          })
+          : [t("toast.targetHit", { title: result.target })];
+        if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
+          parts[0] += ` — ${result.sent_text}`;
+        }
         const bingoParts = formatBingoCompletionParts(result.bingo_completed);
-        if (bingoParts.length) msg += ` · ${bingoParts.join(" · ")}`;
-        toast(msg, "ok", 8000);
-        // Next round starts from its start article — visit set refreshes on round change via HUD.
+        if (bingoParts.length) parts.push(bingoParts.join(" · "));
+        toast(parts.join(" · "), "ok", 8000);
       } else {
         toastBingoCompletions(result.bingo_completed);
       }
@@ -3271,6 +4254,7 @@ async function openArticle(title, options = {}) {
 async function restoreArticleView(force = false) {
   if (!state.status || !isPlayable()) return;
   if (state.handlingDeath) return;
+  state.articleLang = "";
   const desiredTitle = preferredResumeTitle();
   if (!desiredTitle) return;
   if (!force && normalizeTitle(desiredTitle) === normalizeTitle(state.currentTitle)) return;
@@ -3312,12 +4296,11 @@ el.articleBody.addEventListener("click", async (e) => {
   if (state.handlingDeath) return;
   const dest = a.dataset.title || "";
   const destNorm = normalizeTitle(dest);
-  const target = state.status?.current_target || "";
 
   // Bomb hit (only on forward wiki clicks).
-  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !titlesMatch(dest, target)) {
+  if (linkBombsEnabled() && state.bombTitles.has(destNorm) && !isProtectedNavTitle(dest, state.status)) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} hit a link bomb`);
-    await applyDeathEffect("Boom! Link bomb — random page.");
+    await applyDeathEffect(t("toast.bombDeath"));
     return;
   }
 
@@ -3325,10 +4308,10 @@ el.articleBody.addEventListener("click", async (e) => {
   if (
     deathsEnabled()
     && state.roundVisitSet.has(destNorm)
-    && !titlesMatch(dest, target)
+    && !isProtectedNavTitle(dest, state.status)
   ) {
     await notifyDeathLink(`${state.status?.slot_name || "Player"} looped on Wikipedia`);
-    await applyDeathEffect("Loop death! Already visited this round.");
+    await applyDeathEffect(t("toast.loopDeath"));
     return;
   }
 
@@ -3520,6 +4503,10 @@ document.addEventListener("keydown", (e) => {
       else history.back();
     }
   }
+  if (e.key === "Escape" && state.journeyOpen) {
+    e.preventDefault();
+    closeJourneyOverlay();
+  }
   if (e.key === "Escape" && state.searchOpen) {
     e.preventDefault();
     closeSearchOverlay();
@@ -3588,7 +4575,10 @@ ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
 bindBingoOverlayUi();
+bindJourneyOverlayUi();
+bindVictoryOverlayUi();
 bindStuckHelper();
+initSidePanelToggles();
 showMigrateBannerIfNeeded();
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;
@@ -3603,6 +4593,17 @@ if (typeof ResizeObserver !== "undefined") {
   });
   if (el.roundsTrack) trackResizeObserver.observe(el.roundsTrack);
   if (el.fragmentsTrack) trackResizeObserver.observe(el.fragmentsTrack);
+  if (el.journeyPath) {
+    let journeyResizeTimer = 0;
+    const journeyResizeObserver = new ResizeObserver(() => {
+      if (!state.journeyOpen || !state.journeyPayload) return;
+      window.clearTimeout(journeyResizeTimer);
+      journeyResizeTimer = window.setTimeout(() => {
+        drawJourneyPath(state.journeyPayload);
+      }, 50);
+    });
+    journeyResizeObserver.observe(el.journeyPath);
+  }
 }
 setInterval(pollStatus, 1500);
 

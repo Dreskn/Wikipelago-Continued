@@ -5,8 +5,8 @@
   "mode": "full",
   "sample_n": 0,
   "sample_seed": null,
-  "pool_size": 11504,
-  "annotated_count": 11504,
+  "pool_size": 11503,
+  "annotated_count": 11503,
   "elapsed_s": 3992.02,
   "api_calls_delta": 9549,
   "sitelink_cache_hits": 0,
@@ -14,7 +14,7 @@
   "new_qids_classified": 9367,
   "no_qid": 19,
   "miscellaneous_only": 1087,
-  "sensitive_flagged": 284,
+  "sensitive_flagged": 287,
   "tag_counts": {
     "famous_people": 4452,
     "movies": 3521,
@@ -6062,16 +6062,6 @@
         "music"
       ],
       "sensitive": false
-    },
-    {
-      "title": "AMGTV",
-      "canonical_title": "AMGTV",
-      "qid": null,
-      "tags": [
-        "miscellaneous"
-      ],
-      "sensitive": false,
-      "note": "no_wikidata"
     },
     {
       "title": "ASAP Rocky",
@@ -12374,7 +12364,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BF",
@@ -66996,7 +66986,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Portal:Contents",
@@ -74983,7 +74973,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexy",

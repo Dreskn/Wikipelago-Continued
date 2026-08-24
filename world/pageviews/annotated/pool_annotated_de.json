@@ -5,8 +5,8 @@
   "mode": "full",
   "sample_n": 0,
   "sample_seed": null,
-  "pool_size": 10304,
-  "annotated_count": 10304,
+  "pool_size": 10303,
+  "annotated_count": 10303,
   "elapsed_s": 1915.54,
   "api_calls_delta": 4417,
   "sitelink_cache_hits": 2901,
@@ -14,7 +14,7 @@
   "new_qids_classified": 5626,
   "no_qid": 105,
   "miscellaneous_only": 1284,
-  "sensitive_flagged": 187,
+  "sensitive_flagged": 192,
   "tag_counts": {
     "famous_people": 4450,
     "movies": 2808,
@@ -6826,7 +6826,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "BGM-109 Tomahawk",
@@ -24958,7 +24958,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fenetyllin",
@@ -29072,7 +29072,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Gesetzliche Feiertage in Deutschland",
@@ -46871,16 +46871,6 @@
       "sensitive": true
     },
     {
-      "title": "Lilli Schweiger",
-      "canonical_title": "Lilli Schweiger",
-      "qid": "Q100175",
-      "tags": [
-        "famous_people",
-        "movies"
-      ],
-      "sensitive": false
-    },
-    {
       "title": "Lilly Becker",
       "canonical_title": "Lilly Becker",
       "qid": "Q23198002",
@@ -64040,7 +64030,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Portal:COVID-19",
@@ -81223,7 +81213,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Vaiana 2",

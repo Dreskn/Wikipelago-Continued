@@ -1,0 +1,932 @@
+{
+  "Q55": {
+    "question": "Welk van de vier landen van het Koninkrijk der Nederlanden ligt grotendeels in Noordwest-Europa, met drie bijzondere gemeenten in de Caribische Zee, en grenst aan het in 1830 afgescheiden België en aan Duitsland?",
+    "lead_fact": "Een van vier landen van het Koninkrijk; Caribische bijzondere gemeenten; grens met België (1830) en Duitsland.",
+    "source": "native-lead"
+  },
+  "Q9682": {
+    "question": "Welke Britse koningin werd op tienjarige leeftijd vermoedelijke troonopvolger nadat haar oom in 1936 aftrad?",
+    "lead_fact": "Abdicatie van Edward VIII maakte de tienjarige prinses tot heir presumptive.",
+    "source": "translated-from-en"
+  },
+  "Q115564437": {
+    "question": "Welke chatbot bereikte binnen twee maanden na de lancering op 30 november 2022 honderd miljoen maandelijkse gebruikers?",
+    "lead_fact": "Lancering 30 november 2022; 100 miljoen maandelijkse gebruikers in twee maanden.",
+    "source": "translated-from-en"
+  },
+  "Q22686": {
+    "question": "Welke Amerikaanse president presenteerde van 2004 tot 2015 de realityserie The Apprentice, tussen een carrière in vastgoed en het presidentschap?",
+    "lead_fact": "Presentator van The Apprentice 2004–2015; later 45e en 47e president.",
+    "source": "translated-from-en"
+  },
+  "Q31": {
+    "question": "Welk West-Europees koninkrijk aan de Noordzee grenst aan Nederland, Duitsland, Luxemburg en Frankrijk en bestaat uit een Vlaams, Waals en Brussels gewest?",
+    "lead_fact": "Noordzeeland; grenzen met NL, DE, LU en FR; drie gewesten.",
+    "source": "native-lead"
+  },
+  "Q30": {
+    "question": "Welke federale republiek begon met de nederzetting in Virginia in 1607 die uitgroeide tot de Dertien Koloniën, en omvat tegenwoordig Alaska als semi-exclave?",
+    "lead_fact": "Virginia 1607 / Dertien Koloniën; Alaska als semi-exclave. Niet de hoofdstad.",
+    "source": "translated-from-en"
+  },
+  "Q361": {
+    "question": "Welke oorlog van 1914–1918 tussen de geallieerden en de centralen wordt ook in verband gebracht met de verspreiding van de Spaanse griep?",
+    "lead_fact": "Geallieerden tegen centralen; hielp de Spaanse griep verspreiden.",
+    "source": "translated-from-en"
+  },
+  "Q866": {
+    "question": "Welke videosite, opgericht door drie voormalige PayPal-medewerkers, uploadde in 2019 al meer dan 500 uur video per minuut?",
+    "lead_fact": "Opgericht door Hurley, Karim en Chen; in 2019 meer dan 500 uur upload per minuut.",
+    "source": "translated-from-en"
+  },
+  "Q11571": {
+    "question": "Welke Portugese spits houdt de UEFA Champions League-records voor de meeste goals (140) en assists (42)?",
+    "lead_fact": "Champions League: 140 goals en 42 assists.",
+    "source": "translated-from-en"
+  },
+  "Q352": {
+    "question": "Welke nazi-leider nam in 1934 de titel Führer und Reichskanzler aan, nadat hij het jaar daarvoor rijkskanselier van Duitsland was geworden?",
+    "lead_fact": "Rijkskanselier 1933; Führer und Reichskanzler 1934.",
+    "source": "translated-from-en"
+  },
+  "Q362": {
+    "question": "Van welke oorlog van 1939–1945 omvatte de nasleep de bezetting van Duitsland, Oostenrijk, Japan en Korea plus processen tegen Duitse en Japanse leiders?",
+    "lead_fact": "Naoorlogse bezetting van die vier; oorlogsmisdadenprocessen.",
+    "source": "translated-from-en"
+  },
+  "Q57792": {
+    "question": "Welke Nederlander was van 2010 tot 2024 de langstzittende minister-president in de Nederlandse geschiedenis en werd daarna secretaris-generaal van de NAVO?",
+    "lead_fact": "Minister-president 2010–2024; vanaf oktober 2024 secretaris-generaal van de NAVO.",
+    "source": "native-lead"
+  },
+  "Q1515393": {
+    "question": "Welke in de Mediawet vastgelegde publieke omroep verzorgt het landelijke media-aanbod op het gebied van nieuws, sport en evenementen, en wordt deels door de overheid gefinancierd?",
+    "lead_fact": "Wettelijke publieke omroep voor nieuws, sport en evenementen; deels overheidsfinanciering.",
+    "source": "native-lead"
+  },
+  "Q15869": {
+    "question": "Welke Queen-zanger werd als Farrokh Bulsara geboren in Zanzibar bij Parsi-Indiase ouders en vluchtte later voor de revolutie van 1964?",
+    "lead_fact": "Geboortenaam Farrokh Bulsara; Parsi-ouders; revolutie van Zanzibar 1964.",
+    "source": "translated-from-en"
+  },
+  "Q517": {
+    "question": "Welke Franse generaal was van 1804 tot 1814 keizer der Fransen, koning van Italië en beschermer van de Rijnbond, en voerde een invloedrijk burgerlijk wetboek in?",
+    "lead_fact": "Keizer 1804–1814; koning van Italië; invloedrijk burgerlijk wetboek.",
+    "source": "native-lead"
+  },
+  "Q81888": {
+    "question": "Welke Amsterdamse profvoetbalclub, opgericht in 1900, speelt sinds de start van de Eredivisie onafgebroken in de hoogste divisie en werd zesendertig keer kampioen van Nederland?",
+    "lead_fact": "Opgericht 18 maart 1900; 36 landstitels; altijd in de Eredivisie sinds 1956.",
+    "source": "native-lead"
+  },
+  "Q18756": {
+    "question": "Welk UEFA-clubtoernooi begon in 1955 als de Europacup I voor landskampioenen?",
+    "lead_fact": "In 1955 ingevoerd als Europacup I; huidige naam sinds 1992.",
+    "source": "translated-from-en"
+  },
+  "Q727": {
+    "question": "Welke stad is sinds 1808 de hoofdstad van Nederland en vanaf 1815 van het Koninkrijk der Nederlanden, en is de gemeente met de meeste inwoners?",
+    "lead_fact": "Hoofdstad sinds 1808; grootste gemeente; ligt aan het IJ en de Amstel.",
+    "source": "native-lead"
+  },
+  "Q8963": {
+    "question": "Welke Duitse astronoom in dienst van keizer Rudolf II berekende de planeetbewegingen op basis van het werk van Tycho Brahe, inzichten die Isaac Newton later via de zwaartekrachtwet verklaarde?",
+    "lead_fact": "Astronoom van Rudolf II; planeetwetten op basis van Tycho Brahe; later verklaard door Newton.",
+    "source": "native-lead"
+  },
+  "Q615": {
+    "question": "Welke Argentijnse aanvaller scoorde 672 clubgoals voor Barcelona, een record voor één club?",
+    "lead_fact": "672 goals voor Barcelona, meeste voor één club.",
+    "source": "translated-from-en"
+  },
+  "Q355": {
+    "question": "Welk sociaal netwerk was eerst alleen toegankelijk voor Harvard-studenten en ontleent zijn naam aan campusfotoboeken?",
+    "lead_fact": "Eerst alleen Harvard; naam naar face-book-directories.",
+    "source": "translated-from-en"
+  },
+  "Q153815": {
+    "question": "Welke jongere dochter van George VI bleef tijdens de Tweede Wereldoorlog op Windsor Castle in plaats van naar Canada te worden geëvacueerd?",
+    "lead_fact": "Bleef in WO II op Windsor; enige zus van Elizabeth II.",
+    "source": "translated-from-en"
+  },
+  "Q519588": {
+    "question": "Welke Nederlandse volkszanger en kroegbaas werd vanaf de late jaren 70 populair in Nederland en Vlaanderen met hits als Eenzame kerst, Een beetje verliefd en Ik meen 't?",
+    "lead_fact": "Levensliedzanger; hits Eenzame kerst, Een beetje verliefd, Ik meen 't.",
+    "source": "native-lead"
+  },
+  "Q2239218": {
+    "question": "Welke Nederlands-Belgische Formule 1-coureur voor Red Bull Racing werd in 2021 de eerste Nederlandse wereldkampioen en prolongeerde die titel in 2022, 2023 en 2024?",
+    "lead_fact": "Eerste Nederlandse F1-wereldkampioen (2021); titels tot 2024; Red Bull Racing.",
+    "source": "native-lead"
+  },
+  "Q25173": {
+    "question": "Welk luxe Olympic-klasse schip van de White Star Line zonk in de nacht van 14 op 15 april 1912 op haar eerste reis na een aanvaring met een ijsberg, waarbij 1522 opvarenden omkwamen?",
+    "lead_fact": "Olympic-klasse; White Star Line; ijsberg 14–15 april 1912; 1522 doden.",
+    "source": "native-lead"
+  },
+  "Q486": {
+    "question": "Welke ramp, een van slechts twee met niveau 7 op de Internationale Schaal voor Nucleaire Gebeurtenissen, begon tijdens een veiligheidstest bij reactor 4 op 26 april 1986?",
+    "lead_fact": "INES 7; reactor 4; veiligheidstest 26 april 1986 bij Pripjat.",
+    "source": "translated-from-en"
+  },
+  "Q4462875": {
+    "question": "Welke Nederlandse politicus richtte in 2015 Forum voor Democratie op als denktank, was initiatiefnemer van het Oekraïne-referendum en zat van 2017 tot 2026 in de Tweede Kamer?",
+    "lead_fact": "Oprichter FVD (2015); Oekraïne-referendum 2016; Kamerlid 2017–2026.",
+    "source": "native-lead"
+  },
+  "Q25279": {
+    "question": "Welk constituerend land binnen het Koninkrijk der Nederlanden ligt in de zuidelijke Caraïbische Zee, zo'n 65 kilometer ten noorden van Venezuela, en was tot 10 oktober 2010 een eilandgebied?",
+    "lead_fact": "Land binnen het Koninkrijk; 65 km ten noorden van Venezuela; tot 2010 eilandgebied.",
+    "source": "native-lead"
+  },
+  "Q183": {
+    "question": "Welk land in West- en Centraal-Europa grenst onder meer aan Denemarken, Polen, Oostenrijk, Frankrijk en Nederland en heeft de grootste bevolking van de Europese Unie?",
+    "lead_fact": "Bondsrepubliek; grootste EU-bevolking; grenzen van Denemarken tot Nederland.",
+    "source": "native-lead"
+  },
+  "Q5764991": {
+    "question": "Welke folkloristische figuur, gebaseerd op de Griekse bisschop van Myra, deelt in Nederland op 5 december (pakjesavond) cadeaus uit aan kinderen die braaf zijn geweest?",
+    "lead_fact": "Gebaseerd op Nicolaas van Myra; pakjesavond 5 december in Nederland.",
+    "source": "native-lead"
+  },
+  "Q303": {
+    "question": "Welke zanger begon in 1954 op te nemen bij Sun Records nadat zijn familie van Tupelo naar Memphis was verhuisd?",
+    "lead_fact": "Sun Records 1954; verhuizing van Tupelo naar Memphis. Antwoord is de persoon.",
+    "source": "translated-from-en"
+  },
+  "Q17163": {
+    "question": "Welke Nederlandse voetballer en trainer werd in 1999 door de IFFHS tot Europees voetballer van de twintigste eeuw gekozen en eindigde als tweede achter Pelé bij de wereldverkiezing?",
+    "lead_fact": "IFFHS Europees voetballer van de 20e eeuw; tweede achter Pelé wereldwijd.",
+    "source": "native-lead"
+  },
+  "Q154952": {
+    "question": "Welk oudste kind van Beatrix en Claus is sinds 30 april 2013 Koning der Nederlanden?",
+    "lead_fact": "Koning sinds 30 april 2013; oudste kind van Beatrix en Claus.",
+    "source": "native-lead"
+  },
+  "Q635": {
+    "question": "Na de dood van welke hellenistische koningin in 30 v.Chr. werd Egypte een Romeinse provincie, waarmee de hellenistische periode in de Middellandse Zee eindigde?",
+    "lead_fact": "Laatste actieve hellenistische farao; dood markeert Egypte als Romeinse provincie.",
+    "source": "translated-from-en"
+  },
+  "Q142": {
+    "question": "Welk West-Europees land ligt tussen het Kanaal, de Atlantische Oceaan en de Golf van Biskaje, en grenst onder meer aan België, Duitsland, Zwitserland, Italië en Spanje?",
+    "lead_fact": "Op twee na grootste Europese land qua oppervlakte; grenzen van België tot Spanje.",
+    "source": "native-lead"
+  },
+  "Q776262": {
+    "question": "Welke Nederlandse soapserie, sinds 1 oktober 1990 op RTL 4, speelt zich af in de fictieve plaats Meerdijk en was de eerste twee seizoenen gebaseerd op The Restless Years?",
+    "lead_fact": "RTL 4 vanaf 1990; Meerdijk; eerste seizoenen naar The Restless Years.",
+    "source": "native-lead"
+  },
+  "Q456399": {
+    "question": "Welke Nederlandse crimineel werd in 1983 bekend als een van de ontvoerders van biermagnaat Freddy Heineken en diens chauffeur Ab Doderer?",
+    "lead_fact": "Ontvoering Heineken/Doderer in 1983; later top van de Amsterdamse misdaad.",
+    "source": "native-lead"
+  },
+  "Q317521": {
+    "question": "Welke ondernemer was in 1995 medeoprichter van het webbedrijf Zip2 en later van X.com, dat opging in PayPal?",
+    "lead_fact": "Zip2 (1995), daarna X.com → PayPal; niet Tesla/SpaceX als haak.",
+    "source": "translated-from-en"
+  },
+  "Q2831": {
+    "question": "Welke zanger, het achtste van tien kinderen, bracht Thriller uit, later het bestverkochte album aller tijden genoemd?",
+    "lead_fact": "Achtste van tien Jackson-kinderen; Thriller bestverkochte album.",
+    "source": "translated-from-en"
+  },
+  "Q937": {
+    "question": "Welke natuurkundige won in 1921 de Nobelprijs voor het foto-elektrisch effect, niet voor relativiteit?",
+    "lead_fact": "Nobelprijs 1921 voor het foto-elektrisch effect, niet relativiteit.",
+    "source": "translated-from-en"
+  },
+  "Q730": {
+    "question": "Welke republiek aan de noordkust van Zuid-Amerika wordt ook tot het Caraïbisch gebied gerekend, en heeft een zuidelijk district dat 80% van het oppervlak beslaat maar slechts enkele tienduizenden inwoners telt?",
+    "lead_fact": "Noordkust Zuid-Amerika; district Sipaliwini 80% van het oppervlak.",
+    "source": "native-lead"
+  },
+  "Q35657": {
+    "question": "Welke vijftig deelstaten van de Amerikaanse federatie kunnen in zekere mate onafhankelijk van de federale overheid opereren?",
+    "lead_fact": "Vijftig staten met eigen bevoegdheden naast de federale overheid.",
+    "source": "native-lead"
+  },
+  "Q78454": {
+    "question": "Welke prins van Oranje, eerder in dienst van Filips II, speelde een sleutelrol in de Tachtigjarige Oorlog en werd in 1584 in Delft vermoord?",
+    "lead_fact": "Staatsman tegen Filips II; Tachtigjarige Oorlog; moord in Delft 1584.",
+    "source": "native-lead"
+  },
+  "Q187447": {
+    "question": "Welke Colombiaan, oprichter van het Medellín-kartel, kreeg de bijnaam King of Cocaine en werd bij zijn dood op zo'n 30 miljard dollar geschat?",
+    "lead_fact": "Medellín-kartel; King of Cocaine; vermogen circa 30 miljard dollar.",
+    "source": "translated-from-en"
+  },
+  "Q7747": {
+    "question": "Welke Russische leider nam in 1991 als luitenant-kolonel ontslag bij de KGB en leidde later kort de FSB voordat hij premier werd?",
+    "lead_fact": "KGB-luitenant-kolonel tot 1991; FSB-directeur, daarna premier in 1999.",
+    "source": "translated-from-en"
+  },
+  "Q134390": {
+    "question": "Welke twaalf bestuurlijke eenheden vormen in Europees Nederland de bestuurslaag tussen Rijk en gemeenten, met taken als ruimtelijke ordening en toezicht op 342 gemeenten?",
+    "lead_fact": "Twaalf provincies tussen Rijk en 342 gemeenten; ruimtelijke ordening en toezicht.",
+    "source": "native-lead"
+  },
+  "Q134241": {
+    "question": "Welke Rotterdamse profvoetbalclub uit 1908 speelt in De Kuip, draagt rood-wit met een zwarte broek, en is een van de drie traditionele topclubs van Nederland?",
+    "lead_fact": "Opgericht 19 juli 1908; thuis in De Kuip; rood-wit-zwart.",
+    "source": "native-lead"
+  },
+  "Q145": {
+    "question": "Welk land bestaat uit Engeland, Schotland, Wales en Noord-Ierland en deelt alleen met de Ierse Republiek een landgrens?",
+    "lead_fact": "Vier constituerende landen; enige landgrens is met Ierland. Niet Londen.",
+    "source": "translated-from-en"
+  },
+  "Q243": {
+    "question": "Welk monument aan de linkeroever van de Seine in het 7e arrondissement van Parijs ontving tussen 2011 en 2017 jaarlijks meer dan zes miljoen betalende bezoekers?",
+    "lead_fact": "7e arrondissement; meest bezochte betaalde monument; meer dan zes miljoen bezoekers per jaar.",
+    "source": "native-lead"
+  },
+  "Q105338": {
+    "question": "Welke Nederlandse politicus is oprichter, enige lid en fractievoorzitter van de PVV, zit sinds 1998 in de Tweede Kamer en begon daar namens de VVD?",
+    "lead_fact": "Oprichter en enige lid van de PVV; Kamerlid sinds 1998, tot 2004 VVD.",
+    "source": "native-lead"
+  },
+  "Q39864": {
+    "question": "Welk christelijk feest, van het Griekse woord voor de vijftigste dag, herdenkt de uitstorting van de Heilige Geest als begin van het christendom?",
+    "lead_fact": "Pentèkostè, de vijftigste dag; uitstorting van de Heilige Geest.",
+    "source": "native-lead"
+  },
+  "Q5582": {
+    "question": "Welke Nederlandse postimpressionistische schilder uit Zundert werkte onder meer in Auvers-sur-Oise en beïnvloedde expressionisme en fauvisme sterk?",
+    "lead_fact": "Postimpressionist uit Zundert; overleden in Auvers-sur-Oise; invloed op expressionisme.",
+    "source": "native-lead"
+  },
+  "Q233": {
+    "question": "Welke Zuid-Europese dwergstaat in de Middellandse Zee bestaat onder meer uit Gozo, Comino en het kleine Manoel-eiland?",
+    "lead_fact": "Archipel met Gozo, Comino en Manoel-eiland; republiek in de Middellandse Zee.",
+    "source": "native-lead"
+  },
+  "Q801": {
+    "question": "Welk West-Aziatisch land ligt bij het laagste punt op aarde aan de Dode Zee en kreeg in 1917 Britse steun voor een Joods tehuis via de Balfour-verklaring?",
+    "lead_fact": "Dode Zee / laagste punt; Balfour-verklaring 1917. Niet de hoofdstad.",
+    "source": "translated-from-en"
+  },
+  "Q14518837": {
+    "question": "Welk Nederlands AVROTROS-spelprogramma, een remake van het Vlaamse De Mol van Woestijnvis, laat kandidaten geld verdienen terwijl één van hen in het geheim saboteert?",
+    "lead_fact": "Remake van De Mol; AVROTROS/IDTV; één saboteur onder de kandidaten.",
+    "source": "native-lead"
+  },
+  "Q448936": {
+    "question": "Welke Friese schaatstocht over natuurijs van bijna 200 kilometer, maximaal eens per winter, werd in 1909 voor het eerst officieel gereden en start traditioneel in Leeuwarden?",
+    "lead_fact": "Bijna 200 km over natuurijs; eerste officiële tocht 1909; start in Leeuwarden.",
+    "source": "native-lead"
+  },
+  "Q21196": {
+    "question": "Welk belangrijkste christelijke feest in het liturgische jaar volgt op de Goede Week en viert dat Jezus op de zondag na zijn kruisiging uit de dood is opgestaan?",
+    "lead_fact": "Na de Goede Week; opstanding op de zondag na de kruisiging; twee feestdagen.",
+    "source": "native-lead"
+  },
+  "Q1568276": {
+    "question": "Welke Belgisch-Nederlandse meidengroep met Nederlandstalig poprepertoire, geproduceerd door Studio 100, bestaat nu uit Hanne Verbruggen, Marthe De Pillecyn en Julia Boschman?",
+    "lead_fact": "Studio 100; huidige bezetting Verbruggen, De Pillecyn en Boschman.",
+    "source": "native-lead"
+  },
+  "Q38": {
+    "question": "Welk Zuid-Europees land ligt grotendeels op het Apennijns Schiereiland, grenst in het noorden aan Frankrijk, Zwitserland, Oostenrijk en Slovenië, en omvat Sicilië, Sardinië en Elba?",
+    "lead_fact": "Apennijns Schiereiland; Sicilië, Sardinië en Elba; noordgrenzen tot Slovenië.",
+    "source": "native-lead"
+  },
+  "Q1011": {
+    "question": "Welk land bestaat uit een vulkanische eilandengroep in de Atlantische Oceaan voor de westkust van Afrika en heeft Portugees als officiële taal?",
+    "lead_fact": "Vulkanische eilanden voor West-Afrika; Portugees; republiek.",
+    "source": "native-lead"
+  },
+  "Q9439": {
+    "question": "Welke Britse koningin kreeg in 1876 van het parlement extra de titel keizerin van India?",
+    "lead_fact": "Keizerin van India vanaf 1876/1877.",
+    "source": "translated-from-en"
+  },
+  "Q4740163": {
+    "question": "Welke Catalaanse politicus was burgemeester van Girona, werd in 2016 de 130ste president van de Generalitat en liet op 27 oktober 2017 het parlement de onafhankelijkheid uitroepen?",
+    "lead_fact": "130ste president van Catalonië; onafhankelijkheidsuitroep 27 oktober 2017.",
+    "source": "native-lead"
+  },
+  "Q212": {
+    "question": "Welk Oost-Europees land grenst onder meer aan Rusland, Wit-Rusland, Polen, Slowakije, Hongarije, Roemenië en Moldavië, en is het grootste land dat volledig in Europa ligt?",
+    "lead_fact": "Grootste land volledig in Europa; grenzen van Rusland tot Moldavië.",
+    "source": "native-lead"
+  },
+  "Q408": {
+    "question": "Welk land is het vlakste en droogste bewoonde continent ter wereld en omvat Tasmanië plus het vasteland?",
+    "lead_fact": "Vlakste/droogste bewoonde continent; inclusief Tasmanië. Niet de hoofdstad.",
+    "source": "translated-from-en"
+  },
+  "Q9685": {
+    "question": "Welke royal werkte als assistent op een kleuterschool toen ze in 1981 verloofd raakte met de Prins van Wales?",
+    "lead_fact": "Kleuterjuf bij de verloving; huwelijk in St Paul's, juli 1981.",
+    "source": "translated-from-en"
+  },
+  "Q29": {
+    "question": "Welk Zuidwest-Europees koninkrijk beslaat grofweg 80% van het Iberisch Schiereiland en omvat ook de Balearen, de Canarische Eilanden en exclaves in Noord-Afrika?",
+    "lead_fact": "80% van Iberia; Balearen, Canarische Eilanden en Noord-Afrikaanse exclaves.",
+    "source": "native-lead"
+  },
+  "Q29647346": {
+    "question": "Welke Spaanse kraakserie van Álex Pina ging op 2 mei 2017 in première op Antena 3 en verscheen later op Netflix onder de Engelse titel Money Heist?",
+    "lead_fact": "Álex Pina; Antena 3, 2 mei 2017; Netflix-titel Money Heist.",
+    "source": "native-lead"
+  },
+  "Q6223": {
+    "question": "Welke extreme vorm van autoritair nationalisme en militarisme werd onder meer van 1922 tot 1943 in Italië ingesteld en is antidemocratisch, anticommunistisch en antiliberaal?",
+    "lead_fact": "Autoritair nationalisme; Italië 1922–1943; extreemrechts op het spectrum.",
+    "source": "native-lead"
+  },
+  "Q23572": {
+    "question": "Welke HBO-serie bewerkte de boeken van George R.R. Martin tot 73 afleveringen in acht seizoenen, die in 2019 eindigden?",
+    "lead_fact": "73 afleveringen, acht seizoenen, 2011–2019.",
+    "source": "translated-from-en"
+  },
+  "Q15077856": {
+    "question": "Welke Nederlandse D66-politica was van 2022 tot 2024 eerste vicepremier en minister van Financiën, en daarna VN-coördinator voor Gaza?",
+    "lead_fact": "Vicepremier en minister van Financiën in Rutte IV; daarna VN-coördinator Gaza.",
+    "source": "native-lead"
+  },
+  "Q8016": {
+    "question": "Welke Britse premier leidde het land door de Tweede Wereldoorlog en keerde van 1951 tot 1955 terug in het ambt?",
+    "lead_fact": "Premier 1940–1945 en opnieuw 1951–1955.",
+    "source": "translated-from-en"
+  },
+  "Q43": {
+    "question": "Welk transcontinentaal land ligt grotendeels in Anatolië en deels op de Balkan, gescheiden door de Dardanellen, de Zee van Marmara en de Bosporus?",
+    "lead_fact": "Anatolië plus Oost-Thracië; scheiding via Dardanellen, Marmara en Bosporus.",
+    "source": "native-lead"
+  },
+  "Q60": {
+    "question": "Welke Amerikaanse stad bestaat uit vijf boroughs die elk met een county samenvallen en huisvest het hoofdkwartier van de Verenigde Naties?",
+    "lead_fact": "Vijf boroughs samenvallend met counties; VN-hoofdkwartier.",
+    "source": "translated-from-en"
+  },
+  "Q150782": {
+    "question": "Welke hertogin uit het huis Wittelsbach werd in 1854 keizerin van Oostenrijk en in 1867 koningin van Hongarije door haar huwelijk met Frans Jozef I, en kwam in Genève om door een politieke moord?",
+    "lead_fact": "Keizerin vanaf 1854; koningin van Hongarije 1867; moord in Genève 1898.",
+    "source": "native-lead"
+  },
+  "Q25207350": {
+    "question": "Welke Amerikaanse Hulu-dramaserie, ontwikkeld door Bruce Miller, is gebaseerd op de gelijknamige roman van Margaret Atwood en ging op 26 april 2017 in première?",
+    "lead_fact": "Naar Atwood; ontwikkeld door Bruce Miller; Hulu-première 26 april 2017.",
+    "source": "native-lead"
+  },
+  "Q3078910": {
+    "question": "Welke in België geboren Nederlandse wielrenner van Alpecin-Premier Tech werd in 2015 in Tábor de jongste wereldkampioen veldrijden aller tijden en won daarna nog meerdere regenboogtruien?",
+    "lead_fact": "Jongste WK veldrijden in Tábor 2015; Alpecin-Premier Tech; meerdere wereldtitels.",
+    "source": "native-lead"
+  },
+  "Q52": {
+    "question": "Welke encyclopedie wordt sinds 2003 gehost door een Amerikaanse non-profit die vooral van donaties van lezers leeft?",
+    "lead_fact": "Sinds 2003 bij de Wikimedia Foundation; grotendeels donatiefinanciering.",
+    "source": "translated-from-en"
+  },
+  "Q7184": {
+    "question": "Welke militaire organisatie ontstond na de Tweede Wereldoorlog op basis van een verdrag dat op 4 april 1949 in Washington D.C. werd getekend, met wederzijdse verdediging als kern?",
+    "lead_fact": "Noord-Atlantisch Verdrag, Washington 4 april 1949; wederzijdse verdediging.",
+    "source": "native-lead"
+  },
+  "Q46": {
+    "question": "Welk werelddeel ligt ten westen van Azië en ten noorden van Afrika, wordt begrensd door de Middellandse Zee, de Noordelijke IJszee en de Atlantische Oceaan, en is qua oppervlakte het op een na kleinste?",
+    "lead_fact": "Westen van Azië, noorden van Afrika; op een na kleinste werelddeel qua oppervlakte.",
+    "source": "native-lead"
+  },
+  "Q458": {
+    "question": "Welk statenverband van 27 Europese landen groeide uit de EGKS van 1951 en de EEG van 1958, destijds gevormd door zes landen waaronder België, Frankrijk en Nederland?",
+    "lead_fact": "27 lidstaten; oorsprong EGKS 1951 en EEG 1958 met zes oprichters.",
+    "source": "native-lead"
+  },
+  "Q19317": {
+    "question": "Welk om de vier jaar terugkerend FIFA-toernooi tussen nationale elftallen wordt vanaf 2026 uitgebreid naar 48 landen?",
+    "lead_fact": "Vierjaarlijks FIFA-toernooi; uitbreiding naar 48 landen vanaf 2026.",
+    "source": "native-lead"
+  },
+  "Q16": {
+    "question": "Welk land heeft tien provincies en drie territoria van de Atlantische tot de Grote Oceaan en in het noordpoolgebied, en is naar totale oppervlakte het op een na grootste ter wereld?",
+    "lead_fact": "10 provincies, 3 territoria; op een na grootste naar oppervlakte. Niet Ottawa.",
+    "source": "translated-from-en"
+  },
+  "Q15180": {
+    "question": "Welke transcontinentale staat, opgericht in 1922 en ontbonden in 1991, was naar oppervlakte het grootste land ter wereld en het op twee na volkrijkste?",
+    "lead_fact": "1922–1991; grootste naar oppervlakte, op twee na volkrijkste. Niet de hoofdstad.",
+    "source": "translated-from-en"
+  },
+  "Q2599262": {
+    "question": "Welk overzicht rangschikt alle Belgische gemeenten naar inwonertal, met onder meer oppervlakte, bevolkingsdichtheid en welvaartsindex voor jaren als 1846 en 2026?",
+    "lead_fact": "Alle Belgische gemeenten op inwonertal; cijfers 1846–2026 en welvaartsindex.",
+    "source": "native-lead"
+  },
+  "Q1028": {
+    "question": "Welk koninkrijk in Noord-Afrika ligt aan de Middellandse Zee, de Straat van Gibraltar en de Atlantische Oceaan, grenst aan Algerije en de betwiste Westelijke Sahara, en behoort tot de Maghreb?",
+    "lead_fact": "Maghrebland; Gibraltar en Atlantische kust; grens met Algerije en Westelijke Sahara.",
+    "source": "native-lead"
+  },
+  "Q164432": {
+    "question": "Welke opstand van de Zeventien Provinciën tegen Filips II, III en IV begon na de Beeldenstorm van 1566, waarna Alva naar de Nederlanden werd gestuurd?",
+    "lead_fact": "Opstand tegen drie Spaanse Filipsen; Beeldenstorm 1566; komst van Alva.",
+    "source": "native-lead"
+  },
+  "Q462": {
+    "question": "Welke Amerikaanse epische space-opera-filmserie, bedacht door George Lucas en ontwikkeld door Lucasfilm, bestaat uit drie trilogieën plus losstaande films en series?",
+    "lead_fact": "George Lucas / Lucasfilm; drie trilogieën plus spin-offs.",
+    "source": "native-lead"
+  },
+  "Q9671": {
+    "question": "Welke Duitse Formule 1-coureur werd zeven keer wereldkampioen, reed onder meer van 1991 tot 2006, en liep in 2013 bij een skiongeluk ernstig hersenletsel op?",
+    "lead_fact": "Zeven F1-titels; comeback 2010–2012; skiongeluk december 2013.",
+    "source": "native-lead"
+  },
+  "Q39": {
+    "question": "Welk Europees land grenst in het noorden aan Duitsland en heet officieel onder meer Schweizerische Eidgenossenschaft, Confédération suisse en Confœderatio Helvetica?",
+    "lead_fact": "Officiële namen in het Duits, Frans en Latijn; noorderbuur Duitsland.",
+    "source": "native-lead"
+  },
+  "Q252": {
+    "question": "Welke Zuidoost-Aziatische archipelstaat van meer dan 17.000 eilanden, waaronder Sumatra, Java, Sulawesi en delen van Borneo en Nieuw-Guinea, is de grootste archipelstaat ter wereld?",
+    "lead_fact": "Meer dan 17.000 eilanden; grootste archipelstaat; Sumatra tot Nieuw-Guinea.",
+    "source": "native-lead"
+  },
+  "Q9673": {
+    "question": "Welke Britse Formule 1-coureur werd zeven keer wereldkampioen, debuteerde in 2007 bij McLaren naast Fernando Alonso, en rijdt sinds 2025 voor Ferrari?",
+    "lead_fact": "Zeven wereldtitels; McLaren-debuut 2007 naast Alonso; Ferrari vanaf 2025.",
+    "source": "native-lead"
+  },
+  "Q34370": {
+    "question": "Welke havenstad in Zuid-Holland is qua inwonertal de op een na grootste van Nederland en ligt in de metropoolregio met Den Haag?",
+    "lead_fact": "Tweede stad van Nederland; havenstad Zuid-Holland; metropoolregio met Den Haag.",
+    "source": "native-lead"
+  },
+  "Q178275": {
+    "question": "Welke influenzapandemie, veroorzaakt door H1N1, begon rond 1918 en eiste naar schatting minstens 17 miljoen levens?",
+    "lead_fact": "H1N1-pandemie 1918–1920; 17 tot 100 miljoen doden.",
+    "source": "translated-from-en"
+  },
+  "Q41726": {
+    "question": "Welk internationaal genootschap van mensen die streven naar geestelijke en morele verheffing spreekt leden aan met broeder of zuster en werkt met rituelen?",
+    "lead_fact": "Rituelen; leden heten broeder of zuster; (franc-)maçonnerie.",
+    "source": "native-lead"
+  },
+  "Q3044": {
+    "question": "Welke kleinzoon van Karel Martel werd vanaf 768 koning der Franken en op 25 december 800 de eerste keizer van het Heilige Roomse Rijk?",
+    "lead_fact": "Karolinger; koning der Franken vanaf 768; keizer vanaf 25 december 800.",
+    "source": "native-lead"
+  },
+  "Q251868": {
+    "question": "Welk feest op 31 oktober heet ook All Hallows' Eve en valt op de avond voor Allerheiligen?",
+    "lead_fact": "31 oktober; All Hallows' Eve / vooravond van Allerheiligen.",
+    "source": "translated-from-en"
+  },
+  "Q167541": {
+    "question": "Welke hoogste Nederlandse voetbaldivisie in het betaalde mannenvoetbal heet sinds 2025 officieel naar de VriendenLoterij en werd in 2025 door de IFFHS als achtste sterkste ter wereld genoemd?",
+    "lead_fact": "Hoogste mannencompetitie; sponsornaam VriendenLoterij vanaf 2025; IFFHS-plek 8.",
+    "source": "native-lead"
+  },
+  "Q28860866": {
+    "question": "Welke D66-politicus is sinds 23 februari 2026 minister-president van Nederland, was eerder minister voor Klimaat en Energie, en is sinds 2023 partijleider?",
+    "lead_fact": "Premier vanaf 23 februari 2026; eerder klimaatminister; D66-leider sinds 2023.",
+    "source": "native-lead"
+  },
+  "Q326461": {
+    "question": "Onder welke naam wordt een onbepaalde groep muzikanten en beroemdheden aangeduid die op 27-jarige leeftijd overleden?",
+    "lead_fact": "Beroemdheden overleden op 27-jarige leeftijd; ook Forever 27 genoemd.",
+    "source": "native-lead"
+  },
+  "Q133903": {
+    "question": "Welke Nederlandse verdediger vertrok in 2018 voor zo'n 84 miljoen euro van Southampton naar Liverpool, werd aanvoerder van Oranje en in 2019 Europees voetballer van het jaar?",
+    "lead_fact": "Transfer naar Liverpool 2018 (~84 miljoen); aanvoerder Oranje; Europees voetballer 2019.",
+    "source": "native-lead"
+  },
+  "Q10000": {
+    "question": "Welke taalversie van de open internetencyclopedie begon op 19 juni 2001, vijf maanden na de Engelstalige, en telt ruim 2,2 miljoen lemma's, waarmee ze de op vijf na grootste is?",
+    "lead_fact": "Start 19 juni 2001; ruim 2,2 miljoen lemma's; op vijf na grootste taalversie.",
+    "source": "native-lead"
+  },
+  "Q186529": {
+    "question": "Welk gedrag kenmerkt zich door overmatige focus op het eigen imago, fantasieën over macht, een onrealistisch zelfbeeld en gebrek aan echte empathie, in ernstige vorm een persoonlijkheidsstoornis in de DSM?",
+    "lead_fact": "Overmatig ego en gebrek aan empathie; pathologisch als persoonlijkheidsstoornis.",
+    "source": "native-lead"
+  },
+  "Q18233": {
+    "question": "Welke Zweedse popgroep uit Stockholm, gevormd in 1972 door Fältskog, Ulvaeus, Andersson en Lyngstad, won in 1974 het Eurovisiesongfestival met Waterloo?",
+    "lead_fact": "Stockholm 1972; Songfestivalwinst 1974 met Waterloo.",
+    "source": "native-lead"
+  },
+  "Q10693": {
+    "question": "Welke tabel rangschikt alle bekende chemische elementen naar atoomnummer, met s-, p-, d- en f-blokken, en wordt ook naar Mendelejev genoemd?",
+    "lead_fact": "Elementen op atoomnummer; s/p/d/f-blokken; tabel van Mendelejev.",
+    "source": "native-lead"
+  },
+  "Q17714": {
+    "question": "Welke kosmoloog bekleedde van 1979 tot 2009 de Lucasian Professorship of Mathematics in Cambridge, nadat hij op zijn 21e de diagnose motorneuronziekte kreeg?",
+    "lead_fact": "Lucasian Professor 1979–2009; diagnose MND op 21-jarige leeftijd.",
+    "source": "translated-from-en"
+  },
+  "Q8216": {
+    "question": "Welk schrift van 24 letters, in de 9e eeuw v.Chr. ontwikkeld uit het Fenicische alfabet, wordt nog gebruikt in Griekenland en Cyprus?",
+    "lead_fact": "24 letters; uit het Fenicisch; nog in gebruik in Griekenland en Cyprus.",
+    "source": "native-lead"
+  },
+  "Q762": {
+    "question": "Welke Florentijnse renaissancekunstenaar en geleerde, geboren in 1452 en gestorven in Amboise in 1519, geldt als schoolvoorbeeld van de homo universalis?",
+    "lead_fact": "Homo universalis; 1452–1519; gestorven in Amboise.",
+    "source": "native-lead"
+  },
+  "Q46896": {
+    "question": "Welke Zweedse spits speelde onder meer voor Malmö FF, Ajax, Juventus, Barcelona, PSG en Manchester United, en kwam 122 keer uit voor Zweden?",
+    "lead_fact": "Clubs van Malmö tot Milan; 122 interlands; 34 trofeeën.",
+    "source": "native-lead"
+  },
+  "Q8740": {
+    "question": "Welk conflict in Vietnam, Laos en Cambodja eindigde op 30 april 1975, twee jaar nadat de Amerikaanse troepen zich hadden teruggetrokken?",
+    "lead_fact": "Circa 1955 tot 30 april 1975; Amerikaanse terugtrekking in 1973.",
+    "source": "translated-from-en"
+  },
+  "Q2215390": {
+    "question": "Welke Nederlandse presentatrice, vj, soapactrice en televisiekok is ook bekend als culinair expert?",
+    "lead_fact": "Presentatrice, vj, soapactrice, culinair expert en televisiekok.",
+    "source": "native-lead"
+  },
+  "Q130311": {
+    "question": "Welke Britse popzanger, geboren als Georgios Kyriacos Panayiotou, won twee Grammy's, verkocht meer dan 100 miljoen platen en was van 1984 tot 2004 de meest gespeelde artiest op de Britse radio?",
+    "lead_fact": "Geboren als Georgios Kyriacos Panayiotou; 100 miljoen platen; meest gespeeld 1984–2004.",
+    "source": "native-lead"
+  },
+  "Q38111": {
+    "question": "Welke acteur kreeg zijn eerste Oscarnominatie voor de rol van een verstandelijk beperkt jongen in What's Eating Gilbert Grape?",
+    "lead_fact": "Eerste Oscarnominatie: What's Eating Gilbert Grape (1993).",
+    "source": "translated-from-en"
+  },
+  "Q1299": {
+    "question": "Welke rock- en popgroep uit Liverpool, actief van 1960 tot 1970, bestond uit Lennon, McCartney, Harrison en Starr en wordt vaak de invloedrijkste band uit de popgeschiedenis genoemd?",
+    "lead_fact": "Liverpool 1960–1970; Lennon, McCartney, Harrison en Starr.",
+    "source": "native-lead"
+  },
+  "Q159766": {
+    "question": "Welke Nederlandse handelsonderneming kreeg in 1602 van de Staten-Generaal het monopolie op de overzeese handel ten oosten van Kaap de Goede Hoop en ten westen van de Straat Magellaan?",
+    "lead_fact": "Octrooi 1602; monopolie oostelijk van de Kaap tot de Straat Magellaan.",
+    "source": "native-lead"
+  },
+  "Q66971593": {
+    "question": "Welke Venlose realityster en zangeres is bekend van Echte Meisjes in de Jungle, Good Luck Guys en een TLC-reeks met Rowan?",
+    "lead_fact": "Echte Meisjes in de Jungle; Good Luck Guys; TLC-reeks met Rowan.",
+    "source": "native-lead"
+  },
+  "Q1041895": {
+    "question": "Welke Nederlandse zanger en acteur had hits als Ritme van de regen, Malle Babbe en de nummer 1-hit Banger hart?",
+    "lead_fact": "Ritme van de regen, Malle Babbe en Banger hart (enige nummer 1).",
+    "source": "native-lead"
+  },
+  "Q14944179": {
+    "question": "Welke Britse historische dramaserie van Steven Knight volgt een criminele bende in Birmingham kort na de Eerste Wereldoorlog, met Cillian Murphy in de hoofdrol?",
+    "lead_fact": "Steven Knight; Birmingham na WO I; hoofdrol Cillian Murphy.",
+    "source": "native-lead"
+  },
+  "Q133780": {
+    "question": "Welke door Yersinia pestis veroorzaakte ziekte, met builen- en longvorm, eiste tijdens de Zwarte Dood van 1347–1351 naar schatting een derde van de Europeanen?",
+    "lead_fact": "Yersinia pestis; builen- en longvorm; Zwarte Dood 1347–1351.",
+    "source": "native-lead"
+  },
+  "Q131755": {
+    "question": "Welke chronische psychische stoornis, vroeger manisch-depressiviteit genoemd, kenmerkt zich door wisselende periodes van manie of hypomanie en depressie?",
+    "lead_fact": "Eerder manisch-depressief; wisseling van manie/hypomanie en depressie.",
+    "source": "native-lead"
+  },
+  "Q733234": {
+    "question": "Welk attractiepark in Kaatsheuvel, Noord-Brabant, is het grootste van de Benelux en omvat ook een theater, hotels en vakantieparken zoals Bosrijk en Loonsche Land?",
+    "lead_fact": "Kaatsheuvel; grootste park van de Benelux; Bosrijk en Loonsche Land.",
+    "source": "native-lead"
+  },
+  "Q2": {
+    "question": "Welke planeet is de derde vanaf de zon en het enige bekende hemellichaam waarop leven voorkomt?",
+    "lead_fact": "Derde planeet; enige bekende wereld met leven.",
+    "source": "translated-from-en"
+  },
+  "Q171": {
+    "question": "Welk soort website ontleent zijn naam aan een Hawaïaans woord voor snel, via de eerste site WikiWikiWeb?",
+    "lead_fact": "Hawaïaans voor 'snel'; WikiWikiWeb als eerste voorbeeld.",
+    "source": "translated-from-en"
+  },
+  "Q6534": {
+    "question": "Welke politieke omwenteling van 1789–1799 schafte de absolute monarchie in Frankrijk af, riep de Eerste Republiek uit en leidde tot de executie van de afgezette koning en zijn gemalin?",
+    "lead_fact": "1789–1799; einde absolute monarchie; Eerste Republiek en executies.",
+    "source": "native-lead"
+  },
+  "Q84263196": {
+    "question": "Welke besmettelijke ziekte, veroorzaakt door SARS-CoV-2, verspreidde zich vanaf januari 2020 wereldwijd en leidde tot een pandemie?",
+    "lead_fact": "Ziekte door SARS-CoV-2; pandemie vanaf 2020.",
+    "source": "translated-from-en"
+  },
+  "Q12554": {
+    "question": "Welke Europese geschiedperiode van grofweg 500 tot 1500 ligt tussen de klassieke oudheid en de vroegmoderne tijd, traditioneel vanaf de val van het West-Romeinse rijk?",
+    "lead_fact": "Ca. 500–1500; tussen oudheid en vroegmoderne tijd; na val West-Romeinse rijk.",
+    "source": "native-lead"
+  },
+  "Q8683": {
+    "question": "Welke periode van gewapende vrede in de tweede helft van de 20e eeuw stelde het kapitalistische blok onder leiding van de VS tegenover communisten onder leiding van de Sovjet-Unie?",
+    "lead_fact": "Gewapende vrede VS versus USSR; tweede helft 20e eeuw; eerste versus tweede wereld.",
+    "source": "native-lead"
+  },
+  "Q405": {
+    "question": "Welke enige natuurlijke satelliet van de Aarde, de vijfde grootste maan in het zonnestelsel, staat zo'n 380.000 kilometer ver en draait in een kleine maand om de Aarde?",
+    "lead_fact": "Enige natuurlijke satelliet van de Aarde; circa 380.000 km; omlooptijd een maand.",
+    "source": "native-lead"
+  },
+  "Q544": {
+    "question": "Welk planetenstelsel bestaat uit een G2-hoofdreeksster die 99,86% van de massa voor haar rekening neemt, plus acht planeten en vijf dwergplaneten?",
+    "lead_fact": "G2-ster met 99,86% van de massa; acht planeten en vijf dwergplaneten.",
+    "source": "native-lead"
+  },
+  "Q4692": {
+    "question": "Welke Europese culturele periode, letterlijk wedergeboorte, begon in Italië in de veertiende eeuw (trecento) en volgde op de middeleeuwen?",
+    "lead_fact": "Wedergeboorte; Italië trecento; na de middeleeuwen.",
+    "source": "native-lead"
+  },
+  "Q5": {
+    "question": "Welke intelligente primaten, de enige overlevende soort van het geslacht Homo, ontstonden ongeveer 300.000 jaar geleden in Afrika en lopen rechtop?",
+    "lead_fact": "Homo sapiens; rechtop; ontstond ca. 300.000 jaar geleden in Afrika.",
+    "source": "native-lead"
+  },
+  "Q188161": {
+    "question": "Welke Nederlandse kolonie, van 1816 tot de soevereiniteitsoverdracht in 1949, omvatte uiteindelijk het huidige Indonesië en groeide voort uit de VOC?",
+    "lead_fact": "Officiële naam 1816–1949; voortzetting van de VOC; huidig Indonesië.",
+    "source": "native-lead"
+  },
+  "Q261008": {
+    "question": "Van welke tandvlinder (Thaumetopoea processionea) leven de rupsen op eiken en staan ze bekend om hun irriterende haren, in België en Nederland een plaagsoort?",
+    "lead_fact": "Thaumetopoea processionea; rupsen op eik; brandharen.",
+    "source": "native-lead"
+  },
+  "Q161790": {
+    "question": "Welke voormalige diagnose, gekenmerkt door problemen met sociale interactie en beperkte interesses, ging in 2013 in de DSM-5 op in de autismespectrumstoornis?",
+    "lead_fact": "In 2013 in DSM-5 (en later ICD-11) opgegaan in ASS.",
+    "source": "translated-from-en"
+  },
+  "Q57751738": {
+    "question": "Welke groep RNA-virussen omvat de ziekteverwekkers van SARS, MERS en COVID-19?",
+    "lead_fact": "RNA-virussen met corona van spike-eiwitten; SARS, MERS, COVID-19.",
+    "source": "translated-from-en"
+  },
+  "Q12184": {
+    "question": "Hoe heet een epidemie van een besmettelijke ziekte op wereldwijde schaal, van de Griekse woorden voor geheel en volk?",
+    "lead_fact": "Wereldwijde epidemie; van pan (geheel) en dêmos (volk).",
+    "source": "native-lead"
+  },
+  "Q41662": {
+    "question": "Welke negende maand van de islamitische maankalender is de heilige vastenmaand van fajr tot maghrib, met onder meer Laylat al-Qadr?",
+    "lead_fact": "Negende islamitische maand; vasten van fajr tot maghrib; Laylat al-Qadr.",
+    "source": "native-lead"
+  },
+  "Q18498": {
+    "question": "Welk zoogdier uit de familie hondachtigen (Canis lupus) is de grootste wilde soort in die familie en komt voor in Europa, Noord-Amerika en noordelijk Azië?",
+    "lead_fact": "Canis lupus; grootste wilde hondachtige; Europa tot noordelijk Azië.",
+    "source": "native-lead"
+  },
+  "Q12204": {
+    "question": "Welke infectieziekte, historisch tering genoemd, wordt veroorzaakt door Mycobacterium tuberculosis en treft meestal de longen?",
+    "lead_fact": "Mycobacterium tuberculosis; historisch tering; meestal longen.",
+    "source": "translated-from-en"
+  },
+  "Q2840": {
+    "question": "Welke ziekte, veroorzaakt door het influenzavirus dat de luchtwegen aantast, is ernstiger dan een gewone verkoudheid en kan tot sterfte leiden?",
+    "lead_fact": "Influenzavirus in de luchtwegen; ernstiger dan verkoudheid; kan fataal zijn.",
+    "source": "native-lead"
+  },
+  "Q314492": {
+    "question": "Welke legendarische Viking, bijgenaamd met de harige broek, zou in de 9e eeuw de Britse eilanden en het Karolingische rijk hebben geplunderd?",
+    "lead_fact": "Oudnoors loðbrók; 9e-eeuwse raids in Frankrijk en Engeland.",
+    "source": "translated-from-en"
+  },
+  "Q349375": {
+    "question": "Welk online computerspel van Epic Games uit 2017 kent onder meer de modi Save the World en een gratis Battle Royale waarin tot 100 spelers strijden?",
+    "lead_fact": "Epic Games, 2017; Save the World en Battle Royale tot 100 spelers.",
+    "source": "native-lead"
+  },
+  "Q146": {
+    "question": "Welk klein gedomesticeerd roofdier, Felis silvestris catus, is een obligate vleeseter met intrekbare klauwen?",
+    "lead_fact": "Felis silvestris catus; obligate vleeseter; intrekbare klauwen.",
+    "source": "translated-from-en"
+  },
+  "Q220453": {
+    "question": "Welke traditionele helper van Sinterklaas komt volgens de overlevering in november met de stoomboot uit Spanje en deelt cadeaus en snoepgoed uit?",
+    "lead_fact": "Hulp van Sinterklaas; stoomboot uit Spanje; cadeaus en snoepgoed.",
+    "source": "native-lead"
+  },
+  "Q134747": {
+    "question": "Welke vlinder uit de familie Bombycidae wordt gekweekt omdat de larve een cocon van één stevige draad spint, gebruikt voor zijdeproductie?",
+    "lead_fact": "Bombyx mori; cocon van één draad; zijdeteelt.",
+    "source": "native-lead"
+  },
+  "Q18421053": {
+    "question": "Welke uit Oost-Azië stammende plant uit de duizendknoopfamilie (Fallopia japonica) staat op de IUCN-lijst van honderd meest invasieve soorten ter wereld?",
+    "lead_fact": "Fallopia japonica; IUCN top 100 invasief; oorsprong Oost-Azië.",
+    "source": "native-lead"
+  },
+  "Q315796": {
+    "question": "Welke legendarische cadeaubrenger in de westerse christelijke cultuur is gebaseerd op een vierde-eeuwse Griekse bisschop, patroonheilige van kinderen?",
+    "lead_fact": "Afgeleid van Sint-Nicolaas, 4e-eeuwse bisschop.",
+    "source": "translated-from-en"
+  },
+  "Q25407": {
+    "question": "Welk geslacht van bijen (Bombus) telt wereldwijd zo'n 250 soorten in Europa, Azië en Amerika, waarvan in België en Nederland ongeveer dertig voorkomen?",
+    "lead_fact": "Geslacht Bombus; circa 250 soorten; ongeveer dertig in BE/NL.",
+    "source": "native-lead"
+  },
+  "Q10998": {
+    "question": "Welk nachtschadegewas (Solanum tuberosum) slaat zetmeel op in eetbare stengelknollen en is na rijst, tarwe en maïs het belangrijkste voedselgewas ter wereld?",
+    "lead_fact": "Solanum tuberosum; eetbare stengelknollen; vierde voedselgewas.",
+    "source": "native-lead"
+  },
+  "Q283": {
+    "question": "Welke chemische verbinding van twee waterstofatomen en een zuurstofatoom bedekt 71% van het aardoppervlak en is onmisbaar voor vrijwel al het leven?",
+    "lead_fact": "H2O; drie aggregatietoestanden; 71% van het aardoppervlak.",
+    "source": "native-lead"
+  },
+  "Q34201": {
+    "question": "Welke Griekse oppergod, zoon van Kronos en Rheia, heerste vanaf de Olympus en komt in de Romeinse godsdienst overeen met Jupiter?",
+    "lead_fact": "Oppergod op de Olympus; zoon van Kronos en Rheia; Romeins equivalent Jupiter.",
+    "source": "native-lead"
+  },
+  "Q925042": {
+    "question": "Welke gehoornde Alpenfiguur zou op 5 december met Sint-Nicolaas meegaan en stoute kinderen met berkenroeden straffen?",
+    "lead_fact": "5 december; berkenroeden; gehoornde metgezel van Sint-Nicolaas.",
+    "source": "translated-from-en"
+  },
+  "Q144": {
+    "question": "Welk dier, een gedomesticeerde afstammeling van wolven, was meer dan 14.000 jaar geleden de eerste soort die de mens domesticerde?",
+    "lead_fact": "Eerste gedomesticeerde soort; uit wolven; meer dan 14.000 jaar geleden.",
+    "source": "translated-from-en"
+  },
+  "Q25334": {
+    "question": "Welke zangvogel uit de familie van de vliegenvangers heeft de wetenschappelijke naam Erithacus rubecula?",
+    "lead_fact": "Erithacus rubecula; familie Muscicapidae (vliegenvangers).",
+    "source": "native-lead"
+  },
+  "Q778396": {
+    "question": "Welk traditioneel Zweeds gerecht bestaat uit gefermenteerde oostzeeharing, letterlijk zure haring?",
+    "lead_fact": "Gefermenteerde oostzeeharing; letterlijk zure haring.",
+    "source": "native-lead"
+  },
+  "Q578473": {
+    "question": "Welk Nederlands gerecht bestaat uit friet met shoarma, overbakken kaas en salade, vaak met knoflooksaus en sambal, traditioneel in een aluminium schaaltje?",
+    "lead_fact": "Friet, shoarma, gesmolten kaas en salade; aluminium bakje.",
+    "source": "native-lead"
+  },
+  "Q141898": {
+    "question": "Welk traditioneel Koreaans gerecht bestaat uit gefermenteerde kool en groenten, waarbij de groente wordt ingelegd?",
+    "lead_fact": "Gefermenteerde kool en groenten; Koreaanse keuken; inleggen.",
+    "source": "native-lead"
+  },
+  "Q128285": {
+    "question": "Welke mythologie van het noordelijke deel van Europa deelt grotendeels dezelfde goden en helden met de Germaanse, en is in West-Europa een van de bekendere?",
+    "lead_fact": "Deel van de Germaanse mythologie; toonaangevend voor Noord-Europa.",
+    "source": "native-lead"
+  },
+  "Q1357": {
+    "question": "Welke orde van geleedpotigen (Araneae) binnen de spinachtigen telt ruim 50.000 beschreven soorten en wordt ook echte spinnen genoemd?",
+    "lead_fact": "Orde Araneae; ruim 50.000 soorten; echte spinnen versus andere arachniden.",
+    "source": "native-lead"
+  },
+  "Q9174": {
+    "question": "Onder welk begrip, van het Latijnse religio, valt gewoonlijk zingeving waarbij een hogere macht centraal staat, hoewel sommige stromingen in boeddhisme en taoïsme non-theïstisch zijn?",
+    "lead_fact": "Van religio; meestal een god of hogere macht; sommige stromingen non-theïstisch.",
+    "source": "native-lead"
+  },
+  "Q163873": {
+    "question": "Welke uitgestorven makreelhaai verscheen rond 18 miljoen jaar geleden, domineerde de gematigde wereldzeeën en kon enorme afmetingen bereiken; de naam betekent grote tand?",
+    "lead_fact": "Uitgestorven makreelhaai; Mioceen tot Plioceen; naam betekent grote tand.",
+    "source": "native-lead"
+  },
+  "Q2813": {
+    "question": "Welke frisdrank werd in Atlanta uitgevonden door John Stith Pemberton en in 1888 verkocht aan Asa Candler?",
+    "lead_fact": "Pemberton in Atlanta; rechten in 1888 verkocht aan Candler.",
+    "source": "translated-from-en"
+  },
+  "Q902450": {
+    "question": "Welke wielwebspin uit de familie Araneidae heeft de wetenschappelijke naam Argiope bruennichi en wordt ook tijgerspin genoemd?",
+    "lead_fact": "Argiope bruennichi; familie Araneidae; ook tijgerspin.",
+    "source": "native-lead"
+  },
+  "Q207047": {
+    "question": "Welke in 1912 door Wilbur Scoville ontwikkelde schaal meet de scherpte van chilipeper in SHU, oorspronkelijk via verdunning tot testers de pittigheid niet meer waarnemen?",
+    "lead_fact": "Wilbur Scoville, 1912; Scoville heat units via smaakverdunning.",
+    "source": "native-lead"
+  },
+  "Q822331": {
+    "question": "Welke groene thee, als poeder geklopt met heet water, gaat terug op de Chinese Song-dynastie en werd via zenboeddhisten een Japanse traditie, waarbij de planten in de schaduw groeien?",
+    "lead_fact": "Poederthee uit de Song-dynastie; Japanse zen-traditie; schaduwteelt.",
+    "source": "native-lead"
+  },
+  "Q420292": {
+    "question": "Welke Ubisoft-computerspelserie uit 2007, later aangevuld met romans en films, speelt zich af in een fictieve geschiedenis van echte gebeurtenissen en de strijd met de Tempeliers?",
+    "lead_fact": "Ubisoft Montreal vanaf 2007; strijd met de Tempeliers in een fictieve geschiedenis.",
+    "source": "native-lead"
+  },
+  "Q162691": {
+    "question": "Welk christelijk feest op 15 augustus herdenkt dat Maria met lichaam en ziel in de hemel werd opgenomen, in de Orthodoxe Kerk ook Ontslapenis van de Moeder Gods genoemd?",
+    "lead_fact": "15 augustus; Maria met lichaam en ziel ten hemel; orthodox: Ontslapenis.",
+    "source": "native-lead"
+  },
+  "Q20966579": {
+    "question": "Welk smartphone-spel van Niantic uit juli 2016 projecteert via gps en augmented reality animaties op de echte wereld en werd eerst in Amerika, Nieuw-Zeeland en Australië uitgebracht?",
+    "lead_fact": "Niantic, juli 2016; AR en gps; serverproblemen door populariteit.",
+    "source": "native-lead"
+  },
+  "Q302": {
+    "question": "Welke Joodse prediker uit de eerste eeuw in de Romeinse provincie Judea is de centrale figuur van het christendom?",
+    "lead_fact": "1e-eeuwse prediker in Judea; centrale figuur van het christendom.",
+    "source": "translated-from-en"
+  },
+  "Q879668": {
+    "question": "Welke legendarische negende-eeuwse Zweedse koning, zoon van Ragnar Lodbrok en Aslaug, kreeg de bijnaam IJzeren flank en wordt gezien als stamvader van het huis Munsö?",
+    "lead_fact": "Zoon van Ragnar Lodbrok; bijnaam IJzeren flank; huis Munsö.",
+    "source": "native-lead"
+  },
+  "Q49740": {
+    "question": "Welk sandbox-spel van Mojang had in 2009 een publieke alpha en in november 2011 een volledige pc-release?",
+    "lead_fact": "Mojang; publieke alpha 2009; release november 2011.",
+    "source": "translated-from-en"
+  },
+  "Q136277238": {
+    "question": "Welk gepland Warner Bros.-vervolg uit 2027 op de Mojang-verfilming van 2025 wordt geregisseerd door Jared Hess en heeft 23 juli als releasedatum?",
+    "lead_fact": "Jared Hess; vervolg op de Mojang-film uit 2025; gepland 23 juli 2027.",
+    "source": "native-lead"
+  },
+  "Q23925035": {
+    "question": "Welke Japanse animatiefilm uit 2016 van Kyoto Animation, geregisseerd door Naoko Yamada, is gebaseerd op de manga van Yoshitoki Oima en heet in het Japans Koe no Katachi?",
+    "lead_fact": "Kyoto Animation, 2016; Naoko Yamada; manga van Yoshitoki Oima.",
+    "source": "native-lead"
+  },
+  "Q54855979": {
+    "question": "Welke Japanse term beschrijft een gezichtsuitdrukking met rollende of gekruiste ogen, uitgestoken tong en rood gezicht, bekend uit hentai en eroge?",
+    "lead_fact": "Gezichtsuitdrukking van extase; hentai, eroge en erotische manga.",
+    "source": "native-lead"
+  },
+  "Q126720803": {
+    "question": "Welke pejoratieve term uit de jaren 2020 duidt op teksten en beelden van lage kwaliteit, gemaakt met generatieve AI, vergelijkbaar met spam?",
+    "lead_fact": "Lage kwaliteit generatieve AI-media; pejoratief, vergelijkbaar met spam.",
+    "source": "native-lead"
+  },
+  "Q542634": {
+    "question": "Welke Britse schrijver-regisseur schreef onder meer The Beach en 28 Days Later, en regisseerde Ex Machina?",
+    "lead_fact": "Brits romanschrijver, scenarioschrijver en filmregisseur; The Beach, Ex Machina.",
+    "source": "native-lead"
+  },
+  "Q96417649": {
+    "question": "In welk online spel van InnerSloth uit 2018, later ook op de Nintendo Switch, worden spelers op een ruimteschip verdeeld in Crewmates en Impostors?",
+    "lead_fact": "InnerSloth, 2018; Crewmates versus Impostors op een ruimteschip.",
+    "source": "native-lead"
+  },
+  "Q1754057": {
+    "question": "Welke Japanse sciencefiction-fantasie-animefilm uit 1985 werd geregisseerd door Mamoru Oshii en heet in het Japans Tenshi no Tamago?",
+    "lead_fact": "Mamoru Oshii, 1985; Japanse titel Tenshi no Tamago.",
+    "source": "native-lead"
+  },
+  "Q1107": {
+    "question": "Welk leenwoord van het Engelse animation, in Japan een afkorting van animēshon, wordt buiten Japan gebruikt voor Japanse teken- en animatiefilms?",
+    "lead_fact": "Japanse afkorting van animēshon; buiten Japan voor Japanse animatie.",
+    "source": "native-lead"
+  },
+  "Q368215": {
+    "question": "Welke digitale winkel van Apple laat gebruikers applicaties downloaden die met de iOS SDK zijn gemaakt, voor iPhone, iPad en onder meer Apple Watch?",
+    "lead_fact": "Apple-winkel voor iOS-apps via de iOS SDK; iPhone, iPad, Watch.",
+    "source": "native-lead"
+  },
+  "Q672642": {
+    "question": "Welke Franse computerspelontwikkelaar, in 1999 in Lyon opgericht, werd in 2010 overgenomen door ZeniMax Media en opende in 2006 een vestiging in Austin, Texas?",
+    "lead_fact": "Opgericht 12 oktober 1999 in Lyon; ZeniMax 2010; studio in Austin 2006.",
+    "source": "native-lead"
+  },
+  "Q699835": {
+    "question": "Welke Studio Ghibli-animefilm uit 2010 van Hiromasa Yonebayashi is gebaseerd op Mary Nortons jeugdboek The Borrowers uit 1957?",
+    "lead_fact": "Studio Ghibli, 2010; Yonebayashi; naar The Borrowers van Mary Norton.",
+    "source": "native-lead"
+  },
+  "Q308950": {
+    "question": "Welk hoofdpersonage uit de Pokémon-anime woont in Pallet Town, heet in het Japans Satoshi, en wordt in het Nederlands ingesproken door Christa Lips?",
+    "lead_fact": "Pallet Town; Japanse naam Satoshi; Nederlandse stem Christa Lips.",
+    "source": "native-lead"
+  },
+  "Q673036": {
+    "question": "Welke Japanse manga van Osamu Tezuka, van 1952 tot 1968, heet in het Japans Tetsuwan Atomu en werd meerdere keren tot anime verwerkt, plus een film in 2009?",
+    "lead_fact": "Osamu Tezuka, 1952–1968; Tetsuwan Atomu; film in 2009.",
+    "source": "native-lead"
+  },
+  "Q80873": {
+    "question": "Welke komische schoolmanga in yonkoma-formaat van Kiyohiko Azuma (1999–2002) werd in 2002 een 26-delige animeserie?",
+    "lead_fact": "Kiyohiko Azuma; yonkoma 1999–2002; anime van 26 afleveringen in 2002.",
+    "source": "native-lead"
+  },
+  "Q18558978": {
+    "question": "Welke duistere manga van Kentaro Miura verscheen vanaf 1990 in Young Animal van Hakusensha en telt meer dan veertig tankōbons?",
+    "lead_fact": "Kentaro Miura; Young Animal vanaf 1990; meer dan 40 tankōbons.",
+    "source": "native-lead"
+  },
+  "Q904": {
+    "question": "Welke manga van Tite Kubo verscheen vanaf 2001 in Weekly Shonen Jump, kreeg tientallen tankōbons bij Shueisha, en werd deels in het Nederlands vertaald door Kana?",
+    "lead_fact": "Tite Kubo; Weekly Shonen Jump vanaf 2001; Nederlandse vertaling bij Kana.",
+    "source": "native-lead"
+  }
+}

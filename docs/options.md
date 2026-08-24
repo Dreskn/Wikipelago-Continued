@@ -14,7 +14,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal article is revealed and can be cleared to finish your slot. |
+| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. |
 | `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
@@ -26,15 +26,36 @@ Rough pacing tip: if `start_rounds_unlocked` is high relative to `check_count`, 
 
 Per-round target rerolls are YAML-tuned (`target_rerolls_start`, default **1**) and increased by **Progressive Reroll** items (`target_reroll_unlocks`, default **2** → max 3/round when fully upgraded). Reroll the current target from the web client (including the final round). Alternatives come from leftover articles in the same seed pool. The Grand Goal article itself cannot be rerolled.
 
+Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
+
 ### Progressive Back
 
-Browser back is limited per round by `back_depth_start` (default **0**) plus **Progressive Back** items (`back_depth_unlocks`, default **3**). When you hit the limit, Back does nothing until the round advances.
+Browser back is limited per round by `back_depth_start` (default **0**) plus **Progressive Back** items (`back_depth_unlocks`, default **3**). When you hit the limit, the Back tool does nothing until the round advances. The Items row shows remaining depth as a badge.
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `back_depth_start` | `0` | Back steps available each round before you find Progressive Back. `0` means Back stays locked until the first upgrade. |
+| `back_depth_unlocks` | `3` | How many Progressive Back items are in the pool. |
+| `target_rerolls_start` | `1` | Target rerolls available each round at the start. |
+| `target_reroll_unlocks` | `2` | How many Progressive Reroll items are in the pool. |
+
+### Crossroads and side branches
+
+On by default (`branch_count: 2`). Some main-road rounds become crossroads and **Branch Keys** open extra Start → Target chains. Set `branch_count` to `0` to turn the whole system off.
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `branch_count` | `2` | How many main-road rounds are crossroads (`0`–`8`). `0` turns the whole system off. |
+| `branch_length` | `5` | How many rounds each unlocked side branch lasts (`1`–`20`). |
+| `additional_branch_keys` | `1` | Extra Branch Keys in the pool. They still count as progression for the multiworld; they do not open extra branches. |
+
+On the client: live branch targets list under the main road, a small crossroad cue appears on those rounds, and **Journey** includes the side paths.
 
 ### Letter-pair bingo
 
-When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles using each wiki’s **Scrabble letter set** (distinct tiles stay distinct; other accents fold to base Latin; German `ß` → `SS`). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items — each stamps one empty cell on one unlocked board for the whole seed (not per round), and completing a line still sends the check.
+When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items that each fill one empty cell.
 
-Hover the **Target** title to see a plain-text blurb: Wikipedia short description plus the lead paragraph (no images/HTML).
+On the client: unlocked boards stamp in parallel from page titles; click a board for a larger overlay.
 
 ---
 
@@ -42,11 +63,8 @@ Hover the **Target** title to see a plain-text blurb: Wikipedia short descriptio
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `random_goal_article` | `true` | If true, the Grand Goal article is picked randomly from enabled categories. |
-| `goal_article_preset` | `dark_souls` | Used only when `random_goal_article` is `false`. Picks a fixed famous article. |
-
-Valid presets include (see the YAML for the full list):  
-`minecraft`, `the_legend_of_zelda`, `dark_souls`, `elden_ring`, `super_mario_bros`, `pokemon_red_and_blue`, `chess`, `catan`, `the_dark_knight`, `star_wars_film`, `lord_of_the_rings_fellowship`, `the_matrix`, `avatar_the_last_airbender`, `breaking_bad`, `stranger_things`, `game_of_thrones`, `the_simpsons`, `spongebob_squarepants`, `super_smash_bros_ultimate`, `halo_combat_evolved`.
+| `random_goal_article` | `true` | Kept for old YAMLs; ignored. The Grand Goal always comes from that wiki language's goal pool (answer page preferred from enabled categories). |
+| `goal_article_preset` | `dark_souls` | Deprecated and ignored. Kept so older YAMLs still generate. |
 
 ---
 
@@ -86,7 +104,9 @@ When **true**, that part stays hidden until you receive the matching **Lens** it
 
 | Option | Default | Notes |
 | --- | --- | --- |
-| `wikipedia_language` | `en` | One of `en`, `fr`, `de`, `es`, `it`, `pt`, `nl`, `sv`, `pl`. Native titles for that wiki; bridge/web fetch `{lang}.wikipedia.org`. |
+| `wikipedia_language` | `en` | Which Wikipedia you race on: `en`, `fr`, `de`, `es`, `it`, `pt`, `nl`, `sv`, `pl`. Start/Target titles, Grand Goal question, and article fetches all use that edition. |
+
+This is **not** the top-bar language dropdown. That dropdown only translates the client UI (buttons, toasts, panel titles). A French UI can still race on English Wikipedia if the YAML says `en`.
 
 ## Article categories
 
@@ -132,7 +152,7 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `link_bombs` | `false` | Hidden bomb links on each page (requires `deaths`). Hitting one causes a death. |
 | `link_bomb_density` | `few` | `few` (1) / `more` (5) / `insane` (20), capped at half the eligible links. Never bombs Target or Grand Goal links. |
 
-Death effect: jump to a random article. Round visit tracking is cleared as soon as the death fires (and again on the landing page) so deaths cannot chain into a soft-lock while the random page loads. Fragments and unlocks are kept.
+Death effect: jump to a random article. Fragments and unlocks are kept.
 
 ---
 
@@ -140,14 +160,17 @@ Death effect: jump to a random article. Round visit tracking is cleared as soon 
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `trap_count` | `0` | How many Foggy Links / Missing Links items to add (before Footnote filler). Counts toward mandatory item budget — generation fails if too many. |
-| `trap_type` | `both` | `both` / `only_foggy_links` / `only_missing_links`. |
+| `trap_count` | `0` | How many Foggy Links / Missing Links / Wrong Wiki items to add (before Footnote filler). Counts toward mandatory item budget — generation fails if too many. |
+| `trap_type` | `all` | `all` / `only_foggy_links` / `only_missing_links` / `only_wrong_wiki`. `both` is deprecated and still selects every trap. |
 | `trap_link` | `false` | Share traps with other Trap Link players (independent of `trap_count`). |
 
 | Trap | Effect |
 | --- | --- |
-| **Foggy Links** | Next non-target page: link labels become `[Link]`. |
-| **Missing Links** | Next non-target page: about 30% of links removed (never all). |
+| **Foggy Links** | Next ordinary page: link labels become `[Link]`. |
+| **Missing Links** | Next ordinary page: about 30% of links removed (never all). |
+| **Wrong Wiki** | Next click shows the article on a random other-language Wikipedia. The following page returns to your seed language when that article exists there. |
+
+If several traps land at once, they wait in a queue and apply **one page at a time** (you will see a toast when each is received). Target and Grand Goal pages skip Foggy/Missing.
 
 ---
 
@@ -155,7 +178,9 @@ Death effect: jump to a random article. Round visit tracking is cleared as soon 
 
 - **Casual / first multiworld:** defaults (`deaths`/`death_link`/`traps` off).
 - **Shorter seed:** lower `check_count` and `required_fragments`.
+- **More texture:** bingo boards, or raise `branch_count` — not every extra system at once.
 - **Harder / spice:** enable one sanity or one lens — not everything at once. Add `deaths` or a small `trap_count` for chaos.
 
 For gameplay concepts (rounds, fragments, items), see the [Overview](overview.md).  
+For a numbered map of the browser HUD, see the [web client UI](ui.md).  
 For install and connect steps, see the [Setup guide](setup.md).
