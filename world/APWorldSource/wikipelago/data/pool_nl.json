@@ -1,7 +1,7 @@
 {
   "lang": "nl",
   "source": "pool_annotated_nl.json",
-  "count": 8925,
+  "count": 8924,
   "entries": [
     {
       "title": "'14-'18 (musical)",
@@ -12413,13 +12413,6 @@
       "title": "Doe Maar",
       "tags": [
         "music"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Dog Man",
-      "tags": [
-        "movies"
       ],
       "sensitive": false
     },

@@ -1,7 +1,7 @@
 {
   "lang": "es",
   "source": "pool_annotated_es.json",
-  "count": 8721,
+  "count": 8720,
   "entries": [
     {
       "title": ".aero",
@@ -31152,13 +31152,6 @@
         "music"
       ],
       "sensitive": true
-    },
-    {
-      "title": "La ballena",
-      "tags": [
-        "movies"
-      ],
-      "sensitive": false
     },
     {
       "title": "La bella y la bestia (película de 2017)",
