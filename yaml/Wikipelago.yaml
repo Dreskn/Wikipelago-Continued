@@ -72,11 +72,11 @@ Wikipelago:
   # and/or a branch target (and still stamp bingo). Extra keys beyond
   # branch_count still count as progression but do not open more branches.
   # 0 disables the whole system.
-  # branch_count: 0–8 (default 0). branch_length: 1–20 rounds per branch.
-  # additional_branch_keys: 0–8 extra keys in the pool.
-  branch_count: 0
-  branch_length: 3
-  additional_branch_keys: 0
+  # branch_count: 0–8 (default 2). branch_length: 1–20 rounds per branch (default 5).
+  # additional_branch_keys: 0–8 extra keys in the pool (default 1).
+  branch_count: 2
+  branch_length: 5
+  additional_branch_keys: 1
 
   # =============================================================================
   # Wikipedia language & article pool

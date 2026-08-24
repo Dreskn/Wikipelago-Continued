@@ -41,13 +41,13 @@ Browser back is limited per round by `back_depth_start` (default **0**) plus **P
 
 ### Crossroads and side branches
 
-Off by default (`branch_count: 0`). When enabled, some main-road rounds become crossroads and **Branch Keys** open extra Start → Target chains.
+On by default (`branch_count: 2`). Some main-road rounds become crossroads and **Branch Keys** open extra Start → Target chains. Set `branch_count` to `0` to turn the whole system off.
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `branch_count` | `0` | How many main-road rounds are crossroads (`0`–`8`). `0` turns the whole system off. |
-| `branch_length` | `3` | How many rounds each unlocked side branch lasts (`1`–`20`). |
-| `additional_branch_keys` | `0` | Extra Branch Keys in the pool. They still count as progression for the multiworld; they do not open extra branches. |
+| `branch_count` | `2` | How many main-road rounds are crossroads (`0`–`8`). `0` turns the whole system off. |
+| `branch_length` | `5` | How many rounds each unlocked side branch lasts (`1`–`20`). |
+| `additional_branch_keys` | `1` | Extra Branch Keys in the pool. They still count as progression for the multiworld; they do not open extra branches. |
 
 On the client: live branch targets list under the main road, a small crossroad cue appears on those rounds, and **Journey** includes the side paths.
 
@@ -176,9 +176,9 @@ If several traps land at once, they wait in a queue and apply **one page at a ti
 
 ## Suggested starting points
 
-- **Casual / first multiworld:** defaults (`deaths`/`death_link`/`traps` off, `branch_count` 0).
+- **Casual / first multiworld:** defaults (`deaths`/`death_link`/`traps` off).
 - **Shorter seed:** lower `check_count` and `required_fragments`.
-- **More texture:** a small `branch_count` or bingo boards — not every extra system at once.
+- **More texture:** bingo boards, or raise `branch_count` — not every extra system at once.
 - **Harder / spice:** enable one sanity or one lens — not everything at once. Add `deaths` or a small `trap_count` for chaos.
 
 For gameplay concepts (rounds, fragments, items), see the [Overview](overview.md).  

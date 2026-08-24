@@ -391,7 +391,7 @@ class BranchCount(Range):
     display_name = "Branch Count"
     range_start = 0
     range_end = 8
-    default = 0
+    default = 2
 
 
 class BranchLength(Range):
@@ -399,7 +399,7 @@ class BranchLength(Range):
     display_name = "Branch Length"
     range_start = 1
     range_end = 20
-    default = 3
+    default = 5
 
 
 class AdditionalBranchKeys(Range):
@@ -407,7 +407,7 @@ class AdditionalBranchKeys(Range):
     display_name = "Additional Branch Keys"
     range_start = 0
     range_end = 8
-    default = 0
+    default = 1
 
 
 @dataclass
