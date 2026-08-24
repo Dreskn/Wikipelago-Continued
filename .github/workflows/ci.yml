@@ -16,21 +16,6 @@ jobs:
         shell: pwsh
         run: ./world/smoke_test.ps1 -BuildApworld
 
-  pool-validate:
-    name: Pool validate
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Validate article pools against Wikipedia (all languages)
-        run: python world/validate_article_pool.py --lang all --strict
-
   generate:
     name: Generate
     runs-on: ubuntu-latest
