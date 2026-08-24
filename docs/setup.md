@@ -85,11 +85,12 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 
 - Only in-article wiki link clicks count toward checks.
 - Hover the Target title for a short description of that page.
-- **Journey** (on the Progression card, once you are in a game) shows the path of pages you have marked.
+- **Journey** (on the Progression card, once you are in a game) shows the path of pages you have visited.
 - Side cards have a small hide control on the header if you want more room for the article.
 - If the badge says **Offline**, you are no longer attached to the room — reconnect with the same slot; the client will try to resume. Prefer finishing a round before closing the tab when possible.
 - File / Template / Wikipedia-namespace pages are blocked on purpose; pick another link.
 - For how rounds, items, branches, bingo, and the goal work, see the [Overview](overview.md).
+- Common generate errors and play questions: [FAQ](faq.md).
 
 ## Compatibility
 

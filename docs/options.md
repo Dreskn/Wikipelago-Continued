@@ -53,9 +53,9 @@ On the client: live branch targets list under the main road, a small crossroad c
 
 ### Letter-pair bingo
 
-When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). Unlocked boards stamp in parallel from page titles using each wiki’s **Scrabble letter set** (distinct tiles stay distinct; other accents fold to base Latin; German `ß` → `SS`). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items — each stamps one empty cell on one unlocked board for the whole seed (not per round), and completing a line still sends the check.
+When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items that each fill one empty cell.
 
-On the client: each board has **Hide** next to its **Board N** label; click a board for a zoomable overlay.
+On the client: unlocked boards stamp in parallel from page titles; click a board for a larger overlay.
 
 ---
 
@@ -152,7 +152,7 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `link_bombs` | `false` | Hidden bomb links on each page (requires `deaths`). Hitting one causes a death. |
 | `link_bomb_density` | `few` | `few` (1) / `more` (5) / `insane` (20), capped at half the eligible links. Never bombs Target or Grand Goal links. |
 
-Death effect: jump to a random article. Round visit tracking is cleared as soon as the death fires (and again on the landing page) so deaths cannot chain into a soft-lock while the random page loads. Fragments and unlocks are kept.
+Death effect: jump to a random article. Fragments and unlocks are kept.
 
 ---
 

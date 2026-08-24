@@ -1,5 +1,9 @@
 # FAQ
 
+## How do I report a bug?
+
+On the Archipelago Discord, in the [Wikipelago discussion thread](https://discord.com/channels/731205301247803413/1462007968902938768).
+
 ## What does `Wikipelago item math invalid` “required progression items exceed locations” mean?
 
 That’s an intentional failsafe. Your YAML asks for more required items than the seed has locations. Generation stops early so Archipelago doesn’t build a broken pool.

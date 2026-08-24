@@ -20,7 +20,7 @@ Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed us
 10. **Reroll** — Changes every target at once (main path + branches).
 11. **Targets** — The pages you need to reach.
 12. **Fragments** — Your progress towards unlocking your seed Grand Goal. Once enough Knowledge Fragments are obtained, your final destination will be known.
-13. **Compass** — Alerts you if you're less than two clicks away from your target.
+13. **Compass** — warmer/colder hints toward the target.
 14. **Items** — Main game items, grey when locked. In order: Back button, Rerolls, Search (CTRL-F), Compass, Branch Keys.
 15. **Sanities** — Panel for searchsanity (CTRL-F can only uses unlocked letters) or Scrollsanity.
 16. **Bingo** — letter-pair bingo boards, stamp a cell by visiting a page starting with that letter pair. Send checks by stamping a full line (row/column/diagonal), plus the full board.

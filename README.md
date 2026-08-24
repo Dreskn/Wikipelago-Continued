@@ -23,6 +23,8 @@ Live web client: https://wikipelago.dreskn.fr/
 Recommended Archipelago version: **0.6.7**  
 World version: **1.0.0**
 
+Report bugs in the [Wikipelago discussion thread](https://discord.com/channels/731205301247803413/1462007968902938768) on the Archipelago Discord.
+
 Looking for more info about Archipelago in general? See the [website](https://archipelago.gg/) or [GitHub](https://github.com/ArchipelagoMW/Archipelago).
 
 ## Credits

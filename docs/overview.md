@@ -15,7 +15,7 @@ A numbered map of every control is in the [web client UI](ui.md) guide.
 
 - **Article** — the current Wikipedia page. Only in-article wiki links count as moves. File, Template, Wikipedia-namespace, and similar non-article pages are blocked.
 - **Connection** — server, slot, password, **Connect**, and **Practice**.
-- **Progression** — round track, current targets, Knowledge Fragments, Grand Goal, and Compass. **Journey** opens a map of pages you have marked.
+- **Progression** — round track, current targets, Knowledge Fragments, Grand Goal, and Compass. **Journey** opens a map of pages you have visited this seed.
 - **Items** — tools you have found (Back, Reroll, Search, Compass, Branch Key). Locked tools stay grey.
 - **Bingo / Lenses / Sanity / Difficulty** — extra cards appear when your seed uses those options.
 - **Are you really stuck?** — a link to an external wiki-path solver. It does not send checks for you.
@@ -49,7 +49,7 @@ If your YAML sets `branch_count` above 0, some main-road rounds become **crossro
 - Unlocked branches stay live together: one page visit can finish the main target, a branch target, and still stamp bingo.
 - Extra keys beyond the number of branches still count as progression items for the multiworld; they do not open more branches.
 
-The Progression card lists each live branch target under the main road. **Journey** shows main-road, branch, and other marked pages on one path.
+The Progression card lists each live branch target under the main road. **Journey** shows main-road, branch, and other visited pages on one path.
 
 ## What is the goal?
 
@@ -60,7 +60,7 @@ The question comes from that language’s Grand Goal pool (answer page preferred
 ## Useful items
 
 - **Progressive Back** — browser back navigation (limited depth per round)
-- **Progressive Reroll** — raises per-round target reroll charges
+- **Progressive Reroll** — raises per-round target reroll charges. Each use changes every current target at once (main path + branches), not the Grand Goal.
 - **Progressive Bingo Card** — unlocks an extra letter-pair bingo board (when bingo is enabled)
 - **Progressive Bingo Stamp** — stamps one empty bingo cell on one unlocked board (once per seed; YAML `bingo_stamp_unlocks`)
 - **Ctrl+F Lens** — in-page search
@@ -80,7 +80,7 @@ When bingo is on, page titles stamp letter pairs on your board(s). Completing a 
 
 ## Deaths and traps (when enabled)
 
-- **Deaths** — clicking back onto a page you already visited this round jumps you to a random article. Unlocks and fragments are kept.
+- **Deaths** — a forward-revisit of a page you already visited this round jumps you to a random article. Unlocks and fragments are kept.
 - **DeathLink** — that death is shared with other DeathLink games, and theirs can hit you.
 - **Link bombs** — a few ordinary-looking links explode into a death (never the Target or Grand Goal link).
 - **Traps** — Foggy Links hide link text as `[Link]`, Missing Links remove some links, Wrong Wiki shows the next page on another language edition. If several traps arrive at once, they wait in a queue and apply **one per page**.
@@ -94,3 +94,5 @@ When you receive an item, the web client updates your unlocked tools / rounds / 
 
 Wikipelago is a custom world, so there is no options page on archipelago.gg.
 Use the YAML template from [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases) (also in [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml)), and read the [Options guide](options.md) for explanations.
+
+Generate errors and other play questions: [FAQ](faq.md).
