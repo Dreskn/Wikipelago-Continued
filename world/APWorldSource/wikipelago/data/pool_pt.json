@@ -1,7 +1,7 @@
 {
   "lang": "pt",
   "source": "pool_annotated_pt.json",
-  "count": 8444,
+  "count": 8443,
   "entries": [
     {
       "title": "1.ª Companhia",
@@ -43869,14 +43869,6 @@
         "famous_people",
         "movies",
         "tv_shows"
-      ],
-      "sensitive": false
-    },
-    {
-      "title": "Rodrigo Garcia",
-      "tags": [
-        "famous_people",
-        "politics"
       ],
       "sensitive": false
     },
