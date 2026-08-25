@@ -1542,6 +1542,24 @@ function armBombsOnPage(root, status) {
   for (let i = 0; i < capped; i += 1) {
     state.bombTitles.add(normalizeTitle(eligible[i].dataset.title));
   }
+  markBombLinks(root);
+}
+
+function markBombLinks(root) {
+  if (!root) return;
+  root.querySelectorAll("a[data-title]").forEach((a) => {
+    a.classList.remove("wiki-bomb-link");
+    a.querySelector(".wiki-bomb-mark")?.remove();
+    const dest = a.dataset.title || "";
+    if (!state.bombTitles.has(normalizeTitle(dest))) return;
+    a.classList.add("wiki-bomb-link");
+    a.setAttribute("title", t("toast.bombDeath"));
+    const mark = document.createElement("span");
+    mark.className = "wiki-bomb-mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.innerHTML = TOOL_ICON_SVGS.bombs;
+    a.insertBefore(mark, a.firstChild);
+  });
 }
 
 async function processPendingEvents(events) {

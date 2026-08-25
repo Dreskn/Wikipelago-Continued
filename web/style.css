@@ -297,6 +297,25 @@ button {
   50% { opacity: 1; }
 }
 .article-body a { color: #8dd9ff; text-decoration: underline; cursor: pointer; }
+.article-body a.wiki-bomb-link {
+  position: relative;
+}
+.article-body a.wiki-bomb-link .wiki-bomb-mark {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 1.15em;
+  height: 1.15em;
+  transform: translateY(-52%);
+  pointer-events: none;
+  color: #ffb84d;
+  filter: drop-shadow(0 0 1px #0d1621);
+}
+.article-body a.wiki-bomb-link .wiki-bomb-mark svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .article-body img,
 .article-body video,
 .article-body .mw-file-element {

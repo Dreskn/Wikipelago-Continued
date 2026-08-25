@@ -149,7 +149,7 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | --- | --- | --- |
 | `deaths` | `false` | Forward-revisit a page already visited this round → death (random Wikipedia page). Peaceful when off. |
 | `death_link` | `false` | Full Archipelago DeathLink (send and receive). |
-| `link_bombs` | `false` | Hidden bomb links on each page (requires `deaths`). Hitting one causes a death. |
+| `link_bombs` | `false` | Bomb-marked links on each page (requires `deaths`). Hitting one causes a death. |
 | `link_bomb_density` | `few` | `few` (1) / `more` (5) / `insane` (20), capped at half the eligible links. Never bombs Target or Grand Goal links. |
 
 Death effect: jump to a random article. Fragments and unlocks are kept.

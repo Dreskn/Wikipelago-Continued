@@ -82,7 +82,7 @@ When bingo is on, page titles stamp letter pairs on your board(s). Completing a 
 
 - **Deaths** — a forward-revisit of a page you already visited this round jumps you to a random article. Unlocks and fragments are kept.
 - **DeathLink** — that death is shared with other DeathLink games, and theirs can hit you.
-- **Link bombs** — a few ordinary-looking links explode into a death (never the Target or Grand Goal link).
+- **Link bombs** — a few links on each page are marked with a bomb icon; clicking one is a death (never the Target or Grand Goal link).
 - **Traps** — Foggy Links hide link text as `[Link]`, Missing Links remove some links, Wrong Wiki shows the next page on another language edition. If several traps arrive at once, they wait in a queue and apply **one per page**.
 
 ## What can appear in other players' worlds?

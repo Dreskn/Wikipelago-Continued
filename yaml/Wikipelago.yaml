@@ -139,7 +139,7 @@ Wikipelago:
   # =============================================================================
   # deaths: revisiting a page already visited this round = death → random jump (local).
   # death_link: full Archipelago DeathLink (send and receive).
-  # link_bombs: hidden bomb links on pages (requires deaths); hitting one = death.
+  # link_bombs: bomb-marked links on pages (requires deaths); hitting one = death.
   # link_bomb_density: few | more | insane (only when link_bombs is on).
   deaths: false
   death_link: false
