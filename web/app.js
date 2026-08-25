@@ -1408,23 +1408,29 @@ function takeQueuedTrap(name) {
   return true;
 }
 
-async function resolveArticleNavigation(requestedTitle, { countAsClick = false } = {}) {
+async function resolveArticleNavigation(requestedTitle, { countAsClick = false, sourceLang = "" } = {}) {
   const seedLang = wikipediaLanguage();
+  const source = String(sourceLang || "").trim().toLowerCase();
+  const wasTrapped = Boolean(state.articleLang) && state.articleLang !== seedLang;
   let displayLang = state.articleLang || seedLang;
   let displayTitle = requestedTitle;
   let checkTitle = requestedTitle;
+  const lookupLang = source || displayLang;
 
-  if (displayLang !== seedLang) {
-    const links = await fetchLangLinks(displayTitle, displayLang);
+  if (lookupLang !== seedLang) {
+    const links = await fetchLangLinks(displayTitle, lookupLang);
     const homeTitle = langLinkTitle(links, seedLang);
     if (homeTitle) {
       displayLang = seedLang;
       displayTitle = homeTitle;
       checkTitle = homeTitle;
       state.articleLang = "";
-      toast(t("toast.wrongWikiBack", { lang: seedLang }), "ok", 5000);
-    } else {
+      if (wasTrapped) toast(t("toast.wrongWikiBack", { lang: seedLang }), "ok", 5000);
+    } else if (lookupLang === displayLang && displayLang !== seedLang) {
       toast(t("toast.wrongWikiStay", { lang: seedLang, current: displayLang }), "warn", 5000);
+    } else {
+      toast(t("toast.wrongWikiStay", { lang: seedLang, current: lookupLang }), "warn", 5000);
+      return { cancelled: true, displayLang, displayTitle, checkTitle, appliedWrongWiki: false };
     }
   }
 
@@ -3663,6 +3669,32 @@ function isExternalHref(href) {
   return false;
 }
 
+/** Article title + wiki language from a same-wiki or wikipedia.org href. lang is "" for /wiki/ paths. */
+function wikipediaArticleFromHref(href) {
+  const raw = String(href || "").trim();
+  if (!raw || raw.startsWith("#") || raw.startsWith("/w/")) return null;
+  if (raw.startsWith("/wiki/")) {
+    const title = wikiTitleFromHref(raw);
+    return title ? { lang: "", title } : null;
+  }
+  let url;
+  try {
+    if (raw.startsWith("//")) url = new URL(`https:${raw}`);
+    else if (/^https?:\/\//i.test(raw)) url = new URL(raw);
+    else return null;
+  } catch {
+    return null;
+  }
+  const host = String(url.hostname || "").toLowerCase();
+  const mobile = host.match(/^([a-z0-9-]+)\.m\.wikipedia\.org$/);
+  const classic = host.match(/^([a-z0-9-]+)\.wikipedia\.org$/);
+  const lang = String(mobile?.[1] || classic?.[1] || "").trim().toLowerCase();
+  if (!lang || lang === "www" || lang === "m") return null;
+  if (!url.pathname.startsWith("/wiki/")) return null;
+  const title = wikiTitleFromHref(url.pathname || "");
+  return title ? { lang, title } : null;
+}
+
 function unwrapElement(node) {
   const parent = node.parentNode;
   if (!parent) {
@@ -3818,14 +3850,40 @@ function toastBlockedWikiPage() {
   toast(t("toast.pageTypeBlocked"), "warn");
 }
 
+function bindWikiArticleAnchor(a, title, sourceLang) {
+  a.href = "#";
+  if (isBlockedWikiTitle(title)) {
+    a.removeAttribute("data-title");
+    a.removeAttribute("data-wiki-lang");
+    a.dataset.blockedNs = "1";
+    return false;
+  }
+  a.removeAttribute("data-blocked-ns");
+  a.dataset.title = title;
+  if (sourceLang) a.dataset.wikiLang = sourceLang;
+  else a.removeAttribute("data-wiki-lang");
+  return true;
+}
+
 function processArticleLinks(root, options = {}) {
-  // One pass: strip externals, rewrite /wiki links, optional foggy/missing traps.
+  // One pass: strip externals, rewrite wiki links, optional foggy/missing traps.
   const foggy = Boolean(options.foggy);
   const missing = Boolean(options.missing);
   const playable = missing ? [] : null;
 
   root.querySelectorAll("a").forEach((a) => {
     const href = a.getAttribute("href") || "";
+    const parsed = wikipediaArticleFromHref(href);
+    if (parsed) {
+      const playableLink = bindWikiArticleAnchor(a, parsed.title, parsed.lang);
+      if (!playableLink) return;
+      if (foggy) {
+        a.textContent = t("trap.foggyLink");
+        a.title = "";
+      }
+      if (playable) playable.push(a);
+      return;
+    }
     if (isExternalHref(href)) {
       unwrapElement(a);
       return;
@@ -3833,30 +3891,16 @@ function processArticleLinks(root, options = {}) {
     // /w/... must not keep a host-relative href (would leave the SPA).
     if (href.startsWith("/w/")) {
       a.removeAttribute("data-title");
+      a.removeAttribute("data-wiki-lang");
       a.dataset.blockedNs = "1";
       a.href = "#";
       return;
     }
-    if (!href.startsWith("/wiki/")) return;
-    const title = wikiTitleFromHref(href);
-    if (!title) {
-      unwrapElement(a);
-      return;
-    }
-    // Never leave raw /wiki/... hrefs — browser would hit a host 404.
+    if (href.startsWith("#")) return;
+    // Leftover hrefs (absolute Wikipedia non-articles, odd paths) must not leave the SPA.
+    a.removeAttribute("data-title");
+    a.removeAttribute("data-wiki-lang");
     a.href = "#";
-    if (isBlockedWikiTitle(title)) {
-      a.removeAttribute("data-title");
-      a.dataset.blockedNs = "1";
-      return;
-    }
-    a.removeAttribute("data-blocked-ns");
-    a.dataset.title = title;
-    if (foggy) {
-      a.textContent = t("trap.foggyLink");
-      a.title = "";
-    }
-    if (playable) playable.push(a);
   });
 
   if (playable) applyMissingToLinks(playable);
@@ -4122,7 +4166,14 @@ async function openArticle(title, options = {}) {
   const endLoading = beginArticleLoading();
 
   try {
-    const { displayLang, displayTitle, checkTitle, appliedWrongWiki } = await resolveArticleNavigation(title, { countAsClick });
+    const { displayLang, displayTitle, checkTitle, appliedWrongWiki, cancelled } = await resolveArticleNavigation(title, {
+      countAsClick,
+      sourceLang: options.sourceLang || "",
+    });
+    if (cancelled) {
+      endLoading();
+      return;
+    }
     const prepareKey = wikiHtmlCacheKey(displayTitle, displayLang);
     const prepareWait = state.wikiPrepareInflight.get(prepareKey);
     if (prepareWait) {
@@ -4274,6 +4325,8 @@ el.articleBody.addEventListener("pointerover", (e) => {
   const related = e.relatedTarget;
   if (related && a.contains(related)) return;
   const dest = a.dataset.title || "";
+  const hoverLang = String(a.dataset.wikiLang || "").trim().toLowerCase();
+  if (hoverLang && hoverLang !== articleLanguage()) return;
   scheduleWikiPrefetchFromHover(dest);
   scheduleWikiPrepareFromHover(dest);
 });
@@ -4284,17 +4337,17 @@ el.articleBody.addEventListener("load", (e) => {
 }, true);
 
 el.articleBody.addEventListener("click", async (e) => {
-  const blocked = e.target.closest("a[data-blocked-ns]");
-  if (blocked) {
+  const a = e.target.closest("a");
+  if (!a || !el.articleBody.contains(a)) return;
+  if (a.matches("a[data-blocked-ns]")) {
     e.preventDefault();
     toastBlockedWikiPage();
     return;
   }
-  const a = e.target.closest("a[data-title]");
-  if (!a) return;
+  const dest = a.dataset.title || "";
+  if (!dest) return;
   e.preventDefault();
   if (state.handlingDeath) return;
-  const dest = a.dataset.title || "";
   const destNorm = normalizeTitle(dest);
 
   // Bomb hit (only on forward wiki clicks).
@@ -4315,7 +4368,7 @@ el.articleBody.addEventListener("click", async (e) => {
     return;
   }
 
-  openArticle(dest, { countAsClick: true });
+  openArticle(dest, { countAsClick: true, sourceLang: a.dataset.wikiLang || "" });
 });
 
 function isEventInSidePanel(target) {
