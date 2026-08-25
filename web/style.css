@@ -297,15 +297,19 @@ button {
   50% { opacity: 1; }
 }
 .article-body a { color: #8dd9ff; text-decoration: underline; cursor: pointer; }
-.article-body a.wiki-bomb-link {
+.article-body a.wiki-bomb-link,
+.article-body a.wiki-bomb-link:visited,
+.article-body a.wiki-bomb-link:hover {
   position: relative;
+  padding-inline-start: 1.2em;
+  color: #ffb84d;
 }
 .article-body a.wiki-bomb-link .wiki-bomb-mark {
   position: absolute;
   left: 0;
   top: 50%;
-  width: 1.15em;
-  height: 1.15em;
+  width: 1em;
+  height: 1em;
   transform: translateY(-52%);
   pointer-events: none;
   color: #ffb84d;
