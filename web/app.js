@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.1";
+const APP_VERSION = "1.0.2";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -160,6 +160,7 @@ const TOOL_ICON_SVGS = {
   traplink: lucideIcon('<path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/>'),
   bombs: lucideIcon('<circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/>'),
   traps: lucideIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
+  teleport: lucideIcon('<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>'),
 };
 
 function trapTypeLabel(trapType) {
@@ -219,6 +220,8 @@ const state = {
   announcedJourneyCredits: false,
   victoryOpen: false,
   rerollBusy: false,
+  teleportBusy: false,
+  teleportUnlockAt: 0,
   targetSummaryCache: new Map(),
   targetSummaryTitle: "",
   targetTooltipTitle: "",
@@ -283,6 +286,8 @@ const el = {
   targetTooltip: document.getElementById("targetTooltip"),
   rerollTargetBtn: document.getElementById("rerollTargetBtn"),
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
+  teleportBtn: document.getElementById("teleportBtn"),
+  teleportBtnLabel: document.getElementById("teleportBtnLabel"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   goalHover: document.getElementById("goalHover"),
@@ -782,6 +787,72 @@ function setTargetSummaryTitle(title) {
   state.targetSummaryTitle = next;
   setHoverWikiTitle(el.targetHover, next);
   if (changed && state.targetTooltipAnchor === el.targetHover) hideTargetTooltip();
+}
+
+function teleportSecondsLeft() {
+  if (!state.teleportUnlockAt) return 0;
+  return Math.max(0, Math.ceil((state.teleportUnlockAt - Date.now()) / 1000));
+}
+
+let teleportUiTimer = 0;
+
+function syncTeleportButton() {
+  if (!el.teleportBtn || !el.teleportBtnLabel) return;
+  const playable = Boolean(state.status?.connected_to_ap || state.status?.practice);
+  const left = teleportSecondsLeft();
+  const ready = playable && left <= 0 && !state.teleportBusy;
+  el.teleportBtn.disabled = !ready;
+  el.teleportBtnLabel.textContent = left > 0
+    ? t("hud.teleportCooldown", { n: left })
+    : t("hud.teleport");
+  el.teleportBtn.setAttribute("title", t("hud.teleportTitle"));
+  el.teleportBtn.setAttribute("aria-label", t("hud.teleport"));
+  if (left > 0 && !teleportUiTimer) {
+    teleportUiTimer = window.setInterval(syncTeleportButton, 250);
+  } else if (left <= 0 && teleportUiTimer) {
+    window.clearInterval(teleportUiTimer);
+    teleportUiTimer = 0;
+  }
+}
+
+function updateTeleportControls(status) {
+  const remaining = Number(status?.teleport_cooldown_remaining);
+  state.teleportUnlockAt = Number.isFinite(remaining) && remaining > 0
+    ? Date.now() + remaining * 1000
+    : 0;
+  syncTeleportButton();
+}
+
+async function teleportToRandomPage() {
+  if (!requirePlayable() || state.teleportBusy) return;
+  const left = teleportSecondsLeft();
+  if (left > 0) {
+    toast(t("toast.teleportCooldown", { n: left }), "warn", 3500);
+    return;
+  }
+  state.teleportBusy = true;
+  syncTeleportButton();
+  try {
+    await ensureSession();
+    const result = await api(`/api/session/${state.sessionId}/teleport`, "POST", {});
+    if (result.status) updateHUD(result.status);
+    const title = String(result.title || "").trim();
+    if (!title) throw new Error(result.error || t("toast.teleportFailed", { error: "no page" }));
+    await openArticle(title, {
+      countAsClick: false,
+      submitCheck: false,
+      skipBridgeCheck: true,
+      skipTraps: true,
+      replaceHistory: true,
+      requireConnection: true,
+    });
+    toast(t("toast.teleported", { title }), "ok", 5000);
+  } catch (err) {
+    toast(t("toast.teleportFailed", { error: err?.message || "failed" }), "warn", 5000);
+  } finally {
+    state.teleportBusy = false;
+    syncTeleportButton();
+  }
 }
 
 function updateRerollTargetControls(status) {
@@ -3186,6 +3257,7 @@ function applyHUDStatus(status) {
     setTargetSummaryTitle(status.current_target || "");
   }
   updateRerollTargetControls(status);
+  updateTeleportControls(status);
   renderRoundsTrack(status);
   renderFragmentsTrack(status);
   renderBranchTargets(status);
@@ -4174,6 +4246,8 @@ async function openArticle(title, options = {}) {
     replaceHistory = false,
     requireConnection = false,
     travelKind = "",
+    skipBridgeCheck = false,
+    skipTraps = false,
   } = options;
   if (requireConnection && !requirePlayable()) return;
   if (isBlockedWikiTitle(title)) {
@@ -4204,7 +4278,7 @@ async function openArticle(title, options = {}) {
       ? `${displayTitle} · ${displayLang}`
       : displayTitle;
     el.articleBody.scrollTop = 0;
-    consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki });
+    consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki || skipTraps });
 
     const prepared = takeWikiPreparedCache(displayTitle);
     if (prepared) {
@@ -4259,6 +4333,7 @@ async function openArticle(title, options = {}) {
     endLoading();
 
     // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
+    if (skipBridgeCheck) return;
     if (!isPlayable()) {
       if (countAsClick && submitCheck) toast(t("toast.disconnectedChecks"), "warn");
       return;
@@ -4645,6 +4720,15 @@ function showMigrateBannerIfNeeded() {
 ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
+if (el.teleportBtn) {
+  if (TOOL_ICON_SVGS.teleport && !el.teleportBtn.querySelector("svg")) {
+    el.teleportBtn.insertAdjacentHTML("afterbegin", TOOL_ICON_SVGS.teleport);
+  }
+  el.teleportBtn.addEventListener("click", () => {
+    void teleportToRandomPage();
+  });
+  syncTeleportButton();
+}
 bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();

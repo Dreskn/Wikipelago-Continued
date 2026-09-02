@@ -64,13 +64,54 @@ body {
   padding: 16px;
   display: flex;
   flex-direction: column;
+  --side-w: clamp(420px, calc(420px + (100vw - 1200px) * 246 / 720), 666px);
 }
 .topbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr var(--side-w);
+  gap: 16px;
   align-items: center;
-  gap: 12px;
   flex: 0 0 auto;
+}
+.topbar-article {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 2.5rem;
+}
+.topbar-teleport {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.teleport-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 2.5rem;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #3a5068;
+  background: #152131;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.teleport-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+.teleport-btn:hover:not(:disabled) {
+  border-color: #52708d;
+  background: #1b2c3e;
+}
+.teleport-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .topbar-brand { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
 .topbar-logo {
@@ -1625,6 +1666,17 @@ button {
   .layout {
     height: auto;
     max-height: none;
+  }
+  .topbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .topbar-article {
+    gap: 12px;
+  }
+  .topbar-teleport {
+    position: static;
+    transform: none;
   }
   .main-grid {
     grid-template-columns: 1fr;

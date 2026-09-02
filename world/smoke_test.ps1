@@ -123,10 +123,10 @@ try {
     Assert-HasPattern $ciPath 'AP_REF: "0\.6\.7"' 'CI Generate must pin Archipelago 0.6.7'
     Assert-HasPattern $ciPath 'world/ci_generate.py' 'CI must run world/ci_generate.py'
     Assert-HasPattern ([System.IO.Path]::Combine($Root, "ci_generate.py")) 'wikipelago.apworld' 'world/ci_generate.py must install the built apworld'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0\.1\s*$' 'YAML template is missing requires.game.Wikipelago 1.0.1'
-    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0.1"' 'Bridge client version must be 1.0.1'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0\.2\s*$' 'YAML template is missing requires.game.Wikipelago 1.0.2'
+    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0.2"' 'Bridge client version must be 1.0.2'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
-    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.0.1"' 'World full_version must be 1.0.1'
+    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.0.2"' 'World full_version must be 1.0.2'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
     Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
@@ -561,7 +561,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0\.1"' 'Packaged world_version should be 1.0.1'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0\.2"' 'Packaged world_version should be 1.0.2'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

@@ -96,7 +96,7 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **1.0.1** |
+| Wikipelago world (`apworld`) | **1.0.2** |
 | Recommended Archipelago | **0.6.7** |
 | Web client | hosted link above, or local `http://127.0.0.1:5000` from this repo |
 

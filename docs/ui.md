@@ -11,7 +11,7 @@ Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed us
 1. **current build**
 2. **UI language** — for menus, practice and toasts only; the Wikipedia edition comes from your YAML.
 3. **Connected / Offline / Practice**
-4. **current page**
+4. **current page** — 1.0.2 adds an **SOS** button in the top bar, centered above this article. It teleports to a random seed-pool page (60s cooldown).
 5. **Wikipedia content**
 6. **room login** — server, slot, and password.
 7. **Progression panel** — main game tracker.
