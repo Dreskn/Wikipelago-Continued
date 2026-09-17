@@ -665,6 +665,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow-x: auto;
 }
 .bingo-board-block {
   display: flex;
@@ -701,19 +702,20 @@ button {
   position: relative;
   width: 100%;
   max-width: 100%;
+  overflow-x: auto;
 }
-.bingo-board-viewport.is-compact {
+.bingo-board-viewport.is-expandable {
   cursor: zoom-in;
-  overflow: hidden;
   border-radius: 4px;
 }
-.bingo-board-viewport.is-compact:focus-visible {
+.bingo-board-viewport.is-expandable:focus-visible {
   outline: 2px solid #6aa9ff;
   outline-offset: 2px;
 }
-.bingo-preview-scale {
-  transform-origin: top left;
-  will-change: transform;
+.bingo-grid-wrap {
+  position: relative;
+  display: inline-block;
+  padding-right: 1.15rem;
 }
 .bingo-preview-badge {
   position: absolute;
@@ -729,17 +731,33 @@ button {
   font-weight: 700;
   pointer-events: none;
 }
+.bingo-diag-tick {
+  position: absolute;
+  right: 0;
+  z-index: 1;
+  font-size: 0.58rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #6d8296;
+  pointer-events: none;
+  user-select: none;
+}
+.bingo-diag-d { top: 1px; }
+.bingo-diag-ad { bottom: 1px; }
 .bingo-grid {
   display: grid;
   gap: 0;
-  width: min(100%, 12.6rem);
-  --bingo-cell: 1.62rem;
+  width: auto;
+  --bingo-cell: 40.4px;
   border-top: 1px solid #3a5068;
   border-left: 1px solid #3a5068;
   background: #3a5068;
 }
 .bingo-cell {
-  aspect-ratio: 1;
+  width: var(--bingo-cell);
+  height: var(--bingo-cell);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -801,6 +819,16 @@ button {
   flex: 1 1 auto;
   min-width: 0;
   font-size: 1rem;
+}
+.journey-overlay-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.journey-overlay-actions .btn-quiet {
+  padding: 4px 8px;
+  font-size: 0.72rem;
 }
 .bingo-overlay-zoom {
   display: flex;
@@ -1659,6 +1687,40 @@ button {
   margin: 24px 8px;
   color: var(--muted);
   font-size: 0.82rem;
+}
+body.journey-window #releaseBanner,
+body.journey-window #migrateBanner,
+body.journey-window .layout,
+body.journey-window #supportDock,
+body.journey-window .bingo-overlay,
+body.journey-window .victory-overlay {
+  display: none !important;
+}
+body.journey-window .journey-overlay {
+  display: flex;
+  padding: 0;
+}
+body.journey-window .journey-overlay-backdrop {
+  display: none;
+}
+body.journey-window .journey-overlay-panel {
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+body.journey-window .journey-overlay.hidden {
+  display: flex;
+}
+body.journey-window #journeyPopupBtn {
+  display: none;
+}
+.journey-overlay-panel:fullscreen {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border-radius: 0;
 }
 
 @media (max-width: 1200px) {

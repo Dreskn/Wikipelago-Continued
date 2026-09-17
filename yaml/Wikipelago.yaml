@@ -1,5 +1,6 @@
 # Player YAML template for Wikipelago.
 # Copy this file into your Archipelago Players folder and change `name` if you need a different slot name.
+# Comments match the Archipelago Option Creator tooltips (Options.py class docs).
 
 name: MadWikiRacer
 game: Wikipelago
@@ -11,7 +12,7 @@ description: Default Wikipelago player template
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 1.0.2
+    Wikipelago: 1.0.3
 
 Wikipelago:
 
@@ -19,11 +20,14 @@ Wikipelago:
   # Main game
   # =============================================================================
   # progression_balancing: Archipelago 0–99; higher tends to place useful progression a bit earlier in the item sphere.
-  # check_count: how many Start → Target rounds (checks) are generated (10–999, default 40).
-  # required_fragments / additional_fragments_in_pool: 1–200 / 0–200.
-  # start_rounds_unlocked / rounds_per_unlock: early open rounds, then each Round Access unlocks this many more (1–999).
+  # check_count: Start→Target rounds (checks) generated for your slot (10–999). Fails if the enabled article pool is too small.
+  # required_fragments: Knowledge Fragments needed to reveal and clear the Grand Goal (landing on the answer page finishes the slot).
+  # additional_fragments_in_pool: extra fragments in the pool beyond required_fragments (goal still needs only the required count).
+  # start_rounds_unlocked: rounds playable immediately at seed start (1–999).
+  # rounds_per_unlock: additional rounds each Round Access item unlocks (1–999).
   # Grand Goal is always a closed question from that wiki language's goal pool
-  # (answer page preferred from enabled categories).
+  # (answer page preferred from enabled categories). random_goal_article is kept for
+  # old YAMLs and is ignored.
   progression_balancing: 50
   check_count: 40
   required_fragments: 7
@@ -39,8 +43,10 @@ Wikipelago:
   # Progressive tools — Back & target rerolls
   # =============================================================================
   # Each system has a starting value plus Progressive items in the pool.
-  # back_depth_*: browser Back depth (per round; 0 = locked until Progressive Back).
-  # target_reroll_*: target page rerolls available each round.
+  # back_depth_start: Back steps each round (0 = locked until Progressive Back).
+  # back_depth_unlocks: Progressive Back items (each raises per-round Back depth by 1).
+  # target_rerolls_start: target rerolls each round (from leftover seed-pool articles; Grand Goal cannot be rerolled).
+  # target_reroll_unlocks: Progressive Reroll items (each raises per-round reroll max by 1).
   # Ranges are 0–5 for all four options.
   back_depth_start: 0
   back_depth_unlocks: 3
@@ -53,7 +59,8 @@ Wikipelago:
   # Stamp letter pairs from page titles; row / col / diag / full checks per board.
   # Grid size N (3–20); default 5 → weighted sample from that wiki’s Scrabble letter pairs.
   # Letter pairs use Scrabble alphabets (e.g. pl keeps Ą/Ć/Ł…; fr folds é→E; de keeps Ä/Ö/Ü, ß→SS).
-  # bingo_cards_start / bingo_card_unlocks: 0–20 each (combined boards capped at 40).
+  # bingo_cards_start: boards unlocked from the start (0 = all locked behind Progressive Bingo Card).
+  # bingo_card_unlocks: Progressive Bingo Card items (extra boards; combined boards capped at 40).
   # bingo_stamp_unlocks: Progressive Bingo Stamp items (each stamps one empty cell on one board, once per seed).
   # Bingo on with start 0 and unlocks 0 is rejected (no boards).
   toggle_bingo_letterpairs: true
@@ -81,11 +88,11 @@ Wikipelago:
   # =============================================================================
   # Wikipedia language & article pool
   # =============================================================================
-  # wikipedia_language: native titles + page fetches for this slot.
-  #   Valid: en | fr | de | es | it | pt | nl | sv | pl
+  # wikipedia_language: Wikipedia edition for titles, fetches, and the Grand Goal
+  #   (not the client UI language dropdown). Valid: en | fr | de | es | it | pt | nl | sv | pl
   wikipedia_language: en
   # Categories use multi-tag OR: a title is kept if any of its tags intersects
-  # an enabled category. Turn categories on/off to shape the round article pool.
+  # an enabled category. Shapes both round targets and the Grand Goal answer pool.
   include_video_games: true
   include_movies: true
   include_tv_shows: true
@@ -104,17 +111,20 @@ Wikipelago:
   include_animals: true
   include_biology_medicine: true
   include_miscellaneous: true
-  # When false, sensitive pages (porn, terrorism, violent/sexual crime, illicit
-  # drugs) are excluded even if they match an enabled category.
+  # When false, sensitive pages (pornography, BDSM / sadomasochism / sexual
+  # roleplay, terrorism, violent/sexual crime, illicit drugs) are excluded even
+  # if they match an enabled category. When true, they may appear if they also
+  # match an enabled category.
   include_sensitive_pages: false
 
   # =============================================================================
   # Sanities (off by default)
   # =============================================================================
-  # searchsanity: Ctrl+F limited to unlocked Search Letter items.
+  # searchsanity: Ctrl+F Lens only finds letters unlocked via Search Letter items
+  #   (plus search_starting_letters).
   # search_starting_letters: starting letters when searchsanity is on
-  #   (none | all_vowels | etaoi | raise).
-  # scrollsanity: scrolling starts slow; needs Progressive Scroll Speed upgrades.
+  #   (none | all_vowels = A E I O U | etaoi = E T A O I | raise = R A I S E).
+  # scrollsanity: scrolling starts slow; speeds up with Progressive Scroll Speed.
   searchsanity: false
   search_starting_letters: none
   scrollsanity: false
@@ -137,10 +147,11 @@ Wikipelago:
   # =============================================================================
   # Deaths, DeathLink & link bombs (off by default = peaceful)
   # =============================================================================
-  # deaths: revisiting a page already visited this round = death → random jump (local).
+  # deaths: revisiting a page already visited this round = death → random jump (local unless Death Link).
   # death_link: full Archipelago DeathLink (send and receive).
   # link_bombs: bomb-marked links on pages (requires deaths); hitting one = death.
-  # link_bomb_density: few | more | insane (only when link_bombs is on).
+  #   Target and Grand Goal links are never bombs.
+  # link_bomb_density: few (1) | more (5) | insane (20), capped at half the eligible links.
   deaths: false
   death_link: false
   link_bombs: false
@@ -149,7 +160,8 @@ Wikipelago:
   # =============================================================================
   # Traps
   # =============================================================================
-  # trap_count: Foggy Links / Missing Links / Wrong Wiki items in the pool (0–99)
+  # trap_count: Foggy Links / Missing Links / Wrong Wiki items in the pool (0–99).
+  #   Counts toward the mandatory item budget — generation fails if too many.
   # trap_type: all | only_foggy_links | only_missing_links | only_wrong_wiki
   # both is deprecated and still selects every trap (same as all).
   # trap_link: share traps with other Trap Link players (independent of count).

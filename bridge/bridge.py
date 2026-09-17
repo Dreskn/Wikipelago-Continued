@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.0.2"
+CLIENT_VERSION = "1.0.3"
 TELEPORT_COOLDOWN_SEC = 60
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -1275,6 +1275,8 @@ class APConnection:
                 self._resolve_retrieved(packet)
             elif cmd == "SetReply":
                 self._resolve_set_reply(packet)
+            elif cmd == "RoomUpdate":
+                await self._apply_room_update(packet)
 
     def _apply_connected(self, packet: dict[str, Any]) -> None:
         slot_data = packet.get("slot_data") or {}
@@ -1549,33 +1551,60 @@ class APConnection:
                 except Exception:
                     pass
             self.state.checked_locations = restored_checked
-
-            restored_round_index = 0
-            for round_loc in self.state.location_round_ids:
-                if round_loc in restored_checked:
-                    restored_round_index += 1
-                else:
-                    break
-            self.state.round_index = min(restored_round_index, self.state.check_count)
-
-            for bid, loc_ids in enumerate(self.state.location_branch_ids):
-                restored_branch_index = 0
-                for loc_id in loc_ids:
-                    if loc_id in restored_checked:
-                        restored_branch_index += 1
-                    else:
-                        break
-                self.state.branch_round_index[bid] = restored_branch_index
-
-            if self.state.location_grand_goal and self.state.location_grand_goal in restored_checked:
-                self.state.boss_completed = True
-                self.state.goal_status_sent = True
+            self._sync_progress_from_checked(assume_goal_already_sent=True)
 
         self._rebuild_bingo_stamps_from_checked()
 
         # Fresh connect to this slot: resume only within-slot last_page, else round start.
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
+
+    def _sync_progress_from_checked(self, *, assume_goal_already_sent: bool = False) -> None:
+        """Derive round/branch/goal HUD progress from Archipelago checked_locations."""
+        checked = self.state.checked_locations
+        restored_round_index = 0
+        for round_loc in self.state.location_round_ids:
+            if round_loc in checked:
+                restored_round_index += 1
+            else:
+                break
+        self.state.round_index = min(restored_round_index, self.state.check_count)
+        self.state.sync_target_reroll_counter()
+        self.state.sync_back_counter()
+
+        for bid, loc_ids in enumerate(self.state.location_branch_ids):
+            restored_branch_index = 0
+            for loc_id in loc_ids:
+                if loc_id in checked:
+                    restored_branch_index += 1
+                else:
+                    break
+            self.state.branch_round_index[bid] = restored_branch_index
+
+        if self.state.location_grand_goal and self.state.location_grand_goal in checked:
+            self.state.boss_completed = True
+            if assume_goal_already_sent:
+                self.state.goal_status_sent = True
+
+    async def _apply_room_update(self, packet: dict[str, Any]) -> None:
+        """Keep the slot HUD in sync when the room checks locations (Release / !release)."""
+        locations = packet.get("checked_locations")
+        if not isinstance(locations, list) or not locations:
+            return
+        added = False
+        for loc in locations:
+            try:
+                loc_id = int(loc)
+            except Exception:
+                continue
+            if loc_id not in self.state.checked_locations:
+                self.state.checked_locations.add(loc_id)
+                added = True
+        if not added:
+            return
+        self._sync_progress_from_checked()
+        self._rebuild_bingo_stamps_from_checked()
+        await self.ensure_goal_status_if_complete()
 
     def _rebuild_bingo_stamps_from_checked(self) -> None:
         """Infer stamped cells from already-checked bingo lines (HUD after reconnect)."""
@@ -2621,6 +2650,7 @@ class APConnection:
 
         self.state.merge_clicks(clicks_used)
         await self._persist_clicks()
+        page_title = await self._canonicalize_title(page_title)
         self._remember_page(page_title)
 
         target = await self._canonicalize_title(self.state.current_target())
@@ -2979,10 +3009,6 @@ class APConnection:
         if self.state.location_grand_goal:
             await self.send_location_checks([self.state.location_grand_goal])
 
-        remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
-        if remaining:
-            await self.send_location_checks(remaining)
-
         self.state.boss_completed = True
         await self.send_goal_status()
         await self._append_travel_event(
@@ -3286,11 +3312,6 @@ class APConnection:
 
             if action == "finish_boss":
                 self._debug_set_item_count("Knowledge Fragment", max(self.state.required_fragments, self.state.fragments()))
-                # Complete any remaining round locations, then grand goal.
-                remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
-                if remaining:
-                    await self.send_location_checks(remaining)
-                self.state.round_index = self.state.check_count
                 if self.state.location_grand_goal:
                     await self.send_location_checks([self.state.location_grand_goal])
                 self.state.boss_completed = True

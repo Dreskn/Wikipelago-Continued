@@ -4,7 +4,8 @@ from Options import Choice, PerGameCommonOptions, Range, Toggle
 
 
 class CheckCount(Range):
-    """Number of Start→Target rounds. Generation still fails if the enabled article pool is too small."""
+    """Number of Start→Target rounds (checks) generated for your slot (10–999).
+    Generation still fails if the enabled article pool is too small."""
     display_name = "Round Count"
     range_start = 10
     range_end = 999
@@ -12,7 +13,8 @@ class CheckCount(Range):
 
 
 class RequiredFragments(Range):
-    """Knowledge Fragments needed to reveal and clear the Grand Goal."""
+    """Knowledge Fragments needed to reveal and clear the Grand Goal.
+    Landing on the answer page finishes the slot."""
     display_name = "Required Fragments"
     range_start = 1
     range_end = 200
@@ -28,6 +30,8 @@ class AdditionalFragmentsInPool(Range):
 
 
 class StartRoundsUnlocked(Range):
+    """How many Start→Target rounds are playable immediately at seed start (1–999).
+    High relative to Round Count feels more open early; low means waiting more on Round Access."""
     display_name = "Start Rounds Unlocked"
     range_start = 1
     range_end = 999
@@ -35,6 +39,7 @@ class StartRoundsUnlocked(Range):
 
 
 class RoundsPerUnlock(Range):
+    """How many additional rounds each Round Access item unlocks (1–999)."""
     display_name = "Rounds Per Round Access"
     range_start = 1
     range_end = 999
@@ -50,64 +55,78 @@ class RandomGoalArticle(Toggle):
 
 
 class Searchsanity(Toggle):
+    """When enabled, in-page search (Ctrl+F Lens) only finds letters unlocked
+    via Search Letter items, plus any letters from Search Starting Letters."""
     display_name = "Searchsanity"
     default = 0
 
 
 class Scrollsanity(Toggle):
+    """When enabled, scrolling starts slow and speeds up with Progressive Scroll Speed items."""
     display_name = "Scrollsanity"
     default = 0
 
 
 class RandomizeTables(Toggle):
-    """When enabled, Wikipedia tables stay hidden until Table Lens is received."""
+    """When enabled, Wikipedia tables stay hidden until Table Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Tables"
     default = 0
 
 
 class RandomizePictures(Toggle):
-    """When enabled, Wikipedia images/galleries stay hidden until Picture Lens is received."""
+    """When enabled, Wikipedia images/galleries stay hidden until Picture Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Pictures"
     default = 0
 
 
 class RandomizeIncipit(Toggle):
-    """When enabled, the lead/intro section stays hidden until Lead Lens is received."""
+    """When enabled, the lead/intro section stays hidden until Lead Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Incipit"
     default = 0
 
 
 class RandomizeInfoboxes(Toggle):
-    """When enabled, infoboxes stay hidden until Infobox Lens is received."""
+    """When enabled, infoboxes stay hidden until Infobox Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Infoboxes"
     default = 0
 
 
 class RandomizeToc(Toggle):
-    """When enabled, the table of contents stays hidden until Contents Lens is received."""
+    """When enabled, the table of contents stays hidden until Contents Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Table of Contents"
     default = 0
 
 
 class RandomizeNavboxes(Toggle):
-    """When enabled, navboxes and See also hubs stay hidden until Navbox Lens is received."""
+    """When enabled, navboxes and See also hubs stay hidden until Navbox Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Navboxes"
     default = 0
 
 
 class RandomizeHatnotes(Toggle):
-    """When enabled, hatnotes stay hidden until Hatnote Lens is received."""
+    """When enabled, hatnotes stay hidden until Hatnote Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize Hatnotes"
     default = 0
 
 
 class RandomizeReferences(Toggle):
-    """When enabled, footnotes/references stay hidden until Reference Lens is received."""
+    """When enabled, footnotes/references stay hidden until Reference Lens is received.
+    Enabling lenses (even one) can make routing much harder; stacking several increases difficulty sharply."""
     display_name = "Randomize References"
     default = 0
 
 
 class SearchStartingLetters(Choice):
+    """Starting Search Letters when Searchsanity is on (ignored when Searchsanity is off).
+    none: no free letters. all_vowels: A E I O U. etaoi: E T A O I. raise: R A I S E.
+    Remaining letters still come from Search Letter items."""
     display_name = "Search Starting Letters"
     option_none = 0
     option_all_vowels = 1
@@ -117,7 +136,9 @@ class SearchStartingLetters(Choice):
 
 
 class WikipediaLanguage(Choice):
-    """Wikipedia language edition for article titles and page fetches (one per slot)."""
+    """Wikipedia language edition for article titles and page fetches (one per slot).
+    Start/Target titles, Grand Goal question, and article fetches all use that edition.
+    This is not the client UI language dropdown."""
     display_name = "Wikipedia Language"
     option_en = 0
     option_fr = 1
@@ -132,92 +153,127 @@ class WikipediaLanguage(Choice):
 
 
 class IncludeVideoGames(Toggle):
+    """Allow video-game-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Video Games"
     default = 1
 
 
 class IncludeMovies(Toggle):
+    """Allow movie-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Movies"
     default = 1
 
 
 class IncludeTVShows(Toggle):
+    """Allow TV-show-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include TV Shows"
     default = 1
 
 
 class IncludeAnimeManga(Toggle):
+    """Allow anime- and manga-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Anime and Manga"
     default = 1
 
 
 class IncludeSports(Toggle):
+    """Allow sports-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Sports"
     default = 1
 
 
 class IncludeScienceSpace(Toggle):
+    """Allow science- and space-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Science and Space"
     default = 1
 
 
 class IncludeTechnology(Toggle):
+    """Allow technology- and internet-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Technology and Internet"
     default = 1
 
 
 class IncludeHistory(Toggle):
+    """Allow history-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include History"
     default = 1
 
 
 class IncludeGeography(Toggle):
+    """Allow geography- and landmark-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Geography and Landmarks"
     default = 1
 
 
 class IncludeFoodCuisine(Toggle):
+    """Allow food- and cuisine-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Food and Cuisine"
     default = 1
 
 
 class IncludeArtLiterature(Toggle):
+    """Allow art- and literature-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Art and Literature"
     default = 1
 
 
 class IncludeMythologyFolklore(Toggle):
+    """Allow mythology- and folklore-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Mythology and Folklore"
     default = 1
 
 
 class IncludeMusic(Toggle):
+    """Allow music-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Music"
     default = 1
 
 
 class IncludePolitics(Toggle):
+    """Allow politics-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Politics"
     default = 1
 
 
 class IncludeFamousPeople(Toggle):
+    """Allow famous-people-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Famous People"
     default = 1
 
 
 class IncludeMiscellaneous(Toggle):
-    """Catch-all pages that matched no other category (or have no Wikidata entity)."""
+    """Catch-all pages that matched no other category (or have no Wikidata entity).
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Miscellaneous"
     default = 1
 
 
 class IncludeAnimals(Toggle):
+    """Allow animal-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Animals"
     default = 1
 
 
 class IncludeBiologyMedicine(Toggle):
+    """Allow biology- and medicine-tagged articles in the round and Grand Goal pools.
+    Titles are kept if any tag matches an enabled category (OR)."""
     display_name = "Include Biology and Medicine"
     default = 1
 
@@ -261,7 +317,9 @@ class GoalArticlePreset(Choice):
 
 
 class Deaths(Toggle):
-    """When enabled, revisiting a page already visited this round causes a death (random Wikipedia page)."""
+    """When enabled, revisiting a page already visited this round causes a death
+    (jump to a random Wikipedia page). Local only unless Death Link is also on.
+    Peaceful when off."""
     display_name = "Deaths"
     default = 0
 
@@ -273,13 +331,15 @@ class DeathLink(Toggle):
 
 
 class LinkBombs(Toggle):
-    """When enabled (and Deaths is on), random links on each page may be bombs that cause a death."""
+    """When enabled (and Deaths is on), random links on each page may be bombs that cause a death.
+    Target and Grand Goal links are never bombs."""
     display_name = "Link Bombs"
     default = 0
 
 
 class LinkBombDensity(Choice):
-    """How many bomb links to try to place per page (capped at half the eligible links). Requires Deaths and Link Bombs."""
+    """How many bomb links to try to place per page (capped at half the eligible links). Requires Deaths and Link Bombs.
+    few = 1, more = 5, insane = 20."""
     display_name = "Link Bomb Density"
     option_few = 0
     option_more = 1
@@ -288,7 +348,8 @@ class LinkBombDensity(Choice):
 
 
 class TrapCount(Range):
-    """Number of trap items (Foggy Links / Missing Links / Wrong Wiki) added to the pool before Footnote filler."""
+    """Number of trap items (Foggy Links / Missing Links / Wrong Wiki) added to the pool before Footnote filler.
+    Counts toward the mandatory item budget — generation fails if too many."""
     display_name = "Trap Count"
     range_start = 0
     range_end = 99
@@ -317,13 +378,15 @@ class TrapLink(Toggle):
 
 
 class ToggleBingoLetterpairs(Toggle):
-    """When enabled, add letter-pair bingo board(s) with row/column/diagonal/full-card checks."""
+    """When enabled, add letter-pair bingo board(s) with row/column/diagonal/full-card checks.
+    Stamp pairs from page titles. Bingo on with start 0 and unlocks 0 is rejected (no boards)."""
     display_name = "Letter Pair Bingo"
     default = 1
 
 
 class BingoLetterpairsGrid(Range):
-    """Bingo grid size N (N×N cells). Weighted sample from the slot language's Scrabble letter-pair frequencies (3-20)."""
+    """Bingo grid size N (N×N cells). Weighted sample from the slot language's Scrabble letter-pair frequencies (3-20).
+    Letter pairs use Scrabble alphabets (e.g. pl keeps Ą/Ć/Ł…; fr folds é→E; de keeps Ä/Ö/Ü, ß→SS)."""
     display_name = "Letter Pair Bingo Grid Size"
     range_start = 3
     range_end = 20
@@ -339,7 +402,7 @@ class BingoCardsStart(Range):
 
 
 class BingoCardUnlocks(Range):
-    """Number of Progressive Bingo Card items in the pool (extra boards beyond Bingo Cards Start)."""
+    """Number of Progressive Bingo Card items in the pool (extra boards beyond Bingo Cards Start). Combined boards capped at 40."""
     display_name = "Bingo Card Unlocks"
     range_start = 0
     range_end = 20
@@ -347,7 +410,7 @@ class BingoCardUnlocks(Range):
 
 
 class BingoStampUnlocks(Range):
-    """Number of Progressive Bingo Stamp items in the pool (each stamps one empty cell on one unlocked board, once per game)."""
+    """Number of Progressive Bingo Stamp items in the pool (each stamps one empty cell on one unlocked board, once per seed)."""
     display_name = "Bingo Stamp Unlocks"
     range_start = 0
     range_end = 20
@@ -371,7 +434,8 @@ class BackDepthUnlocks(Range):
 
 
 class TargetRerollsStart(Range):
-    """Starting target rerolls available each round."""
+    """Starting target rerolls available each round. Alternatives come from leftover articles in the same seed pool.
+    The Grand Goal article itself cannot be rerolled."""
     display_name = "Target Rerolls Start"
     range_start = 0
     range_end = 5
@@ -387,7 +451,8 @@ class TargetRerollUnlocks(Range):
 
 
 class BranchCount(Range):
-    """How many main-road rounds are crossroads (Branch N needs N keys plus that finished crossroad). 0 disables branches."""
+    """How many main-road rounds are crossroads (never round 1). Branch N needs N keys plus that finished crossroad
+    (either order). 0 disables the whole branch system. All unlocked branches stay live at once."""
     display_name = "Branch Count"
     range_start = 0
     range_end = 8
@@ -395,7 +460,7 @@ class BranchCount(Range):
 
 
 class BranchLength(Range):
-    """Rounds in each unlocked side branch chain."""
+    """Rounds in each unlocked side branch chain (1–20)."""
     display_name = "Branch Length"
     range_start = 1
     range_end = 20

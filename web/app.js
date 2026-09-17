@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.2";
+const APP_VERSION = "1.0.3";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -298,7 +298,10 @@ const el = {
   crossroadBadge: document.getElementById("crossroadBadge"),
   journeyOverlay: document.getElementById("journeyOverlay"),
   journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
+  journeyOverlayPanel: document.querySelector(".journey-overlay-panel"),
   journeyOverlayTitle: document.getElementById("journeyOverlayTitle"),
+  journeyFullscreenBtn: document.getElementById("journeyFullscreenBtn"),
+  journeyPopupBtn: document.getElementById("journeyPopupBtn"),
   journeyOverlayClose: document.getElementById("journeyOverlayClose"),
   journeyPath: document.getElementById("journeyPath"),
   journeyTip: document.getElementById("journeyTip"),
@@ -1361,6 +1364,42 @@ function renderJourneyView(payload) {
   drawJourneyPath(payload);
 }
 
+function isJourneyStandaloneWindow() {
+  return new URLSearchParams(window.location.search).get("view") === "journey";
+}
+
+function syncJourneyFullscreenButton() {
+  if (!el.journeyFullscreenBtn) return;
+  const active = Boolean(document.fullscreenElement);
+  const label = active ? t("journey.exitFullscreen") : t("journey.fullscreen");
+  el.journeyFullscreenBtn.textContent = label;
+  el.journeyFullscreenBtn.setAttribute("aria-label", label);
+}
+
+async function toggleJourneyFullscreen() {
+  const panel = el.journeyOverlayPanel;
+  if (!panel) return;
+  try {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    const request = panel.requestFullscreen || panel.webkitRequestFullscreen;
+    if (!request) throw new Error("fullscreen unsupported");
+    await request.call(panel);
+  } catch {
+    toast(t("journey.fullscreenFailed"), "warn");
+  }
+}
+
+function openJourneyPopup() {
+  if (isJourneyStandaloneWindow()) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", "journey");
+  const popup = window.open(url.toString(), "wikipelago-journey", "popup=yes,width=980,height=860");
+  if (!popup) toast(t("journey.popupBlocked"), "warn");
+}
+
 async function openJourneyOverlay({ credits = false } = {}) {
   if (!el.journeyOverlay || !state.sessionId) return;
   state.journeyOpen = true;
@@ -1368,6 +1407,7 @@ async function openJourneyOverlay({ credits = false } = {}) {
   if (el.journeyOverlayTitle) {
     el.journeyOverlayTitle.textContent = credits ? t("journey.credits") : t("journey.title");
   }
+  syncJourneyFullscreenButton();
   try {
     const payload = await api(`/api/session/${state.sessionId}/journey`);
     renderJourneyView(payload);
@@ -1377,6 +1417,13 @@ async function openJourneyOverlay({ credits = false } = {}) {
 }
 
 function closeJourneyOverlay() {
+  if (isJourneyStandaloneWindow()) {
+    window.close();
+    return;
+  }
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch(() => {});
+  }
   state.journeyOpen = false;
   el.journeyOverlay?.classList.add("hidden");
 }
@@ -1424,7 +1471,20 @@ function bindJourneyOverlayUi() {
     void openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
   });
   el.journeyOverlayClose?.addEventListener("click", closeJourneyOverlay);
-  el.journeyOverlayBackdrop?.addEventListener("click", closeJourneyOverlay);
+  el.journeyOverlayBackdrop?.addEventListener("click", () => {
+    if (!isJourneyStandaloneWindow()) closeJourneyOverlay();
+  });
+  el.journeyFullscreenBtn?.addEventListener("click", () => {
+    void toggleJourneyFullscreen();
+  });
+  el.journeyPopupBtn?.addEventListener("click", openJourneyPopup);
+  document.addEventListener("fullscreenchange", () => {
+    syncJourneyFullscreenButton();
+    if (state.journeyOpen && state.journeyPayload) {
+      state.journeyLayoutKey = "";
+      drawJourneyPath(state.journeyPayload);
+    }
+  });
 }
 
 function titlesMatch(a, b) {
@@ -2359,10 +2419,8 @@ function mergeBingoStampMaps(...maps) {
   return out;
 }
 
-/** Minimum readable cell size (px) before a sidebar board becomes a scaled preview. */
-const BINGO_MIN_SIDE_CELL_PX = 22;
-/** Preferred max board width in the sidebar for small grids (~12.6rem). */
-const BINGO_SIDE_PREF_MAX_PX = 202;
+/** Sidebar cell size matching the current 5×5 board (~12.6rem / 5). */
+const BINGO_SIDE_CELL_PX = 40.4;
 /** Base cell size (px) for the expanded overlay board before user zoom. */
 const BINGO_OVERLAY_CELL_PX = 43;
 const BINGO_ZOOM_MIN = 0.4;
@@ -2384,7 +2442,17 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
 
   const grid = document.createElement("div");
   grid.className = "bingo-grid";
-  grid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
+  const wrap = document.createElement("div");
+  wrap.className = "bingo-grid-wrap";
+  const tickD = document.createElement("span");
+  tickD.className = "bingo-diag-tick bingo-diag-d";
+  tickD.textContent = "D";
+  tickD.title = t("bingo.diag");
+  const tickAd = document.createElement("span");
+  tickAd.className = "bingo-diag-tick bingo-diag-ad";
+  tickAd.textContent = "AD";
+  tickAd.title = t("bingo.antidiag");
+  wrap.append(tickD, tickAd, grid);
   for (let row = 0; row < n; row += 1) {
     for (let col = 0; col < n; col += 1) {
       const pair = String(board[row]?.[col] || "").toUpperCase();
@@ -2416,47 +2484,20 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
       grid.appendChild(cell);
     }
   }
-  return { grid, n, lines: lineMap };
-}
-
-function bingoSidebarAvailWidth() {
-  const host = el.bingoBoards;
-  if (!host) return 280;
-  const width = host.clientWidth;
-  if (width > 40) return width;
-  // Fallback before first layout: side column minus card padding.
-  return 330 - 24;
+  return { grid, wrap, n, lines: lineMap };
 }
 
 function sizeBingoGrid(grid, n, cellPx) {
-  const size = Math.max(1, n) * cellPx;
+  const cols = Math.max(n, 1);
+  const size = cols * cellPx;
   grid.style.width = `${size}px`;
   grid.style.setProperty("--bingo-cell", `${cellPx}px`);
-  grid.style.gridTemplateColumns = `repeat(${Math.max(n, 1)}, minmax(0, 1fr))`;
+  grid.style.gridTemplateColumns = `repeat(${cols}, ${cellPx}px)`;
 }
 
-function applyBingoSidebarFit(viewport, grid, n, boardKey) {
-  const avail = bingoSidebarAvailWidth();
-  const readableWidth = Math.max(n, 1) * BINGO_MIN_SIDE_CELL_PX;
-  if (readableWidth <= avail + 0.5) {
-    const width = Math.min(avail, Math.max(BINGO_SIDE_PREF_MAX_PX, readableWidth));
-    sizeBingoGrid(grid, n, width / Math.max(n, 1));
-    viewport.appendChild(grid);
-    return;
-  }
-
-  // Board wider than the side panel: keep a readable natural size, scale to fit.
-  sizeBingoGrid(grid, n, BINGO_MIN_SIDE_CELL_PX);
-  const natural = readableWidth;
-  const scale = avail / natural;
-  const scaler = document.createElement("div");
-  scaler.className = "bingo-preview-scale";
-  scaler.style.width = `${natural}px`;
-  scaler.style.transform = `scale(${scale})`;
-  scaler.appendChild(grid);
-
-  viewport.classList.add("is-compact");
-  viewport.style.height = `${natural * scale}px`;
+function applyBingoSidebarFit(viewport, grid, wrap, n, boardKey) {
+  sizeBingoGrid(grid, n, BINGO_SIDE_CELL_PX);
+  viewport.classList.add("is-expandable");
   viewport.title = t("bingo.expandHint");
   viewport.setAttribute("role", "button");
   viewport.tabIndex = 0;
@@ -2478,7 +2519,7 @@ function applyBingoSidebarFit(viewport, grid, n, boardKey) {
     }
   });
 
-  viewport.appendChild(scaler);
+  viewport.appendChild(wrap || grid);
   viewport.appendChild(badge);
 }
 
@@ -2549,7 +2590,7 @@ function refreshBingoOverlayContent() {
   const { remaining: stampRemaining } = bingoStampCharges(status);
   const pickMode = Boolean(state.bingoStampPickMode && stampRemaining > 0);
 
-  const { grid, n } = renderBingoBoardGrid(
+  const { grid, wrap, n } = renderBingoBoardGrid(
     board,
     stampedMap[boardKey] || [],
     cellsMap[boardKey] || [],
@@ -2562,7 +2603,7 @@ function refreshBingoOverlayContent() {
     }
   );
   sizeBingoGrid(grid, n, BINGO_OVERLAY_CELL_PX);
-  el.bingoOverlayWorld.replaceChildren(grid);
+  el.bingoOverlayWorld.replaceChildren(wrap || grid);
   if (el.bingoOverlayTitle) {
     const complete = isBingoBoardFullyComplete(linesMap[boardKey] || {});
     el.bingoOverlayTitle.textContent = complete
@@ -2865,7 +2906,7 @@ function renderBingoHud(status) {
     header.appendChild(title);
     block.appendChild(header);
 
-    const { grid, n, lines: lineMap } = renderBingoBoardGrid(
+    const { grid, wrap, n, lines: lineMap } = renderBingoBoardGrid(
       board,
       stampedMap[boardKey] || [],
       cellsMap[boardKey] || [],
@@ -2881,8 +2922,8 @@ function renderBingoHud(status) {
     viewport.className = "bingo-board-viewport";
     block.appendChild(viewport);
     el.bingoBoards.appendChild(block);
-    if (!collapsed) applyBingoSidebarFit(viewport, grid, n, boardKey);
-    else viewport.appendChild(grid);
+    if (!collapsed) applyBingoSidebarFit(viewport, grid, wrap, n, boardKey);
+    else viewport.appendChild(wrap || grid);
 
     anySize = Math.max(anySize, n);
     const lineKeys = Object.keys(lineMap);
@@ -4029,18 +4070,25 @@ function ensureWikiHtmlCacheLanguage() {
   if (!state.wikiCacheLanguage) state.wikiCacheLanguage = lang;
 }
 
-function storeWikiHtmlCache(title, html, lang = articleLanguage()) {
+function storeWikiHtmlCache(title, html, lang = articleLanguage(), resolvedTitle = "") {
   ensureWikiHtmlCacheLanguage();
-  const key = wikiHtmlCacheKey(title, lang);
-  if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
-  state.wikiHtmlCache.set(key, { html: String(html || "") });
+  const resolved = String(resolvedTitle || title || "").trim() || String(title || "");
+  const entry = { html: String(html || ""), resolvedTitle: resolved };
+  const keys = [wikiHtmlCacheKey(title, lang)];
+  if (normalizeTitle(resolved) !== normalizeTitle(title)) {
+    keys.push(wikiHtmlCacheKey(resolved, lang));
+  }
+  for (const key of keys) {
+    if (state.wikiHtmlCache.has(key)) state.wikiHtmlCache.delete(key);
+    state.wikiHtmlCache.set(key, entry);
+  }
   while (state.wikiHtmlCache.size > WIKI_PREFETCH_MAX_CACHE) {
     const oldest = state.wikiHtmlCache.keys().next().value;
     state.wikiHtmlCache.delete(oldest);
   }
 }
 
-function takeWikiHtmlCache(title, lang = articleLanguage()) {
+function takeWikiHtmlCacheEntry(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
   const key = wikiHtmlCacheKey(title, lang);
   const hit = state.wikiHtmlCache.get(key);
@@ -4048,7 +4096,12 @@ function takeWikiHtmlCache(title, lang = articleLanguage()) {
   // Refresh LRU order.
   state.wikiHtmlCache.delete(key);
   state.wikiHtmlCache.set(key, hit);
-  return hit.html;
+  return hit;
+}
+
+function takeWikiHtmlCache(title, lang = articleLanguage()) {
+  const hit = takeWikiHtmlCacheEntry(title, lang);
+  return hit ? hit.html : null;
 }
 
 async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
@@ -4070,22 +4123,25 @@ async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
     throw new Error(`${info} [${lang}]`);
   }
   if (!data.parse || !data.parse.text) throw new Error(`Article unavailable [${lang}]`);
-  return data.parse.text;
+  const resolvedTitle = String(data.parse.title || title).trim() || title;
+  return { html: data.parse.text, resolvedTitle };
 }
 
-async function fetchWikiHtml(title, lang = articleLanguage()) {
+async function fetchWikiArticle(title, lang = articleLanguage()) {
   ensureWikiHtmlCacheLanguage();
-  const cached = takeWikiHtmlCache(title, lang);
-  if (cached != null) return cached;
+  const cached = takeWikiHtmlCacheEntry(title, lang);
+  if (cached) {
+    return { html: cached.html, resolvedTitle: cached.resolvedTitle || title };
+  }
 
   const key = wikiHtmlCacheKey(title, lang);
   let inflight = state.wikiHtmlInflight.get(key);
   if (!inflight) {
     inflight = (async () => {
       try {
-        const html = await fetchWikiHtmlUncached(title, lang);
-        storeWikiHtmlCache(title, html, lang);
-        return html;
+        const article = await fetchWikiHtmlUncached(title, lang);
+        storeWikiHtmlCache(title, article.html, lang, article.resolvedTitle);
+        return article;
       } finally {
         state.wikiHtmlInflight.delete(key);
       }
@@ -4093,6 +4149,11 @@ async function fetchWikiHtml(title, lang = articleLanguage()) {
     state.wikiHtmlInflight.set(key, inflight);
   }
   return inflight;
+}
+
+async function fetchWikiHtml(title, lang = articleLanguage()) {
+  const { html } = await fetchWikiArticle(title, lang);
+  return html;
 }
 
 function pumpWikiPrefetchQueue() {
@@ -4145,11 +4206,14 @@ function scheduleWikiPrefetchFromHover(title) {
   }, WIKI_PREFETCH_HOVER_MS);
 }
 
-function storeWikiPreparedCache(title, root) {
+function storeWikiPreparedCache(title, root, resolvedTitle = "") {
   ensureWikiHtmlCacheLanguage();
   const key = wikiHtmlCacheKey(title);
   if (state.wikiPreparedCache.has(key)) state.wikiPreparedCache.delete(key);
-  state.wikiPreparedCache.set(key, root);
+  state.wikiPreparedCache.set(key, {
+    root,
+    resolvedTitle: String(resolvedTitle || title || "").trim() || title,
+  });
   while (state.wikiPreparedCache.size > WIKI_PREFETCH_MAX_CACHE) {
     const oldest = state.wikiPreparedCache.keys().next().value;
     state.wikiPreparedCache.delete(oldest);
@@ -4185,13 +4249,13 @@ async function prepareWikiHtml(title) {
 
   const inflight = (async () => {
     try {
-      const html = await fetchWikiHtml(clean);
+      const article = await fetchWikiArticle(clean);
       await idleYield();
       // Hover target may have changed; still finish prepare for LRU usefulness.
       const root = document.createElement("div");
-      root.innerHTML = html;
+      root.innerHTML = article.html;
       prepareArticleHtml(root, { foggy: false, missing: false, applyLocks: false });
-      storeWikiPreparedCache(clean, root);
+      storeWikiPreparedCache(clean, root, article.resolvedTitle);
     } catch {
       /* ignore prepare failures — open will fall back to normal path */
     } finally {
@@ -4272,17 +4336,38 @@ async function openArticle(title, options = {}) {
       try { await prepareWait; } catch { /* fall through */ }
     }
 
-    state.currentTitle = displayTitle;
     const seedLang = wikipediaLanguage();
+    const prepared = takeWikiPreparedCache(displayTitle);
+    let html = "";
+    let resolvedDisplay = displayTitle;
+    if (prepared?.root) {
+      resolvedDisplay = prepared.resolvedTitle || displayTitle;
+    } else {
+      try {
+        const article = await fetchWikiArticle(displayTitle, displayLang);
+        html = article.html;
+        resolvedDisplay = article.resolvedTitle || displayTitle;
+      } catch (err) {
+        endLoading();
+        const detail = err?.message ? ` (${err.message})` : "";
+        toast(t("toast.openFailed", { title: displayTitle, detail }), "warn");
+        return;
+      }
+    }
+    displayTitle = resolvedDisplay;
+    if (displayLang === seedLang) {
+      checkTitle = resolvedDisplay;
+    }
+
+    state.currentTitle = displayTitle;
     el.articleTitle.textContent = displayLang !== seedLang
       ? `${displayTitle} · ${displayLang}`
       : displayTitle;
     el.articleBody.scrollTop = 0;
     consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki || skipTraps });
 
-    const prepared = takeWikiPreparedCache(displayTitle);
-    if (prepared) {
-      el.articleBody.replaceChildren(...prepared.childNodes);
+    if (prepared?.root) {
+      el.articleBody.replaceChildren(...prepared.root.childNodes);
       // Re-apply current fog/missing on the live tree (pre-prepare used neutral flags).
       processArticleLinks(el.articleBody, {
         foggy: state.activeFoggy,
@@ -4291,15 +4376,6 @@ async function openArticle(title, options = {}) {
       applyDisplayLocks();
       refreshArticleScrollHosts(el.articleBody);
     } else {
-      let html;
-      try {
-        html = await fetchWikiHtml(displayTitle, displayLang);
-      } catch (err) {
-        endLoading();
-        const detail = err?.message ? ` (${err.message})` : "";
-        toast(t("toast.openFailed", { title: displayTitle, detail }), "warn");
-        return;
-      }
       el.articleBody.innerHTML = html;
       prepareArticleHtml(el.articleBody, {
         foggy: state.activeFoggy,
@@ -4735,6 +4811,7 @@ bindVictoryOverlayUi();
 bindStuckHelper();
 initSidePanelToggles();
 showMigrateBannerIfNeeded();
+if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;
   const rerenderTracks = () => {
@@ -4766,5 +4843,9 @@ setInterval(pollStatus, 1500);
   await loadBuildBadge();
   await ensureSession();
   await pollStatus();
+  if (isJourneyStandaloneWindow()) {
+    await openJourneyOverlay({ credits: Boolean(state.status?.boss_completed) });
+    return;
+  }
   if (isPlayable()) await restoreArticleView(true);
 })();
