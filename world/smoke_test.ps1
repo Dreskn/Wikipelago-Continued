@@ -238,6 +238,7 @@ try {
     Assert-NoPattern $bridgePath 'location_round_ids if loc not in self.state.checked_locations' 'Goaling must not dump leftover rounds'
     Assert-HasPattern $webAppPath 'data.parse.title' 'Web must use Wikipedia parse.title as the resolved page name'
     Assert-HasPattern $webAppPath 'resolvedTitle' 'Web must keep resolved Wikipedia titles for checks'
+    Assert-HasPattern $webAppPath 'let \{ displayLang, displayTitle, checkTitle' 'Resolved Wikipedia title must be reassignable in openArticle'
     Assert-HasPattern $bridgePath 'send_death_link' 'Bridge DeathLink send helper is missing'
     Assert-HasPattern $bridgePath 'send_trap_link' 'Bridge TrapLink send helper is missing'
     Assert-HasPattern $webAppPath 'submitCheck' 'Web submitCheck gating is missing'

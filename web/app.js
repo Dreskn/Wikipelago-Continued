@@ -4322,7 +4322,7 @@ async function openArticle(title, options = {}) {
   const endLoading = beginArticleLoading();
 
   try {
-    const { displayLang, displayTitle, checkTitle, appliedWrongWiki, cancelled } = await resolveArticleNavigation(title, {
+    let { displayLang, displayTitle, checkTitle, appliedWrongWiki, cancelled } = await resolveArticleNavigation(title, {
       countAsClick,
       sourceLang: options.sourceLang || "",
     });
