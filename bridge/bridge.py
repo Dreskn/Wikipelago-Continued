@@ -3,6 +3,7 @@ import argparse
 import asyncio
 import json
 import logging
+import math
 import os
 import random
 import subprocess
@@ -22,7 +23,8 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.0.1"
+CLIENT_VERSION = "1.0.3"
+TELEPORT_COOLDOWN_SEC = 60
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -350,6 +352,7 @@ class SessionState:
     clicks_used: int = 0
     clicks_storage_ready: bool = False
     last_page: str = ""
+    last_teleport_at: float = 0.0
     path_last_page: dict[str, str] = field(default_factory=dict)
     active_path: str = "main"
     crossroads: list[dict[str, Any]] = field(default_factory=list)
@@ -429,6 +432,19 @@ class SessionState:
     def is_playable(self) -> bool:
         """Archipelago connected, or local Practice mode."""
         return self.connected_to_ap or self.practice
+
+    def teleport_cooldown_remaining(self) -> int:
+        if self.last_teleport_at <= 0:
+            return 0
+        left = TELEPORT_COOLDOWN_SEC - (time.time() - self.last_teleport_at)
+        if left <= 0:
+            return 0
+        return int(math.ceil(left))
+
+    def teleport_ready_at(self) -> float:
+        if self.last_teleport_at <= 0:
+            return 0.0
+        return self.last_teleport_at + TELEPORT_COOLDOWN_SEC
 
     def owned_search_letters(self) -> list[str]:
         letters = set(self.search_starting_letters)
@@ -856,6 +872,9 @@ class SessionState:
             "boss_ready": self.boss_ready(),
             "boss_completed": self.boss_completed,
             "last_page": self.last_page,
+            "teleport_cooldown_remaining": self.teleport_cooldown_remaining(),
+            "teleport_ready_at": self.teleport_ready_at(),
+            "can_teleport": self.is_playable() and self.teleport_cooldown_remaining() == 0,
             "last_error": self.last_error,
             "active_path": "main",
             "paths": self.path_payload(),
@@ -1256,6 +1275,8 @@ class APConnection:
                 self._resolve_retrieved(packet)
             elif cmd == "SetReply":
                 self._resolve_set_reply(packet)
+            elif cmd == "RoomUpdate":
+                await self._apply_room_update(packet)
 
     def _apply_connected(self, packet: dict[str, Any]) -> None:
         slot_data = packet.get("slot_data") or {}
@@ -1530,33 +1551,60 @@ class APConnection:
                 except Exception:
                     pass
             self.state.checked_locations = restored_checked
-
-            restored_round_index = 0
-            for round_loc in self.state.location_round_ids:
-                if round_loc in restored_checked:
-                    restored_round_index += 1
-                else:
-                    break
-            self.state.round_index = min(restored_round_index, self.state.check_count)
-
-            for bid, loc_ids in enumerate(self.state.location_branch_ids):
-                restored_branch_index = 0
-                for loc_id in loc_ids:
-                    if loc_id in restored_checked:
-                        restored_branch_index += 1
-                    else:
-                        break
-                self.state.branch_round_index[bid] = restored_branch_index
-
-            if self.state.location_grand_goal and self.state.location_grand_goal in restored_checked:
-                self.state.boss_completed = True
-                self.state.goal_status_sent = True
+            self._sync_progress_from_checked(assume_goal_already_sent=True)
 
         self._rebuild_bingo_stamps_from_checked()
 
         # Fresh connect to this slot: resume only within-slot last_page, else round start.
         if not self.state.last_page:
             self.state.last_page = self.state.current_start()
+
+    def _sync_progress_from_checked(self, *, assume_goal_already_sent: bool = False) -> None:
+        """Derive round/branch/goal HUD progress from Archipelago checked_locations."""
+        checked = self.state.checked_locations
+        restored_round_index = 0
+        for round_loc in self.state.location_round_ids:
+            if round_loc in checked:
+                restored_round_index += 1
+            else:
+                break
+        self.state.round_index = min(restored_round_index, self.state.check_count)
+        self.state.sync_target_reroll_counter()
+        self.state.sync_back_counter()
+
+        for bid, loc_ids in enumerate(self.state.location_branch_ids):
+            restored_branch_index = 0
+            for loc_id in loc_ids:
+                if loc_id in checked:
+                    restored_branch_index += 1
+                else:
+                    break
+            self.state.branch_round_index[bid] = restored_branch_index
+
+        if self.state.location_grand_goal and self.state.location_grand_goal in checked:
+            self.state.boss_completed = True
+            if assume_goal_already_sent:
+                self.state.goal_status_sent = True
+
+    async def _apply_room_update(self, packet: dict[str, Any]) -> None:
+        """Keep the slot HUD in sync when the room checks locations (Release / !release)."""
+        locations = packet.get("checked_locations")
+        if not isinstance(locations, list) or not locations:
+            return
+        added = False
+        for loc in locations:
+            try:
+                loc_id = int(loc)
+            except Exception:
+                continue
+            if loc_id not in self.state.checked_locations:
+                self.state.checked_locations.add(loc_id)
+                added = True
+        if not added:
+            return
+        self._sync_progress_from_checked()
+        self._rebuild_bingo_stamps_from_checked()
+        await self.ensure_goal_status_if_complete()
 
     def _rebuild_bingo_stamps_from_checked(self) -> None:
         """Infer stamped cells from already-checked bingo lines (HUD after reconnect)."""
@@ -2602,6 +2650,7 @@ class APConnection:
 
         self.state.merge_clicks(clicks_used)
         await self._persist_clicks()
+        page_title = await self._canonicalize_title(page_title)
         self._remember_page(page_title)
 
         target = await self._canonicalize_title(self.state.current_target())
@@ -2853,6 +2902,100 @@ class APConnection:
             "status": self.state.to_status(),
         }
 
+    def _norm_title(self, title: str) -> str:
+        return str(title or "").replace("_", " ").strip().casefold()
+
+    def _seed_pool_titles(self) -> list[str]:
+        titles: list[str] = []
+        seen: set[str] = set()
+
+        def add(title: Any) -> None:
+            text = str(title or "").replace("_", " ").strip()
+            if not text:
+                return
+            key = text.casefold()
+            if key in seen:
+                return
+            seen.add(key)
+            titles.append(text)
+
+        for pair in self.state.round_pairs:
+            if isinstance(pair, dict):
+                add(pair.get("start"))
+                add(pair.get("target"))
+        for title in self.state.reroll_pool:
+            add(title)
+        if self.state.practice:
+            for title in self.state.practice_pool_titles:
+                add(title)
+        for branch in self.state.branches:
+            for pair in (branch.get("pairs") or []):
+                if isinstance(pair, dict):
+                    add(pair.get("start"))
+                    add(pair.get("target"))
+        add(self.state.goal_article())
+        return titles
+
+    def _current_block_titles(self) -> set[str]:
+        blocked = {self._norm_title(self.state.last_page)}
+        target = self.state.current_target()
+        if target:
+            blocked.add(self._norm_title(target))
+        for item in self.state.live_branch_targets():
+            if isinstance(item, dict):
+                blocked.add(self._norm_title(item.get("target")))
+        return {title for title in blocked if title}
+
+    async def teleport_random_page(self) -> dict[str, Any]:
+        """Move last_page to a random seed article. No checks, bingo, or scoring."""
+        self.state.last_seen = time.time()
+        if not self.state.is_playable():
+            return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+
+        remaining = self.state.teleport_cooldown_remaining()
+        if remaining > 0:
+            return {
+                "ok": False,
+                "error": f"teleport cooling down ({remaining}s left)",
+                "cooldown_remaining": remaining,
+                "status": self.state.to_status(),
+            }
+
+        blocked = self._current_block_titles()
+        pool = [title for title in self._seed_pool_titles() if self._norm_title(title) not in blocked]
+        if not pool:
+            return {
+                "ok": False,
+                "error": "no alternate pages left in the seed pool",
+                "status": self.state.to_status(),
+            }
+
+        random.shuffle(pool)
+        resolved = ""
+        for candidate in pool[:24]:
+            resolved_title = await self._canonicalize_title(candidate)
+            if resolved_title and self._norm_title(resolved_title) not in blocked:
+                resolved = resolved_title
+                break
+        if not resolved:
+            return {
+                "ok": False,
+                "error": "no alternate pages left in the seed pool",
+                "status": self.state.to_status(),
+            }
+
+        old_page = self.state.last_page
+        self._remember_page(resolved)
+        self.state.last_teleport_at = time.time()
+        await self._append_travel_event("teleport", resolved)
+        return {
+            "ok": True,
+            "teleported": True,
+            "title": resolved,
+            "old_page": old_page,
+            "status": self.state.to_status(),
+        }
+
     async def try_finish_boss(self) -> None:
         if self.state.boss_completed:
             return
@@ -2865,10 +3008,6 @@ class APConnection:
 
         if self.state.location_grand_goal:
             await self.send_location_checks([self.state.location_grand_goal])
-
-        remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
-        if remaining:
-            await self.send_location_checks(remaining)
 
         self.state.boss_completed = True
         await self.send_goal_status()
@@ -3173,11 +3312,6 @@ class APConnection:
 
             if action == "finish_boss":
                 self._debug_set_item_count("Knowledge Fragment", max(self.state.required_fragments, self.state.fragments()))
-                # Complete any remaining round locations, then grand goal.
-                remaining = [loc for loc in self.state.location_round_ids if loc not in self.state.checked_locations]
-                if remaining:
-                    await self.send_location_checks(remaining)
-                self.state.round_index = self.state.check_count
                 if self.state.location_grand_goal:
                     await self.send_location_checks([self.state.location_grand_goal])
                 self.state.boss_completed = True
@@ -3404,6 +3538,15 @@ class App:
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
 
+    async def session_teleport(self, request: web.Request) -> web.StreamResponse:
+        sid = request.match_info["sid"]
+        session = self.sessions.get(sid)
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.teleport_random_page()
+        status_code = 200 if result.get("ok") else 400
+        return web.json_response(result, status=status_code)
+
     async def session_journey(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -3500,6 +3643,7 @@ class App:
         app.router.add_post("/api/session/{sid}/bingo-stamp", self.session_use_bingo_stamp)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
+        app.router.add_post("/api/session/{sid}/teleport", self.session_teleport)
         app.router.add_get("/api/session/{sid}/journey", self.session_journey)
         if debug_menu_enabled():
             app.router.add_post("/api/session/{sid}/debug", self.session_debug)

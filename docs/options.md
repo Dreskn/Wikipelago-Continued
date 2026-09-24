@@ -5,7 +5,7 @@ Player settings live in your YAML under the `Wikipelago:` block.
 - **Template (source of truth for names/defaults):** [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml)
 - Also attached on [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)
 
-After installing the apworld, you can generate a fresh template from the Archipelago Launcher (**Generate Template Options**).
+After installing the apworld, you can generate a fresh template from the Archipelago Launcher (**Generate Template Options**). Option Creator tooltips come from `Options.py` and match the comments in that YAML template.
 
 ---
 
