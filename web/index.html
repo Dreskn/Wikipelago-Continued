@@ -3,13 +3,31 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#141d28" />
+  <meta name="theme-color" content="#0e1020" />
   <meta name="description" content="Play Wikipedia racing rounds connected to Archipelago." />
   <title>Wikipelago</title>
+  <script>
+    // Apply the saved light/dark theme before first paint (no dark flash for light users).
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("wikipelago_theme"); } catch (e) { /* storage blocked */ }
+      if (theme !== "light" && theme !== "dark") {
+        theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      document.documentElement.dataset.theme = theme;
+      if (theme === "light") {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", "#e8eae4");
+      }
+    })();
+  </script>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png?v=20260915-01" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260917-03" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..800;1,9..144,500..700&family=Instrument+Sans:wght@400..700&family=IBM+Plex+Mono:wght@500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400&display=swap" />
+  <link rel="stylesheet" href="/static/style.css?v=20260927-02" />
 </head>
 <body>
   <div id="releaseBanner" class="migrate-banner" role="status">
@@ -33,6 +51,10 @@
         </div>
       </div>
       <div class="topbar-status">
+        <button id="themeToggle" type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
         <select id="uiLangSelect" class="topbar-lang" aria-label="Language" data-i18n-aria="conn.language"></select>
         <div id="connBadge" class="badge offline" data-i18n="badge.offline">Offline</div>
       </div>
@@ -111,8 +133,8 @@
                 </span>
               </div>
               <div class="target-list">
-                <p class="target-row">
-                  <strong data-i18n="path.main">Main road</strong>
+                <p class="target-row main-target-row">
+                  <strong class="realm-label main-road-label" data-i18n="path.main">Main road</strong>
                   <span class="target-hover" id="targetHover">
                     <span id="targetText">-</span>
                     <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
@@ -120,6 +142,14 @@
                 </p>
                 <div id="branchTargets" class="branch-targets hidden"></div>
               </div>
+            </div>
+
+            <div id="realmsBlock" class="realms-block hidden">
+              <div class="run-label-row">
+                <strong id="realmsTitle" data-i18n="realm.title">Realms</strong>
+                <span id="realmsMeta" class="muted-meta"></span>
+              </div>
+              <ol id="realmsList" class="realms-list"></ol>
             </div>
 
             <div class="goal-block">
@@ -287,7 +317,7 @@
     <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
   </nav>
 
-  <script src="/static/i18n.js?v=20260917-03"></script>
-  <script src="/static/app.js?v=20260917-03"></script>
+  <script src="/static/i18n.js?v=20260927-02"></script>
+  <script src="/static/app.js?v=20260927-02"></script>
 </body>
 </html>

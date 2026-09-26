@@ -296,6 +296,10 @@ const el = {
   branchTracks: document.getElementById("branchTracks"),
   branchTargets: document.getElementById("branchTargets"),
   crossroadBadge: document.getElementById("crossroadBadge"),
+  realmsBlock: document.getElementById("realmsBlock"),
+  realmsList: document.getElementById("realmsList"),
+  realmsTitle: document.getElementById("realmsTitle"),
+  realmsMeta: document.getElementById("realmsMeta"),
   journeyOverlay: document.getElementById("journeyOverlay"),
   journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
   journeyOverlayPanel: document.querySelector(".journey-overlay-panel"),
@@ -565,6 +569,52 @@ function onUiLanguageChanged(code) {
   if (state.victoryOpen) fillVictoryOverlay(state.status);
   refreshSearchChrome();
   refreshSidePanelToggles();
+  syncThemeToggle();
+}
+
+// Light / dark theme. index.html applies the saved choice before first paint;
+// this keeps the toggle, the browser theme color and the Journey map in sync.
+const THEME_STORAGE_KEY = "wikipelago_theme";
+const THEME_COLORS = { dark: "#0e1020", light: "#e8eae4" };
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+function syncThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+  const label = currentTheme() === "light" ? t("theme.toDark") : t("theme.toLight");
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+function applyTheme(theme, { persist = true } = {}) {
+  const next = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  if (persist) {
+    try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch { /* storage blocked */ }
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[next]);
+  syncThemeToggle();
+  // Journey dots read their colors from CSS variables; redraw with the new palette.
+  if (state.journeyOpen && state.journeyPayload) {
+    state.journeyLayoutKey = "";
+    drawJourneyPath(state.journeyPayload);
+  }
+}
+
+function bindThemeToggle() {
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    applyTheme(currentTheme() === "light" ? "dark" : "light");
+  });
+  // Another tab (or the Journey pop-out) changed the theme: follow it.
+  window.addEventListener("storage", (event) => {
+    if (event.key === THEME_STORAGE_KEY && (event.newValue === "light" || event.newValue === "dark")) {
+      applyTheme(event.newValue, { persist: false });
+    }
+  });
+  syncThemeToggle();
 }
 
 function bindUiLanguageControls() {
@@ -929,6 +979,50 @@ function formatThemeTag(tag) {
   return raw ? raw.replace(/_/g, " ") : "";
 }
 
+// Article-pool tags; each gets its own Realm color in style.css ([data-topic]).
+const REALM_TOPICS = new Set([
+  "video_games", "movies", "tv_shows", "anime_manga", "sports", "science_space",
+  "technology", "history", "geography", "food_cuisine", "art_literature",
+  "mythology_folklore", "music", "politics", "famous_people", "miscellaneous",
+  "animals", "biology_medicine",
+]);
+
+function topicLabel(tag) {
+  const raw = String(tag || "").trim();
+  if (!raw) return "";
+  const key = `topic.${raw}`;
+  const label = t(key);
+  return label === key ? formatThemeTag(raw) : label;
+}
+
+function setTopic(node, tag) {
+  if (!node) return;
+  const raw = String(tag || "").trim();
+  if (REALM_TOPICS.has(raw)) node.dataset.topic = raw;
+  else delete node.dataset.topic;
+}
+
+function isRealmMaster(status) {
+  return String(status?.goal || "") === "realm_master";
+}
+
+function branchById(status, branchId) {
+  const branches = Array.isArray(status?.branches) ? status.branches : [];
+  return branches.find((branch) => Number(branch?.id) === Number(branchId)) || null;
+}
+
+/** "History Realm" when the branch has a topic, otherwise the legacy "Branch N". */
+function realmName(item, status = state.status) {
+  const branchId = Number.isFinite(Number(item?.branch_id)) ? Number(item.branch_id) : Number(item?.id);
+  const tag = item?.theme_tag || branchById(status, branchId)?.theme_tag || "";
+  if (!tag) return t("hud.forkTarget", { n: forkNumber(item) });
+  return t("realm.name", { topic: topicLabel(tag) });
+}
+
+function portalName(tag) {
+  return t("realm.portal", { topic: topicLabel(tag) });
+}
+
 function pathLabel(path) {
   if (!path) return t("path.main");
   if (path.id === "main") return t("path.main");
@@ -987,7 +1081,9 @@ function renderBranchTargets(status) {
     const row = document.createElement("p");
     row.className = "target-row branch-target-row";
     const label = document.createElement("strong");
-    label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
+    label.className = "realm-label";
+    setTopic(label, item.theme_tag);
+    label.textContent = realmName(item, status);
     const title = document.createElement("span");
     title.className = "target-hover target-page";
     title.textContent = item.target || "…";
@@ -1000,6 +1096,60 @@ function renderBranchTargets(status) {
 
 function renderBranchTracks(status) {
   if (el.branchTracks) el.branchTracks.innerHTML = "";
+}
+
+/** Realm checklist: topic, Portal / lock state, progress. Shown whenever the seed has branches. */
+function renderRealmsBlock(status) {
+  if (!el.realmsBlock || !el.realmsList) return;
+  const realms = Array.isArray(status?.realms) ? status.realms : [];
+  const show = !status?.practice && realms.length > 0;
+  el.realmsBlock.classList.toggle("hidden", !show);
+  el.realmsList.innerHTML = "";
+  if (!show) return;
+  const master = isRealmMaster(status);
+  const cleared = realms.filter((realm) => realm?.cleared).length;
+  if (el.realmsTitle) el.realmsTitle.textContent = master ? t("realm.masterTitle") : t("realm.title");
+  if (el.realmsMeta) el.realmsMeta.textContent = `${cleared}/${realms.length}`;
+  for (const realm of realms) {
+    const row = document.createElement("li");
+    row.className = "realm-row";
+    setTopic(row, realm.theme_tag);
+    let stateName = "sealed";
+    if (realm.cleared) stateName = "cleared";
+    else if (realm.unlocked) stateName = "open";
+    else if (realm.has_portal || (!realm.portal_item && Number(status.branch_keys_available) > 0)) stateName = "ready";
+    row.dataset.state = stateName;
+
+    const swatch = document.createElement("span");
+    swatch.className = "realm-swatch";
+    swatch.setAttribute("aria-hidden", "true");
+
+    const name = document.createElement("span");
+    name.className = "realm-name";
+    name.textContent = realmName(realm, status);
+
+    const note = document.createElement("span");
+    note.className = "realm-note";
+    const crossroad = Number(realm.crossroad_round) || 0;
+    if (stateName === "cleared") note.textContent = t("realm.cleared");
+    else if (stateName === "open") note.textContent = `${Number(realm.completed) || 0}/${Number(realm.length) || 0}`;
+    else if (stateName === "ready") note.textContent = t("realm.atRound", { n: crossroad });
+    else if (realm.portal_item) note.textContent = t("realm.needs", { portal: portalName(realm.theme_tag) });
+    else note.textContent = t("realm.needsKey");
+
+    const bar = document.createElement("span");
+    bar.className = "realm-bar";
+    const fill = document.createElement("span");
+    const length = Math.max(1, Number(realm.length) || 1);
+    fill.style.width = `${Math.round((Math.min(length, Number(realm.completed) || 0) / length) * 100)}%`;
+    bar.appendChild(fill);
+
+    row.title = realm.portal_item
+      ? `${realmName(realm, status)} · ${portalName(realm.theme_tag)} · ${t("track.kindRound")} ${crossroad}`
+      : `${realmName(realm, status)} · ${t("track.kindRound")} ${crossroad}`;
+    row.append(swatch, name, note, bar);
+    el.realmsList.appendChild(row);
+  }
 }
 
 function forkProgressByNumber(status) {
@@ -1019,7 +1169,7 @@ function forkProgressByNumber(status) {
   return map;
 }
 
-function renderForkSpur(parentSeg, progress, fork) {
+function renderForkSpur(parentSeg, progress, fork, topic = "") {
   const total = Math.max(0, Number(progress?.total) || 0);
   if (!parentSeg || total <= 0) return;
   const current = Math.max(1, Number(progress.current) || 1);
@@ -1037,7 +1187,8 @@ function renderForkSpur(parentSeg, progress, fork) {
   }
   const spur = document.createElement("div");
   spur.className = "fork-spur";
-  const kind = forkProgressTitle({ fork });
+  setTopic(spur, topic);
+  const kind = topic ? t("realm.name", { topic: topicLabel(topic) }) : forkProgressTitle({ fork });
   spur.setAttribute("aria-label", done ? `${kind} ${t("hud.complete")}` : `${kind} ${current}/${total}`);
   const runs = rleTrackItems(items);
   for (const run of runs) {
@@ -1095,7 +1246,19 @@ function renderCrossroadBadge(status) {
   }
   el.crossroadBadge.classList.remove("hidden");
   el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
+  setTopic(el.crossroadBadge, info.theme_tag);
   const fork = Number(info.fork) > 0 ? Math.trunc(Number(info.fork)) : Number(info.branch_id) + 1;
+  if (info.portal_item) {
+    const realm = realmName(info, status);
+    if (info.unlocked) {
+      el.crossroadBadge.textContent = t("crossroad.realmOpen", { realm });
+    } else if (info.has_portal) {
+      el.crossroadBadge.textContent = t("crossroad.realmReady", { realm });
+    } else {
+      el.crossroadBadge.textContent = t("crossroad.realmNeedPortal", { realm, portal: portalName(info.theme_tag) });
+    }
+    return;
+  }
   if (info.unlocked) {
     el.crossroadBadge.textContent = t("crossroad.unlocked", { n: fork });
   } else if (Number(status.branch_keys_available) > 0) {
@@ -1142,7 +1305,7 @@ function journeyPageNodes(events) {
       }
     }
     if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
-    if (kind === "grand_goal") node.grandGoal = true;
+    if (kind === "grand_goal" || kind === "realm_master") node.grandGoal = true;
     if (node !== last) nodes.push(node);
   }
   return nodes.map((node) => {
@@ -1212,18 +1375,39 @@ function journeyTrailD(points) {
   return d;
 }
 
+function cssVar(name, fallback) {
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function forkTopic(fork, status = state.status) {
+  return String(branchById(status, Number(fork) - 1)?.theme_tag || "");
+}
+
 function journeyNodeFill(node) {
-  if (node.grandGoal) return { fill: "#ffd76a", stroke: "#c4922a" };
-  if (node.mainRound) return { fill: "#1ecb70", stroke: "#148a4c" };
-  if (node.forks.length) return { fill: "#40c4ff", stroke: "#1a7aa0" };
-  if (node.stamp) return { fill: "#b57bff", stroke: "#7a3fd4" };
-  return { fill: "#0d1620", stroke: "#6a849c" };
+  const ink = cssVar("--ink-0", "#0e1020");
+  if (node.grandGoal) return { fill: cssVar("--paper", "#f3ecdc"), stroke: cssVar("--brass", "#e0915a") };
+  if (node.mainRound) return { fill: cssVar("--brass", "#e0915a"), stroke: ink };
+  if (node.forks.length) {
+    const topic = forkTopic(node.forks[0]);
+    const realm = topic ? cssVar(`--topic-${topic}`, "") : "";
+    return { fill: realm || cssVar("--sea", "#8fa8ff"), stroke: ink };
+  }
+  if (node.stamp) return { fill: cssVar("--stamp", "#b57bff"), stroke: ink };
+  return { fill: ink, stroke: cssVar("--line-strong", "#3b4163") };
 }
 
 function journeyNodeTipLines(node) {
   const lines = [];
   if (node.mainRound) lines.push(t("journey.roundMain"));
-  for (const fork of node.forks) lines.push(t("journey.roundFork", { n: fork }));
+  for (const fork of node.forks) {
+    const topic = forkTopic(fork);
+    lines.push(topic ? t("realm.name", { topic: topicLabel(topic) }) : t("journey.roundFork", { n: fork }));
+  }
   if (node.grandGoal) lines.push(t("journey.grandGoal"));
   if (node.stamp) lines.push(t("journey.stamp"));
   if (!lines.length && node.kinds.has("back")) lines.push(journeyKindLabel("back"));
@@ -1316,7 +1500,7 @@ function drawJourneyPath(payload) {
       ring.setAttribute("cy", String(node.y));
       ring.setAttribute("r", String(node.r + 3));
       ring.setAttribute("fill", "none");
-      ring.setAttribute("stroke", "#b57bff");
+      ring.setAttribute("stroke", cssVar("--stamp", "#b57bff"));
       ring.setAttribute("stroke-width", "2.5");
       svg.appendChild(ring);
     }
@@ -1429,6 +1613,19 @@ function closeJourneyOverlay() {
 }
 
 function fillVictoryOverlay(status) {
+  if (isRealmMaster(status)) {
+    const realms = Array.isArray(status?.realms) ? status.realms : [];
+    if (el.victoryQuestion) {
+      el.victoryQuestion.textContent = realms.map((realm) => realmName(realm, status)).join(" · ");
+      el.victoryQuestion.classList.toggle("hidden", !realms.length);
+    }
+    if (el.victoryAnswer) el.victoryAnswer.classList.add("hidden");
+    if (el.victoryMessage) el.victoryMessage.textContent = t("victory.realmMessage", { n: realms.length });
+    if (el.victoryOverlayTitle) el.victoryOverlayTitle.textContent = t("victory.realmTitle");
+    if (el.victoryJourneyBtn) el.victoryJourneyBtn.textContent = t("victory.seeJourney");
+    if (el.victoryCloseBtn) el.victoryCloseBtn.textContent = t("victory.continue");
+    return;
+  }
   const question = String(status?.goal_question || "").trim();
   const title = status?.goal_article || "";
   if (el.victoryQuestion) {
@@ -1836,6 +2033,7 @@ function rleTrackItems(items) {
         crossroad: Boolean(item.crossroad),
         unlocked: Boolean(item.unlocked),
         fork: Number(item.fork) || 0,
+        topic: item.topic || "",
         forkProgress: item.forkProgress || null,
         count: 1,
         startLabel: item.label,
@@ -1914,7 +2112,7 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, forkProgress = null }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, topic = "", forkProgress = null }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
@@ -1922,12 +2120,13 @@ function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, ti
   if (crossroad) seg.classList.add("crossroad");
   if (crossroad && unlocked) seg.classList.add("unlocked");
   if (crossroad && fork > 0) seg.dataset.fork = String(fork);
+  if (crossroad) setTopic(seg, topic);
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
   }
   if (title) seg.title = title;
-  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork);
+  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork, topic);
   trackEl.appendChild(seg);
 }
 
@@ -1963,8 +2162,11 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
           crossroad: Boolean(run.crossroad),
           unlocked: Boolean(run.unlocked),
           fork: Number(run.fork) || 0,
+          topic: run.topic || "",
           forkProgress: run.forkProgress || null,
-          title: `${kind} ${individualStart + i}`,
+          title: run.crossroad && run.topic
+            ? `${kind} ${individualStart + i} · ${t("realm.name", { topic: topicLabel(run.topic) })}`
+            : `${kind} ${individualStart + i}`,
         });
       }
     };
@@ -2010,6 +2212,11 @@ function renderRoundsTrack(status) {
       : Math.trunc(Number(cr?.branch_id)) + 1;
     if (fork > 0) forkByRound.set(round, fork);
   }
+  const topicByFork = new Map();
+  for (const branch of Array.isArray(status.branches) ? status.branches : []) {
+    const fork = Math.trunc(Number(branch?.id)) + 1;
+    if (fork > 0 && branch?.theme_tag) topicByFork.set(fork, String(branch.theme_tag));
+  }
   const progressByFork = forkProgressByNumber(status);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
@@ -2023,6 +2230,7 @@ function renderRoundsTrack(status) {
       crossroad: crossroads.has(i),
       unlocked: unlockedCross.has(i),
       fork,
+      topic: fork ? (topicByFork.get(fork) || "") : "",
       forkProgress: fork ? (progressByFork.get(fork) || null) : null,
       label: `${t("track.kindRound")} ${i}`,
     });
@@ -2040,7 +2248,8 @@ function renderRoundsTrack(status) {
 
 function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
-  if (status?.practice) {
+  if (status?.practice || isRealmMaster(status)) {
+    // Realm Master has no fragments or Grand Goal; the Realms checklist is the goal HUD.
     if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
     if (el.goalRow) el.goalRow.classList.add("hidden");
     setHoverWikiTitle(el.goalHover, "");
@@ -2135,7 +2344,8 @@ function renderToolIcons(status) {
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
   const key = el.toolIconsRow.querySelector('[data-tool="key"]');
-  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0;
+  // Topic Realms use Portals (shown in the Realms list), not Branch Keys.
+  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0 && !status.topic_portals;
   const keyCount = Math.max(0, Number(status.branch_keys_available) || 0);
   if (key) {
     key.classList.toggle("hidden", !hasBranches);
@@ -3293,6 +3503,9 @@ function applyHUDStatus(status) {
   if (status.boss_completed) {
     el.targetText.textContent = t("hud.goalComplete");
     setTargetSummaryTitle("");
+  } else if (!status.current_target && isRealmMaster(status)) {
+    el.targetText.textContent = t("hud.mainRoadDone");
+    setTargetSummaryTitle("");
   } else {
     el.targetText.textContent = status.current_target || "...";
     setTargetSummaryTitle(status.current_target || "");
@@ -3303,6 +3516,7 @@ function applyHUDStatus(status) {
   renderFragmentsTrack(status);
   renderBranchTargets(status);
   renderCrossroadBadge(status);
+  renderRealmsBlock(status);
   if (el.journeyBtn) {
     el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
   }
@@ -3339,7 +3553,12 @@ function applyHUDStatus(status) {
     const path = (Array.isArray(status.paths) ? status.paths : []).find(
       (item) => item && item.id === `branch:${id}`
     );
-    toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
+    const branch = branchById(status, id);
+    if (branch?.portal_item) {
+      toast(t("toast.realmUnlocked", { realm: realmName(branch, status) }), "ok", 7000);
+    } else {
+      toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
+    }
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
   if (status.last_error) {
@@ -3536,10 +3755,16 @@ function initDebugDisplayPanel() {
     debugBtn("All lenses", () => runDebugAction("grant_lenses")),
     debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
     debugBtn("Max scroll", () => runDebugAction("grant_scroll")),
+    debugBtn("Open all branches / Portals", () => runDebugAction("unlock_all_branches")),
+    debugBtn("Advance live Realms +1", () => runDebugAction("complete_branch_rounds")),
   ]));
   const itemSelect = document.createElement("select");
   itemSelect.className = "debug-input";
+  const seedPortals = (Array.isArray(state.status?.branches) ? state.status.branches : [])
+    .map((branch) => String(branch?.portal_item || ""))
+    .filter(Boolean);
   for (const name of [
+    ...seedPortals,
     "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
     "Branch Key",
     "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
@@ -4808,6 +5033,7 @@ if (el.teleportBtn) {
 bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();
+bindThemeToggle();
 bindStuckHelper();
 initSidePanelToggles();
 showMigrateBannerIfNeeded();

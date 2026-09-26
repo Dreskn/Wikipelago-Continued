@@ -41,3 +41,30 @@ for index, letter in enumerate("ABCDEFGHIJKLMNOPQRSTUVWXYZ", start=20):
     item_table[f"Search Letter {letter}"] = WikipelagoItemData(ITEM_OFFSET + index, ItemClassification.useful)
 
 TRAP_ITEM_NAMES: tuple[str, ...] = ("Foggy Links", "Missing Links", "Wrong Wiki")
+
+# Topic Realms (1.1): one Portal per article-pool tag. Order is the datapackage order — append only.
+PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
+    "video_games": "Video Games Portal",
+    "movies": "Film Portal",
+    "tv_shows": "Television Portal",
+    "anime_manga": "Anime & Manga Portal",
+    "sports": "Sports Portal",
+    "science_space": "Science & Space Portal",
+    "technology": "Technology Portal",
+    "history": "History Portal",
+    "geography": "Geography Portal",
+    "food_cuisine": "Food Portal",
+    "art_literature": "Arts & Literature Portal",
+    "mythology_folklore": "Mythology Portal",
+    "music": "Music Portal",
+    "politics": "Politics Portal",
+    "famous_people": "People Portal",
+    "miscellaneous": "Curiosities Portal",
+    "animals": "Animals Portal",
+    "biology_medicine": "Biology & Medicine Portal",
+}
+
+for index, portal_name in enumerate(PORTAL_ITEM_BY_TOPIC.values(), start=50):
+    item_table[portal_name] = WikipelagoItemData(ITEM_OFFSET + index, ItemClassification.progression)
+
+PORTAL_ITEM_NAMES: tuple[str, ...] = tuple(PORTAL_ITEM_BY_TOPIC.values())

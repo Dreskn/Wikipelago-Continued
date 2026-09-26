@@ -123,10 +123,10 @@ try {
     Assert-HasPattern $ciPath 'AP_REF: "0\.6\.7"' 'CI Generate must pin Archipelago 0.6.7'
     Assert-HasPattern $ciPath 'world/ci_generate.py' 'CI must run world/ci_generate.py'
     Assert-HasPattern ([System.IO.Path]::Combine($Root, "ci_generate.py")) 'wikipelago.apworld' 'world/ci_generate.py must install the built apworld'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.0\.3\s*$' 'YAML template is missing requires.game.Wikipelago 1.0.3'
-    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.0.3"' 'Bridge client version must be 1.0.3'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.1\.0\s*$' 'YAML template is missing requires.game.Wikipelago 1.1.0'
+    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.1.0"' 'Bridge client version must be 1.1.0'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
-    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.0.3"' 'World full_version must be 1.0.3'
+    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.1.0"' 'World full_version must be 1.1.0'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
     Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
@@ -324,7 +324,8 @@ try {
     Assert-NoPattern $bridgePath 'all\(loc in self\.state\.checked_locations for loc in self\.state\.location_round_ids\)' 'Bridge must not declare goal when only all rounds are checked'
     Assert-HasPattern $initPath 'needed_from_remaining = round_count \+ 1' 'World must sample opening start plus N non-goal targets'
     Assert-NoPattern $initPath 'targets = non_final_targets \+ \[self\.goal_article\]' 'World must not append goal_article as the final round target'
-    Assert-HasPattern $initPath 'used_titles = \{first_start, \*targets, self\.goal_article\}' 'World must keep Grand Goal out of round targets'
+    Assert-HasPattern $initPath 'used_titles = \{first_start, \*targets\}' 'World must track opening start and round targets as used'
+    Assert-HasPattern $initPath 'used_titles\.add\(self\.goal_article\)' 'World must keep Grand Goal out of round targets'
     Assert-HasPattern $bridgePath 'goal_article_title' 'Bridge must store slot_data goal_article separately'
     Assert-HasPattern $bridgePath '"rounds_completed"' 'Bridge status rounds_completed is missing'
     Assert-HasPattern $bridgePath 'round_index < len\(self\.round_pairs\)' 'Bridge must allow reroll on the final normal round'
@@ -425,7 +426,7 @@ try {
     Assert-HasPattern $webAppPath 'dataset.fork' 'Web crossroad fork numbers on the track hook are missing'
     Assert-HasPattern $webIndexPath 'hud.targets' 'Web Targets heading is missing'
     Assert-HasPattern $webIndexPath 'target-list' 'Web target rows must sit under a Targets divider'
-    Assert-HasPattern $webCssPath 'border-bottom: 1px solid #314557' 'Web target list must have a matching line below the rows'
+    Assert-HasPattern $webCssPath 'border-bottom: 1px solid var\(--line\)' 'Web target list must have a matching line below the rows'
     Assert-HasPattern $webI18nPath '"hud.rounds": "Progression"' 'Web Rounds heading must be renamed Progression'
     Assert-HasPattern $webI18nPath '"hud.forkTarget": "Branch {n}"' 'Web target labels must say Branch N'
     Assert-HasPattern $webAppPath '/journey' 'Web journey API client is missing'
@@ -484,7 +485,9 @@ try {
     Assert-HasPattern $initPath '_display_unlock_items' 'Display unlock helper is missing'
     Assert-HasPattern $initPath 'def create_event' 'World create_event helper is missing'
     Assert-HasPattern $initPath 'place_locked_item\(self\.create_item\("Victory"\)\)' 'Grand Goal must lock a real Victory item id for hosting'
-    Assert-NoPattern $initPath 'place_locked_item\(self\.create_event\("Victory"\)\)' 'Grand Goal must not lock a None-id Victory event'
+    Assert-NoPattern $initPath 'grand_goal\.place_locked_item\(self\.create_event\("Victory"\)\)' 'Grand Goal must not lock a None-id Victory event'
+    # Realm Master uses an id-less "Goal Complete" event location, which must hold the event Victory.
+    Assert-HasPattern $initPath 'goal_complete\.place_locked_item\(self\.create_event\("Victory"\)\)' 'Realm Master Goal Complete must lock the event Victory'
     Assert-HasPattern $itemsPath '"Victory"' 'Victory must exist as a datapackage item (locked on Grand Goal only)'
     Write-Pass "Known bad title regressions are absent from source pools"
 } catch {
@@ -579,7 +582,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.0\.3"' 'Packaged world_version should be 1.0.3'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.1\.0"' 'Packaged world_version should be 1.1.0'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

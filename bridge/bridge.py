@@ -1,4 +1,4 @@
-﻿
+
 import argparse
 import asyncio
 import json
@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-cloud")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.0.3"
+CLIENT_VERSION = "1.1.0"
 TELEPORT_COOLDOWN_SEC = 60
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -114,6 +114,31 @@ DEFAULT_ITEMS = {
     "Branch Key": 1_870_048,
     "Wrong Wiki": 1_870_049,
 }
+
+# Topic Realms: must match world Items.PORTAL_ITEM_BY_TOPIC (same order, ids from +50).
+PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
+    "video_games": "Video Games Portal",
+    "movies": "Film Portal",
+    "tv_shows": "Television Portal",
+    "anime_manga": "Anime & Manga Portal",
+    "sports": "Sports Portal",
+    "science_space": "Science & Space Portal",
+    "technology": "Technology Portal",
+    "history": "History Portal",
+    "geography": "Geography Portal",
+    "food_cuisine": "Food Portal",
+    "art_literature": "Arts & Literature Portal",
+    "mythology_folklore": "Mythology Portal",
+    "music": "Music Portal",
+    "politics": "Politics Portal",
+    "famous_people": "People Portal",
+    "miscellaneous": "Curiosities Portal",
+    "animals": "Animals Portal",
+    "biology_medicine": "Biology & Medicine Portal",
+}
+for _portal_index, _portal_name in enumerate(PORTAL_ITEM_BY_TOPIC.values(), start=50):
+    DEFAULT_ITEMS[_portal_name] = 1_870_000 + _portal_index
+PORTAL_ITEM_NAMES = frozenset(PORTAL_ITEM_BY_TOPIC.values())
 
 TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links", "Wrong Wiki"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
@@ -297,6 +322,8 @@ class SessionState:
     practice_pool_titles: list[str] = field(default_factory=list)
     ap_server: str = ""
     slot_name: str = ""
+    goal: str = "grand_goal"
+    topic_portals: bool = False
     check_count: int = 10
     required_fragments: int = 8
     start_rounds_unlocked: int = 5
@@ -408,10 +435,67 @@ class SessionState:
             return self.round_pairs[-1]["target"]
         return self.round_pairs[self.round_index]["start"]
 
+    def is_realm_master(self) -> bool:
+        return self.goal == "realm_master"
+
     def goal_article(self) -> str:
+        if self.is_realm_master():
+            return ""
         if self.goal_article_title:
             return self.goal_article_title
         return self.round_pairs[-1]["target"] if self.round_pairs else ""
+
+    def realm_cleared(self, branch_id: int) -> bool:
+        try:
+            loc_ids = self.location_branch_ids[int(branch_id)]
+        except Exception:
+            return False
+        return bool(loc_ids) and all(loc_id in self.checked_locations for loc_id in loc_ids)
+
+    def realms_cleared_count(self) -> int:
+        return sum(1 for bid in range(len(self.location_branch_ids)) if self.realm_cleared(bid))
+
+    def realm_master_met(self) -> bool:
+        if not self.is_realm_master() or not self.location_branch_ids:
+            return False
+        return self.realms_cleared_count() >= len(self.location_branch_ids)
+
+    def branch_portal_item(self, branch_id: int) -> str:
+        branch = self.branch_by_id(branch_id)
+        return str((branch or {}).get("portal_item") or "")
+
+    def realms_payload(self) -> list[dict[str, Any]]:
+        """One row per branch / Realm for the HUD (locked, open, cleared)."""
+        unlocked = set(self.unlocked_branch_ids())
+        crossroad_by_branch: dict[int, int] = {}
+        for cr in self.crossroads:
+            try:
+                crossroad_by_branch[int(cr.get("branch_id") or 0)] = int(cr.get("main_round") or 0)
+            except Exception:
+                continue
+        rows: list[dict[str, Any]] = []
+        for branch in self.branches:
+            try:
+                bid = int(branch.get("id") or 0)
+            except Exception:
+                continue
+            pairs = branch.get("pairs") or []
+            length = len(pairs) if isinstance(pairs, list) else 0
+            idx = int(self.branch_round_index.get(bid, 0) or 0)
+            portal = str(branch.get("portal_item") or "")
+            rows.append({
+                "id": bid,
+                "fork": bid + 1,
+                "theme_tag": str(branch.get("theme_tag") or ""),
+                "portal_item": portal,
+                "has_portal": bool(portal) and self.has_item(portal),
+                "crossroad_round": crossroad_by_branch.get(bid, 0),
+                "unlocked": bid in unlocked,
+                "completed": min(idx, length),
+                "length": length,
+                "cleared": self.realm_cleared(bid),
+            })
+        return rows
 
     def fragments(self) -> int:
         fragment_id = self.item_ids.get("Knowledge Fragment", DEFAULT_ITEMS["Knowledge Fragment"])
@@ -454,7 +538,7 @@ class SessionState:
         return sorted(letters)
 
     def boss_ready(self) -> bool:
-        if self.practice:
+        if self.practice or self.is_realm_master():
             return False
         return self.fragments() >= self.required_fragments
 
@@ -546,6 +630,8 @@ class SessionState:
         return self.item_count("Branch Key")
 
     def branch_keys_available(self) -> int:
+        if self.topic_portals:
+            return 0
         return max(0, self.branch_key_count() - len(self.unlocked_branch_ids()))
 
     def reached_main_round(self) -> int:
@@ -570,6 +656,12 @@ class SessionState:
         return [branch_id for _main, branch_id in completed]
 
     def unlocked_branch_ids(self) -> list[int]:
+        if self.topic_portals:
+            # Topic Realms: finished crossroad + that Realm's own Portal, in any order.
+            return [
+                bid for bid in self.completed_crossroad_branch_ids()
+                if self.branch_portal_item(bid) and self.has_item(self.branch_portal_item(bid))
+            ]
         keys = self.branch_key_count()
         if keys <= 0:
             return []
@@ -591,11 +683,14 @@ class SessionState:
                 continue
             unlocked = self.is_branch_unlocked(branch_id)
             branch = self.branch_by_id(branch_id)
+            portal = str((branch or {}).get("portal_item") or "")
             return {
                 "main_round": main_round,
                 "branch_id": branch_id,
                 "fork": branch_id + 1,
                 "theme_tag": str((branch or {}).get("theme_tag") or ""),
+                "portal_item": portal,
+                "has_portal": bool(portal) and self.has_item(portal),
                 "unlocked": unlocked,
                 "needs_key": not unlocked,
             }
@@ -671,6 +766,7 @@ class SessionState:
                 "id": bid,
                 "fork": bid + 1,
                 "theme_tag": str(branch.get("theme_tag") or ""),
+                "portal_item": str(branch.get("portal_item") or ""),
                 "target": str(pairs[idx].get("target") or ""),
                 "round": min(idx + 1, max(len(pairs), 1)),
                 "length": len(pairs),
@@ -796,6 +892,10 @@ class SessionState:
         return {
             "connected_to_ap": self.connected_to_ap,
             "practice": self.practice,
+            "goal": self.goal,
+            "topic_portals": self.topic_portals,
+            "realms": self.realms_payload(),
+            "realms_cleared": self.realms_cleared_count(),
             "ap_server": self.ap_server,
             "slot_name": self.slot_name,
             "current_start": self.current_start(),
@@ -881,7 +981,10 @@ class SessionState:
             "crossroads": list(self.crossroads),
             "crossroad_rounds": self.crossroad_rounds(),
             "unlocked_crossroad_rounds": self.unlocked_crossroad_rounds(),
-            "branches": list(self.branches),
+            "branches": [
+                {key: value for key, value in branch.items() if key != "reroll_pool"}
+                for branch in self.branches
+            ],
             "unlocked_branch_ids": self.unlocked_branch_ids(),
             "live_branch_targets": self.live_branch_targets(),
             "branch_key_count": self.branch_key_count(),
@@ -951,6 +1054,8 @@ class APConnection:
         self.state.crossroads = []
         self.state.branches = []
         self.state.branch_round_index = {}
+        self.state.goal = "grand_goal"
+        self.state.topic_portals = False
         if fresh_race:
             self.state.clicks_used = 0
             self.state.path_last_page = {"main": start}
@@ -1367,11 +1472,22 @@ class APConnection:
                         target = self._canonicalize_known_title(str(pair.get("target", "")).strip())
                         if start and target:
                             pairs.append({"start": start, "target": target})
-                parsed_branches.append({
+                parsed_branch: dict[str, Any] = {
                     "id": bid,
                     "theme_tag": str(item.get("theme_tag") or ""),
                     "pairs": pairs,
-                })
+                }
+                portal = str(item.get("portal_item") or "").strip()
+                if portal:
+                    parsed_branch["portal_item"] = portal
+                realm_pool = item.get("reroll_pool")
+                if isinstance(realm_pool, list):
+                    parsed_branch["reroll_pool"] = [
+                        self._canonicalize_known_title(str(title).strip())
+                        for title in realm_pool
+                        if str(title).strip()
+                    ]
+                parsed_branches.append(parsed_branch)
                 self.state.branch_round_index[bid] = 0
             self.state.branches = parsed_branches
 
@@ -1402,6 +1518,9 @@ class APConnection:
                 if str(title).strip()
             ]
 
+        goal_raw = str(slot_data.get("goal") or "grand_goal").strip().lower()
+        self.state.goal = goal_raw if goal_raw in ("grand_goal", "realm_master") else "grand_goal"
+        self.state.topic_portals = bool(slot_data.get("topic_portals", False))
         self.state.check_count = int(slot_data.get("check_count", len(self.state.round_pairs)))
         self.state.required_fragments = int(slot_data.get("required_fragments", self.state.required_fragments))
         self.state.start_rounds_unlocked = int(slot_data.get("start_rounds_unlocked", self.state.start_rounds_unlocked))
@@ -1582,6 +1701,11 @@ class APConnection:
             self.state.branch_round_index[bid] = restored_branch_index
 
         if self.state.location_grand_goal and self.state.location_grand_goal in checked:
+            self.state.boss_completed = True
+            if assume_goal_already_sent:
+                self.state.goal_status_sent = True
+        if self.state.realm_master_met():
+            # Realm Master: no goal location; completion is "every Realm's last round checked".
             self.state.boss_completed = True
             if assume_goal_already_sent:
                 self.state.goal_status_sent = True
@@ -2653,10 +2777,16 @@ class APConnection:
         page_title = await self._canonicalize_title(page_title)
         self._remember_page(page_title)
 
-        target = await self._canonicalize_title(self.state.current_target())
-        self._set_active_pair_target(target)
-        await self._update_compass_hint(page_title, target)
-        matched_main = await self._titles_match(page_title, target)
+        raw_target = self.state.current_target()
+        if raw_target:
+            target = await self._canonicalize_title(raw_target)
+            self._set_active_pair_target(target)
+            await self._update_compass_hint(page_title, target)
+            matched_main = await self._titles_match(page_title, target)
+        else:
+            # Realm Master after the last main round: only Realm targets remain.
+            target = ""
+            matched_main = False
 
         result: dict[str, Any] = {
             "matched": matched_main,
@@ -2801,8 +2931,11 @@ class APConnection:
 
         pool = list(self.state.reroll_pool)
 
-        async def _pick(blocked_titles: set[str]) -> tuple[str, str] | None:
-            candidates = [title for title in pool if _norm(title) not in blocked_titles]
+        async def _pick(blocked_titles: set[str], only: set[str] | None = None) -> tuple[str, str] | None:
+            candidates = [
+                title for title in pool
+                if _norm(title) not in blocked_titles and (only is None or _norm(title) in only)
+            ]
             if not candidates:
                 return None
             picked = random.choice(candidates)
@@ -2818,7 +2951,16 @@ class APConnection:
 
         picks: list[tuple[dict[str, Any], str, str]] = []
         for slot in slots:
-            chosen = await _pick(blocked)
+            realm_titles: set[str] | None = None
+            if slot.get("kind") == "branch":
+                realm = self.state.branch_by_id(int(slot.get("branch_id") or 0)) or {}
+                realm_pool = realm.get("reroll_pool")
+                if isinstance(realm_pool, list) and realm_pool:
+                    realm_titles = {_norm(title) for title in realm_pool}
+            chosen = await _pick(blocked, realm_titles) if realm_titles else None
+            if not chosen:
+                # Off-topic fallback once a Realm's own slice runs dry.
+                chosen = await _pick(blocked)
             if not chosen:
                 return {
                     "ok": False,
@@ -2851,6 +2993,11 @@ class APConnection:
             changes.append(change)
             if old_target and _norm(old_target) != _norm(self.state.goal_article()):
                 recycled.append(old_target)
+                if slot.get("kind") == "branch":
+                    realm = self.state.branch_by_id(int(slot.get("branch_id") or 0)) or {}
+                    realm_pool = realm.get("reroll_pool")
+                    if isinstance(realm_pool, list) and all(_norm(t) != _norm(old_target) for t in realm_pool):
+                        realm_pool.append(old_target)
 
         for old_target in recycled:
             if _title_still_used(old_target):
@@ -2998,6 +3145,17 @@ class APConnection:
 
     async def try_finish_boss(self) -> None:
         if self.state.boss_completed:
+            return
+        if self.state.is_realm_master():
+            if not self.state.realm_master_met():
+                return
+            self.state.boss_completed = True
+            await self.send_goal_status()
+            await self._append_travel_event(
+                "realm_master",
+                self.state.last_page,
+                extra={"path": "main"},
+            )
             return
         if not self.state.boss_ready():
             return
@@ -3172,7 +3330,12 @@ class APConnection:
                 }
 
             if action == "unlock_all_branches":
-                need = max(0, len(self.state.branches))
+                if self.state.topic_portals:
+                    for branch in self.state.branches:
+                        portal = str(branch.get("portal_item") or "")
+                        if portal and not self.state.has_item(portal):
+                            await self._debug_grant_named(portal, unique=True, fire_trap=False)
+                need = 0 if self.state.topic_portals else max(0, len(self.state.branches))
                 while self.state.item_count("Branch Key") < need:
                     await self._debug_grant_named("Branch Key", unique=False, fire_trap=False)
                 return {
@@ -3310,7 +3473,25 @@ class APConnection:
                 self._queue_event({"type": "death", "source": "Debug", "cause": cause})
                 return {"ok": True, "action": action, "status": self.state.to_status()}
 
+            if action == "complete_branch_rounds":
+                # Advance every live Realm / branch by one round (sends real checks).
+                completed: list[dict[str, Any]] = []
+                for bid in list(self.state.unlocked_branch_ids()):
+                    idx = int(self.state.branch_round_index.get(bid, 0) or 0)
+                    result = await self._debug_complete_branch_at(bid, idx)
+                    if result.get("advanced"):
+                        completed.append(result)
+                await self.try_finish_boss()
+                await self.ensure_goal_status_if_complete()
+                if not completed:
+                    return {"ok": False, "error": "no live branch rounds", "status": self.state.to_status()}
+                return {"ok": True, "action": action, "completed": completed, "status": self.state.to_status()}
+
             if action == "finish_boss":
+                if self.state.is_realm_master():
+                    self.state.boss_completed = True
+                    await self.send_goal_status()
+                    return {"ok": True, "action": action, "status": self.state.to_status()}
                 self._debug_set_item_count("Knowledge Fragment", max(self.state.required_fragments, self.state.fragments()))
                 if self.state.location_grand_goal:
                     await self.send_location_checks([self.state.location_grand_goal])

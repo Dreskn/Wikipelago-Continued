@@ -475,6 +475,26 @@ class AdditionalBranchKeys(Range):
     default = 1
 
 
+class TopicPortals(Toggle):
+    """Topic Realms. Every branch becomes a Realm with its own topic (History, Music, ...) and
+    is opened by that topic's Portal item instead of generic Branch Keys, so Realms open in any order.
+    Each Realm needs a distinct enabled category with at least Branch Length unused articles.
+    Additional Branch Keys is ignored when this is on."""
+    display_name = "Topic Portals"
+    default = 0
+
+
+class Goal(Choice):
+    """How the seed is won.
+    grand_goal: collect Required Fragments, then find the answer to the Grand Goal question.
+    realm_master: clear the last round of every branch / Realm. Needs Branch Count of at least 1;
+    Knowledge Fragments and the Grand Goal are not generated."""
+    display_name = "Goal"
+    option_grand_goal = 0
+    option_realm_master = 1
+    default = 0
+
+
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
     check_count: CheckCount
@@ -534,3 +554,5 @@ class WikipelagoOptions(PerGameCommonOptions):
     branch_count: BranchCount
     branch_length: BranchLength
     additional_branch_keys: AdditionalBranchKeys
+    topic_portals: TopicPortals
+    goal: Goal

@@ -12,7 +12,7 @@ description: Default Wikipelago player template
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 1.0.3
+    Wikipelago: 1.1.0
 
 Wikipelago:
 
@@ -28,6 +28,9 @@ Wikipelago:
   # Grand Goal is always a closed question from that wiki language's goal pool
   # (answer page preferred from enabled categories). random_goal_article is kept for
   # old YAMLs and is ignored.
+  # goal: grand_goal (fragments, then the Grand Goal question) |
+  #   realm_master (clear every branch / Realm; needs branch_count >= 1; no fragments or Grand Goal).
+  goal: grand_goal
   progression_balancing: 50
   check_count: 40
   required_fragments: 7
@@ -81,9 +84,14 @@ Wikipelago:
   # 0 disables the whole system.
   # branch_count: 0–8 (default 2). branch_length: 1–20 rounds per branch (default 5).
   # additional_branch_keys: 0–8 extra keys in the pool (default 1).
+  # topic_portals: Topic Realms. Each branch gets its own topic (History, Music, ...)
+  #   and opens with that topic's Portal item instead of Branch Keys, in any order.
+  #   Realm rerolls stay on topic. Needs a distinct enabled category per Realm.
+  #   additional_branch_keys is ignored when this is on.
   branch_count: 2
   branch_length: 5
   additional_branch_keys: 1
+  topic_portals: true
 
   # =============================================================================
   # Wikipedia language & article pool

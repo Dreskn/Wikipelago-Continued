@@ -16,7 +16,11 @@ def create_regions(world: "WikipelagoWorld") -> None:
         data = location_table[name]
         game.add_locations({name: data.code}, world.location_class)
 
-    game.add_locations({"Grand Goal": location_table["Grand Goal"].code}, world.location_class)
+    if world._goal_is_grand_goal():
+        game.add_locations({"Grand Goal": location_table["Grand Goal"].code}, world.location_class)
+    else:
+        # Realm Master: generation-only event location, holds the Victory event.
+        game.add_locations({"Goal Complete": None}, world.location_class)
 
     if world.options.toggle_bingo_letterpairs.value:
         grid_size = world.options.bingo_letterpairs_grid.value

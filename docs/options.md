@@ -51,6 +51,29 @@ On by default (`branch_count: 2`). Some main-road rounds become crossroads and *
 
 On the client: live branch targets list under the main road, a small crossroad cue appears on those rounds, and **Journey** includes the side paths.
 
+### Topic Realms (1.1)
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `topic_portals` | `false` (template: `true`) | Every branch becomes a **Realm** with its own topic (History, Music, Sports, ...). Each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...) instead of Branch Keys, so Realms open in whatever order their Portals arrive. |
+
+- A Realm needs its Portal **and** its crossroad round finished (either order).
+- Every Realm gets a different enabled category with at least `branch_length` spare articles. Generation stops with a clear message if there are not enough, so lower `branch_count` / `branch_length` or enable more `include_*` categories.
+- Realm target rerolls stay on topic (off-topic only once the Realm's own slice runs dry).
+- `additional_branch_keys` is ignored while this is on.
+
+On the client each Realm has its own color on the round track, in the target list, in the **Realms** checklist and on the Journey map. The main road stays brass.
+
+---
+
+## Goal
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `goal` | `grand_goal` | `grand_goal`: collect `required_fragments`, then land on the answer to the Grand Goal question. `realm_master`: clear the last round of every branch / Realm. |
+
+`realm_master` needs `branch_count` of at least 1. It generates no Knowledge Fragments and no Grand Goal; the **Realms** checklist is your goal tracker. It works with or without `topic_portals`, but it is built for it.
+
 ### Letter-pair bingo
 
 When `toggle_bingo_letterpairs` is on (default), you get `bingo_cards_start` boards (default **1**) of size `bingo_letterpairs_grid` (3–20, default **5**). Set start to **0** to keep every board locked until **Progressive Bingo Card** items (`bingo_card_unlocks`, default **2**). Bingo on with start **0** and unlocks **0** is rejected (no boards). `bingo_stamp_unlocks` (default **2**) adds **Progressive Bingo Stamp** items that each fill one empty cell.
@@ -59,7 +82,7 @@ On the client: unlocked boards stamp in parallel from page titles; click a board
 
 ---
 
-## Grand Goal article
+## Grand Goal article (goal: grand_goal)
 
 | Option | Default | What it does |
 | --- | --- | --- |
