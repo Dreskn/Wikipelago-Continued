@@ -1307,7 +1307,7 @@ class APConnection:
         while True:
             try:
                 ws_url = self._to_ws_url(self.server)
-                async with websockets.connect(ws_url, ping_interval=20, ping_timeout=20, max_size=2**22) as ws:
+                async with websockets.connect(ws_url, ping_interval=20, ping_timeout=20, max_size=2**24) as ws:
                     self.ws = ws
                     await self._handshake(ws)
                     fail_streak = 0
