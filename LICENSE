@@ -29,6 +29,9 @@ HUD tool icons in web/app.js (TOOL_ICON_SVGS) are from Lucide
 Used icons: undo-2, dices, search, compass, key-round, mouse, a-large-small,
 gauge, skull, share-2, shuffle, bomb, triangle-alert, life-buoy.
 
+Card heading icons in web/style.css: plug, route, backpack, lock-open, grid-3x3,
+glasses, flame, bug.
+
 ISC License
 
 Copyright (c) 2026 Lucide Icons and Contributors
@@ -57,8 +60,9 @@ files:
 
 ---
 
-The Lucide icons search, compass, share-2, and triangle-alert (formerly
-alert-triangle) are derived from the Feather project:
+The Lucide icons search, compass, share-2, triangle-alert (formerly
+alert-triangle), lock-open (formerly unlock), and grid-3x3 (formerly grid) are
+derived from the Feather project:
 
 The MIT License (MIT)
 
