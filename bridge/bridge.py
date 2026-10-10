@@ -25,6 +25,10 @@ LOG = logging.getLogger("wikipelago-cloud")
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
 CLIENT_VERSION = "1.1.0"
 TELEPORT_COOLDOWN_SEC = 60
+# Wiki Compass: backlink pages (500 titles each) fetched per target, once per session.
+COMPASS_BACKLINK_PAGES = 2
+# Wikimedia asks API clients for a descriptive User-Agent with a contact URL; vague ones get throttled first.
+WIKI_USER_AGENT = f"WikipelagoBridge/{CLIENT_VERSION} (https://github.com/Dreskn/Wikipelago-Continued)"
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -195,6 +199,25 @@ def normalize_title(title: str) -> str:
     spaced = " ".join(title.replace("_", " ").strip().split())
     deaccented = "".join(ch for ch in unicodedata.normalize("NFKD", spaced) if not unicodedata.combining(ch))
     return deaccented.casefold()
+
+
+def compass_hint(previous: tuple[int, int] | None, current: tuple[int, int]) -> str:
+    """Wiki Compass word for a (level, overlap) reading compared with the previous one for that target."""
+    level, overlap = current
+    if level == 0:
+        return "On target"
+    if previous is None:
+        return "Calibrating"
+    prev_level, prev_overlap = previous
+    if level != prev_level:
+        return "Warmer" if level < prev_level else "Colder"
+    # Same level: compare link overlap, ignoring small wobbles (about 12%).
+    margin = max(1, prev_overlap // 8)
+    if overlap >= prev_overlap + margin:
+        return "Warmer"
+    if overlap <= prev_overlap - margin:
+        return "Colder"
+    return "Same"
 
 
 # Must match world/APWorldSource/wikipelago/letter_pairs.py (Scrabble alphabets).
@@ -389,7 +412,9 @@ class SessionState:
     visit_counts: dict[str, int] = field(default_factory=dict)
     travel_storage_ready: bool = False
     warmer_colder: str | None = None
-    last_distance_estimate: int | None = None
+    # Wiki Compass: last (level, overlap) reading per live target title, and which target the hint is about.
+    compass_memory: dict[str, tuple[int, int]] = field(default_factory=dict)
+    compass_target: dict[str, Any] | None = None
     boss_completed: bool = False
     goal_status_sent: bool = False
     last_error: str = ""
@@ -437,6 +462,30 @@ class SessionState:
 
     def is_realm_master(self) -> bool:
         return self.goal == "realm_master"
+
+    def reset_compass(self) -> None:
+        self.warmer_colder = None
+        self.compass_memory = {}
+        self.compass_target = None
+
+    def compass_targets(self) -> list[dict[str, Any]]:
+        """Live targets the Wiki Compass can point at: the main road plus every open branch / Realm."""
+        targets: list[dict[str, Any]] = []
+        if self.boss_completed:
+            return targets
+        main = self.current_target()
+        if main:
+            targets.append({"kind": "main", "title": main})
+        for live in self.live_branch_targets():
+            if live.get("target"):
+                targets.append({
+                    "kind": "branch",
+                    "branch_id": live["id"],
+                    "fork": live["fork"],
+                    "theme_tag": live["theme_tag"],
+                    "title": live["target"],
+                })
+        return targets
 
     def goal_article(self) -> str:
         if self.is_realm_master():
@@ -969,6 +1018,7 @@ class SessionState:
             "hatnotes_unlocked": (not self.randomize_hatnotes) or self.has_item("Hatnote Lens"),
             "references_unlocked": (not self.randomize_references) or self.has_item("Reference Lens"),
             "warmer_colder": self.warmer_colder,
+            "compass_target": self.compass_target,
             "boss_ready": self.boss_ready(),
             "boss_completed": self.boss_completed,
             "last_page": self.last_page,
@@ -1006,7 +1056,10 @@ class APConnection:
         self.password = ""
         self.items_seen = 0
         self.link_cache: dict[str, set[str]] = {}
+        self.backlink_cache: dict[str, tuple[set[str], set[str]]] = {}
         self.resolved_title_cache: dict[str, str] = {}
+        self._compass_seq = 0
+        self._compass_tasks: set[asyncio.Task] = set()
         self._scout_waiters: dict[int, asyncio.Future] = {}
         self._datapackage_requested = False
 
@@ -1063,8 +1116,7 @@ class APConnection:
             self.state.visit_counts = {}
             self.state.travel_storage_ready = False
             self.state.clicks_storage_ready = False
-        self.state.warmer_colder = None
-        self.state.last_distance_estimate = None
+        self.state.reset_compass()
         self.state.boss_completed = False
         self.state.goal_status_sent = False
 
@@ -1155,8 +1207,7 @@ class APConnection:
         self.state.received_items.clear()
         self.state.boss_completed = False
         self.state.goal_status_sent = False
-        self.state.warmer_colder = None
-        self.state.last_distance_estimate = None
+        self.state.reset_compass()
         self.state.pending_events.clear()
         self.state.bingo_letterpairs = False
         self.state.bingo_letterpairs_grid = 0
@@ -1201,6 +1252,7 @@ class APConnection:
             self.state.path_last_page = {}
         self.items_seen = 0
         self.link_cache.clear()
+        self.backlink_cache.clear()
         self.resolved_title_cache.clear()
         self._datapackage_requested = False
         for fut in self._scout_waiters.values():
@@ -1240,8 +1292,7 @@ class APConnection:
             self.state.active_path = "main"
             self.state.crossroads = []
             self.state.branches = []
-            self.state.warmer_colder = None
-            self.state.last_distance_estimate = None
+            self.state.reset_compass()
         if self.reader_task and not self.reader_task.done():
             self.reader_task.cancel()
             try:
@@ -2619,7 +2670,7 @@ class APConnection:
             req = urllib.request.Request(
                 url,
                 headers={
-                    "User-Agent": "WikipelagoBridge/1.0 (local bridge)",
+                    "User-Agent": WIKI_USER_AGENT,
                     "Accept": "application/json",
                 },
             )
@@ -2645,23 +2696,69 @@ class APConnection:
         lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
         return f"https://{lang}.wikipedia.org"
 
-    async def _estimate_click_distance(self, page_title: str, target_title: str) -> int | None:
-        page_norm = normalize_title(page_title)
+    def _fetch_backlinks(self, title: str) -> tuple[set[str], set[str]]:
+        """(articles linking to `title`, redirects to `title`), capped for very popular pages."""
+        norm = normalize_title(title)
+        cached = self.backlink_cache.get(norm)
+        if cached is not None:
+            return cached
+
+        backlinks: set[str] = set()
+        redirects: set[str] = set()
+        blcontinue: str | None = None
+        for _ in range(COMPASS_BACKLINK_PAGES):
+            params: dict[str, str] = {
+                "action": "query",
+                "list": "backlinks",
+                "bltitle": title,
+                "blnamespace": "0",
+                "blredirect": "1",
+                "bllimit": "max",
+                "format": "json",
+            }
+            if blcontinue:
+                params["blcontinue"] = blcontinue
+
+            url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": WIKI_USER_AGENT,
+                    "Accept": "application/json",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=8) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+
+            for entry in payload.get("query", {}).get("backlinks", []):
+                entry_title = str(entry.get("title", "")).strip()
+                if entry_title:
+                    (redirects if "redirect" in entry else backlinks).add(normalize_title(entry_title))
+                for sub in entry.get("redirlinks", []) or []:
+                    sub_title = str(sub.get("title", "")).strip()
+                    if sub_title:
+                        backlinks.add(normalize_title(sub_title))
+
+            blcontinue = payload.get("continue", {}).get("blcontinue")
+            if not blcontinue:
+                break
+
+        self.backlink_cache[norm] = (backlinks, redirects)
+        return backlinks, redirects
+
+    def _compass_reading(self, page_title: str, page_links: set[str], target_title: str) -> tuple[int, int]:
+        """(level, overlap) of a page against one target. Level 0: on it; 1: linked from the page;
+        2: two clicks away; 3: farther. Overlap counts the page's links into the target's
+        neighbourhood (pages linking to it or linked from it); higher is closer."""
         target_norm = normalize_title(target_title)
-        if page_norm == target_norm:
-            return 0
-
-        try:
-            page_links = await asyncio.to_thread(self._fetch_page_links, page_title)
-            if target_norm in page_links:
-                return 1
-
-            target_links = await asyncio.to_thread(self._fetch_page_links, target_title)
-            if page_links.intersection(target_links):
-                return 2
-            return 3
-        except Exception:
-            return None
+        if normalize_title(page_title) == target_norm:
+            return (0, 0)
+        backlinks, redirects = self._fetch_backlinks(target_title)
+        if target_norm in page_links or page_links & redirects:
+            return (1, 0)
+        target_links = self._fetch_page_links(target_title)
+        overlap = len(page_links & (backlinks | target_links))
+        return (2 if page_links & backlinks else 3, overlap)
 
 
     def _fetch_resolved_title(self, title: str) -> str:
@@ -2675,7 +2772,7 @@ class APConnection:
         req = urllib.request.Request(
             url,
             headers={
-                "User-Agent": "WikipelagoBridge/1.0 (local bridge)",
+                "User-Agent": WIKI_USER_AGENT,
                 "Accept": "application/json",
             },
         )
@@ -2710,31 +2807,52 @@ class APConnection:
         except Exception:
             return False
 
-    async def _update_compass_hint(self, page_title: str, target_title: str) -> None:
-        if not self.state.has_item("Wiki Compass"):
-            self.state.warmer_colder = None
-            self.state.last_distance_estimate = None
+    def _schedule_compass(self, page_title: str) -> None:
+        """Refresh the Wiki Compass in the background so checks never wait on Wikipedia;
+        the status poll picks the new hint up."""
+        if not page_title or not self.state.is_playable():
+            return
+        self._compass_seq += 1
+        task = asyncio.create_task(self._update_compass(page_title, self._compass_seq))
+        self._compass_tasks.add(task)
+        task.add_done_callback(self._compass_tasks.discard)
+
+    async def _update_compass(self, page_title: str, seq: int) -> None:
+        state = self.state
+        if not state.has_item("Wiki Compass"):
+            state.reset_compass()
+            return
+        targets = state.compass_targets()
+        if not targets:
+            state.warmer_colder = None
+            state.compass_target = None
             return
 
-        estimate = await self._estimate_click_distance(page_title, target_title)
-        if estimate is None:
-            self.state.warmer_colder = "No signal"
-            return
-        if estimate == 0:
-            self.state.warmer_colder = "On target"
-            self.state.last_distance_estimate = 0
+        readings: list[tuple[dict[str, Any], tuple[int, int]]] = []
+        try:
+            page = await self._canonicalize_title(page_title)
+            page_links = await asyncio.to_thread(self._fetch_page_links, page)
+        except Exception:
+            page_links = None
+        if page_links is not None:
+            for target in targets:
+                try:
+                    reading = await asyncio.to_thread(self._compass_reading, page, page_links, target["title"])
+                except Exception:
+                    continue
+                readings.append((target, reading))
+
+        if seq != self._compass_seq:
+            return  # The player already moved on; the newer reading wins.
+        if not readings:
+            state.warmer_colder = "No signal"
             return
 
-        previous = self.state.last_distance_estimate
-        if previous is None:
-            self.state.warmer_colder = "Calibrating"
-        elif estimate < previous:
-            self.state.warmer_colder = "Warmer"
-        elif estimate > previous:
-            self.state.warmer_colder = "Colder"
-        else:
-            self.state.warmer_colder = "Same"
-        self.state.last_distance_estimate = estimate
+        # Point at the nearest live target, compared with that target's own previous reading.
+        target, reading = min(readings, key=lambda item: (item[1][0], -item[1][1]))
+        state.warmer_colder = compass_hint(state.compass_memory.get(normalize_title(target["title"])), reading)
+        state.compass_target = target
+        state.compass_memory = {normalize_title(t["title"]): r for t, r in readings}
 
     async def send_goal_status(self) -> None:
         if self.ws is None:
@@ -2781,7 +2899,6 @@ class APConnection:
         if raw_target:
             target = await self._canonicalize_title(raw_target)
             self._set_active_pair_target(target)
-            await self._update_compass_hint(page_title, target)
             matched_main = await self._titles_match(page_title, target)
         else:
             # Realm Master after the last main round: only Realm targets remain.
@@ -2805,6 +2922,7 @@ class APConnection:
                 result["advanced"] = True
                 result["practice_rolled"] = True
                 result["hits"] = [{"kind": "main", "target": target}]
+            self._schedule_compass(page_title)
             result["status"] = self.state.to_status()
             result["next_target"] = self.state.current_target()
             return result
@@ -2878,6 +2996,8 @@ class APConnection:
 
         await self.try_finish_boss()
         await self.ensure_goal_status_if_complete()
+        # After any round advance, so a new target starts at "Calibrating" instead of reusing old readings.
+        self._schedule_compass(page_title)
         result["status"] = self.state.to_status()
         result["next_target"] = self.state.current_target()
         return result
@@ -3007,9 +3127,8 @@ class APConnection:
 
         self.state.reroll_pool = pool
         self.state.target_rerolls_used += 1
-        if any(change.get("kind") == "main" for change in changes):
-            self.state.warmer_colder = None
-            self.state.last_distance_estimate = None
+        # New targets have no Compass history yet: recalibrate on the page the player is on.
+        self._schedule_compass(self.state.last_page)
 
         main_change = next((item for item in changes if item.get("kind") == "main"), None)
         first = main_change or (changes[0] if changes else {})
@@ -3302,8 +3421,7 @@ class APConnection:
                 self.state.round_index = min(target_index, self.state.check_count)
                 self.state.sync_target_reroll_counter()
                 self.state.sync_back_counter()
-                self.state.warmer_colder = None
-                self.state.last_distance_estimate = None
+                self.state.reset_compass()
                 await self.try_finish_boss()
                 out: dict[str, Any] = {
                     "ok": True,
@@ -3420,8 +3538,7 @@ class APConnection:
                 new_target = await self._canonicalize_title(title)
                 if not self._set_active_pair_target(new_target):
                     return {"ok": False, "error": "no active round", "status": self.state.to_status()}
-                self.state.warmer_colder = None
-                self.state.last_distance_estimate = None
+                self.state.reset_compass()
                 return {
                     "ok": True,
                     "action": action,
@@ -3684,6 +3801,8 @@ class App:
             await session.conn._append_travel_event("death", page_title)
 
         if not submit_check:
+            # Back, death and restore still change the page the Compass reads.
+            session.conn._schedule_compass(page_title)
             return web.json_response({
                 "ok": True,
                 "matched": False,

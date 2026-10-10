@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.1.0";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -127,6 +127,8 @@ const TRACK_FORK_OVERFLOW_MIN = 3;
 const TRACK_EMPHASIS_MIN_PX = 24;
 /** Crossroad chip width on the main road. */
 const TRACK_CROSSROAD_PX = 48;
+// Narrowest crossroad hook when many Realms share a small track (matches the 24px spur).
+const TRACK_CROSSROAD_MIN_PX = 24;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
 const TRACK_PAD_X_PX = 4;
 
@@ -1023,6 +1025,17 @@ function portalName(tag) {
   return t("realm.portal", { topic: topicLabel(tag) });
 }
 
+/** "Warmer", plus which target it follows ("Warmer · History Realm") once branches are live. */
+function compassHintText(status) {
+  const raw = status.warmer_colder || "Calibrating";
+  const hint = I18n?.localizeCompassHint ? I18n.localizeCompassHint(raw) : raw;
+  const target = status.compass_target;
+  const live = Array.isArray(status.live_branch_targets) ? status.live_branch_targets : [];
+  if (!target || !live.length || raw === "No signal") return hint;
+  const label = target.kind === "branch" ? realmName(target, status) : t("path.main");
+  return `${hint} · ${label}`;
+}
+
 function pathLabel(path) {
   if (!path) return t("path.main");
   if (path.id === "main") return t("path.main");
@@ -1390,7 +1403,7 @@ function forkTopic(fork, status = state.status) {
 
 function journeyNodeFill(node) {
   const ink = cssVar("--ink-0", "#0e1020");
-  if (node.grandGoal) return { fill: cssVar("--paper", "#f3ecdc"), stroke: cssVar("--brass", "#e0915a") };
+  if (node.grandGoal) return { fill: cssVar("--journey-goal", "#f3ecdc"), stroke: cssVar("--journey-goal-stroke", "#e0915a") };
   if (node.mainRound) return { fill: cssVar("--brass", "#e0915a"), stroke: ink };
   if (node.forks.length) {
     const topic = forkTopic(node.forks[0]);
@@ -1554,6 +1567,11 @@ function isJourneyStandaloneWindow() {
 
 function syncJourneyFullscreenButton() {
   if (!el.journeyFullscreenBtn) return;
+  // iPhone Safari only allows fullscreen for video: hide the button instead of failing.
+  const panel = el.journeyOverlayPanel;
+  const supported = Boolean(panel && (panel.requestFullscreen || panel.webkitRequestFullscreen))
+    && document.fullscreenEnabled !== false;
+  el.journeyFullscreenBtn.classList.toggle("hidden", !supported);
   const active = Boolean(document.fullscreenElement);
   const label = active ? t("journey.exitFullscreen") : t("journey.fullscreen");
   el.journeyFullscreenBtn.textContent = label;
@@ -1993,14 +2011,14 @@ function trackChipMinPx(plan) {
   return width;
 }
 
-function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
+function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX, crossroadPx = TRACK_CROSSROAD_PX) {
   let parts = 0;
   let width = 0;
   for (const p of plan) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
       // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += p.run.crossroad ? TRACK_CROSSROAD_PX : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
+      width += p.run.crossroad ? crossroadPx : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
       parts += 1;
     }
     if (p.overflow > 0) {
@@ -2070,6 +2088,16 @@ function buildTrackPlan(items, trackEl) {
     return { run, individuals: 0, overflow: run.count };
   });
 
+  // Many Realms on a narrow track: shrink the crossroad hooks so the row stays on screen.
+  const crossroads = plan.filter((p) => p.run.crossroad).length;
+  let crossroadPx = TRACK_CROSSROAD_PX;
+  if (crossroads > 0) {
+    const others = estimatePlanWidthPx(plan, trackChipMinPx(plan), 0);
+    const fit = Math.floor((avail - others) / crossroads);
+    crossroadPx = Math.max(TRACK_CROSSROAD_MIN_PX, Math.min(TRACK_CROSSROAD_PX, fit));
+  }
+  trackEl?.style.setProperty("--track-crossroad-w", `${crossroadPx}px`);
+
   const expandPriority = (p) => {
     if (p.overflow <= 0) return -1;
     if (p.run.state === "open" || p.run.state === "filled") return 3;
@@ -2094,7 +2122,7 @@ function buildTrackPlan(items, trackEl) {
     const p = plan[best];
     p.individuals += 1;
     p.overflow -= 1;
-    if (estimatePlanWidthPx(plan, trackChipMinPx(plan)) > avail) {
+    if (estimatePlanWidthPx(plan, trackChipMinPx(plan), crossroadPx) > avail) {
       p.individuals -= 1;
       p.overflow += 1;
       blocked.add(best);
@@ -3522,9 +3550,7 @@ function applyHUDStatus(status) {
   }
 
   el.compassHint.textContent = status.compass_unlocked
-    ? (I18n?.localizeCompassHint
-      ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
-      : (status.warmer_colder || t("hud.calibrating")))
+    ? compassHintText(status)
     : t("hud.locked");
   renderSearchStatus();
   renderToolIcons(status);

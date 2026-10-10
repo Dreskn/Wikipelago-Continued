@@ -125,6 +125,7 @@ try {
     Assert-HasPattern ([System.IO.Path]::Combine($Root, "ci_generate.py")) 'wikipelago.apworld' 'world/ci_generate.py must install the built apworld'
     Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.1\.0\s*$' 'YAML template is missing requires.game.Wikipelago 1.1.0'
     Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.1.0"' 'Bridge client version must be 1.1.0'
+    Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "web", "app.js")) 'APP_VERSION = "1.1.0"' 'Web APP_VERSION must be 1.1.0'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
     Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.1.0"' 'World full_version must be 1.1.0'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'

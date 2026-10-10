@@ -61,6 +61,9 @@
       "hud.calibrating": "Calibrating",
       "hud.warmer": "Warmer",
       "hud.colder": "Colder",
+      "hud.same": "Same",
+      "hud.onTarget": "On target",
+      "hud.noSignal": "No signal",
       "hud.goalComplete": "GOAL COMPLETE",
       "hud.loadingEllipsis": "Loading…",
       "hud.noDescription": "No short description available.",
@@ -450,6 +453,9 @@
     "hud.calibrating": "Calibration",
     "hud.warmer": "Plus chaud",
     "hud.colder": "Plus froid",
+    "hud.same": "Pareil",
+    "hud.onTarget": "Sur la cible",
+    "hud.noSignal": "Pas de signal",
     "hud.goalComplete": "OBJECTIF ATTEINT",
     "hud.loadingEllipsis": "Chargement…",
     "hud.noDescription": "Aucune courte description.",
@@ -577,6 +583,17 @@
     "track.moreLikeThis": "{kind}s {start}–{end} (+{overflow} similaires)",
     "track.kindRound": "Manche",
     "track.kindFragment": "Fragment",
+    // Screen-reader labels
+    "path.aria": "Chemins",
+    "items.toolsAria": "Outils",
+    "items.scrollAria": "Vitesse de défilement",
+    "items.lettersAria": "Lettres de recherche",
+    "items.bingoAria": "Grilles de bingo paires de lettres",
+    "items.lensesAria": "Lentilles d'affichage",
+    "items.difficultyAria": "Options de difficulté",
+    "items.roundsAria": "Progression des manches",
+    "items.fragmentsAria": "Fragments de savoir",
+    "journey.filter": "Filtrer",
   };
 
   STRINGS.de = {
@@ -624,6 +641,9 @@
     "hud.calibrating": "Kalibrieren",
     "hud.warmer": "Wärmer",
     "hud.colder": "Kälter",
+    "hud.same": "Gleich",
+    "hud.onTarget": "Am Ziel",
+    "hud.noSignal": "Kein Signal",
     "hud.goalComplete": "ZIEL ERREICHT",
     "victory.title": "Großes Ziel erreicht!",
     "victory.message": "Du hast die Seite gefunden und diesen Seed beendet.",
@@ -845,6 +865,16 @@
     "track.moreLikeThis": "{kind}s {start}–{end} (+{overflow} weitere)",
     "track.kindRound": "Runde",
     "track.kindFragment": "Fragment",
+    // Screen-reader labels
+    "path.aria": "Wege",
+    "items.toolsAria": "Werkzeuge",
+    "items.scrollAria": "Scrollgeschwindigkeit",
+    "items.lettersAria": "Suchbuchstaben",
+    "items.bingoAria": "Buchstabenpaar-Bingokarten",
+    "items.lensesAria": "Anzeigelinsen",
+    "items.difficultyAria": "Schwierigkeitsoptionen",
+    "items.roundsAria": "Rundenfortschritt",
+    "items.fragmentsAria": "Wissensfragmente",
   };
 
   STRINGS.es = {
@@ -892,6 +922,9 @@
     "hud.calibrating": "Calibrando",
     "hud.warmer": "Más caliente",
     "hud.colder": "Más frío",
+    "hud.same": "Igual",
+    "hud.onTarget": "En el objetivo",
+    "hud.noSignal": "Sin señal",
     "hud.goalComplete": "OBJETIVO COMPLETADO",
     "victory.title": "¡Gran Objetivo alcanzado!",
     "victory.message": "Encontraste la página y terminaste esta seed.",
@@ -1113,6 +1146,17 @@
     "track.moreLikeThis": "{kind}s {start}–{end} (+{overflow} más así)",
     "track.kindRound": "Ronda",
     "track.kindFragment": "Fragmento",
+    // Screen-reader labels
+    "path.aria": "Caminos",
+    "items.toolsAria": "Herramientas",
+    "items.scrollAria": "Velocidad de desplazamiento",
+    "items.lettersAria": "Letras de búsqueda",
+    "items.bingoAria": "Cartones de bingo de pares de letras",
+    "items.lensesAria": "Lentes de visualización",
+    "items.difficultyAria": "Opciones de dificultad",
+    "items.roundsAria": "Progreso de rondas",
+    "items.fragmentsAria": "Fragmentos de conocimiento",
+    "journey.filter": "Filtrar",
   };
 
   STRINGS.it = {
@@ -1157,6 +1201,9 @@
     "hud.calibrating": "Calibrazione",
     "hud.warmer": "Più caldo",
     "hud.colder": "Più freddo",
+    "hud.same": "Uguale",
+    "hud.onTarget": "Sul bersaglio",
+    "hud.noSignal": "Nessun segnale",
     "hud.goalComplete": "OBIETTIVO COMPLETATO",
     "victory.title": "Grande Obiettivo raggiunto!",
     "victory.message": "Hai trovato la pagina e hai finito questo seed.",
@@ -1380,6 +1427,17 @@
     "track.moreLikeThis": "{kind} {start}–{end} (+{overflow} simili)",
     "track.kindRound": "Round",
     "track.kindFragment": "Frammento",
+    // Screen-reader labels
+    "path.aria": "Percorsi",
+    "items.toolsAria": "Strumenti",
+    "items.scrollAria": "Velocità di scorrimento",
+    "items.lettersAria": "Lettere di ricerca",
+    "items.bingoAria": "Cartelle del bingo coppie di lettere",
+    "items.lensesAria": "Lenti di visualizzazione",
+    "items.difficultyAria": "Opzioni di difficoltà",
+    "items.roundsAria": "Progressione dei round",
+    "items.fragmentsAria": "Frammenti di conoscenza",
+    "journey.filter": "Filtra",
   };
 
   STRINGS.pt = {
@@ -1424,6 +1482,9 @@
     "hud.calibrating": "Calibrando",
     "hud.warmer": "Mais quente",
     "hud.colder": "Mais frio",
+    "hud.same": "Igual",
+    "hud.onTarget": "No alvo",
+    "hud.noSignal": "Sem sinal",
     "hud.goalComplete": "OBJETIVO CONCLUÍDO",
     "victory.title": "Grande Objetivo alcançado!",
     "victory.message": "Encontraste a página e terminaste esta seed.",
@@ -1647,6 +1708,17 @@
     "track.moreLikeThis": "{kind}s {start}–{end} (+{overflow} semelhantes)",
     "track.kindRound": "Rodada",
     "track.kindFragment": "Fragmento",
+    // Screen-reader labels
+    "path.aria": "Caminhos",
+    "items.toolsAria": "Ferramentas",
+    "items.scrollAria": "Velocidade de rolagem",
+    "items.lettersAria": "Letras de pesquisa",
+    "items.bingoAria": "Cartelas de bingo de pares de letras",
+    "items.lensesAria": "Lentes de exibição",
+    "items.difficultyAria": "Opções de dificuldade",
+    "items.roundsAria": "Progresso das rodadas",
+    "items.fragmentsAria": "Fragmentos de conhecimento",
+    "journey.filter": "Filtrar",
   };
 
   STRINGS.nl = {
@@ -1691,6 +1763,9 @@
     "hud.calibrating": "Kalibreren",
     "hud.warmer": "Warmer",
     "hud.colder": "Kouder",
+    "hud.same": "Gelijk",
+    "hud.onTarget": "Op het doel",
+    "hud.noSignal": "Geen signaal",
     "hud.goalComplete": "DOEL BEREIKT",
     "victory.title": "Groot Doel bereikt!",
     "victory.message": "Je hebt de pagina gevonden en deze seed voltooid.",
@@ -1914,6 +1989,16 @@
     "track.moreLikeThis": "{kind}s {start}–{end} (+{overflow} soortgelijk)",
     "track.kindRound": "Ronde",
     "track.kindFragment": "Fragment",
+    // Screen-reader labels
+    "path.aria": "Paden",
+    "items.toolsAria": "Gereedschap",
+    "items.scrollAria": "Scrollsnelheid",
+    "items.lettersAria": "Zoekletters",
+    "items.bingoAria": "Letterparenbingokaarten",
+    "items.lensesAria": "Weergavelenzen",
+    "items.difficultyAria": "Moeilijkheidsopties",
+    "items.roundsAria": "Rondevoortgang",
+    "items.fragmentsAria": "Kennisfragmenten",
   };
 
   STRINGS.sv = {
@@ -1958,6 +2043,9 @@
     "hud.calibrating": "Kalibrerar",
     "hud.warmer": "Varmare",
     "hud.colder": "Kallare",
+    "hud.same": "Samma",
+    "hud.onTarget": "På målet",
+    "hud.noSignal": "Ingen signal",
     "hud.goalComplete": "MÅL UPPNÅTT",
     "victory.title": "Stort mål uppnått!",
     "victory.message": "Du hittade sidan och avslutade den här seed:en.",
@@ -2181,6 +2269,17 @@
     "track.moreLikeThis": "{kind}er {start}–{end} (+{overflow} liknande)",
     "track.kindRound": "Runda",
     "track.kindFragment": "Fragment",
+    // Screen-reader labels
+    "path.aria": "Vägar",
+    "items.toolsAria": "Verktyg",
+    "items.scrollAria": "Rullningshastighet",
+    "items.lettersAria": "Sökbokstäver",
+    "items.bingoAria": "Brickor för bokstavsparbingo",
+    "items.lensesAria": "Visningslinser",
+    "items.difficultyAria": "Svårighetsalternativ",
+    "items.roundsAria": "Rundframsteg",
+    "items.fragmentsAria": "Kunskapsfragment",
+    "journey.filter": "Filtrera",
   };
 
   STRINGS.pl = {
@@ -2225,6 +2324,9 @@
     "hud.calibrating": "Kalibracja",
     "hud.warmer": "Cieplej",
     "hud.colder": "Zimniej",
+    "hud.same": "Bez zmian",
+    "hud.onTarget": "Na celu",
+    "hud.noSignal": "Brak sygnału",
     "hud.goalComplete": "CEL OSIĄGNIĘTY",
     "victory.title": "Wielki cel osiągnięty!",
     "victory.message": "Znalazłeś stronę i ukończyłeś ten seed.",
@@ -2448,6 +2550,17 @@
     "track.moreLikeThis": "{kind} {start}–{end} (+{overflow} podobnych)",
     "track.kindRound": "Runda",
     "track.kindFragment": "Fragment",
+    // Screen-reader labels
+    "path.aria": "Ścieżki",
+    "items.toolsAria": "Narzędzia",
+    "items.scrollAria": "Prędkość przewijania",
+    "items.lettersAria": "Litery wyszukiwania",
+    "items.bingoAria": "Plansze bingo par liter",
+    "items.lensesAria": "Soczewki wyświetlania",
+    "items.difficultyAria": "Opcje trudności",
+    "items.roundsAria": "Postęp rund",
+    "items.fragmentsAria": "Fragmenty wiedzy",
+    "journey.filter": "Filtruj",
   };
 
   function normalizeUiLang(code) {
@@ -2546,6 +2659,9 @@
     if (value === "Calibrating") return t("hud.calibrating");
     if (value === "Warmer") return t("hud.warmer");
     if (value === "Colder") return t("hud.colder");
+    if (value === "Same") return t("hud.same");
+    if (value === "On target") return t("hud.onTarget");
+    if (value === "No signal") return t("hud.noSignal");
     return value;
   }
 
