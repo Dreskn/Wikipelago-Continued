@@ -326,6 +326,13 @@ body {
   border: 1px solid var(--line-strong);
   background: var(--ink-1);
 }
+.topbar-status .badge {
+  display: inline-flex;
+  align-items: center;
+  height: var(--topbar-control-h);
+  padding-top: 0;
+  padding-bottom: 0;
+}
 .badge::before {
   content: "";
   position: absolute;
@@ -343,6 +350,7 @@ body {
 .badge.practice { color: #a9d8cf; border-color: rgba(95, 179, 166, 0.5); }
 
 .topbar-status {
+  --topbar-control-h: 1.9rem;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -354,8 +362,9 @@ body {
 .topbar-lang {
   width: auto;
   min-width: 7.5rem;
+  height: var(--topbar-control-h, auto);
   margin: 0;
-  padding: 6px 10px;
+  padding: 0 10px;
   border-radius: var(--radius);
   border: 1px solid var(--line-strong);
   background: var(--ink-1);
@@ -2540,8 +2549,8 @@ body.journey-window #journeyPopupBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: var(--topbar-control-h, 2.1rem);
+  height: var(--topbar-control-h, 2.1rem);
   padding: 0;
   border-radius: var(--radius);
   border: 1px solid var(--line-strong);
@@ -2785,10 +2794,7 @@ body.journey-window #journeyPopupBtn {
     min-height: 36px;
     padding: 6px 12px;
   }
-  .theme-toggle {
-    width: 40px;
-    height: 40px;
-  }
+  .topbar-status { --topbar-control-h: 40px; }
   .helper-toggle { padding: 8px 0; }
   .muted-meta,
   .realm-note,
