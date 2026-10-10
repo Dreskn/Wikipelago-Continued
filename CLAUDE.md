@@ -1,0 +1,66 @@
+# Wikipelago Continued
+
+Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
+
+- Continued fork of [Skrumptily69's original Wikipelago](https://github.com/Skrumptily69/Wikipelago), used with permission. Keep the credit (README.md, LICENSE).
+- Live client: https://wikipelago.dreskn.fr/ — bug reports come from the Wikipelago thread on the Archipelago Discord (link in README).
+- 9 Wikipedia languages: en, fr, de, es, it, pt, nl, sv, pl (`UI_LANGS` in `web/i18n.js`, `WikipediaLanguage` in `Options.py`).
+
+## Layout
+
+- `world/APWorldSource/wikipelago/` — the APWorld (Python, loaded by the AP generator).
+  - `__init__.py` world logic and item pool; `Items.py`, `Locations.py`, `Regions.py`; `Options.py` (YAML options)
+  - `grand_goal.py`, `letter_pairs.py` (bingo), `article_pool.py`, `entertainment_articles.py`
+  - `data/pool_{lang}.json` curated multi-tag article pools; `letter_pair_weights_{lang}.json` bingo weights
+  - `archipelago.json` version metadata
+  - Built to `world/APWorld/wikipelago.apworld` (gitignored).
+- `bridge/bridge.py` — single-file aiohttp server: serves `web/`, REST API under `/api/session/{sid}/...`, and acts as the Archipelago websocket client (one state per browser session). Calls the Wikipedia API for title canonicalisation, redirects and Compass page links. Deps: `aiohttp`, `websockets`.
+- `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`.
+- `docs/` — player docs; `docs/grand-goal/` is the Grand Goal question bank and its build scripts.
+- `yaml/Wikipelago.yaml` — player YAML template.
+- `world/` — build, test and pool-maintenance scripts.
+- `Dockerfile`, `Procfile`, `render.yaml` — older/alternative deploy configs.
+
+## Commands (PowerShell, repo root)
+
+```powershell
+python bridge/bridge.py --port 5000      # run locally; --debug-menu (or WIKIPELAGO_DEBUG_MENU=1) for the playtest console; PORT env also works
+bridge/setup_and_start_bridge.bat        # first run on Windows; bridge/start_bridge.bat afterwards
+./world/build_apworld.ps1                # build the apworld
+./world/release_check.ps1                # build + smoke test
+./world/smoke_test.ps1 [-BuildApworld]   # smoke test only (also runs the two Python unit tests)
+./world/fuzz_test.ps1 -Runs 25           # option sanity fuzz
+./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "<path>"   # real generation, needs a local Archipelago
+python world/test_letter_pairs.py
+python world/test_blocked_namespaces.py
+python world/validate_article_pool.py --lang all --strict       # pools vs live Wikipedia
+python world/build_letter_pair_weights.py --lang all            # rebuild bingo weights (downloads to world/_cache/)
+```
+
+## CI (`.github/workflows/`)
+
+- `ci.yml` (every push and PR): `smoke_test.ps1 -BuildApworld`, then EN/FR/PL seed generation against Archipelago 0.6.7 via `world/ci_generate.py`.
+- `pool-validate.yml` (weekly, and on pool changes to `main`): reports dead titles, never removes them.
+
+## Conventions
+
+- Work on `dev`. `main` is the released branch, updated only by a `dev` → `main` PR on GitHub. Never push to `main` directly.
+- Commit messages: one plain imperative sentence ending with a period, e.g. "Fix blank room load from a const displayTitle assignment."
+- Releases go on GitHub Releases with `wikipelago.apworld` and `yaml/Wikipelago.yaml` attached.
+- Files must be strict UTF-8 (the smoke test checks this).
+- New UI text needs entries in `web/i18n.js` for all 9 languages. English strings sent by the bridge (compass hints, trap names, goal text) are mapped by the `localize*` helpers at the end of `i18n.js`.
+- When shipping web asset changes, bump `CACHE_NAME` in `web/service-worker.js` and the `?v=` stamps in `web/index.html`.
+- Version bumps touch all of these together:
+  - `world/APWorldSource/wikipelago/archipelago.json`: `world_version`, `full_version`, `description`
+  - `CLIENT_VERSION` in `bridge/bridge.py`
+  - `APP_VERSION` in `web/app.js`
+  - `requires.game.Wikipelago` in `yaml/Wikipelago.yaml`
+  - version pins in `world/smoke_test.ps1`
+  - `README.md`, `world/README.md`, the Compatibility table in `docs/setup.md`
+
+  The smoke test only checks the YAML, `CLIENT_VERSION` and `archipelago.json` pins; the rest can drift unnoticed.
+
+## Working agreements
+
+- Briefly explain the plan before large changes; keep changes focused on the task.
+- Don't commit or push unless asked.
