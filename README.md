@@ -35,6 +35,6 @@ Continued development and hosting by [Dreskn](https://github.com/Dreskn/Wikipela
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). HUD tool icons are [Lucide](https://lucide.dev) (ISC; some icons derived from Feather, MIT) — see `LICENSE`.
+This project is licensed under the [MIT License](LICENSE). HUD tool icons are [Lucide](https://lucide.dev) (ISC; some icons derived from Feather, MIT). Fonts are Fraunces, Instrument Sans, JetBrains Mono and Libertinus Serif, self-hosted under the SIL Open Font License — see `LICENSE`.
 
 The original author confirmed they had abandoned the project and gave permission to continue public development (including releases and hosting) while keeping attribution for the original idea and earlier versions.

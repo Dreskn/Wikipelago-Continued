@@ -3,6 +3,58 @@
  * Indigo ink chrome around a dark reading page. Copper (--brass) marks the main road;
  * every Realm (branch) carries its topic color via [data-topic] → --realm.
  */
+
+/* Self-hosted fonts (SIL Open Font License; licences in web/fonts/). Trimmed to the 9 UI languages. */
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/Fraunces-VF.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("fonts/Fraunces-Italic-VF.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Instrument Sans";
+  src: url("fonts/InstrumentSans-VF.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-VF.woff2") format("woff2");
+  font-weight: 500 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libertinus Serif";
+  src: url("fonts/LibertinusSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libertinus Serif";
+  src: url("fonts/LibertinusSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libertinus Serif";
+  src: url("fonts/LibertinusSerif-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* Chrome */
   --ink-0: #0e1020;
@@ -68,8 +120,8 @@
 
   --font-display: "Fraunces", "Iowan Old Style", Georgia, serif;
   --font-ui: "Instrument Sans", "Avenir Next", "Segoe UI", sans-serif;
-  --font-read: "Source Serif 4", "Iowan Old Style", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --font-read: "Libertinus Serif", "Iowan Old Style", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
 
   --radius: 6px;
   --radius-sm: 4px;
