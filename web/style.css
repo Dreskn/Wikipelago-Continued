@@ -199,8 +199,10 @@ body {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.migrate-banner a:hover {
-  color: #fff4d6;
+@media (hover: hover) {
+  .migrate-banner a:hover {
+    color: #fff4d6;
+  }
 }
 
 .layout {
@@ -257,10 +259,12 @@ body {
   height: 1.15rem;
   flex-shrink: 0;
 }
-.teleport-btn:hover:not(:disabled) {
-  border-color: var(--vermilion);
-  background: rgba(224, 103, 79, 0.18);
-  color: #ffd9d0;
+@media (hover: hover) {
+  .teleport-btn:hover:not(:disabled) {
+    border-color: var(--vermilion);
+    background: rgba(224, 103, 79, 0.18);
+    color: #ffd9d0;
+  }
 }
 .teleport-btn:disabled {
   opacity: 0.45;
@@ -349,8 +353,10 @@ body {
   font-weight: 600;
   cursor: pointer;
 }
-.topbar-lang:hover {
-  border-color: var(--brass);
+@media (hover: hover) {
+  .topbar-lang:hover {
+    border-color: var(--brass);
+  }
 }
 .connection-actions {
   display: flex;
@@ -443,7 +449,9 @@ button {
   cursor: pointer;
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 80ms ease;
 }
-button:hover:not(:disabled) { background: var(--brass-hi); }
+@media (hover: hover) {
+  button:hover:not(:disabled) { background: var(--brass-hi); }
+}
 button:active:not(:disabled) { transform: translateY(1px); }
 .article-title {
   margin: 0 0 10px;
@@ -570,9 +578,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
   text-underline-offset: 2px;
   cursor: pointer;
 }
-.article-body a:hover {
-  color: var(--page-link-hover);
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .article-body a:hover {
+    color: var(--page-link-hover);
+    text-decoration-color: currentColor;
+  }
 }
 .article-body a.wiki-bomb-link,
 .article-body a.wiki-bomb-link:visited,
@@ -915,9 +925,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
   outline-offset: -1px;
   background: color-mix(in srgb, var(--brass) 14%, transparent);
 }
-.bingo-cell.stampable:hover {
-  background: color-mix(in srgb, var(--brass) 28%, transparent);
-  color: #fff3d6;
+@media (hover: hover) {
+  .bingo-cell.stampable:hover {
+    background: color-mix(in srgb, var(--brass) 28%, transparent);
+    color: #fff3d6;
+  }
 }
 .bingo-boards {
   display: flex;
@@ -1058,7 +1070,9 @@ button:active:not(:disabled) { transform: translateY(1px); }
   padding: 0;
   cursor: pointer;
 }
-.bingo-overlay-backdrop:hover:not(:disabled) { background: rgba(6, 7, 16, 0.78); }
+@media (hover: hover) {
+  .bingo-overlay-backdrop:hover:not(:disabled) { background: rgba(6, 7, 16, 0.78); }
+}
 .bingo-overlay-panel {
   position: relative;
   z-index: 1;
@@ -1250,10 +1264,12 @@ button:active:not(:disabled) { transform: translateY(1px); }
   font-weight: 600;
   cursor: pointer;
 }
-.btn-quiet:hover:not(:disabled) {
-  color: var(--text);
-  border-color: var(--brass);
-  background: color-mix(in srgb, var(--brass) 8%, transparent);
+@media (hover: hover) {
+  .btn-quiet:hover:not(:disabled) {
+    color: var(--text);
+    border-color: var(--brass);
+    background: color-mix(in srgb, var(--brass) 8%, transparent);
+  }
 }
 .btn-quiet:disabled {
   opacity: 0.4;
@@ -1283,7 +1299,9 @@ button:active:not(:disabled) { transform: translateY(1px); }
   text-underline-offset: 3px;
   cursor: pointer;
 }
-.helper-toggle:hover:not(:disabled) { color: var(--muted); background: transparent; }
+@media (hover: hover) {
+  .helper-toggle:hover:not(:disabled) { color: var(--muted); background: transparent; }
+}
 .helper-panel {
   margin-top: 8px;
   display: flex;
@@ -1297,7 +1315,9 @@ button:active:not(:disabled) { transform: translateY(1px); }
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.helper-line a:hover { color: var(--text); }
+@media (hover: hover) {
+  .helper-line a:hover { color: var(--text); }
+}
 .helper-debug-label {
   display: inline-flex;
   align-items: center;
@@ -1331,6 +1351,9 @@ button:active:not(:disabled) { transform: translateY(1px); }
 [data-panel="debug"] { --card-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20v-9'/%3E%3Cpath d='M14 7a4 4 0 0 1 4 4v3a6 6 0 0 1-12 0v-3a4 4 0 0 1 4-4z'/%3E%3Cpath d='M14.12 3.88 16 2'/%3E%3Cpath d='M21 21a4 4 0 0 0-3.81-4'/%3E%3Cpath d='M21 5a4 4 0 0 1-3.55 3.97'/%3E%3Cpath d='M22 13h-4'/%3E%3Cpath d='M3 21a4 4 0 0 1 3.81-4'/%3E%3Cpath d='M3 5a4 4 0 0 0 3.55 3.97'/%3E%3Cpath d='M6 13H2'/%3E%3Cpath d='m8 2 1.88 1.88'/%3E%3Cpath d='M9 7.13V6a3 3 0 1 1 6 0v1.13'/%3E%3C/svg%3E"); }
 .card h2,
 .card-head > strong {
+  /* Keeps the icon on the same line as the heading text. */
+  display: inline-flex;
+  align-items: center;
   margin: 0 0 10px;
   font-family: var(--font-display);
   font-size: 1.08rem;
@@ -1804,8 +1827,10 @@ button:active:not(:disabled) { transform: translateY(1px); }
   line-height: 1;
   cursor: pointer;
 }
-.toast-close:hover { color: var(--text); background: var(--ink-2); }
-@media (max-width: 900px) {
+@media (hover: hover) {
+  .toast-close:hover { color: var(--text); background: var(--ink-2); }
+}
+@media (max-width: 899px) {
   .toast-stack {
     top: max(8px, env(safe-area-inset-top));
     left: 8px;
@@ -1878,6 +1903,22 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 
 .hidden { display: none; }
+/* Touch screens: what a mouse would show on hover, shown briefly on tap. */
+.tap-tip {
+  position: fixed;
+  z-index: 1300;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--ink-0);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+.item-icon[data-tool="search"] { cursor: pointer; }
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -2190,9 +2231,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
   color: var(--paper-ink);
   border-color: var(--paper-line);
 }
-.victory-actions .btn-quiet:hover:not(:disabled) {
-  background: var(--paper-2);
-  color: var(--paper-ink);
+@media (hover: hover) {
+  .victory-actions .btn-quiet:hover:not(:disabled) {
+    background: var(--paper-2);
+    color: var(--paper-ink);
+  }
 }
 .journey-overlay-panel {
   position: relative;
@@ -2293,6 +2336,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 body.journey-window #releaseBanner,
 body.journey-window #migrateBanner,
+body.journey-window #phoneBar,
 body.journey-window .layout,
 body.journey-window #supportDock,
 body.journey-window .bingo-overlay,
@@ -2326,38 +2370,109 @@ body.journey-window #journeyPopupBtn {
   border-radius: 0;
 }
 
+/* Mid-size windows: keep both columns, with a narrower HUD. */
 @media (max-width: 1200px) {
-  body { overflow: auto; }
-  .layout {
-    height: auto;
-    max-height: none;
-  }
-  .topbar {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  .topbar-status {
-    justify-content: flex-start;
-  }
-  .main-grid {
-    grid-template-columns: 1fr;
-    flex: none;
-    height: auto;
-  }
-  .article-panel {
-    height: auto;
-    min-height: 62vh;
-  }
-  .article-body {
-    flex: none;
-    max-height: 50vh;
-  }
-  .side-panel {
-    height: auto;
-    max-height: none;
-    overflow: visible;
-  }
+  .layout { --side-w: clamp(330px, 38vw, 420px); }
 }
+
+/* ------------------------------------------------------------------ */
+/* Phone layout (< 900px): sticky target bar + article with page        */
+/* scrolling; the menu button swaps the article for the header and HUD. */
+/* ------------------------------------------------------------------ */
+.phone-bar { display: none; }
+.phone-bar-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.phone-targets {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+  padding-top: 2px;
+}
+.phone-target-row {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+.phone-target-row .realm-label {
+  display: inline-block;
+  flex: 0 1 auto;
+  max-width: 42%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.phone-target-row .realm-label::before {
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.phone-target-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.phone-brand {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.phone-brand img { border-radius: 50%; }
+.phone-more {
+  justify-self: start;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+}
+.phone-bar-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.phone-bar-tools.hidden,
+.phone-compass.hidden { display: none; }
+.phone-compass {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.phone-icon-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin-left: auto;
+  padding: 0;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--ink-2);
+  color: var(--text);
+}
+.phone-compass:not(.hidden) + .phone-icon-btn { margin-left: 0; }
+.phone-icon-btn svg { width: 20px; height: 20px; display: block; }
+.phone-sos-btn { height: 40px; }
 
 @media (hover: none) and (pointer: coarse) {
   input,
@@ -2389,21 +2504,21 @@ body.journey-window #journeyPopupBtn {
 }
 .support-btn {
   pointer-events: auto;
-  padding: 4px 9px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line-strong);
-  background: rgba(21, 24, 41, 0.94);
+  padding: 2px 4px;
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 0.64rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-decoration: none;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  /* Text only; a soft halo keeps it readable over the cards. */
+  text-shadow: 0 0 6px var(--ink-0), 0 0 2px var(--ink-0);
 }
-.support-btn:hover {
-  color: var(--brass-hi);
-  border-color: var(--brass);
+@media (hover: hover) {
+  .support-btn:hover {
+    color: var(--brass-hi);
+    text-decoration: underline;
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -2421,10 +2536,12 @@ body.journey-window #journeyPopupBtn {
   background: var(--ink-1);
   color: var(--muted);
 }
-.theme-toggle:hover:not(:disabled) {
-  background: var(--ink-2);
-  border-color: var(--brass);
-  color: var(--brass-hi);
+@media (hover: hover) {
+  .theme-toggle:hover:not(:disabled) {
+    background: var(--ink-2);
+    border-color: var(--brass);
+    color: var(--brass-hi);
+  }
 }
 .theme-toggle svg { width: 1.05rem; height: 1.05rem; display: block; }
 /* Show where a click goes: sun while dark, moon while light. */
@@ -2504,7 +2621,9 @@ body.journey-window #journeyPopupBtn {
 :root[data-theme="light"] .badge.offline { color: #a8412c; border-color: rgba(168, 65, 44, 0.4); }
 :root[data-theme="light"] .badge.practice { color: #1f6f66; border-color: rgba(31, 111, 102, 0.4); }
 :root[data-theme="light"] .teleport-btn { color: #a8412c; background: rgba(194, 74, 51, 0.06); }
-:root[data-theme="light"] .teleport-btn:hover:not(:disabled) { color: #7d2c1c; background: rgba(194, 74, 51, 0.12); }
+@media (hover: hover) {
+  :root[data-theme="light"] .teleport-btn:hover:not(:disabled) { color: #7d2c1c; background: rgba(194, 74, 51, 0.12); }
+}
 :root[data-theme="light"] .toast { box-shadow: 0 10px 28px rgba(40, 50, 45, 0.18); }
 :root[data-theme="light"] .goal-question { color: var(--text); }
 :root[data-theme="light"] .goal-answer { color: #3d7a2c; }
@@ -2541,7 +2660,9 @@ body.journey-window #journeyPopupBtn {
 :root[data-theme="light"] .realm-row[data-state="cleared"] { background: color-mix(in srgb, var(--realm) 20%, var(--ink-1)); }
 :root[data-theme="light"] .crossroad-badge { background: color-mix(in srgb, var(--realm) 12%, var(--ink-1)); }
 :root[data-theme="light"] .crossroad-badge.unlocked { background: color-mix(in srgb, var(--realm) 20%, var(--ink-1)); }
-:root[data-theme="light"] .bingo-cell.stampable:hover { color: var(--text); }
+@media (hover: hover) {
+  :root[data-theme="light"] .bingo-cell.stampable:hover { color: var(--text); }
+}
 :root[data-theme="light"] .bingo-preview-badge { background: var(--ink-1); }
 :root[data-theme="light"] .article-body a { text-decoration-color: color-mix(in srgb, var(--page-link) 35%, transparent); }
 :root[data-theme="light"] .article-body a.wiki-bomb-link,
@@ -2557,6 +2678,111 @@ body.journey-window #journeyPopupBtn {
 :root[data-theme="light"] .article-body .mw-parser-output .diag-climat-leg-tmin,
 :root[data-theme="light"] .article-body .mw-parser-output .diag-climat-leg-prec { color: #2f7f8a; }
 :root[data-theme="light"] .journey-node-label { text-shadow: 0 1px 2px var(--ink-1), 0 0 6px var(--ink-1); }
-:root[data-theme="light"] .support-btn { background: var(--ink-1); }
 :root[data-theme="light"] .bingo-overlay-backdrop,
 :root[data-theme="light"] .bingo-overlay-backdrop:hover:not(:disabled) { background: rgba(30, 40, 50, 0.45); }
+
+/* Phone layout: last, so it overrides the desktop rules above. */
+@media (max-width: 899px) {
+  html,
+  body { height: auto; }
+  body {
+    display: block;
+    min-height: 100%;
+    overflow: visible;
+  }
+  .layout {
+    display: block;
+    padding: 10px 10px 16px;
+  }
+  .phone-bar {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    padding: 8px 10px 8px 12px;
+    background: color-mix(in srgb, var(--ink-1) 94%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  }
+  /* Article view: bar + article. Menu view: header + HUD cards + support links. */
+  body:not(.phone-menu-open) .topbar,
+  body:not(.phone-menu-open) .side-panel,
+  body:not(.phone-menu-open) .support-dock,
+  body.phone-menu-open .article-panel { display: none; }
+  .topbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  /* The bar already shows the brand and SOS. */
+  .topbar-teleport,
+  .topbar-logo,
+  .topbar h1 { display: none; }
+  .topbar-status {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  .main-grid {
+    display: block;
+    margin-top: 10px;
+  }
+  .article-panel {
+    height: auto;
+    overflow: visible;
+    padding: 14px 12px 10px;
+  }
+  .article-stage { display: block; }
+  .article-body {
+    overflow: visible;
+    max-height: none;
+    padding: 4px 2px 12px;
+  }
+  .side-panel {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  /* Search and loading stay in view while the page scrolls. */
+  .search-overlay {
+    position: fixed;
+    top: calc(var(--phone-bar-h, 96px) + 8px);
+    left: 8px;
+    right: 8px;
+    z-index: 45;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  }
+  .article-loading {
+    position: fixed;
+    z-index: 35;
+  }
+  #journeyPopupBtn { display: none; }
+  .support-dock {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 18px;
+    padding: 4px 12px 24px;
+  }
+  /* Finger-sized controls and no text under 12px. */
+  .card-toggle {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+  }
+  .btn-quiet {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+  .helper-toggle { padding: 8px 0; }
+  .muted-meta,
+  .realm-note,
+  .card label,
+  .support-btn { font-size: max(12px, 0.75rem); }
+}

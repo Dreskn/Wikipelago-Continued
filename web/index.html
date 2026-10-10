@@ -26,7 +26,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/static/style.css?v=20261010-03" />
+  <link rel="stylesheet" href="/static/style.css?v=20261010-05" />
 </head>
 <body>
   <div id="releaseBanner" class="migrate-banner" role="status">
@@ -34,6 +34,18 @@
   </div>
   <div id="migrateBanner" class="migrate-banner hidden" role="status">
     <p data-i18n-html="migrate.renderBanner">This Render URL is outdated. Open the game at <a href="https://wikipelago.dreskn.fr/">wikipelago.dreskn.fr</a> instead.</p>
+  </div>
+  <!-- Phone layout only (< 900px): targets and quick tools stay on screen while the page scrolls. -->
+  <div id="phoneBar" class="phone-bar" role="region" aria-label="Current targets" data-i18n-aria="phone.barAria">
+    <div class="phone-bar-row">
+      <div id="phoneTargets" class="phone-targets"></div>
+      <button id="phoneMenuBtn" type="button" class="phone-icon-btn phone-menu-btn" aria-expanded="false" aria-label="Menu"></button>
+    </div>
+    <div id="phoneTools" class="phone-bar-tools hidden">
+      <span id="phoneCompass" class="phone-compass hidden"></span>
+      <button id="phoneSearchBtn" type="button" class="phone-icon-btn" aria-label="Search this page" data-i18n-aria="search.placeholder" title="Search this page" data-i18n-title="search.placeholder"></button>
+      <button id="phoneSosBtn" type="button" class="teleport-btn phone-sos-btn" disabled><span id="phoneSosLabel">SOS</span></button>
+    </div>
   </div>
   <div class="layout">
     <header class="topbar">
@@ -317,7 +329,7 @@
     <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
   </nav>
 
-  <script src="/static/i18n.js?v=20261010-03"></script>
-  <script src="/static/app.js?v=20261010-03"></script>
+  <script src="/static/i18n.js?v=20261010-05"></script>
+  <script src="/static/app.js?v=20261010-05"></script>
 </body>
 </html>

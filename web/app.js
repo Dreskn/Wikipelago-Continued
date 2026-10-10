@@ -163,6 +163,8 @@ const TOOL_ICON_SVGS = {
   bombs: lucideIcon('<circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/>'),
   traps: lucideIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
   teleport: lucideIcon('<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>'),
+  menu: lucideIcon('<path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/>'),
+  close: lucideIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
 };
 
 function trapTypeLabel(trapType) {
@@ -290,6 +292,14 @@ const el = {
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   teleportBtn: document.getElementById("teleportBtn"),
   teleportBtnLabel: document.getElementById("teleportBtnLabel"),
+  phoneBar: document.getElementById("phoneBar"),
+  phoneTargets: document.getElementById("phoneTargets"),
+  phoneMenuBtn: document.getElementById("phoneMenuBtn"),
+  phoneTools: document.getElementById("phoneTools"),
+  phoneCompass: document.getElementById("phoneCompass"),
+  phoneSearchBtn: document.getElementById("phoneSearchBtn"),
+  phoneSosBtn: document.getElementById("phoneSosBtn"),
+  phoneSosLabel: document.getElementById("phoneSosLabel"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   goalHover: document.getElementById("goalHover"),
@@ -623,6 +633,7 @@ function onUiLanguageChanged(code) {
   refreshSearchChrome();
   refreshSidePanelToggles();
   syncThemeToggle();
+  syncPhoneMenuButton();
 }
 
 // Light / dark theme. index.html applies the saved choice before first paint;
@@ -838,24 +849,31 @@ function bindTargetTooltip() {
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
-  const root = document.querySelector(".side-panel") || document;
+  const root = document;
+  const sidePanel = document.querySelector(".side-panel");
   root.addEventListener("mouseover", (event) => {
+    // Touch screens fire a fake mouseover on tap; they toggle previews on click instead.
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
-    if (!hover || !root.contains(hover)) return;
+    if (!hover) return;
     const from = event.relatedTarget;
     if (from && hover.contains(from)) return;
     enterTargetHover(hover);
   });
   root.addEventListener("mouseout", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (!hover) return;
     leaveTargetHover(hover, event.relatedTarget);
   });
+  // A tap also focuses the title: on touch screens the click toggle owns the preview.
   root.addEventListener("focusin", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (hover) enterTargetHover(hover);
   });
   root.addEventListener("focusout", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (hover) leaveTargetHover(hover, event.relatedTarget);
   });
@@ -863,7 +881,7 @@ function bindTargetTooltip() {
     if (state.targetTooltipVisible) positionTargetTooltip();
   });
   // Side panel scroll would otherwise leave a stale fixed position.
-  root.addEventListener("scroll", () => {
+  sidePanel?.addEventListener("scroll", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   }, { passive: true });
 }
@@ -913,6 +931,12 @@ function syncTeleportButton() {
     : t("hud.teleport");
   el.teleportBtn.setAttribute("title", t("hud.teleportTitle"));
   el.teleportBtn.setAttribute("aria-label", t("hud.teleport"));
+  if (el.phoneSosBtn && el.phoneSosLabel) {
+    el.phoneSosBtn.disabled = !ready;
+    el.phoneSosLabel.textContent = el.teleportBtnLabel.textContent;
+    el.phoneSosBtn.setAttribute("title", t("hud.teleportTitle"));
+    el.phoneSosBtn.setAttribute("aria-label", t("hud.teleport"));
+  }
   if (left > 0 && !teleportUiTimer) {
     teleportUiTimer = window.setInterval(syncTeleportButton, 250);
   } else if (left <= 0 && teleportUiTimer) {
@@ -1085,6 +1109,249 @@ function compassHintText(status) {
   if (!target || !live.length || raw === "No signal") return hint;
   const label = target.kind === "branch" ? realmName(target, status) : t("path.main");
   return `${hint} · ${label}`;
+}
+
+// ---------------------------------------------------------------------------
+// Phone layout (< 900px): a sticky bar keeps the targets and quick tools on screen,
+// the article scrolls with the page, and the menu button swaps it for the HUD cards.
+// ---------------------------------------------------------------------------
+const PHONE_QUERY = window.matchMedia("(max-width: 899px)");
+// Touch screens without hover: tap shows what a mouse would reveal on hover.
+const TOUCH_QUERY = window.matchMedia("(hover: none)");
+const PHONE_BAR_BRANCH_ROWS = 2;
+
+function isPhoneLayout() {
+  return PHONE_QUERY.matches;
+}
+
+/** What scrolls the article: the page on phones, #articleBody otherwise. */
+function articleScroller() {
+  return isPhoneLayout() ? (document.scrollingElement || document.documentElement) : el.articleBody;
+}
+
+/** New page: back to its top (on phones, just below the bar instead of the very top of the site). */
+function resetArticleScroll() {
+  if (!isPhoneLayout()) {
+    if (el.articleBody) el.articleBody.scrollTop = 0;
+    return;
+  }
+  const panel = el.articleBody?.closest(".article-panel");
+  if (!panel) return;
+  const top = panel.getBoundingClientRect().top + window.scrollY - (el.phoneBar?.offsetHeight || 0) - 8;
+  if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
+}
+
+function isPhoneMenuOpen() {
+  return document.body.classList.contains("phone-menu-open");
+}
+
+function syncPhoneMenuButton() {
+  if (!el.phoneMenuBtn) return;
+  const open = isPhoneMenuOpen();
+  el.phoneMenuBtn.innerHTML = open ? TOOL_ICON_SVGS.close : TOOL_ICON_SVGS.menu;
+  const label = open ? t("phone.closeMenu") : t("phone.menu");
+  el.phoneMenuBtn.setAttribute("aria-label", label);
+  el.phoneMenuBtn.title = label;
+  el.phoneMenuBtn.setAttribute("aria-expanded", String(open));
+}
+
+/**
+ * Article view <-> menu view. Opening from the button adds a history entry so the
+ * phone's Back closes the menu instead of turning the article back a page.
+ */
+function setPhoneMenu(open, { fromHistory = false, addHistory = false } = {}) {
+  const next = Boolean(open);
+  if (next === isPhoneMenuOpen()) return;
+  if (next) state.phoneArticleScrollY = window.scrollY;
+  document.body.classList.toggle("phone-menu-open", next);
+  syncPhoneMenuButton();
+  hideTargetTooltip();
+  hideTapTip();
+  if (next && addHistory) {
+    history.pushState({ ...(history.state || {}), phoneMenu: true }, "");
+  } else if (!next && !fromHistory && history.state?.phoneMenu) {
+    state.ignoreNextPopstate = true;
+    history.back();
+  }
+  window.scrollTo(0, next ? 0 : (state.phoneArticleScrollY || 0));
+  // Tracks measure their width, and the cards were hidden until now.
+  if (next && state.status) {
+    renderRoundsTrack(state.status);
+    renderFragmentsTrack(state.status);
+  }
+}
+
+/** First status shows the menu on phones when nothing is running; starting a game shows the article. */
+function syncPhoneMenuForStatus(status) {
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
+  if (state.phoneWasPlayable === undefined) {
+    if (isPhoneLayout() && !playable) setPhoneMenu(true);
+  } else if (playable && !state.phoneWasPlayable && isPhoneLayout()) {
+    setPhoneMenu(false);
+  }
+  state.phoneWasPlayable = playable;
+}
+
+function phoneTargetRow(labelText, titleText, { topic = "", main = false, wikiTitle = "" } = {}) {
+  const row = document.createElement("p");
+  row.className = "phone-target-row";
+  const label = document.createElement("span");
+  label.className = main ? "realm-label main-road-label" : "realm-label";
+  setTopic(label, topic);
+  label.textContent = labelText;
+  const title = document.createElement("span");
+  title.className = "phone-target-title target-hover";
+  title.textContent = titleText;
+  setHoverWikiTitle(title, wikiTitle);
+  row.append(label, title);
+  return row;
+}
+
+function renderPhoneBar(status) {
+  if (!el.phoneTargets) return;
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
+  const rows = [];
+  if (!playable) {
+    rows.push({ brand: true });
+  } else {
+    let mainText = status.current_target || "…";
+    let mainWiki = status.current_target || "";
+    if (status.boss_completed) {
+      mainText = t("hud.goalComplete");
+      mainWiki = "";
+    } else if (!status.current_target && isRealmMaster(status)) {
+      mainText = t("hud.mainRoadDone");
+      mainWiki = "";
+    }
+    rows.push({ label: t("path.main"), text: mainText, wiki: mainWiki, main: true });
+    const question = String(status.goal_question || "").trim();
+    if (!status.practice && !isRealmMaster(status) && status.boss_ready && !status.boss_completed && question) {
+      rows.push({ label: t("hud.grandGoal").replace(/\s*:\s*$/, ""), text: question, wiki: "", main: true });
+    }
+    const live = !status.practice && !status.boss_completed && Array.isArray(status.live_branch_targets)
+      ? status.live_branch_targets
+      : [];
+    for (const item of live.slice(0, PHONE_BAR_BRANCH_ROWS)) {
+      rows.push({ label: realmName(item, status), text: item.target || "…", wiki: item.target || "", topic: item.theme_tag || "" });
+    }
+    if (live.length > PHONE_BAR_BRANCH_ROWS) rows.push({ more: live.length - PHONE_BAR_BRANCH_ROWS });
+  }
+  // Rebuild only on change: polls run every 1.5s and an open preview is anchored to these nodes.
+  const key = JSON.stringify(rows);
+  if (key !== state.phoneBarKey) {
+    state.phoneBarKey = key;
+    el.phoneTargets.replaceChildren(...rows.map((row) => {
+      if (row.brand) {
+        const brand = document.createElement("p");
+        brand.className = "phone-brand";
+        brand.innerHTML = '<img src="/icons/icon-192.png" width="28" height="28" alt="" />';
+        brand.append("Wikipelago");
+        return brand;
+      }
+      if (row.more) {
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "btn-quiet phone-more";
+        more.textContent = t("phone.moreTargets", { n: row.more });
+        more.addEventListener("click", () => setPhoneMenu(true, { addHistory: true }));
+        return more;
+      }
+      return phoneTargetRow(row.label, row.text, { topic: row.topic, main: row.main, wikiTitle: row.wiki });
+    }));
+  }
+  if (el.phoneTools) el.phoneTools.classList.toggle("hidden", !playable);
+  if (el.phoneCompass) {
+    const showCompass = playable && Boolean(status.compass_unlocked);
+    el.phoneCompass.classList.toggle("hidden", !showCompass);
+    if (showCompass) el.phoneCompass.textContent = `${t("hud.compass")} ${compassHintText(status)}`;
+  }
+}
+
+let tapTipTimer = 0;
+
+function hideTapTip() {
+  clearTimeout(tapTipTimer);
+  el.tapTip?.classList.add("hidden");
+}
+
+function showTapTip(text, anchor) {
+  if (!el.tapTip) {
+    el.tapTip = document.createElement("div");
+    el.tapTip.className = "tap-tip hidden";
+    el.tapTip.setAttribute("role", "status");
+    document.body.appendChild(el.tapTip);
+  }
+  const tip = el.tapTip;
+  tip.textContent = text;
+  tip.classList.remove("hidden");
+  const rect = anchor.getBoundingClientRect();
+  const margin = 8;
+  const width = Math.min(tip.offsetWidth, window.innerWidth - margin * 2);
+  const left = Math.max(margin, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - margin));
+  let top = rect.top - tip.offsetHeight - 6;
+  if (top < margin) top = rect.bottom + 6;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+  clearTimeout(tapTipTimer);
+  tapTipTimer = setTimeout(hideTapTip, 2600);
+}
+
+function bindPhoneLayout() {
+  if (el.phoneSearchBtn) el.phoneSearchBtn.innerHTML = TOOL_ICON_SVGS.search;
+  if (el.phoneSosBtn && TOOL_ICON_SVGS.teleport) el.phoneSosBtn.insertAdjacentHTML("afterbegin", TOOL_ICON_SVGS.teleport);
+  syncPhoneMenuButton();
+  el.phoneMenuBtn?.addEventListener("click", () => setPhoneMenu(!isPhoneMenuOpen(), { addHistory: true }));
+  el.phoneSearchBtn?.addEventListener("click", () => openSearchOverlay());
+  el.phoneSosBtn?.addEventListener("click", () => {
+    void teleportToRandomPage();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isPhoneMenuOpen()) setPhoneMenu(false);
+  });
+  // Leaving the phone layout (rotation, wider window) brings both columns back.
+  PHONE_QUERY.addEventListener("change", () => {
+    if (!isPhoneLayout()) document.body.classList.remove("phone-menu-open");
+    else if (!(state.status?.connected_to_ap || state.status?.practice)) setPhoneMenu(true);
+    syncPhoneMenuButton();
+    if (state.status) {
+      renderRoundsTrack(state.status);
+      renderFragmentsTrack(state.status);
+    }
+  });
+  // The search box and previews sit just under the bar, whatever its height.
+  if (el.phoneBar && typeof ResizeObserver === "function") {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--phone-bar-h", `${el.phoneBar.offsetHeight}px`);
+    }).observe(el.phoneBar);
+  }
+  // Touch: tap a target title for its preview, or anything with a label for a short bubble.
+  document.addEventListener("click", (event) => {
+    if (!TOUCH_QUERY.matches) return;
+    const hover = event.target.closest?.(".target-hover");
+    const wikiTitle = hover ? hoverWikiTitle(hover) : "";
+    if (wikiTitle) {
+      hideTapTip();
+      if (state.targetTooltipVisible && state.targetTooltipAnchor === hover) hideTargetTooltip();
+      else showTargetTooltip(wikiTitle, hover);
+      return;
+    }
+    const labelled = event.target.closest?.("[title]");
+    if (
+      labelled
+      && labelled.title
+      && !labelled.closest("button, a, input, select, label, [role='button'], #articleBody")
+    ) {
+      hideTargetTooltip();
+      showTapTip(labelled.title, labelled);
+      return;
+    }
+    hideTapTip();
+    if (state.targetTooltipVisible && !event.target.closest?.("#targetTooltip")) hideTargetTooltip();
+  });
+  window.addEventListener("scroll", () => {
+    hideTapTip();
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  }, { passive: true });
 }
 
 function pathLabel(path) {
@@ -2048,6 +2315,22 @@ function ensureToolIcons() {
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
   el.toolIconsRow.dataset.ready = "4";
+  const search = el.toolIconsRow.querySelector('[data-tool="search"]');
+  if (search) {
+    search.setAttribute("role", "button");
+    search.tabIndex = 0;
+    const open = () => {
+      setPhoneMenu(false);
+      openSearchOverlay();
+    };
+    search.addEventListener("click", open);
+    search.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  }
 }
 
 function overflowChipWidthPx(count) {
@@ -3603,6 +3886,8 @@ function applyHUDStatus(status) {
   el.compassHint.textContent = status.compass_unlocked
     ? compassHintText(status)
     : t("hud.locked");
+  renderPhoneBar(status);
+  syncPhoneMenuForStatus(status);
   renderSearchStatus();
   renderToolIcons(status);
   renderLensIcons(status);
@@ -4665,7 +4950,7 @@ async function openArticle(title, options = {}) {
     el.articleTitle.textContent = displayLang !== seedLang
       ? `${displayTitle} · ${displayLang}`
       : displayTitle;
-    el.articleBody.scrollTop = 0;
+    resetArticleScroll();
     consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki || skipTraps });
 
     if (prepared?.root) {
@@ -4847,16 +5132,19 @@ function isEventInSidePanel(target) {
 }
 
 function applyArticleWheel(deltaY) {
-  if (!el.articleBody) return;
+  const scroller = articleScroller();
+  if (!scroller) return;
   const factor = state.status?.scrollsanity ? scrollFactor() : 1;
-  el.articleBody.scrollTop += deltaY * factor;
+  scroller.scrollTop += deltaY * factor;
 }
 
 // One scroll path: always drive #articleBody ourselves (except side panel / bingo overlay).
 // Native scrolling over nested overflow:auto hosts was latching the wheel at mid-page.
 window.addEventListener("wheel", (e) => {
   if (isEventInSidePanel(e.target)) return;
-  if (e.target?.closest?.("#bingoOverlay")) return;
+  if (e.target?.closest?.("#bingoOverlay, #journeyOverlay, #victoryOverlay")) return;
+  // Phone menu view: the HUD cards scroll with the page as usual.
+  if (isPhoneLayout() && isPhoneMenuOpen()) return;
   if (!el.articleBody) return;
 
   const nest = e.target?.closest?.(".table-scroll.is-scrollable-x");
@@ -5046,21 +5334,30 @@ document.addEventListener("keydown", (e) => {
       End: 1_000_000,
       " ": e.shiftKey ? -320 : 320,
     };
-    if (Object.prototype.hasOwnProperty.call(keyToAmount, e.key)) {
+    const scroller = articleScroller();
+    if (scroller && Object.prototype.hasOwnProperty.call(keyToAmount, e.key)) {
       e.preventDefault();
       const amount = keyToAmount[e.key];
       if (e.key === "Home") {
-        el.articleBody.scrollTop = 0;
+        scroller.scrollTop = 0;
       } else if (e.key === "End") {
-        el.articleBody.scrollTop = el.articleBody.scrollHeight;
+        scroller.scrollTop = scroller.scrollHeight;
       } else {
-        el.articleBody.scrollTop += amount * factor;
+        scroller.scrollTop += amount * factor;
       }
     }
   }
 });
 
 window.addEventListener("popstate", async (e) => {
+  if (state.ignoreNextPopstate) {
+    state.ignoreNextPopstate = false;
+    return;
+  }
+  if (isPhoneMenuOpen()) {
+    setPhoneMenu(false, { fromHistory: true });
+    return;
+  }
   if (state.status && !canGoBackNow()) {
     rePushCurrentHistory();
     backBlockedToast();
@@ -5111,6 +5408,7 @@ bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();
 bindThemeToggle();
+bindPhoneLayout();
 bindStuckHelper();
 initSidePanelToggles();
 showMigrateBannerIfNeeded();
