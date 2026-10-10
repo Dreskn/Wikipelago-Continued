@@ -50,9 +50,24 @@ function Get-GoalPreset {
     return Get-Random -InputObject $values
 }
 
+function Get-EnabledCategoryCount([hashtable]$Settings) {
+    # include_sensitive_pages is a filter, not a category (and has no Realm Portal).
+    return @($Settings.Keys | Where-Object { $_ -like 'include_*' -and $_ -ne 'include_sensitive_pages' -and $Settings[$_] }).Count
+}
+
 function Test-LocalSettings([hashtable]$Settings) {
     $checkCount = [int]$Settings.check_count
-    $required = [int]$Settings.required_fragments
+    $goal = if ($Settings.goal) { [string]$Settings.goal } else { "grand_goal" }
+    $isGrandGoal = $goal -ne "realm_master"
+    # realm_master generates no Knowledge Fragments (required or extra) and no Grand Goal.
+    $required = if ($isGrandGoal) { [int]$Settings.required_fragments } else { 0 }
+    $additionalFragments = 0
+    if ($isGrandGoal) {
+        $additionalFragments = 2
+        if ($null -ne $Settings.additional_fragments_in_pool) {
+            $additionalFragments = [Math]::Max(0, [int]$Settings.additional_fragments_in_pool)
+        }
+    }
     $startUnlocked = [int]$Settings.start_rounds_unlocked
     $perUnlock = [Math]::Max(1, [int]$Settings.rounds_per_unlock)
     $startingLetters = switch ($Settings.search_starting_letters) {
@@ -95,15 +110,26 @@ function Test-LocalSettings([hashtable]$Settings) {
     if ($null -ne $Settings.additional_branch_keys) {
         $additionalBranchKeys = [Math]::Max(0, [int]$Settings.additional_branch_keys)
     }
+    if (-not $isGrandGoal -and $branchCount -le 0) {
+        return "goal realm_master requires branch_count of at least 1"
+    }
     if ($branchCount -gt 0 -and $checkCount -lt 2) {
         return "branch_count requires check_count of at least 2"
     }
     if ($branchCount -gt [Math]::Max(0, $checkCount - 1)) {
         return "branch_count exceeds eligible main-road crossroads"
     }
-    $branchKeys = if ($branchCount -gt 0) { $branchCount + $additionalBranchKeys } else { 0 }
+    # Topic Realms only exist with branches. Each Realm takes a distinct enabled category
+    # (article counts per category are not modelled here; the world also needs branch_length spare titles each).
+    $topicPortals = [bool]$Settings.topic_portals -and $branchCount -gt 0
+    if ($topicPortals -and (Get-EnabledCategoryCount -Settings $Settings) -lt $branchCount) {
+        return "topic_portals needs a distinct enabled category per Realm"
+    }
+    # Realms open with one Portal each instead of Branch Keys (additional_branch_keys is ignored).
+    $branchKeys = if ($branchCount -gt 0 -and -not $topicPortals) { $branchCount + $additionalBranchKeys } else { 0 }
+    $portalItems = if ($topicPortals) { $branchCount } else { 0 }
     $freeLocations = $checkCount + ($branchCount * $branchLength)
-    $mandatoryItems = $required + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded + $displayUnlocksNeeded + $branchKeys
+    $mandatoryItems = $required + $additionalFragments + 3 + $roundAccessCount + $searchLettersNeeded + $scrollUpgradesNeeded + $displayUnlocksNeeded + $branchKeys + $portalItems
     if ($mandatoryItems -gt $freeLocations) {
         return "mandatory progression items exceed available checks"
     }
@@ -123,6 +149,7 @@ function New-WikipelagoSettings {
             progression_balancing = Get-Random -Minimum 0 -Maximum 100
             check_count = $checkCount
             required_fragments = $requiredFragments
+            additional_fragments_in_pool = Get-Random -Minimum 0 -Maximum 4
             start_rounds_unlocked = $startUnlocked
             rounds_per_unlock = $roundsPerUnlock
             random_goal_article = Get-RandomBool
@@ -161,6 +188,8 @@ function New-WikipelagoSettings {
             branch_count = 0
             branch_length = 3
             additional_branch_keys = 0
+            topic_portals = Get-RandomBool
+            goal = "grand_goal"
         }
 
         if ((Get-Random -Minimum 0 -Maximum 100) -lt 35 -and $checkCount -ge 8) {
@@ -168,9 +197,13 @@ function New-WikipelagoSettings {
             $settings.branch_count = Get-Random -Minimum 1 -Maximum ($maxBranches + 1)
             $settings.branch_length = Get-Random -Minimum 1 -Maximum 5
             $settings.additional_branch_keys = Get-Random -Minimum 0 -Maximum 3
+            # realm_master needs at least one branch, so it is only rolled here (Test-LocalSettings also guards it).
+            if (Get-RandomBool) {
+                $settings.goal = "realm_master"
+            }
         }
 
-        if (-not ($settings.GetEnumerator() | Where-Object { $_.Key -like 'include_*' -and $_.Value }).Count) {
+        if ((Get-EnabledCategoryCount -Settings $settings) -eq 0) {
             $settings.include_video_games = $true
         }
 
@@ -190,44 +223,47 @@ Wikipelago:
   progression_balancing: $($Settings.progression_balancing)
   check_count: $($Settings.check_count)
   required_fragments: $($Settings.required_fragments)
+  additional_fragments_in_pool: $($Settings.additional_fragments_in_pool)
   start_rounds_unlocked: $($Settings.start_rounds_unlocked)
   rounds_per_unlock: $($Settings.rounds_per_unlock)
-  random_goal_article: $([string]$Settings.random_goal_article).ToLower()
+  random_goal_article: $(([string]$Settings.random_goal_article).ToLower())
   goal_article_preset: $($Settings.goal_article_preset)
-  searchsanity: $([string]$Settings.searchsanity).ToLower()
-  scrollsanity: $([string]$Settings.scrollsanity).ToLower()
+  searchsanity: $(([string]$Settings.searchsanity).ToLower())
+  scrollsanity: $(([string]$Settings.scrollsanity).ToLower())
   search_starting_letters: $($Settings.search_starting_letters)
-  randomize_tables: $([string]$Settings.randomize_tables).ToLower()
-  randomize_pictures: $([string]$Settings.randomize_pictures).ToLower()
-  randomize_incipit: $([string]$Settings.randomize_incipit).ToLower()
-  randomize_infoboxes: $([string]$Settings.randomize_infoboxes).ToLower()
-  randomize_toc: $([string]$Settings.randomize_toc).ToLower()
-  randomize_navboxes: $([string]$Settings.randomize_navboxes).ToLower()
-  randomize_hatnotes: $([string]$Settings.randomize_hatnotes).ToLower()
-  randomize_references: $([string]$Settings.randomize_references).ToLower()
+  randomize_tables: $(([string]$Settings.randomize_tables).ToLower())
+  randomize_pictures: $(([string]$Settings.randomize_pictures).ToLower())
+  randomize_incipit: $(([string]$Settings.randomize_incipit).ToLower())
+  randomize_infoboxes: $(([string]$Settings.randomize_infoboxes).ToLower())
+  randomize_toc: $(([string]$Settings.randomize_toc).ToLower())
+  randomize_navboxes: $(([string]$Settings.randomize_navboxes).ToLower())
+  randomize_hatnotes: $(([string]$Settings.randomize_hatnotes).ToLower())
+  randomize_references: $(([string]$Settings.randomize_references).ToLower())
   wikipedia_language: $($Settings.wikipedia_language)
-  include_video_games: $([string]$Settings.include_video_games).ToLower()
-  include_movies: $([string]$Settings.include_movies).ToLower()
-  include_tv_shows: $([string]$Settings.include_tv_shows).ToLower()
-  include_anime_manga: $([string]$Settings.include_anime_manga).ToLower()
-  include_sports: $([string]$Settings.include_sports).ToLower()
-  include_science_space: $([string]$Settings.include_science_space).ToLower()
-  include_technology: $([string]$Settings.include_technology).ToLower()
-  include_history: $([string]$Settings.include_history).ToLower()
-  include_geography: $([string]$Settings.include_geography).ToLower()
-  include_food_cuisine: $([string]$Settings.include_food_cuisine).ToLower()
-  include_art_literature: $([string]$Settings.include_art_literature).ToLower()
-  include_mythology_folklore: $([string]$Settings.include_mythology_folklore).ToLower()
-  include_music: $([string]$Settings.include_music).ToLower()
-  include_politics: $([string]$Settings.include_politics).ToLower()
-  include_famous_people: $([string]$Settings.include_famous_people).ToLower()
-  include_animals: $([string]$Settings.include_animals).ToLower()
-  include_biology_medicine: $([string]$Settings.include_biology_medicine).ToLower()
-  include_miscellaneous: $([string]$Settings.include_miscellaneous).ToLower()
-  include_sensitive_pages: $([string]$Settings.include_sensitive_pages).ToLower()
+  include_video_games: $(([string]$Settings.include_video_games).ToLower())
+  include_movies: $(([string]$Settings.include_movies).ToLower())
+  include_tv_shows: $(([string]$Settings.include_tv_shows).ToLower())
+  include_anime_manga: $(([string]$Settings.include_anime_manga).ToLower())
+  include_sports: $(([string]$Settings.include_sports).ToLower())
+  include_science_space: $(([string]$Settings.include_science_space).ToLower())
+  include_technology: $(([string]$Settings.include_technology).ToLower())
+  include_history: $(([string]$Settings.include_history).ToLower())
+  include_geography: $(([string]$Settings.include_geography).ToLower())
+  include_food_cuisine: $(([string]$Settings.include_food_cuisine).ToLower())
+  include_art_literature: $(([string]$Settings.include_art_literature).ToLower())
+  include_mythology_folklore: $(([string]$Settings.include_mythology_folklore).ToLower())
+  include_music: $(([string]$Settings.include_music).ToLower())
+  include_politics: $(([string]$Settings.include_politics).ToLower())
+  include_famous_people: $(([string]$Settings.include_famous_people).ToLower())
+  include_animals: $(([string]$Settings.include_animals).ToLower())
+  include_biology_medicine: $(([string]$Settings.include_biology_medicine).ToLower())
+  include_miscellaneous: $(([string]$Settings.include_miscellaneous).ToLower())
+  include_sensitive_pages: $(([string]$Settings.include_sensitive_pages).ToLower())
   branch_count: $($Settings.branch_count)
   branch_length: $($Settings.branch_length)
   additional_branch_keys: $($Settings.additional_branch_keys)
+  topic_portals: $(([string]$Settings.topic_portals).ToLower())
+  goal: $($Settings.goal)
 "@
 }
 

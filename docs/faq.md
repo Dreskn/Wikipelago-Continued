@@ -13,6 +13,20 @@ Fix it by either:
 - **Adding locations** — raise `check_count`, and/or enable bingo / use a larger grid / more boards, and/or enable branches
 - **Removing item pressure** — turn down sanities (especially searchsanity), lenses, traps, unlock counts, or ease Round Access (`start_rounds_unlocked` / `rounds_per_unlock`)
 
+## What does `Wikipelago cannot generate Topic Realms` “no unused enabled category” mean?
+
+With `topic_portals` on, every Realm needs its **own** enabled category, and that category needs at least `branch_length` articles the main road has not already used. The error names the first Realm that could not get one.
+
+Fix it by either:
+
+- **Enabling more categories** — turn on more `include_*` toggles (you need at least as many as `branch_count`, and a few spare helps)
+- **Asking for less** — lower `branch_count` and/or `branch_length`
+- **Turning `topic_portals` off** — plain branches can share a category
+
+## What does `goal realm_master needs at least one branch / Realm` mean?
+
+Realm Master is won by clearing every branch / Realm, so a seed with `branch_count: 0` has nothing to clear. Set `branch_count` to 1 or more, or switch back to `goal: grand_goal`.
+
 ## I don't understand how bingo works. How do I stamp a letter pair like FC?
 
 Bingo only looks at the **start of the page title**. It skips spaces, digits, hyphens, and other punctuation, then takes the **first two letters**. Those two letters are the pair that gets stamped.
@@ -53,3 +67,7 @@ Non-article namespaces (File, Template, Wikipedia:, Portail, Plik, and the same 
 ## What happened to `goal_article_preset` / `random_goal_article`?
 
 They are ignored. The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs still generate; they just no longer pick a preset series.
+
+## I picked Realm Master. Where are my Knowledge Fragments and the Grand Goal?
+
+There are none: `goal: realm_master` generates no Knowledge Fragments and no Grand Goal question. The **Realms to master** checklist in the Progression card is your goal tracker (cleared / total). You win when the last round of every Realm is done. If you finish the main road first, the target line reads "Main road cleared — finish your Realms".
