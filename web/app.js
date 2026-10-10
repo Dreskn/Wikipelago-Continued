@@ -125,6 +125,8 @@ const TRACK_OVERFLOW_MIN = 5;
 const TRACK_FORK_OVERFLOW_MIN = 3;
 /** Current-round / +N chip width. */
 const TRACK_EMPHASIS_MIN_PX = 24;
+/** Side margin of the current round, so its outline (2px + 1px offset) clears its neighbours. Matches style.css. */
+const TRACK_CURRENT_MARGIN_PX = 3;
 /** Crossroad chip width on the main road. */
 const TRACK_CROSSROAD_PX = 48;
 // Narrowest crossroad hook when many Realms share a small track (matches the 24px spur).
@@ -2351,8 +2353,10 @@ function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX, crossroadP
   for (const p of plan) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
-      // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += p.run.crossroad ? crossroadPx : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
+      // Current round uses the same footprint as a +N chip, plus margins so its outline stays clear.
+      width += p.run.crossroad
+        ? crossroadPx
+        : (p.run.current ? chipMinPx + TRACK_CURRENT_MARGIN_PX * 2 : TRACK_SEG_MIN_PX);
       parts += 1;
     }
     if (p.overflow > 0) {

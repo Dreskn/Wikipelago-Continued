@@ -1630,6 +1630,8 @@ button:active:not(:disabled) { transform: translateY(1px); }
   max-width: none;
   outline: 2px solid var(--brass-hi);
   outline-offset: 1px;
+  /* The outline reaches 3px out; keep a clean gap to the neighbouring tiles (TRACK_CURRENT_MARGIN_PX). */
+  margin: 0 3px;
   position: relative;
   z-index: 1;
   animation: seg-pulse 1.8s ease-in-out infinite;
@@ -2019,6 +2021,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 .rounds-track .fork-spur .seg.current {
   outline: 2px solid var(--realm);
+  margin: 3px 0;
   animation: none;
 }
 .rounds-track .fork-spur .seg.overflow {
