@@ -254,6 +254,8 @@
       "toast.connectToPlay": "Connect to Archipelago to play",
       "toast.connectOrPractice": "Connect to Archipelago or start Practice",
       "toast.connected": "Connected to Archipelago",
+      "toast.dismiss": "Dismiss",
+      "toast.region": "Notifications",
       "toast.connecting": "Connecting to Archipelago...",
       "toast.connectFailed": "Could not connect to Archipelago",
       "toast.connectFailedShort": "Connect failed",
@@ -584,6 +586,8 @@
     "track.kindRound": "Manche",
     "track.kindFragment": "Fragment",
     // Screen-reader labels
+    "toast.dismiss": "Fermer",
+    "toast.region": "Notifications",
     "path.aria": "Chemins",
     "items.toolsAria": "Outils",
     "items.scrollAria": "Vitesse de défilement",
@@ -866,6 +870,8 @@
     "track.kindRound": "Runde",
     "track.kindFragment": "Fragment",
     // Screen-reader labels
+    "toast.dismiss": "Schließen",
+    "toast.region": "Benachrichtigungen",
     "path.aria": "Wege",
     "items.toolsAria": "Werkzeuge",
     "items.scrollAria": "Scrollgeschwindigkeit",
@@ -1147,6 +1153,8 @@
     "track.kindRound": "Ronda",
     "track.kindFragment": "Fragmento",
     // Screen-reader labels
+    "toast.dismiss": "Cerrar",
+    "toast.region": "Notificaciones",
     "path.aria": "Caminos",
     "items.toolsAria": "Herramientas",
     "items.scrollAria": "Velocidad de desplazamiento",
@@ -1428,6 +1436,8 @@
     "track.kindRound": "Round",
     "track.kindFragment": "Frammento",
     // Screen-reader labels
+    "toast.dismiss": "Chiudi",
+    "toast.region": "Notifiche",
     "path.aria": "Percorsi",
     "items.toolsAria": "Strumenti",
     "items.scrollAria": "Velocità di scorrimento",
@@ -1709,6 +1719,8 @@
     "track.kindRound": "Rodada",
     "track.kindFragment": "Fragmento",
     // Screen-reader labels
+    "toast.dismiss": "Fechar",
+    "toast.region": "Notificações",
     "path.aria": "Caminhos",
     "items.toolsAria": "Ferramentas",
     "items.scrollAria": "Velocidade de rolagem",
@@ -1990,6 +2002,8 @@
     "track.kindRound": "Ronde",
     "track.kindFragment": "Fragment",
     // Screen-reader labels
+    "toast.dismiss": "Sluiten",
+    "toast.region": "Meldingen",
     "path.aria": "Paden",
     "items.toolsAria": "Gereedschap",
     "items.scrollAria": "Scrollsnelheid",
@@ -2270,6 +2284,8 @@
     "track.kindRound": "Runda",
     "track.kindFragment": "Fragment",
     // Screen-reader labels
+    "toast.dismiss": "Stäng",
+    "toast.region": "Aviseringar",
     "path.aria": "Vägar",
     "items.toolsAria": "Verktyg",
     "items.scrollAria": "Rullningshastighet",
@@ -2551,6 +2567,8 @@
     "track.kindRound": "Runda",
     "track.kindFragment": "Fragment",
     // Screen-reader labels
+    "toast.dismiss": "Zamknij",
+    "toast.region": "Powiadomienia",
     "path.aria": "Ścieżki",
     "items.toolsAria": "Narzędzia",
     "items.scrollAria": "Prędkość przewijania",

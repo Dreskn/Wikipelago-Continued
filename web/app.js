@@ -348,7 +348,7 @@ const el = {
   bingoZoomOut: document.getElementById("bingoZoomOut"),
   bingoZoomReset: document.getElementById("bingoZoomReset"),
   lensesItem: document.getElementById("lensesItem"),
-  toast: document.getElementById("toast"),
+  toastStack: document.getElementById("toastStack"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
@@ -464,25 +464,79 @@ const savedConnection = loadSavedConnection();
 el.serverInput.value = savedConnection.server;
 el.slotInput.value = savedConnection.slot;
 
-let toastTimer = null;
-let stickyToastActive = false;
+// Notifications: a small stack, newest on top (top of the screen on phones, top-right on desktop).
+const TOAST_MAX = 3;
+const toastTimers = new WeakMap();
 let lastStickyError = "";
 
-function toast(text, kind = "ok", durationMs = 5500) {
-  el.toast.textContent = text;
-  el.toast.className = `toast ${kind}`;
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = null;
-  // durationMs <= 0 keeps the toast visible until the next toast replaces it.
-  if (durationMs <= 0) {
-    stickyToastActive = true;
+function dismissToast(node) {
+  if (!node || node.classList.contains("leaving")) return;
+  clearTimeout(toastTimers.get(node));
+  node.classList.add("leaving");
+  setTimeout(() => node.remove(), 200);
+}
+
+function armToastTimer(node, durationMs) {
+  clearTimeout(toastTimers.get(node));
+  if (durationMs > 0) toastTimers.set(node, setTimeout(() => dismissToast(node), durationMs));
+}
+
+/**
+ * Show a notification. durationMs <= 0 keeps it until tapped or cleared (connection errors).
+ * `detail` adds a smaller second line.
+ */
+function toast(text, kind = "ok", durationMs = 5500, { detail = "" } = {}) {
+  const stack = el.toastStack;
+  if (!stack || !text) return;
+  const live = [...stack.children].filter((node) => !node.classList.contains("leaving"));
+  // Same message already showing (status polls, repeated taps): restart it instead of stacking.
+  const same = live.find((node) => node.dataset.text === text && node.dataset.kind === kind);
+  if (same) {
+    armToastTimer(same, durationMs);
     return;
   }
-  stickyToastActive = false;
-  toastTimer = setTimeout(() => {
-    el.toast.className = "toast hidden";
-    toastTimer = null;
-  }, durationMs);
+  const sticky = durationMs <= 0;
+  // Only one sticky notification at a time: the newest connection state wins.
+  if (sticky) live.filter((node) => node.classList.contains("sticky")).forEach(dismissToast);
+
+  const node = document.createElement("div");
+  node.className = `toast ${kind}${sticky ? " sticky" : ""}`;
+  node.dataset.text = text;
+  node.dataset.kind = kind;
+  const body = document.createElement("div");
+  body.className = "toast-body";
+  const main = document.createElement("p");
+  main.className = "toast-text";
+  main.textContent = text;
+  body.appendChild(main);
+  if (detail) {
+    const extra = document.createElement("p");
+    extra.className = "toast-detail";
+    extra.textContent = detail;
+    body.appendChild(extra);
+  }
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "toast-close";
+  close.setAttribute("aria-label", t("toast.dismiss"));
+  close.textContent = "×";
+  node.append(body, close);
+  node.addEventListener("click", () => dismissToast(node));
+  // Desktop: hovering keeps it readable; leaving gives a short grace period.
+  node.addEventListener("mouseenter", () => clearTimeout(toastTimers.get(node)));
+  node.addEventListener("mouseleave", () => {
+    if (!node.classList.contains("sticky")) armToastTimer(node, 2500);
+  });
+  stack.prepend(node);
+  armToastTimer(node, durationMs);
+
+  // Too many: drop the oldest, keeping a sticky one if possible.
+  const shown = [...stack.children].filter((item) => !item.classList.contains("leaving"));
+  while (shown.length > TOAST_MAX) {
+    const oldest = [...shown].reverse().find((item) => !item.classList.contains("sticky")) || shown[shown.length - 1];
+    shown.splice(shown.indexOf(oldest), 1);
+    dismissToast(oldest);
+  }
 }
 
 function toastSticky(text, kind = "warn") {
@@ -491,10 +545,7 @@ function toastSticky(text, kind = "warn") {
 
 function clearStickyConnectionError() {
   lastStickyError = "";
-  if (stickyToastActive && el.toast.classList.contains("warn")) {
-    el.toast.className = "toast hidden";
-    stickyToastActive = false;
-  }
+  el.toastStack?.querySelectorAll(".toast.sticky.warn").forEach(dismissToast);
 }
 
 function isApConnected() {

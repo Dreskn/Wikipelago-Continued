@@ -26,7 +26,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/static/style.css?v=20261010-02" />
+  <link rel="stylesheet" href="/static/style.css?v=20261010-03" />
 </head>
 <body>
   <div id="releaseBanner" class="migrate-banner" role="status">
@@ -171,7 +171,6 @@
             </div>
 
             <p><strong data-i18n="hud.compass">Compass:</strong> <span id="compassHint">-</span></p>
-            <div id="toast" class="toast hidden"></div>
           </div>
         </div>
 
@@ -311,12 +310,14 @@
     </div>
   </div>
 
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-label="Notifications" data-i18n-aria="toast.region"></div>
+
   <nav id="supportDock" class="support-dock" aria-label="Support">
     <a href="https://ko-fi.com/dreskn" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.me">Support Wikipelago</a>
     <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
   </nav>
 
-  <script src="/static/i18n.js?v=20261010-02"></script>
-  <script src="/static/app.js?v=20261010-02"></script>
+  <script src="/static/i18n.js?v=20261010-03"></script>
+  <script src="/static/app.js?v=20261010-03"></script>
 </body>
 </html>
