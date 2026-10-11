@@ -3,27 +3,69 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#141d28" />
+  <meta name="theme-color" content="#0e1020" />
   <meta name="description" content="Play Wikipedia racing rounds connected to Archipelago." />
   <title>Wikipelago</title>
+  <script>
+    // Apply the saved light/dark theme before first paint (no dark flash for light users).
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("wikipelago_theme"); } catch (e) { /* storage blocked */ }
+      if (theme !== "light" && theme !== "dark") {
+        theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      }
+      document.documentElement.dataset.theme = theme;
+      if (theme === "light") {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", "#e8eae4");
+      }
+      // Display settings: text size, high contrast (follows the system until chosen), colorblind colors.
+      var scale = null, contrast = null, cvd = null;
+      try {
+        scale = localStorage.getItem("wikipelago_text_scale");
+        contrast = localStorage.getItem("wikipelago_contrast");
+        cvd = localStorage.getItem("wikipelago_cvd");
+      } catch (e) { /* storage blocked */ }
+      if (scale === "1.5") scale = "1.3"; // 150% was removed; keep those players on the largest size
+      if (["1", "1.05", "1.15", "1.3"].indexOf(scale) >= 0) {
+        document.documentElement.style.setProperty("--text-scale", scale);
+      }
+      var systemMore = window.matchMedia && window.matchMedia("(prefers-contrast: more)").matches;
+      if (contrast === "more" || (contrast !== "normal" && systemMore)) document.documentElement.dataset.contrast = "more";
+      if (cvd === "1") document.documentElement.dataset.cvd = "1";
+    })();
+  </script>
   <link rel="manifest" href="/manifest.webmanifest" />
   <link rel="icon" href="/icons/icon-192.png?v=20260915-01" type="image/png" sizes="192x192" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
-  <link rel="stylesheet" href="/static/style.css?v=20260917-03" />
+  <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="/static/style.css?v=20261011-12" />
 </head>
-<body>
+<body class="is-idle">
   <div id="releaseBanner" class="migrate-banner" role="status">
-    <p data-i18n-html="banner.release10">This web client always uses the <a href="https://github.com/Dreskn/Wikipelago-Continued/releases">latest release</a>. Please report any issues on <a href="https://discord.com/channels/731205301247803413/1462007968902938768">Discord</a>. To continue playing on previous clients, <a href="https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms">host the bridge locally</a>.</p>
+    <p data-i18n-html="banner.release10">This web client always uses the <a href="https://github.com/Dreskn/Wikipelago-Continued/releases">latest release</a>. Please report any issues on the <a href="https://discord.com/channels/731205301247803413/1462007968902938768">Archipelago Discord</a>. To continue playing on previous clients, <a href="https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms">host the bridge locally</a>.</p>
   </div>
-  <div id="migrateBanner" class="migrate-banner hidden" role="status">
-    <p data-i18n-html="migrate.renderBanner">This Render URL is outdated. Open the game at <a href="https://wikipelago.dreskn.fr/">wikipelago.dreskn.fr</a> instead.</p>
+  <!-- Phone layout only (< 900px): targets and quick tools stay on screen while the page scrolls. -->
+  <div id="phoneBar" class="phone-bar" role="region" aria-label="Current targets" data-i18n-aria="phone.barAria">
+    <div class="phone-bar-row">
+      <div id="phoneTargets" class="phone-targets"></div>
+      <button id="phoneMenuBtn" type="button" class="phone-icon-btn phone-menu-btn" aria-expanded="false" aria-label="Menu"></button>
+    </div>
+    <div id="phoneTools" class="phone-bar-tools hidden">
+      <span id="phoneCompass" class="phone-compass hidden"></span>
+      <button id="phoneSearchBtn" type="button" class="phone-icon-btn" aria-label="Search this page" data-i18n-aria="search.placeholder" title="Search this page" data-i18n-title="search.placeholder"></button>
+      <button id="phoneSosBtn" type="button" class="teleport-btn phone-sos-btn" disabled><span id="phoneSosLabel">SOS</span></button>
+    </div>
   </div>
   <div class="layout">
     <header class="topbar">
       <div class="topbar-article">
         <div class="topbar-brand">
-          <img class="topbar-logo" src="/icons/icon-192.png" width="192" height="192" alt="" />
-          <h1>Wikipelago</h1>
+          <div class="topbar-name">
+            <img class="topbar-logo" src="/icons/icon-192.png" width="192" height="192" alt="" />
+            <h1>Wikipelago</h1>
+          </div>
           <div id="buildBadge" class="build-badge" title="Deploy build" data-i18n-title="build.deploy">…</div>
         </div>
         <div class="topbar-teleport">
@@ -33,6 +75,27 @@
         </div>
       </div>
       <div class="topbar-status">
+        <div class="display-menu">
+          <button id="displayBtn" type="button" class="theme-toggle display-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="displayPanel" aria-label="Display settings" title="Display settings">Aa</button>
+          <div id="displayPanel" class="display-panel hidden" role="dialog" aria-labelledby="displayPanelTitle">
+            <p id="displayPanelTitle" class="display-title" data-i18n="display.title">Display</p>
+            <div>
+              <span class="display-label" id="displaySizeLabel" data-i18n="display.textSize">Text size</span>
+              <div class="display-sizes" role="radiogroup" aria-labelledby="displaySizeLabel">
+                <button type="button" role="radio" data-scale="1">100%</button>
+                <button type="button" role="radio" data-scale="1.05">105%</button>
+                <button type="button" role="radio" data-scale="1.15">115%</button>
+                <button type="button" role="radio" data-scale="1.3">130%</button>
+              </div>
+            </div>
+            <label class="display-switch"><input type="checkbox" id="contrastToggle" /> <span data-i18n="display.contrast">High contrast</span></label>
+            <label class="display-switch"><input type="checkbox" id="cvdToggle" /> <span data-i18n="display.colorblind">Colorblind-friendly colors</span></label>
+          </div>
+        </div>
+        <button id="themeToggle" type="button" class="theme-toggle" aria-label="Switch to light theme" title="Switch to light theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
         <select id="uiLangSelect" class="topbar-lang" aria-label="Language" data-i18n-aria="conn.language"></select>
         <div id="connBadge" class="badge offline" data-i18n="badge.offline">Offline</div>
       </div>
@@ -52,6 +115,11 @@
           </div>
         </div>
         <div id="articleStage" class="article-stage">
+          <!-- Shown until a room or Practice is running: what to do first. -->
+          <div id="idleIntro" class="idle-intro">
+            <h2 data-i18n="idle.title">Ready to race?</h2>
+            <p data-i18n="idle.body">Connect to your Archipelago room, or start Practice to play right away with no setup.</p>
+          </div>
           <article id="articleBody" class="article-body"></article>
           <div id="articleLoading" class="article-loading hidden" aria-live="polite" aria-busy="false">
             <div class="article-loading-panel">
@@ -62,6 +130,7 @@
         </div>
       </section>
 
+      <div class="side-column">
       <aside class="side-panel">
         <div class="card" id="connectionCard">
           <div class="connection-head">
@@ -106,13 +175,13 @@
               <div class="run-label-row">
                 <strong data-i18n="hud.targets">Targets</strong>
                 <span class="targets-reroll">
-                  <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled title="Reroll every current target (up to 3 per round; not the Grand Goal)" data-i18n="hud.reroll" data-i18n-title="hud.rerollTitle">Reroll</button>
+                  <button type="button" id="rerollTargetBtn" class="btn-quiet" disabled data-i18n="hud.reroll">Reroll</button>
                   <span id="rerollTargetMeta" class="muted-meta"></span>
                 </span>
               </div>
               <div class="target-list">
-                <p class="target-row">
-                  <strong data-i18n="path.main">Main road</strong>
+                <p class="target-row main-target-row">
+                  <strong class="realm-label main-road-label" data-i18n="path.main">Main road</strong>
                   <span class="target-hover" id="targetHover">
                     <span id="targetText">-</span>
                     <span id="targetTooltip" class="target-tooltip hidden" role="tooltip"></span>
@@ -120,6 +189,14 @@
                 </p>
                 <div id="branchTargets" class="branch-targets hidden"></div>
               </div>
+            </div>
+
+            <div id="realmsBlock" class="realms-block hidden">
+              <div class="run-label-row">
+                <strong id="realmsTitle" data-i18n="realm.title">Realms</strong>
+                <span id="realmsMeta" class="muted-meta"></span>
+              </div>
+              <ol id="realmsList" class="realms-list"></ol>
             </div>
 
             <div class="goal-block">
@@ -142,7 +219,6 @@
             </div>
 
             <p><strong data-i18n="hud.compass">Compass:</strong> <span id="compassHint">-</span></p>
-            <div id="toast" class="toast hidden"></div>
           </div>
         </div>
 
@@ -205,12 +281,13 @@
         </div>
 
         <div class="helper-box">
-          <button type="button" id="stuckToggleBtn" class="helper-toggle" data-i18n="stuck.toggle">Are you really stuck?</button>
+          <p class="helper-line">
+            <span data-i18n="stuck.tryThe">Stuck? Try the</span>
+            <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer" data-i18n="stuck.solver">Wiki path solver</a>
+          </p>
+          <!-- Only on bridges started with the debug menu enabled. -->
+          <button type="button" id="stuckToggleBtn" class="helper-toggle hidden" data-i18n="stuck.toggle">Are you really stuck?</button>
           <div id="stuckPanel" class="helper-panel hidden">
-            <p class="helper-line">
-              <span data-i18n="stuck.tryThe">Try the</span>
-              <a href="https://wiki.spaceface.dev/" target="_blank" rel="noopener noreferrer" data-i18n="stuck.solver">Wiki path solver</a>
-            </p>
             <div id="debugUnlockWrap" class="hidden">
               <p class="helper-line">
                 <label class="helper-debug-label">
@@ -229,6 +306,13 @@
           </div>
         </div>
       </aside>
+      <!-- One row under the sidebar, outside its scroll area, so it never covers a card. -->
+      <nav id="supportDock" class="support-dock" aria-label="Support" data-i18n-aria="support.aria">
+        <a href="https://ko-fi.com/dreskn" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.me">Support Wikipelago</a>
+        <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
+        <a href="https://github.com/Dreskn/Wikipelago-Continued" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.source">Source</a>
+      </nav>
+      </div>
     </main>
   </div>
 
@@ -282,12 +366,9 @@
     </div>
   </div>
 
-  <nav id="supportDock" class="support-dock" aria-label="Support">
-    <a href="https://ko-fi.com/dreskn" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.me">Support Wikipelago</a>
-    <a href="https://donate.wikimedia.org/" target="_blank" rel="noopener noreferrer" class="support-btn" data-i18n="support.wikipedia">Support Wikipedia</a>
-  </nav>
+  <div id="toastStack" class="toast-stack" aria-live="polite" aria-label="Notifications" data-i18n-aria="toast.region"></div>
 
-  <script src="/static/i18n.js?v=20260917-03"></script>
-  <script src="/static/app.js?v=20260917-03"></script>
+  <script src="/static/i18n.js?v=20261011-12"></script>
+  <script src="/static/app.js?v=20261011-12"></script>
 </body>
 </html>

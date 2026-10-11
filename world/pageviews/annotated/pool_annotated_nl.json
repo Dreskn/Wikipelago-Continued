@@ -10213,7 +10213,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Call Me by Your Name (film)",
@@ -10384,7 +10384,7 @@
         "biology_medicine",
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Canon van Vlaanderen",
@@ -12630,7 +12630,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Coco Chanel",
@@ -13307,7 +13307,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Crans-Montana",
@@ -16821,7 +16821,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Moord op Anne Faber'"
     },
     {
@@ -16831,7 +16831,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dood van Diana Frances Spencer",
@@ -16859,7 +16859,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dood van Nicky Verstappen",
@@ -43954,7 +43954,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MEAU",
@@ -46645,7 +46645,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Mat '64",
@@ -47359,7 +47359,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MediaMarkt",
@@ -47783,7 +47783,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Methylfenidaat",
@@ -49472,7 +49472,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Iryna Zarutska",
@@ -49509,7 +49509,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Marianne Vaatstra",
@@ -49546,7 +49546,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Theo van Gogh",
@@ -50404,7 +50404,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Natasha Richardson",
@@ -50618,7 +50618,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Necrotiserende fasciitis",
@@ -53351,7 +53351,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Oogappels",
@@ -55174,7 +55174,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Peggy Vrijens",
@@ -61817,7 +61817,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Zaak-Dutroux'"
     },
     {
@@ -63483,7 +63483,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Seropositief",
@@ -64879,7 +64879,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Soedan",
@@ -76650,7 +76650,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zaak-Dutroux",
@@ -76659,7 +76659,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zaak-Fritzl",
@@ -76668,7 +76668,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zaak-Lucia de Berk",
@@ -79901,7 +79901,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -80535,7 +80535,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -85438,7 +85438,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

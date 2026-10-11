@@ -1,8 +1,0 @@
-﻿services:
-  - type: web
-    name: wikipelago
-    env: python
-    rootDir: .
-    buildCommand: pip install -r bridge/requirements.txt
-    startCommand: python bridge/bridge.py --host 0.0.0.0 --port $PORT
-    autoDeploy: true

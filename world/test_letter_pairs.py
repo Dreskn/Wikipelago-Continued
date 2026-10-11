@@ -23,6 +23,10 @@ CASES = [
     ("pt", "Ação", "AÇ"),
     ("sv", "Öl", "ÖL"),
     ("it", "Città", "CI"),
+    ("fr", "Œuf", "OE"),
+    ("fr", "Œsophage", "OE"),
+    ("fr", "Cœur", "CO"),
+    ("en", "Æsir", "AE"),
 ]
 
 
@@ -35,53 +39,40 @@ def _load_world_lp():
     return mod
 
 
-def _bridge_letter_pair(title: str, lang: str) -> str | None:
-    """Mirror of bridge.letter_pair_from_title (kept in sync by smoke + this test)."""
-    alphabet_map = {
-        "en": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-        "fr": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-        "it": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-        "nl": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-        "es": "ABCDEFGHIJKLMNOPQRSTUVWXYZÑ",
-        "pt": "ABCDEFGHIJKLMNOPQRSTUVWXYZÇ",
-        "de": "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜ",
-        "sv": "ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ",
-        "pl": "ABCDEFGHIJKLMNOPQRSTUVWXYZĄĆĘŁŃÓŚŹŻ",
-    }
-    code = (lang or "en").strip().lower()
-    alphabet = set(alphabet_map.get(code, alphabet_map["en"]))
-    letters: list[str] = []
-    for ch in title:
-        if not ch or ch.isspace():
-            continue
-        upper = ch.upper()
-        if upper in alphabet:
-            letters.append(upper)
-        elif ch in ("ß", "ẞ") or upper == "ẞ":
-            letters.extend(("S", "S"))
-        else:
-            decomposed = unicodedata.normalize("NFKD", ch)
-            for part in decomposed:
-                if unicodedata.combining(part):
-                    continue
-                if "A" <= part <= "Z" or "a" <= part <= "z":
-                    letter = part.upper()
-                    if letter in alphabet:
-                        letters.append(letter)
-        if len(letters) >= 2:
-            return letters[0] + letters[1]
-    return None
+_BRIDGE_PAIR_NAMES = ("_SCRABBLE_LETTERS", "_BINGO_LIGATURES", "_bingo_alphabet", "_fold_bingo_base_latin", "letter_pair_from_title")
+
+
+def _load_bridge_letter_pair():
+    """The bridge's real letter-pair code, lifted out of bridge.py (importing it would need aiohttp)."""
+    import ast
+
+    tree = ast.parse(BRIDGE_PATH.read_text(encoding="utf-8"))
+    chunks = []
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) and node.name in _BRIDGE_PAIR_NAMES:
+            chunks.append(node)
+        elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+            if any(isinstance(t, ast.Name) and t.id in _BRIDGE_PAIR_NAMES for t in targets):
+                chunks.append(node)
+    namespace = {"unicodedata": unicodedata}
+    exec(compile(ast.Module(body=chunks, type_ignores=[]), str(BRIDGE_PATH), "exec"), namespace)
+    missing = [name for name in _BRIDGE_PAIR_NAMES if name not in namespace]
+    if missing:
+        raise RuntimeError(f"bridge.py is missing {missing}")
+    return namespace["letter_pair_from_title"]
 
 
 def main() -> int:
     world = _load_world_lp()
+    bridge_letter_pair = _load_bridge_letter_pair()
     failures = 0
     for lang, title, expect in CASES:
         got = world.letter_pair_from_title(title, lang)
         if got != expect:
             print(f"FAIL world {lang}: {title!r} -> {got!r} (expect {expect!r})", file=sys.stderr)
             failures += 1
-        bridge_got = _bridge_letter_pair(title, lang)
+        bridge_got = bridge_letter_pair(title, lang)
         if bridge_got != expect:
             print(f"FAIL bridge {lang}: {title!r} -> {bridge_got!r} (expect {expect!r})", file=sys.stderr)
             failures += 1

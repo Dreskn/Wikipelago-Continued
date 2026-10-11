@@ -4702,7 +4702,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Arbogafallet'"
     },
     {
@@ -6948,7 +6948,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Bertha von Suttner",
@@ -9605,7 +9605,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Calle Halfvarsson",
@@ -9748,7 +9748,7 @@
         "biology_medicine",
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Carin Göring",
@@ -17791,7 +17791,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fagerstakoncernen",
@@ -19917,7 +19917,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Friår",
@@ -20246,7 +20246,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Förmögenhetsskatt i Sverige",
@@ -21640,7 +21640,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Grotesco",
@@ -22903,7 +22903,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Hagasessorna",
@@ -24350,7 +24350,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Hem för vård eller boende",
@@ -24760,7 +24760,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Herrarnas turnering i fotboll vid olympiska sommarspelen 2016",
@@ -34589,7 +34589,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kol",
@@ -40394,7 +40394,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Luka Modrić",
@@ -40808,7 +40808,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MIM-104 Patriot",
@@ -44528,7 +44528,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Metoo",
@@ -47449,7 +47449,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Natasha Richardson",
@@ -49010,7 +49010,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Nyval",
@@ -53057,7 +53057,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Politik i Sverige",
@@ -53761,7 +53761,7 @@
         "history",
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Protein",
@@ -53817,7 +53817,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Psykopati",
@@ -60098,7 +60098,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sofia Aronsson",
@@ -64499,7 +64499,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Terry Jones",
@@ -67838,7 +67838,7 @@
         "famous_people",
         "sports"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ulrika Eleonora",
@@ -71972,7 +71972,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Överståthållarämbetet",
@@ -74118,7 +74118,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -74780,7 +74780,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -76974,7 +76974,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

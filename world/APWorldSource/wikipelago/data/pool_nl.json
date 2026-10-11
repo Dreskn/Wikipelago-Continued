@@ -7728,7 +7728,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Call Me by Your Name (film)",
@@ -7865,7 +7865,7 @@
         "biology_medicine",
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Canon van Vlaanderen",
@@ -9509,7 +9509,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Coco Chanel",
@@ -9992,7 +9992,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Crans-Montana",
@@ -12671,14 +12671,14 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dood van Breonna Taylor",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dood van Diana Spencer",
@@ -12699,7 +12699,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dood van Nicky Verstappen",
@@ -33633,7 +33633,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MEAU",
@@ -35732,7 +35732,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Mat '64",
@@ -36282,7 +36282,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MediaMarkt",
@@ -36612,7 +36612,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Methylfenidaat",
@@ -37959,7 +37959,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Iryna Zaroetska",
@@ -37987,7 +37987,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Marianne Vaatstra",
@@ -38008,7 +38008,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Moord op Theo van Gogh",
@@ -38673,7 +38673,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Natasha Richardson",
@@ -38843,7 +38843,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Necrotiserende fasciitis",
@@ -40929,7 +40929,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Oogappels",
@@ -42342,7 +42342,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Peggy Vrijens",
@@ -47458,7 +47458,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sabine Hagedoren",
@@ -48733,7 +48733,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Seropositief",
@@ -49803,7 +49803,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Soedan",
@@ -58625,14 +58625,14 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zaak-Fritzl",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zaak-Lucia de Berk",
@@ -61028,7 +61028,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ponyo",
@@ -61491,7 +61491,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cosplay",
@@ -65035,7 +65035,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ouroboros",

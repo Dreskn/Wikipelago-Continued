@@ -3442,7 +3442,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Anastacia",
@@ -6221,7 +6221,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Attentat vom 20. Juli 1944",
@@ -10860,7 +10860,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Bulgarien",
@@ -11631,7 +11631,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Call Me by Your Name",
@@ -12925,7 +12925,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Che Guevara",
@@ -15415,7 +15415,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cucurbitacine",
@@ -15451,7 +15451,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cupra",
@@ -22605,7 +22605,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Entführungen von Cleveland, Ohio",
@@ -22614,7 +22614,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Entführungen von Cleveland'"
     },
     {
@@ -22624,7 +22624,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Enzi Fuchs",
@@ -24461,7 +24461,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fall for Me",
@@ -32505,7 +32505,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Haubitze",
@@ -33686,7 +33686,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Herpes Zoster",
@@ -34668,7 +34668,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Hyperschallwaffe",
@@ -44098,7 +44098,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kolinda Grabar-Kitarović",
@@ -44563,7 +44563,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kris Kristofferson",
@@ -45598,7 +45598,7 @@
         "movies",
         "politics"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Larry King",
@@ -48058,7 +48058,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Liste von Amokläufen an Bildungseinrichtungen",
@@ -48067,7 +48067,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Liste von Android-Versionen",
@@ -48158,7 +48158,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Liste von Serienmördern",
@@ -49109,7 +49109,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Lukas Ammann",
@@ -49507,7 +49507,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MERS-CoV",
@@ -52329,7 +52329,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Masuren",
@@ -53727,7 +53727,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Methylphenidat",
@@ -55826,7 +55826,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Mord im Mittsommer",
@@ -55928,7 +55928,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Morena Baccarin",
@@ -56942,7 +56942,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Natascha Ochsenknecht",
@@ -57540,7 +57540,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Nelly Sachs",
@@ -70939,7 +70939,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sex Education",
@@ -70967,7 +70967,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Seychellen",
@@ -78480,7 +78480,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Todesfall Gabby Petito",
@@ -81623,7 +81623,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Prozess um die Vergewaltigungs-Serie an Gisèle Pelicot'"
     },
     {
@@ -85212,7 +85212,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Yahya Sinwar",
@@ -85318,7 +85318,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "YouTube",
@@ -88721,7 +88721,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -88765,7 +88765,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -88931,7 +88931,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -89605,7 +89605,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -90634,7 +90634,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -92436,7 +92436,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -95592,7 +95592,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

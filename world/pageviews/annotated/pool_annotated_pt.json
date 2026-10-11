@@ -407,7 +407,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "6ix9ine",
@@ -5608,7 +5608,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Assassinato de Gabrielle Petito",
@@ -5680,7 +5680,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Marcos Matsunaga'"
     },
     {
@@ -5864,7 +5864,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Atentado à Maratona de Boston de 2013",
@@ -10832,7 +10832,7 @@
         "biology_medicine",
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Canoas",
@@ -11708,7 +11708,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartel de Medellín",
@@ -11717,7 +11717,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartografia",
@@ -11844,7 +11844,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Aída Curi",
@@ -11853,7 +11853,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Bernardo Boldrini",
@@ -11862,7 +11862,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Bernardo Boldrini'"
     },
     {
@@ -11872,7 +11872,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Celso Daniel'"
     },
     {
@@ -11892,7 +11892,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Eliza Samudio'"
     },
     {
@@ -11902,7 +11902,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Sequestro e assassinato de Eloá Cristina'"
     },
     {
@@ -11921,7 +11921,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Gil Rugai",
@@ -11930,7 +11930,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Henry Borel",
@@ -11979,7 +11979,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Marcos Kitano",
@@ -11988,7 +11988,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Marcos Matsunaga'"
     },
     {
@@ -14322,7 +14322,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Coco Chanel",
@@ -16699,7 +16699,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Curaçau",
@@ -30951,7 +30951,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Incidente de Varginha",
@@ -35170,7 +35170,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Julia Dalavia",
@@ -39822,7 +39822,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Lista de prefeitos da cidade de São Paulo",
@@ -41436,7 +41436,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Assassinato de Jun Lin'"
     },
     {
@@ -42201,7 +42201,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MPB (gênero musical)",
@@ -44634,7 +44634,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Mata Atlântica",
@@ -46817,7 +46817,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Morte de Diana, Princesa de Gales",
@@ -48779,7 +48779,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Natação",
@@ -61059,7 +61059,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sequência de Fibonacci",
@@ -61333,7 +61333,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo",
@@ -61351,7 +61351,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo grupal",
@@ -61369,7 +61369,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo oral",
@@ -61378,7 +61378,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo vaginal",
@@ -62194,7 +62194,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sofia Carson",
@@ -64575,7 +64575,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Terry Crews",
@@ -70266,7 +70266,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "XVideos",
@@ -70939,7 +70939,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zootopia 2",
@@ -74364,7 +74364,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -74419,7 +74419,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -74607,7 +74607,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -75325,7 +75325,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -76405,7 +76405,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -78238,7 +78238,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -81224,7 +81224,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

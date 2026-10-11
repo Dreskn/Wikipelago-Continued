@@ -27,7 +27,10 @@ HUD tool icons in web/app.js (TOOL_ICON_SVGS) are from Lucide
 (https://lucide.dev), used under the ISC License.
 
 Used icons: undo-2, dices, search, compass, key-round, mouse, a-large-small,
-gauge, skull, share-2, shuffle, bomb, triangle-alert, life-buoy.
+gauge, skull, share-2, shuffle, bomb, triangle-alert, life-buoy, menu, x.
+
+Card heading icons in web/style.css: plug, route, backpack, lock-open, grid-3x3,
+glasses, flame, bug.
 
 ISC License
 
@@ -45,8 +48,21 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-The Lucide icons search, compass, share-2, and triangle-alert (formerly
-alert-triangle) are derived from the Feather project:
+Fonts in web/fonts/ are used under the SIL Open Font License, Version 1.1.
+They are trimmed to the characters the UI languages need and converted to
+WOFF2. The full licence and copyright notice for each family is next to its
+files:
+
+- Fraunces (Undercase Type): web/fonts/Fraunces-OFL.txt
+- Instrument Sans (Instrument): web/fonts/InstrumentSans-OFL.txt
+- JetBrains Mono (JetBrains): web/fonts/JetBrainsMono-OFL.txt
+- Libertinus Serif (The Libertinus Project): web/fonts/Libertinus-OFL.txt
+
+---
+
+The Lucide icons search, compass, share-2, triangle-alert (formerly
+alert-triangle), lock-open (formerly unlock), grid-3x3 (formerly grid), menu,
+and x are derived from the Feather project:
 
 The MIT License (MIT)
 

@@ -6,6 +6,8 @@ Play at https://wikipelago.dreskn.fr/. The page is the Wikipedia article on the 
 
 Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
 
+Next to the language menu, the **sun/moon** button switches between dark and light, and the **Aa** button opens the display settings: text size (100%, 105%, 115% or 130%), **High contrast** (follows your system's contrast setting until you choose), and **Colorblind-friendly colors** (Realms are colored by their order with a colorblind-safe palette; success and warning notifications become blue and orange). Your choices are remembered in this browser.
+
 ## Legend
 
 1. **current build**
@@ -20,7 +22,7 @@ Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed us
 10. **Reroll** — Changes every target at once (main path + branches).
 11. **Targets** — The pages you need to reach.
 12. **Fragments** — Your progress towards unlocking your seed Grand Goal. Once enough Knowledge Fragments are obtained, your final destination will be known.
-13. **Compass** — warmer/colder hints toward the target.
+13. **Compass** — warmer/colder hints toward your nearest live target; once branches are open it also names which one.
 14. **Items** — Main game items, grey when locked. In order: Back button, Rerolls, Search (CTRL-F), Compass, Branch Keys.
 15. **Sanities** — Panel for searchsanity (CTRL-F can only uses unlocked letters) or Scrollsanity.
 16. **Bingo** — letter-pair bingo boards, stamp a cell by visiting a page starting with that letter pair. Send checks by stamping a full line (row/column/diagonal), plus the full board.

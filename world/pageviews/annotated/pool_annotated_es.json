@@ -806,7 +806,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Abuso sexual infantil",
@@ -815,7 +815,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Acapulco Shore",
@@ -7167,7 +7167,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Asesinato de Samuel Luiz",
@@ -8030,7 +8030,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Backrooms (película)",
@@ -9604,7 +9604,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Blue Beam Project",
@@ -11478,7 +11478,7 @@
         "biology_medicine",
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Canserbero",
@@ -12517,7 +12517,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartel de Medellín",
@@ -12526,7 +12526,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartel del Norte del Valle",
@@ -12535,7 +12535,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Casa Targaryen",
@@ -12592,7 +12592,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Asunta Basterra",
@@ -12691,7 +12691,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso O. J. Simpson",
@@ -12709,7 +12709,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Casos de abuso sexual contra Sean Combs'"
     },
     {
@@ -12728,7 +12728,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso de Nahir Galarza",
@@ -13590,7 +13590,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Chavín (cultura)",
@@ -14311,7 +14311,7 @@
       "tags": [
         "art_literature"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cincuenta sombras de Grey (película)",
@@ -15246,7 +15246,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cociente intelectual",
@@ -17709,7 +17709,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Crimen de Los Galindos",
@@ -18384,7 +18384,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cártel de los Soles",
@@ -19842,7 +19842,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Desaparición de Madeleine McCann",
@@ -27502,7 +27502,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Feudalismo",
@@ -27874,7 +27874,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Foro de Cooperación Económica Asia-Pacífico",
@@ -33657,7 +33657,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Incidente de Sister Hong en Nankín",
@@ -38958,7 +38958,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Jujutsu Kaisen",
@@ -40596,7 +40596,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "LXI Festival Internacional de la Canción de Viña del Mar",
@@ -43523,7 +43523,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Los asesinos de la luna",
@@ -44415,7 +44415,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Luka Modrić",
@@ -44729,7 +44729,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Mac Miller",
@@ -47278,7 +47278,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Masacre de Puerto Hurraco",
@@ -50342,7 +50342,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Muerte de Diana de Gales",
@@ -51326,7 +51326,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Necromancia",
@@ -54970,7 +54970,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Pedri",
@@ -57226,7 +57226,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Lean (droga)'"
     },
     {
@@ -61848,7 +61848,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Secuestro de Anabel Segura",
@@ -62808,7 +62808,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexo oral",
@@ -62817,7 +62817,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sexualidad",
@@ -64594,7 +64594,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Studio Ghibli",
@@ -71158,7 +71158,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "XVideos",
@@ -71956,7 +71956,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Zootopia 2",
@@ -75262,7 +75262,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -75328,7 +75328,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -75526,7 +75526,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -76396,7 +76396,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -76454,7 +76454,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -77801,7 +77801,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -79728,7 +79728,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -82856,7 +82856,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

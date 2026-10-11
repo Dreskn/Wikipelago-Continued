@@ -1204,7 +1204,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Air Cocaïne",
@@ -1213,7 +1213,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Alain Lamare",
@@ -1277,7 +1277,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Cédric Chouviat",
@@ -1286,7 +1286,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Mort de Cédric Chouviat'"
     },
     {
@@ -1296,7 +1296,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Delphine Jubillar",
@@ -1305,7 +1305,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Affaire Jubillar'"
     },
     {
@@ -1324,7 +1324,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Dreyfus",
@@ -1342,7 +1342,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Dutroux",
@@ -1351,7 +1351,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Elisa Lam",
@@ -1369,7 +1369,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Estelle Mouzin",
@@ -1378,7 +1378,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Flactif",
@@ -1387,7 +1387,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Fritzl",
@@ -1396,7 +1396,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Frédéric Péchier",
@@ -1405,7 +1405,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Godard",
@@ -1441,7 +1441,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Kulik",
@@ -1460,7 +1460,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Meurtre de Lola Daviet'"
     },
     {
@@ -1479,7 +1479,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Malik Oussekine",
@@ -1488,7 +1488,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Marina Sabatier",
@@ -1497,7 +1497,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Marković",
@@ -1515,7 +1515,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Mila",
@@ -1542,7 +1542,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Romand",
@@ -1551,7 +1551,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Sarah Halimi",
@@ -1578,7 +1578,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire Steve Maia Caniço",
@@ -1671,7 +1671,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire de la Josacine empoisonnée",
@@ -1689,7 +1689,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire des abus sexuels et violences dans l'institution Notre-Dame de Bétharram",
@@ -1698,7 +1698,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Affaire Bétharram'"
     },
     {
@@ -1708,7 +1708,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire du Coral",
@@ -1717,7 +1717,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affaire du gang des barbares",
@@ -1744,7 +1744,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Affiche rouge",
@@ -10981,7 +10981,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Candice Renoir",
@@ -11565,7 +11565,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartel de Medellín",
@@ -11574,7 +11574,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cary Grant",
@@ -13472,7 +13472,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Che Guevara",
@@ -13512,7 +13512,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cherif (série télévisée)",
@@ -13947,7 +13947,7 @@
         "biology_medicine",
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Christian VII",
@@ -14475,7 +14475,7 @@
       "tags": [
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Cinquante Nuances de Grey'"
     },
     {
@@ -17015,7 +17015,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cupra (marque)",
@@ -17405,7 +17405,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Dab",
@@ -22315,7 +22315,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Empathie (série télévisée)",
@@ -42859,7 +42859,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Lewis Capaldi",
@@ -46007,7 +46007,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Luke Perry",
@@ -46438,7 +46438,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ma famille d'abord",
@@ -49210,7 +49210,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Match Isner - Mahut lors du tournoi de Wimbledon 2010",
@@ -50220,7 +50220,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Meurtres au paradis",
@@ -53380,7 +53380,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Affaire Natascha Kampusch'"
     },
     {
@@ -54849,7 +54849,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Népal",
@@ -59700,7 +59700,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Poudlard",
@@ -75729,7 +75729,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "XVideos",
@@ -82212,7 +82212,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -82267,7 +82267,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -83224,7 +83224,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -84396,7 +84396,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -86382,7 +86382,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {
@@ -89635,7 +89635,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_sitelink"
     },
     {

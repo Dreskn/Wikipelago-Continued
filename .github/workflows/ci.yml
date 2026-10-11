@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Run smoke tests (build + verify apworld)
         shell: pwsh
@@ -24,17 +24,17 @@ jobs:
       AP_REF: "0.6.7"
     steps:
       - name: Checkout Wikipelago
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout Archipelago ${{ env.AP_REF }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: ArchipelagoMW/Archipelago
           ref: ${{ env.AP_REF }}
           path: Archipelago
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         run: ./world/build_apworld.ps1
 
-      - name: Generate EN, FR, and PL seeds
+      - name: Generate the six ci_generate.py seeds (EN, FR, PL, Topic Realms, Realm Master)
         env:
           SKIP_REQUIREMENTS_UPDATE: "1"
         run: |

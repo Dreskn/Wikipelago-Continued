@@ -43,6 +43,39 @@ CASES = (
             "branch_length": "3",
         },
     },
+    {
+        "id": "en-topic-realms",
+        "seed": 45,
+        "values": {
+            "name": "CI-REALMS",
+            "branch_count": "4",
+            "branch_length": "4",
+            "topic_portals": "true",
+        },
+    },
+    {
+        "id": "fr-realm-master",
+        "seed": 46,
+        "values": {
+            "name": "CI-MASTER",
+            "wikipedia_language": "fr",
+            "branch_count": "3",
+            "branch_length": "3",
+            "topic_portals": "true",
+            "goal": "realm_master",
+        },
+    },
+    {
+        "id": "en-realm-master-plain-branches",
+        "seed": 47,
+        "values": {
+            "name": "CI-MASTER-KEYS",
+            "branch_count": "2",
+            "branch_length": "2",
+            "topic_portals": "false",
+            "goal": "realm_master",
+        },
+    },
 )
 
 

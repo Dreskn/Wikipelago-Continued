@@ -1,4 +1,4 @@
-const APP_VERSION = "1.0.3";
+const APP_VERSION = "1.1.0";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -125,20 +125,24 @@ const TRACK_OVERFLOW_MIN = 5;
 const TRACK_FORK_OVERFLOW_MIN = 3;
 /** Current-round / +N chip width. */
 const TRACK_EMPHASIS_MIN_PX = 24;
+/** Side margin of the current round, so its outline (2px + 1px offset) clears its neighbours. Matches style.css. */
+const TRACK_CURRENT_MARGIN_PX = 3;
 /** Crossroad chip width on the main road. */
 const TRACK_CROSSROAD_PX = 48;
+// Narrowest crossroad hook when many Realms share a small track (matches the 24px spur).
+const TRACK_CROSSROAD_MIN_PX = 24;
 /** Horizontal track padding (each side) — keep outline / end chips uncropped. */
 const TRACK_PAD_X_PX = 4;
 
 const DISPLAY_LOCKS = [
-  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyph: "Tbl" },
-  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyph: "Pic" },
-  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyph: "Led" },
-  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyph: "Inf" },
-  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyph: "Toc" },
-  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyph: "Nav" },
-  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyph: "Hat" },
-  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
+  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyphKey: "lens.tablesShort" },
+  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyphKey: "lens.picturesShort" },
+  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyphKey: "lens.leadShort" },
+  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyphKey: "lens.infoboxesShort" },
+  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyphKey: "lens.contentsShort" },
+  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyphKey: "lens.navboxesShort" },
+  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyphKey: "lens.hatnotesShort" },
+  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyphKey: "lens.referencesShort" },
 ];
 
 function lucideIcon(inner) {
@@ -161,6 +165,8 @@ const TOOL_ICON_SVGS = {
   bombs: lucideIcon('<circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/>'),
   traps: lucideIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
   teleport: lucideIcon('<circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/>'),
+  menu: lucideIcon('<path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/>'),
+  close: lucideIcon('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
 };
 
 function trapTypeLabel(trapType) {
@@ -190,8 +196,8 @@ let debugPanelReady = false;
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
 const CONNECTION_STORAGE_KEY = "wikipelago_connection";
-const DEFAULT_SERVER = "archipelago.gg:";
-const DEFAULT_SLOT = "WikiTester";
+// Pages clicked while the room is unreachable, replayed once it is back (a target reached offline still counts).
+const MAX_OFFLINE_VISITS = 50;
 
 const state = {
   sessionId: localStorage.getItem("wikipelago_session_id") || "",
@@ -202,6 +208,10 @@ const state = {
   clicksUsed: 0,
   announcedGoalComplete: false,
   restoringArticle: false,
+  /** {identity, title} visits made while the room was unreachable; see queueOfflineVisit. */
+  offlineVisits: [],
+  /** True after the player pressed Disconnect: clicks made afterwards are browsing only. */
+  userDisconnected: false,
   bingoStampSyncKey: "",
   bingoRemoteStampCount: 0,
   bingoUi: null,
@@ -288,6 +298,18 @@ const el = {
   rerollTargetMeta: document.getElementById("rerollTargetMeta"),
   teleportBtn: document.getElementById("teleportBtn"),
   teleportBtnLabel: document.getElementById("teleportBtnLabel"),
+  phoneBar: document.getElementById("phoneBar"),
+  displayBtn: document.getElementById("displayBtn"),
+  displayPanel: document.getElementById("displayPanel"),
+  contrastToggle: document.getElementById("contrastToggle"),
+  cvdToggle: document.getElementById("cvdToggle"),
+  phoneTargets: document.getElementById("phoneTargets"),
+  phoneMenuBtn: document.getElementById("phoneMenuBtn"),
+  phoneTools: document.getElementById("phoneTools"),
+  phoneCompass: document.getElementById("phoneCompass"),
+  phoneSearchBtn: document.getElementById("phoneSearchBtn"),
+  phoneSosBtn: document.getElementById("phoneSosBtn"),
+  phoneSosLabel: document.getElementById("phoneSosLabel"),
   goalRow: document.getElementById("goalRow"),
   goalText: document.getElementById("goalText"),
   goalHover: document.getElementById("goalHover"),
@@ -296,6 +318,10 @@ const el = {
   branchTracks: document.getElementById("branchTracks"),
   branchTargets: document.getElementById("branchTargets"),
   crossroadBadge: document.getElementById("crossroadBadge"),
+  realmsBlock: document.getElementById("realmsBlock"),
+  realmsList: document.getElementById("realmsList"),
+  realmsTitle: document.getElementById("realmsTitle"),
+  realmsMeta: document.getElementById("realmsMeta"),
   journeyOverlay: document.getElementById("journeyOverlay"),
   journeyOverlayBackdrop: document.getElementById("journeyOverlayBackdrop"),
   journeyOverlayPanel: document.querySelector(".journey-overlay-panel"),
@@ -342,7 +368,7 @@ const el = {
   bingoZoomOut: document.getElementById("bingoZoomOut"),
   bingoZoomReset: document.getElementById("bingoZoomReset"),
   lensesItem: document.getElementById("lensesItem"),
-  toast: document.getElementById("toast"),
+  toastStack: document.getElementById("toastStack"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
   enableDebugMenuChk: document.getElementById("enableDebugMenuChk"),
@@ -354,14 +380,14 @@ const el = {
 function loadSavedConnection() {
   try {
     const raw = localStorage.getItem(CONNECTION_STORAGE_KEY);
-    if (!raw) return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+    if (!raw) return { server: "", slot: "" };
     const parsed = JSON.parse(raw);
     return {
-      server: String(parsed?.server || "").trim() || DEFAULT_SERVER,
-      slot: String(parsed?.slot || "").trim() || DEFAULT_SLOT,
+      server: String(parsed?.server || "").trim(),
+      slot: String(parsed?.slot || "").trim(),
     };
   } catch {
-    return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+    return { server: "", slot: "" };
   }
 }
 
@@ -458,25 +484,79 @@ const savedConnection = loadSavedConnection();
 el.serverInput.value = savedConnection.server;
 el.slotInput.value = savedConnection.slot;
 
-let toastTimer = null;
-let stickyToastActive = false;
+// Notifications: a small stack, newest on top (top of the screen on phones, top-right on desktop).
+const TOAST_MAX = 3;
+const toastTimers = new WeakMap();
 let lastStickyError = "";
 
-function toast(text, kind = "ok", durationMs = 5500) {
-  el.toast.textContent = text;
-  el.toast.className = `toast ${kind}`;
-  if (toastTimer) clearTimeout(toastTimer);
-  toastTimer = null;
-  // durationMs <= 0 keeps the toast visible until the next toast replaces it.
-  if (durationMs <= 0) {
-    stickyToastActive = true;
+function dismissToast(node) {
+  if (!node || node.classList.contains("leaving")) return;
+  clearTimeout(toastTimers.get(node));
+  node.classList.add("leaving");
+  setTimeout(() => node.remove(), 200);
+}
+
+function armToastTimer(node, durationMs) {
+  clearTimeout(toastTimers.get(node));
+  if (durationMs > 0) toastTimers.set(node, setTimeout(() => dismissToast(node), durationMs));
+}
+
+/**
+ * Show a notification. durationMs <= 0 keeps it until tapped or cleared (connection errors).
+ * `detail` adds a smaller second line.
+ */
+function toast(text, kind = "ok", durationMs = 5500, { detail = "" } = {}) {
+  const stack = el.toastStack;
+  if (!stack || !text) return;
+  const live = [...stack.children].filter((node) => !node.classList.contains("leaving"));
+  // Same message already showing (status polls, repeated taps): restart it instead of stacking.
+  const same = live.find((node) => node.dataset.text === text && node.dataset.kind === kind);
+  if (same) {
+    armToastTimer(same, durationMs);
     return;
   }
-  stickyToastActive = false;
-  toastTimer = setTimeout(() => {
-    el.toast.className = "toast hidden";
-    toastTimer = null;
-  }, durationMs);
+  const sticky = durationMs <= 0;
+  // Only one sticky notification at a time: the newest connection state wins.
+  if (sticky) live.filter((node) => node.classList.contains("sticky")).forEach(dismissToast);
+
+  const node = document.createElement("div");
+  node.className = `toast ${kind}${sticky ? " sticky" : ""}`;
+  node.dataset.text = text;
+  node.dataset.kind = kind;
+  const body = document.createElement("div");
+  body.className = "toast-body";
+  const main = document.createElement("p");
+  main.className = "toast-text";
+  main.textContent = text;
+  body.appendChild(main);
+  if (detail) {
+    const extra = document.createElement("p");
+    extra.className = "toast-detail";
+    extra.textContent = detail;
+    body.appendChild(extra);
+  }
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "toast-close";
+  close.setAttribute("aria-label", t("toast.dismiss"));
+  close.textContent = "×";
+  node.append(body, close);
+  node.addEventListener("click", () => dismissToast(node));
+  // Desktop: hovering keeps it readable; leaving gives a short grace period.
+  node.addEventListener("mouseenter", () => clearTimeout(toastTimers.get(node)));
+  node.addEventListener("mouseleave", () => {
+    if (!node.classList.contains("sticky")) armToastTimer(node, 2500);
+  });
+  stack.prepend(node);
+  armToastTimer(node, durationMs);
+
+  // Too many: drop the oldest, keeping a sticky one if possible.
+  const shown = [...stack.children].filter((item) => !item.classList.contains("leaving"));
+  while (shown.length > TOAST_MAX) {
+    const oldest = [...shown].reverse().find((item) => !item.classList.contains("sticky")) || shown[shown.length - 1];
+    shown.splice(shown.indexOf(oldest), 1);
+    dismissToast(oldest);
+  }
 }
 
 function toastSticky(text, kind = "warn") {
@@ -485,10 +565,7 @@ function toastSticky(text, kind = "warn") {
 
 function clearStickyConnectionError() {
   lastStickyError = "";
-  if (stickyToastActive && el.toast.classList.contains("warn")) {
-    el.toast.className = "toast hidden";
-    stickyToastActive = false;
-  }
+  el.toastStack?.querySelectorAll(".toast.sticky.warn").forEach(dismissToast);
 }
 
 function isApConnected() {
@@ -565,6 +642,142 @@ function onUiLanguageChanged(code) {
   if (state.victoryOpen) fillVictoryOverlay(state.status);
   refreshSearchChrome();
   refreshSidePanelToggles();
+  syncThemeToggle();
+  syncPhoneMenuButton();
+  syncDisplayPanel();
+}
+
+// Light / dark theme. index.html applies the saved choice before first paint;
+// this keeps the toggle, the browser theme color and the Journey map in sync.
+const THEME_STORAGE_KEY = "wikipelago_theme";
+const THEME_COLORS = { dark: "#0e1020", light: "#e8eae4" };
+
+function currentTheme() {
+  return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+}
+
+function syncThemeToggle() {
+  const btn = document.getElementById("themeToggle");
+  if (!btn) return;
+  const label = currentTheme() === "light" ? t("theme.toDark") : t("theme.toLight");
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+function applyTheme(theme, { persist = true } = {}) {
+  const next = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  if (persist) {
+    try { localStorage.setItem(THEME_STORAGE_KEY, next); } catch { /* storage blocked */ }
+  }
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[next]);
+  syncThemeToggle();
+  // Journey dots read their colors from CSS variables; redraw with the new palette.
+  if (state.journeyOpen && state.journeyPayload) {
+    state.journeyLayoutKey = "";
+    drawJourneyPath(state.journeyPayload);
+  }
+}
+
+// Display settings ("Aa"): text size, high contrast, colorblind-friendly colors.
+// index.html applies the saved choices before first paint; high contrast follows the system until chosen.
+const DISPLAY_PREFS = { scale: "wikipelago_text_scale", contrast: "wikipelago_contrast", cvd: "wikipelago_cvd" };
+const CONTRAST_QUERY = window.matchMedia("(prefers-contrast: more)");
+
+function readDisplayPref(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function writeDisplayPref(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* storage blocked */ }
+}
+
+function syncDisplayPanel() {
+  const root = document.documentElement;
+  const scale = root.style.getPropertyValue("--text-scale").trim() || "1";
+  el.displayPanel?.querySelectorAll("[data-scale]").forEach((btn) => {
+    btn.setAttribute("aria-checked", String(btn.dataset.scale === scale));
+  });
+  if (el.contrastToggle) el.contrastToggle.checked = root.dataset.contrast === "more";
+  if (el.cvdToggle) el.cvdToggle.checked = root.dataset.cvd === "1";
+  const label = t("display.open");
+  el.displayBtn?.setAttribute("aria-label", label);
+  if (el.displayBtn) el.displayBtn.title = label;
+}
+
+function applyDisplaySettings({ scale, contrast, cvd } = {}) {
+  const root = document.documentElement;
+  if (scale !== undefined) root.style.setProperty("--text-scale", scale);
+  if (contrast !== undefined) {
+    if (contrast) root.dataset.contrast = "more";
+    else delete root.dataset.contrast;
+  }
+  if (cvd !== undefined) {
+    if (cvd) root.dataset.cvd = "1";
+    else delete root.dataset.cvd;
+  }
+  syncDisplayPanel();
+  // Widths and colors changed: redraw what measures or reads them.
+  if (state.status) updateHUD(state.status);
+  if (state.journeyOpen && state.journeyPayload) {
+    state.journeyLayoutKey = "";
+    drawJourneyPath(state.journeyPayload);
+  }
+}
+
+function setDisplayPanelOpen(open) {
+  if (!el.displayPanel || !el.displayBtn) return;
+  el.displayPanel.classList.toggle("hidden", !open);
+  el.displayBtn.setAttribute("aria-expanded", String(Boolean(open)));
+}
+
+function bindDisplayPanel() {
+  if (!el.displayBtn || !el.displayPanel) return;
+  el.displayBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setDisplayPanelOpen(el.displayPanel.classList.contains("hidden"));
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest?.(".display-menu")) setDisplayPanelOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !el.displayPanel.classList.contains("hidden")) {
+      setDisplayPanelOpen(false);
+      el.displayBtn.focus();
+    }
+  });
+  el.displayPanel.querySelectorAll("[data-scale]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      writeDisplayPref(DISPLAY_PREFS.scale, btn.dataset.scale);
+      applyDisplaySettings({ scale: btn.dataset.scale });
+    });
+  });
+  el.contrastToggle?.addEventListener("change", () => {
+    // An explicit choice stops following the system setting.
+    writeDisplayPref(DISPLAY_PREFS.contrast, el.contrastToggle.checked ? "more" : "normal");
+    applyDisplaySettings({ contrast: el.contrastToggle.checked });
+  });
+  el.cvdToggle?.addEventListener("change", () => {
+    writeDisplayPref(DISPLAY_PREFS.cvd, el.cvdToggle.checked ? "1" : "0");
+    applyDisplaySettings({ cvd: el.cvdToggle.checked });
+  });
+  CONTRAST_QUERY.addEventListener("change", () => {
+    if (!readDisplayPref(DISPLAY_PREFS.contrast)) applyDisplaySettings({ contrast: CONTRAST_QUERY.matches });
+  });
+  syncDisplayPanel();
+}
+
+function bindThemeToggle() {
+  document.getElementById("themeToggle")?.addEventListener("click", () => {
+    applyTheme(currentTheme() === "light" ? "dark" : "light");
+  });
+  // Another tab (or the Journey pop-out) changed the theme: follow it.
+  window.addEventListener("storage", (event) => {
+    if (event.key === THEME_STORAGE_KEY && (event.newValue === "light" || event.newValue === "dark")) {
+      applyTheme(event.newValue, { persist: false });
+    }
+  });
+  syncThemeToggle();
 }
 
 function bindUiLanguageControls() {
@@ -735,24 +948,31 @@ function bindTargetTooltip() {
   if (el.targetTooltip.parentElement !== document.body) {
     document.body.appendChild(el.targetTooltip);
   }
-  const root = document.querySelector(".side-panel") || document;
+  const root = document;
+  const sidePanel = document.querySelector(".side-panel");
   root.addEventListener("mouseover", (event) => {
+    // Touch screens fire a fake mouseover on tap; they toggle previews on click instead.
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
-    if (!hover || !root.contains(hover)) return;
+    if (!hover) return;
     const from = event.relatedTarget;
     if (from && hover.contains(from)) return;
     enterTargetHover(hover);
   });
   root.addEventListener("mouseout", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (!hover) return;
     leaveTargetHover(hover, event.relatedTarget);
   });
+  // A tap also focuses the title: on touch screens the click toggle owns the preview.
   root.addEventListener("focusin", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (hover) enterTargetHover(hover);
   });
   root.addEventListener("focusout", (event) => {
+    if (TOUCH_QUERY.matches) return;
     const hover = event.target.closest?.(".target-hover");
     if (hover) leaveTargetHover(hover, event.relatedTarget);
   });
@@ -760,7 +980,7 @@ function bindTargetTooltip() {
     if (state.targetTooltipVisible) positionTargetTooltip();
   });
   // Side panel scroll would otherwise leave a stale fixed position.
-  root.addEventListener("scroll", () => {
+  sidePanel?.addEventListener("scroll", () => {
     if (state.targetTooltipVisible) positionTargetTooltip();
   }, { passive: true });
 }
@@ -810,6 +1030,12 @@ function syncTeleportButton() {
     : t("hud.teleport");
   el.teleportBtn.setAttribute("title", t("hud.teleportTitle"));
   el.teleportBtn.setAttribute("aria-label", t("hud.teleport"));
+  if (el.phoneSosBtn && el.phoneSosLabel) {
+    el.phoneSosBtn.disabled = !ready;
+    el.phoneSosLabel.textContent = el.teleportBtnLabel.textContent;
+    el.phoneSosBtn.setAttribute("title", t("hud.teleportTitle"));
+    el.phoneSosBtn.setAttribute("aria-label", t("hud.teleport"));
+  }
   if (left > 0 && !teleportUiTimer) {
     teleportUiTimer = window.setInterval(syncTeleportButton, 250);
   } else if (left <= 0 && teleportUiTimer) {
@@ -860,7 +1086,9 @@ async function teleportToRandomPage() {
 
 function updateRerollTargetControls(status) {
   if (!el.rerollTargetBtn || !el.rerollTargetMeta) return;
-  const max = Number(status?.target_rerolls_max) || 3;
+  const maxRaw = Number(status?.target_rerolls_max);
+  const max = Number.isFinite(maxRaw) ? Math.max(0, maxRaw) : 0;
+  el.rerollTargetBtn.title = t("hud.rerollTitle", { n: max });
   const remaining = Number(status?.target_rerolls_remaining);
   const playable = Boolean(status?.connected_to_ap || status?.practice);
   const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
@@ -929,6 +1157,314 @@ function formatThemeTag(tag) {
   return raw ? raw.replace(/_/g, " ") : "";
 }
 
+// Article-pool tags; each gets its own Realm color in style.css ([data-topic]).
+const REALM_TOPICS = new Set([
+  "video_games", "movies", "tv_shows", "anime_manga", "sports", "science_space",
+  "technology", "history", "geography", "food_cuisine", "art_literature",
+  "mythology_folklore", "music", "politics", "famous_people", "miscellaneous",
+  "animals", "biology_medicine",
+]);
+
+function topicLabel(tag) {
+  const raw = String(tag || "").trim();
+  if (!raw) return "";
+  const key = `topic.${raw}`;
+  const label = t(key);
+  return label === key ? formatThemeTag(raw) : label;
+}
+
+/** Realm order (0-based) for a topic in this seed: colorblind mode colors Realms by order. */
+function realmIndexForTopic(tag, status = state.status) {
+  const branches = Array.isArray(status?.branches) ? status.branches : [];
+  const branch = branches.find((item) => String(item?.theme_tag || "") === tag);
+  return branch ? Number(branch.id) || 0 : -1;
+}
+
+function setTopic(node, tag) {
+  if (!node) return;
+  const raw = String(tag || "").trim();
+  if (REALM_TOPICS.has(raw)) node.dataset.topic = raw;
+  else delete node.dataset.topic;
+  const index = raw ? realmIndexForTopic(raw) : -1;
+  if (index >= 0) node.dataset.realmIndex = String(index % 8);
+  else delete node.dataset.realmIndex;
+}
+
+function isRealmMaster(status) {
+  return String(status?.goal || "") === "realm_master";
+}
+
+function branchById(status, branchId) {
+  const branches = Array.isArray(status?.branches) ? status.branches : [];
+  return branches.find((branch) => Number(branch?.id) === Number(branchId)) || null;
+}
+
+/** "History Realm" when the branch has a topic, otherwise the legacy "Branch N". */
+function realmName(item, status = state.status) {
+  const branchId = Number.isFinite(Number(item?.branch_id)) ? Number(item.branch_id) : Number(item?.id);
+  const tag = item?.theme_tag || branchById(status, branchId)?.theme_tag || "";
+  if (!tag) return t("hud.forkTarget", { n: forkNumber(item) });
+  return t("realm.name", { topic: topicLabel(tag) });
+}
+
+function portalName(tag) {
+  return t("realm.portal", { topic: topicLabel(tag) });
+}
+
+/** "Warmer", plus which target it follows ("Warmer · History Realm") once branches are live. */
+function compassHintText(status) {
+  const raw = status.warmer_colder || "Calibrating";
+  const hint = I18n?.localizeCompassHint ? I18n.localizeCompassHint(raw) : raw;
+  const target = status.compass_target;
+  const live = Array.isArray(status.live_branch_targets) ? status.live_branch_targets : [];
+  if (!target || !live.length || raw === "No signal") return hint;
+  const label = target.kind === "branch" ? realmName(target, status) : t("path.main");
+  return `${hint} · ${label}`;
+}
+
+// ---------------------------------------------------------------------------
+// Phone layout (< 900px): a sticky bar keeps the targets and quick tools on screen,
+// the article scrolls with the page, and the menu button swaps it for the HUD cards.
+// ---------------------------------------------------------------------------
+const PHONE_QUERY = window.matchMedia("(max-width: 899px)");
+// Touch screens without hover: tap shows what a mouse would reveal on hover.
+const TOUCH_QUERY = window.matchMedia("(hover: none)");
+const PHONE_BAR_BRANCH_ROWS = 2;
+
+function isPhoneLayout() {
+  return PHONE_QUERY.matches;
+}
+
+/** What scrolls the article: the page on phones, #articleBody otherwise. */
+function articleScroller() {
+  return isPhoneLayout() ? (document.scrollingElement || document.documentElement) : el.articleBody;
+}
+
+/** New page: back to its top (on phones, just below the bar instead of the very top of the site). */
+function resetArticleScroll() {
+  if (!isPhoneLayout()) {
+    if (el.articleBody) el.articleBody.scrollTop = 0;
+    return;
+  }
+  const panel = el.articleBody?.closest(".article-panel");
+  if (!panel) return;
+  const top = panel.getBoundingClientRect().top + window.scrollY - (el.phoneBar?.offsetHeight || 0) - 8;
+  if (window.scrollY > top) window.scrollTo(0, Math.max(0, top));
+}
+
+function isPhoneMenuOpen() {
+  return document.body.classList.contains("phone-menu-open");
+}
+
+function syncPhoneMenuButton() {
+  if (!el.phoneMenuBtn) return;
+  const open = isPhoneMenuOpen();
+  el.phoneMenuBtn.innerHTML = open ? TOOL_ICON_SVGS.close : TOOL_ICON_SVGS.menu;
+  const label = open ? t("phone.closeMenu") : t("phone.menu");
+  el.phoneMenuBtn.setAttribute("aria-label", label);
+  el.phoneMenuBtn.title = label;
+  el.phoneMenuBtn.setAttribute("aria-expanded", String(open));
+}
+
+/**
+ * Article view <-> menu view. Opening from the button adds a history entry so the
+ * phone's Back closes the menu instead of turning the article back a page.
+ */
+function setPhoneMenu(open, { fromHistory = false, addHistory = false } = {}) {
+  const next = Boolean(open);
+  if (next === isPhoneMenuOpen()) return;
+  if (next) state.phoneArticleScrollY = window.scrollY;
+  document.body.classList.toggle("phone-menu-open", next);
+  syncPhoneMenuButton();
+  hideTargetTooltip();
+  hideTapTip();
+  if (next && addHistory) {
+    history.pushState({ ...(history.state || {}), phoneMenu: true }, "");
+  } else if (!next && !fromHistory && history.state?.phoneMenu) {
+    state.ignoreNextPopstate = true;
+    history.back();
+  }
+  window.scrollTo(0, next ? 0 : (state.phoneArticleScrollY || 0));
+  // Tracks measure their width, and the cards were hidden until now.
+  if (next && state.status) {
+    renderRoundsTrack(state.status);
+    renderFragmentsTrack(state.status);
+  }
+}
+
+/** First status shows the menu on phones when nothing is running; starting a game shows the article. */
+function syncPhoneMenuForStatus(status) {
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
+  if (state.phoneWasPlayable === undefined) {
+    if (isPhoneLayout() && !playable) setPhoneMenu(true);
+  } else if (playable && !state.phoneWasPlayable && isPhoneLayout()) {
+    setPhoneMenu(false);
+  }
+  state.phoneWasPlayable = playable;
+}
+
+function phoneTargetRow(labelText, titleText, { topic = "", main = false, wikiTitle = "" } = {}) {
+  const row = document.createElement("p");
+  row.className = "phone-target-row";
+  const label = document.createElement("span");
+  label.className = main ? "realm-label main-road-label" : "realm-label";
+  setTopic(label, topic);
+  label.textContent = labelText;
+  const title = document.createElement("span");
+  title.className = "phone-target-title target-hover";
+  title.textContent = titleText;
+  setHoverWikiTitle(title, wikiTitle);
+  row.append(label, title);
+  return row;
+}
+
+function renderPhoneBar(status) {
+  if (!el.phoneTargets) return;
+  const playable = Boolean(status?.connected_to_ap || status?.practice);
+  const rows = [];
+  if (!playable) {
+    rows.push({ brand: true });
+  } else {
+    let mainText = status.current_target || "…";
+    let mainWiki = status.current_target || "";
+    if (status.boss_completed) {
+      mainText = t("hud.goalComplete");
+      mainWiki = "";
+    } else if (!status.current_target && isRealmMaster(status)) {
+      mainText = t("hud.mainRoadDone");
+      mainWiki = "";
+    }
+    rows.push({ label: t("path.main"), text: mainText, wiki: mainWiki, main: true });
+    const question = String(status.goal_question || "").trim();
+    if (!status.practice && !isRealmMaster(status) && status.boss_ready && !status.boss_completed && question) {
+      rows.push({ label: t("hud.grandGoal").replace(/\s*:\s*$/, ""), text: question, wiki: "", main: true });
+    }
+    const live = !status.boss_completed && Array.isArray(status.live_branch_targets)
+      ? status.live_branch_targets
+      : [];
+    for (const item of live.slice(0, PHONE_BAR_BRANCH_ROWS)) {
+      rows.push({ label: realmName(item, status), text: item.target || "…", wiki: item.target || "", topic: item.theme_tag || "" });
+    }
+    if (live.length > PHONE_BAR_BRANCH_ROWS) rows.push({ more: live.length - PHONE_BAR_BRANCH_ROWS });
+  }
+  // Rebuild only on change: polls run every 1.5s and an open preview is anchored to these nodes.
+  const key = JSON.stringify(rows);
+  if (key !== state.phoneBarKey) {
+    state.phoneBarKey = key;
+    el.phoneTargets.replaceChildren(...rows.map((row) => {
+      if (row.brand) {
+        const brand = document.createElement("p");
+        brand.className = "phone-brand";
+        brand.innerHTML = '<img src="/icons/icon-192.png" width="28" height="28" alt="" />';
+        brand.append("Wikipelago");
+        return brand;
+      }
+      if (row.more) {
+        const more = document.createElement("button");
+        more.type = "button";
+        more.className = "btn-quiet phone-more";
+        more.textContent = t("phone.moreTargets", { n: row.more });
+        more.addEventListener("click", () => setPhoneMenu(true, { addHistory: true }));
+        return more;
+      }
+      return phoneTargetRow(row.label, row.text, { topic: row.topic, main: row.main, wikiTitle: row.wiki });
+    }));
+  }
+  if (el.phoneTools) el.phoneTools.classList.toggle("hidden", !playable);
+  if (el.phoneCompass) {
+    const showCompass = playable && Boolean(status.compass_unlocked);
+    el.phoneCompass.classList.toggle("hidden", !showCompass);
+    if (showCompass) el.phoneCompass.textContent = `${t("hud.compass")} ${compassHintText(status)}`;
+  }
+}
+
+let tapTipTimer = 0;
+
+function hideTapTip() {
+  clearTimeout(tapTipTimer);
+  el.tapTip?.classList.add("hidden");
+}
+
+function showTapTip(text, anchor) {
+  if (!el.tapTip) {
+    el.tapTip = document.createElement("div");
+    el.tapTip.className = "tap-tip hidden";
+    el.tapTip.setAttribute("role", "status");
+    document.body.appendChild(el.tapTip);
+  }
+  const tip = el.tapTip;
+  tip.textContent = text;
+  tip.classList.remove("hidden");
+  const rect = anchor.getBoundingClientRect();
+  const margin = 8;
+  const width = Math.min(tip.offsetWidth, window.innerWidth - margin * 2);
+  const left = Math.max(margin, Math.min(rect.left + rect.width / 2 - width / 2, window.innerWidth - width - margin));
+  let top = rect.top - tip.offsetHeight - 6;
+  if (top < margin) top = rect.bottom + 6;
+  tip.style.left = `${left}px`;
+  tip.style.top = `${top}px`;
+  clearTimeout(tapTipTimer);
+  tapTipTimer = setTimeout(hideTapTip, 2600);
+}
+
+function bindPhoneLayout() {
+  if (el.phoneSearchBtn) el.phoneSearchBtn.innerHTML = TOOL_ICON_SVGS.search;
+  if (el.phoneSosBtn && TOOL_ICON_SVGS.teleport) el.phoneSosBtn.insertAdjacentHTML("afterbegin", TOOL_ICON_SVGS.teleport);
+  syncPhoneMenuButton();
+  el.phoneMenuBtn?.addEventListener("click", () => setPhoneMenu(!isPhoneMenuOpen(), { addHistory: true }));
+  el.phoneSearchBtn?.addEventListener("click", () => openSearchOverlay());
+  el.phoneSosBtn?.addEventListener("click", () => {
+    void teleportToRandomPage();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isPhoneMenuOpen()) setPhoneMenu(false);
+  });
+  // Leaving the phone layout (rotation, wider window) brings both columns back.
+  PHONE_QUERY.addEventListener("change", () => {
+    if (!isPhoneLayout()) document.body.classList.remove("phone-menu-open");
+    else if (!(state.status?.connected_to_ap || state.status?.practice)) setPhoneMenu(true);
+    syncPhoneMenuButton();
+    if (state.status) {
+      renderRoundsTrack(state.status);
+      renderFragmentsTrack(state.status);
+    }
+  });
+  // The search box and previews sit just under the bar, whatever its height.
+  if (el.phoneBar && typeof ResizeObserver === "function") {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--phone-bar-h", `${el.phoneBar.offsetHeight}px`);
+    }).observe(el.phoneBar);
+  }
+  // Touch: tap a target title for its preview, or anything with a label for a short bubble.
+  document.addEventListener("click", (event) => {
+    if (!TOUCH_QUERY.matches) return;
+    const hover = event.target.closest?.(".target-hover");
+    const wikiTitle = hover ? hoverWikiTitle(hover) : "";
+    if (wikiTitle) {
+      hideTapTip();
+      if (state.targetTooltipVisible && state.targetTooltipAnchor === hover) hideTargetTooltip();
+      else showTargetTooltip(wikiTitle, hover);
+      return;
+    }
+    const labelled = event.target.closest?.("[title]");
+    if (
+      labelled
+      && labelled.title
+      && !labelled.closest("button, a, input, select, label, [role='button'], #articleBody")
+    ) {
+      hideTargetTooltip();
+      showTapTip(labelled.title, labelled);
+      return;
+    }
+    hideTapTip();
+    if (state.targetTooltipVisible && !event.target.closest?.("#targetTooltip")) hideTargetTooltip();
+  });
+  window.addEventListener("scroll", () => {
+    hideTapTip();
+    if (state.targetTooltipVisible) positionTargetTooltip();
+  }, { passive: true });
+}
+
 function pathLabel(path) {
   if (!path) return t("path.main");
   if (path.id === "main") return t("path.main");
@@ -979,7 +1515,7 @@ function unlockedBranchPaths(status) {
 function renderBranchTargets(status) {
   if (!el.branchTargets) return;
   const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
-  const show = !status?.practice && !status?.boss_completed && live.length > 0;
+  const show = !status?.boss_completed && live.length > 0;
   el.branchTargets.classList.toggle("hidden", !show);
   el.branchTargets.innerHTML = "";
   if (!show) return;
@@ -987,7 +1523,9 @@ function renderBranchTargets(status) {
     const row = document.createElement("p");
     row.className = "target-row branch-target-row";
     const label = document.createElement("strong");
-    label.textContent = t("hud.forkTarget", { n: forkNumber(item) });
+    label.className = "realm-label";
+    setTopic(label, item.theme_tag);
+    label.textContent = realmName(item, status);
     const title = document.createElement("span");
     title.className = "target-hover target-page";
     title.textContent = item.target || "…";
@@ -1000,6 +1538,86 @@ function renderBranchTargets(status) {
 
 function renderBranchTracks(status) {
   if (el.branchTracks) el.branchTracks.innerHTML = "";
+}
+
+/** Realm checklist: topic, Portal / lock state, progress. Shown whenever the seed has branches. */
+function renderRealmsBlock(status) {
+  if (!el.realmsBlock || !el.realmsList) return;
+  const realms = Array.isArray(status?.realms) ? status.realms : [];
+  const show = realms.length > 0;
+  el.realmsBlock.classList.toggle("hidden", !show);
+  el.realmsList.innerHTML = "";
+  if (!show) return;
+  const master = isRealmMaster(status);
+  const cleared = realms.filter((realm) => realm?.cleared).length;
+  if (el.realmsTitle) el.realmsTitle.textContent = master ? t("realm.masterTitle") : t("realm.title");
+  if (el.realmsMeta) el.realmsMeta.textContent = `${cleared}/${realms.length}`;
+  for (const realm of realms) {
+    const row = document.createElement("li");
+    row.className = "realm-row";
+    setTopic(row, realm.theme_tag);
+    let stateName = "sealed";
+    if (realm.cleared) stateName = "cleared";
+    else if (realm.unlocked) stateName = "open";
+    else if (realm.has_portal || (!realm.portal_item && Number(status.branch_keys_available) > 0)) stateName = "ready";
+    row.dataset.state = stateName;
+
+    const swatch = document.createElement("span");
+    swatch.className = "realm-swatch";
+    swatch.setAttribute("aria-hidden", "true");
+
+    const name = document.createElement("span");
+    name.className = "realm-name";
+    name.textContent = realmName(realm, status);
+
+    const note = document.createElement("span");
+    note.className = "realm-note";
+    const crossroad = Number(realm.crossroad_round) || 0;
+    if (stateName === "cleared") note.textContent = t("realm.cleared");
+    else if (stateName === "open") note.textContent = `${Number(realm.completed) || 0}/${Number(realm.length) || 0}`;
+    else if (stateName === "ready") note.textContent = t("realm.atRound", { n: crossroad });
+    else if (realm.portal_item) note.textContent = t("realm.needs", { portal: portalName(realm.theme_tag) });
+    else note.textContent = t("realm.needsKey");
+
+    const bar = document.createElement("span");
+    bar.className = "realm-bar";
+    const fill = document.createElement("span");
+    const length = Math.max(1, Number(realm.length) || 1);
+    fill.style.width = `${Math.round((Math.min(length, Number(realm.completed) || 0) / length) * 100)}%`;
+    bar.appendChild(fill);
+
+    row.title = realm.portal_item
+      ? `${realmName(realm, status)} · ${portalName(realm.theme_tag)} · ${t("track.kindRound")} ${crossroad}`
+      : `${realmName(realm, status)} · ${t("track.kindRound")} ${crossroad}`;
+    row.append(swatch, name, note, bar);
+    el.realmsList.appendChild(row);
+  }
+  if (status.practice && status.practice_realm_cleared) {
+    const item = document.createElement("li");
+    item.className = "practice-new";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-quiet";
+    btn.textContent = t("practice.newRealm");
+    btn.addEventListener("click", () => void requestPracticeRefresh("new-realm"));
+    item.appendChild(btn);
+    el.realmsList.appendChild(item);
+  }
+}
+
+/** Practice only: replace a full bingo board or a cleared Realm. */
+async function requestPracticeRefresh(kind) {
+  if (!state.sessionId || !state.status?.practice) return;
+  try {
+    const result = await api(`/api/session/${state.sessionId}/practice/${kind}`, "POST", {});
+    if (kind === "new-board") {
+      // The finished board was auto-collapsed; show the new one open.
+      ensureBingoUiState(result.status || state.status).boards["1"] = { collapsed: false, autoHidden: false };
+    }
+    if (result.status) updateHUD(result.status);
+  } catch (err) {
+    toast(err?.message || t("toast.syncFailed"), "warn");
+  }
 }
 
 function forkProgressByNumber(status) {
@@ -1019,7 +1637,7 @@ function forkProgressByNumber(status) {
   return map;
 }
 
-function renderForkSpur(parentSeg, progress, fork) {
+function renderForkSpur(parentSeg, progress, fork, topic = "") {
   const total = Math.max(0, Number(progress?.total) || 0);
   if (!parentSeg || total <= 0) return;
   const current = Math.max(1, Number(progress.current) || 1);
@@ -1037,7 +1655,8 @@ function renderForkSpur(parentSeg, progress, fork) {
   }
   const spur = document.createElement("div");
   spur.className = "fork-spur";
-  const kind = forkProgressTitle({ fork });
+  setTopic(spur, topic);
+  const kind = topic ? t("realm.name", { topic: topicLabel(topic) }) : forkProgressTitle({ fork });
   spur.setAttribute("aria-label", done ? `${kind} ${t("hud.complete")}` : `${kind} ${current}/${total}`);
   const runs = rleTrackItems(items);
   for (const run of runs) {
@@ -1095,7 +1714,19 @@ function renderCrossroadBadge(status) {
   }
   el.crossroadBadge.classList.remove("hidden");
   el.crossroadBadge.classList.toggle("unlocked", Boolean(info.unlocked));
+  setTopic(el.crossroadBadge, info.theme_tag);
   const fork = Number(info.fork) > 0 ? Math.trunc(Number(info.fork)) : Number(info.branch_id) + 1;
+  if (info.portal_item) {
+    const realm = realmName(info, status);
+    if (info.unlocked) {
+      el.crossroadBadge.textContent = t("crossroad.realmOpen", { realm });
+    } else if (info.has_portal) {
+      el.crossroadBadge.textContent = t("crossroad.realmReady", { realm });
+    } else {
+      el.crossroadBadge.textContent = t("crossroad.realmNeedPortal", { realm, portal: portalName(info.theme_tag) });
+    }
+    return;
+  }
   if (info.unlocked) {
     el.crossroadBadge.textContent = t("crossroad.unlocked", { n: fork });
   } else if (Number(status.branch_keys_available) > 0) {
@@ -1142,7 +1773,7 @@ function journeyPageNodes(events) {
       }
     }
     if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
-    if (kind === "grand_goal") node.grandGoal = true;
+    if (kind === "grand_goal" || kind === "realm_master") node.grandGoal = true;
     if (node !== last) nodes.push(node);
   }
   return nodes.map((node) => {
@@ -1212,18 +1843,42 @@ function journeyTrailD(points) {
   return d;
 }
 
+function cssVar(name, fallback) {
+  try {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function forkTopic(fork, status = state.status) {
+  return String(branchById(status, Number(fork) - 1)?.theme_tag || "");
+}
+
 function journeyNodeFill(node) {
-  if (node.grandGoal) return { fill: "#ffd76a", stroke: "#c4922a" };
-  if (node.mainRound) return { fill: "#1ecb70", stroke: "#148a4c" };
-  if (node.forks.length) return { fill: "#40c4ff", stroke: "#1a7aa0" };
-  if (node.stamp) return { fill: "#b57bff", stroke: "#7a3fd4" };
-  return { fill: "#0d1620", stroke: "#6a849c" };
+  const ink = cssVar("--ink-0", "#0e1020");
+  if (node.grandGoal) return { fill: cssVar("--journey-goal", "#f3ecdc"), stroke: cssVar("--journey-goal-stroke", "#e0915a") };
+  if (node.mainRound) return { fill: cssVar("--brass", "#e0915a"), stroke: ink };
+  if (node.forks.length) {
+    const topic = forkTopic(node.forks[0]);
+    const colorblind = document.documentElement.dataset.cvd === "1";
+    const realm = colorblind
+      ? cssVar(`--cvd-realm-${(Number(node.forks[0]) - 1) % 8}`, "")
+      : (topic ? cssVar(`--topic-${topic}`, "") : "");
+    return { fill: realm || cssVar("--sea", "#8fa8ff"), stroke: ink };
+  }
+  if (node.stamp) return { fill: cssVar("--stamp", "#b57bff"), stroke: ink };
+  return { fill: ink, stroke: cssVar("--line-strong", "#3b4163") };
 }
 
 function journeyNodeTipLines(node) {
   const lines = [];
   if (node.mainRound) lines.push(t("journey.roundMain"));
-  for (const fork of node.forks) lines.push(t("journey.roundFork", { n: fork }));
+  for (const fork of node.forks) {
+    const topic = forkTopic(fork);
+    lines.push(topic ? t("realm.name", { topic: topicLabel(topic) }) : t("journey.roundFork", { n: fork }));
+  }
   if (node.grandGoal) lines.push(t("journey.grandGoal"));
   if (node.stamp) lines.push(t("journey.stamp"));
   if (!lines.length && node.kinds.has("back")) lines.push(journeyKindLabel("back"));
@@ -1232,25 +1887,65 @@ function journeyNodeTipLines(node) {
 }
 
 function hideJourneyTip() {
+  state.journeyTipNode = null;
   if (!el.journeyTip) return;
   el.journeyTip.classList.add("hidden");
   el.journeyTip.innerHTML = "";
 }
 
-function showJourneyTip(node, clientX, clientY) {
-  if (!el.journeyTip || !el.journeyPath) return;
-  const lines = journeyNodeTipLines(node);
-  el.journeyTip.innerHTML = "";
+/** The page on real Wikipedia, in the seed's language. */
+function openJourneyArticle(node) {
+  const url = `${wikipediaOrigin()}/wiki/${encodeURIComponent(String(node.title).replace(/ /g, "_"))}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/** Title, what happened there, then the same summary as the target preview. */
+function fillJourneyTip(node) {
+  const tip = el.journeyTip;
+  tip.innerHTML = "";
   const title = document.createElement("strong");
   title.textContent = node.title;
-  el.journeyTip.appendChild(title);
-  for (const line of lines) {
+  tip.appendChild(title);
+  for (const line of journeyNodeTipLines(node)) {
     const kind = document.createElement("div");
     kind.className = "journey-tip-kind";
     kind.textContent = line;
-    el.journeyTip.appendChild(kind);
+    tip.appendChild(kind);
   }
+  const summary = document.createElement("p");
+  summary.className = "journey-tip-summary loading";
+  summary.textContent = t("hud.loadingEllipsis");
+  tip.appendChild(summary);
+  const hint = document.createElement("div");
+  hint.className = "journey-tip-hint";
+  hint.textContent = TOUCH_QUERY.matches ? t("journey.tapToOpen") : t("journey.clickToOpen");
+  tip.appendChild(hint);
+  const settle = (text) => {
+    if (state.journeyTipNode !== node) return;
+    summary.classList.remove("loading");
+    summary.textContent = text;
+    positionJourneyTip(state.journeyTipX, state.journeyTipY);
+  };
+  fetchTargetSummary(node.title)
+    .then((text) => settle(text || t("hud.noDescription")))
+    .catch(() => settle(t("hud.descriptionFailed")));
+}
+
+function showJourneyTip(node, clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath) return;
+  // Build once per point: moving the pointer only repositions, so the summary is not refetched.
+  if (state.journeyTipNode !== node) {
+    state.journeyTipNode = node;
+    fillJourneyTip(node);
+  }
+  state.journeyTipX = clientX;
+  state.journeyTipY = clientY;
   el.journeyTip.classList.remove("hidden");
+  positionJourneyTip(clientX, clientY);
+}
+
+function positionJourneyTip(clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath || el.journeyTip.classList.contains("hidden")) return;
   const originEl = el.journeyPath.parentElement || el.journeyPath;
   const wrap = originEl.getBoundingClientRect();
   const tipW = el.journeyTip.offsetWidth || 160;
@@ -1316,7 +2011,7 @@ function drawJourneyPath(payload) {
       ring.setAttribute("cy", String(node.y));
       ring.setAttribute("r", String(node.r + 3));
       ring.setAttribute("fill", "none");
-      ring.setAttribute("stroke", "#b57bff");
+      ring.setAttribute("stroke", cssVar("--stamp", "#b57bff"));
       ring.setAttribute("stroke-width", "2.5");
       svg.appendChild(ring);
     }
@@ -1335,11 +2030,32 @@ function drawJourneyPath(payload) {
     hit.setAttribute("r", String(Math.max(node.r + 6, 11)));
     hit.setAttribute("fill", "transparent");
     hit.setAttribute("tabindex", "0");
-    hit.setAttribute("role", "img");
+    hit.setAttribute("role", "link");
     hit.setAttribute("aria-label", [node.title, ...journeyNodeTipLines(node)].join(", "));
-    hit.addEventListener("pointerenter", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
-    hit.addEventListener("pointermove", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
-    hit.addEventListener("pointerleave", hideJourneyTip);
+    // Touch has no hover: the first tap shows the info, a second tap on the same point opens the page.
+    hit.addEventListener("pointerenter", (ev) => {
+      if (ev.pointerType !== "touch") showJourneyTip(node, ev.clientX, ev.clientY);
+    });
+    hit.addEventListener("pointermove", (ev) => {
+      if (ev.pointerType !== "touch") showJourneyTip(node, ev.clientX, ev.clientY);
+    });
+    hit.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType !== "touch") hideJourneyTip();
+    });
+    hit.addEventListener("click", (ev) => {
+      const touch = ev.pointerType === "touch" || TOUCH_QUERY.matches;
+      if (touch && state.journeyTipNode !== node) {
+        showJourneyTip(node, ev.clientX, ev.clientY);
+        return;
+      }
+      openJourneyArticle(node);
+    });
+    hit.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        openJourneyArticle(node);
+      }
+    });
     hit.addEventListener("focus", () => showJourneyTip(node, host.getBoundingClientRect().left + node.x, host.getBoundingClientRect().top + node.y));
     hit.addEventListener("blur", hideJourneyTip);
     svg.appendChild(hit);
@@ -1370,6 +2086,11 @@ function isJourneyStandaloneWindow() {
 
 function syncJourneyFullscreenButton() {
   if (!el.journeyFullscreenBtn) return;
+  // iPhone Safari only allows fullscreen for video: hide the button instead of failing.
+  const panel = el.journeyOverlayPanel;
+  const supported = Boolean(panel && (panel.requestFullscreen || panel.webkitRequestFullscreen))
+    && document.fullscreenEnabled !== false;
+  el.journeyFullscreenBtn.classList.toggle("hidden", !supported);
   const active = Boolean(document.fullscreenElement);
   const label = active ? t("journey.exitFullscreen") : t("journey.fullscreen");
   el.journeyFullscreenBtn.textContent = label;
@@ -1429,6 +2150,19 @@ function closeJourneyOverlay() {
 }
 
 function fillVictoryOverlay(status) {
+  if (isRealmMaster(status)) {
+    const realms = Array.isArray(status?.realms) ? status.realms : [];
+    if (el.victoryQuestion) {
+      el.victoryQuestion.textContent = realms.map((realm) => realmName(realm, status)).join(" · ");
+      el.victoryQuestion.classList.toggle("hidden", !realms.length);
+    }
+    if (el.victoryAnswer) el.victoryAnswer.classList.add("hidden");
+    if (el.victoryMessage) el.victoryMessage.textContent = t("victory.realmMessage", { n: realms.length });
+    if (el.victoryOverlayTitle) el.victoryOverlayTitle.textContent = t("victory.realmTitle");
+    if (el.victoryJourneyBtn) el.victoryJourneyBtn.textContent = t("victory.seeJourney");
+    if (el.victoryCloseBtn) el.victoryCloseBtn.textContent = t("victory.continue");
+    return;
+  }
   const question = String(status?.goal_question || "").trim();
   const title = status?.goal_article || "";
   if (el.victoryQuestion) {
@@ -1478,6 +2212,10 @@ function bindJourneyOverlayUi() {
     void toggleJourneyFullscreen();
   });
   el.journeyPopupBtn?.addEventListener("click", openJourneyPopup);
+  // Touch: tapping the map away from a point closes its info.
+  el.journeyPath?.addEventListener("click", (ev) => {
+    if (!ev.target.closest?.(".journey-node-hit")) hideJourneyTip();
+  });
   document.addEventListener("fullscreenchange", () => {
     syncJourneyFullscreenButton();
     if (state.journeyOpen && state.journeyPayload) {
@@ -1782,6 +2520,22 @@ function ensureToolIcons() {
   el.toolIconsRow.innerHTML = "";
   for (const tool of tools) el.toolIconsRow.appendChild(makeIconNode(tool));
   el.toolIconsRow.dataset.ready = "4";
+  const search = el.toolIconsRow.querySelector('[data-tool="search"]');
+  if (search) {
+    search.setAttribute("role", "button");
+    search.tabIndex = 0;
+    const open = () => {
+      setPhoneMenu(false);
+      openSearchOverlay();
+    };
+    search.addEventListener("click", open);
+    search.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        open();
+      }
+    });
+  }
 }
 
 function overflowChipWidthPx(count) {
@@ -1796,14 +2550,16 @@ function trackChipMinPx(plan) {
   return width;
 }
 
-function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX) {
+function estimatePlanWidthPx(plan, chipMinPx = TRACK_EMPHASIS_MIN_PX, crossroadPx = TRACK_CROSSROAD_PX) {
   let parts = 0;
   let width = 0;
   for (const p of plan) {
     for (let i = 0; i < p.individuals; i += 1) {
       if (parts > 0) width += TRACK_SEG_GAP_PX;
-      // Current round uses the same footprint as a +N chip so its outline stays visible.
-      width += p.run.crossroad ? TRACK_CROSSROAD_PX : (p.run.current ? chipMinPx : TRACK_SEG_MIN_PX);
+      // Current round uses the same footprint as a +N chip, plus margins so its outline stays clear.
+      width += p.run.crossroad
+        ? crossroadPx
+        : (p.run.current ? chipMinPx + TRACK_CURRENT_MARGIN_PX * 2 : TRACK_SEG_MIN_PX);
       parts += 1;
     }
     if (p.overflow > 0) {
@@ -1836,6 +2592,7 @@ function rleTrackItems(items) {
         crossroad: Boolean(item.crossroad),
         unlocked: Boolean(item.unlocked),
         fork: Number(item.fork) || 0,
+        topic: item.topic || "",
         forkProgress: item.forkProgress || null,
         count: 1,
         startLabel: item.label,
@@ -1872,6 +2629,16 @@ function buildTrackPlan(items, trackEl) {
     return { run, individuals: 0, overflow: run.count };
   });
 
+  // Many Realms on a narrow track: shrink the crossroad hooks so the row stays on screen.
+  const crossroads = plan.filter((p) => p.run.crossroad).length;
+  let crossroadPx = TRACK_CROSSROAD_PX;
+  if (crossroads > 0) {
+    const others = estimatePlanWidthPx(plan, trackChipMinPx(plan), 0);
+    const fit = Math.floor((avail - others) / crossroads);
+    crossroadPx = Math.max(TRACK_CROSSROAD_MIN_PX, Math.min(TRACK_CROSSROAD_PX, fit));
+  }
+  trackEl?.style.setProperty("--track-crossroad-w", `${crossroadPx}px`);
+
   const expandPriority = (p) => {
     if (p.overflow <= 0) return -1;
     if (p.run.state === "open" || p.run.state === "filled") return 3;
@@ -1896,7 +2663,7 @@ function buildTrackPlan(items, trackEl) {
     const p = plan[best];
     p.individuals += 1;
     p.overflow -= 1;
-    if (estimatePlanWidthPx(plan, trackChipMinPx(plan)) > avail) {
+    if (estimatePlanWidthPx(plan, trackChipMinPx(plan), crossroadPx) > avail) {
       p.individuals -= 1;
       p.overflow += 1;
       blocked.add(best);
@@ -1914,7 +2681,7 @@ function buildTrackPlan(items, trackEl) {
   return { plan, chipMinPx: trackChipMinPx(plan) };
 }
 
-function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, forkProgress = null }) {
+function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, title = "", crossroad = false, unlocked = false, fork = 0, topic = "", forkProgress = null }) {
   const seg = document.createElement("div");
   seg.className = "seg";
   if (state) seg.classList.add(state);
@@ -1922,12 +2689,13 @@ function appendTrackSeg(trackEl, { state, current = false, overflowCount = 0, ti
   if (crossroad) seg.classList.add("crossroad");
   if (crossroad && unlocked) seg.classList.add("unlocked");
   if (crossroad && fork > 0) seg.dataset.fork = String(fork);
+  if (crossroad) setTopic(seg, topic);
   if (overflowCount > 0) {
     seg.classList.add("overflow");
     seg.textContent = `+${overflowCount}`;
   }
   if (title) seg.title = title;
-  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork);
+  if (crossroad && forkProgress) renderForkSpur(seg, forkProgress, fork, topic);
   trackEl.appendChild(seg);
 }
 
@@ -1963,8 +2731,11 @@ function renderPlannedTrack(trackEl, plan, kind, chipMinPx = TRACK_EMPHASIS_MIN_
           crossroad: Boolean(run.crossroad),
           unlocked: Boolean(run.unlocked),
           fork: Number(run.fork) || 0,
+          topic: run.topic || "",
           forkProgress: run.forkProgress || null,
-          title: `${kind} ${individualStart + i}`,
+          title: run.crossroad && run.topic
+            ? `${kind} ${individualStart + i} · ${t("realm.name", { topic: topicLabel(run.topic) })}`
+            : `${kind} ${individualStart + i}`,
         });
       }
     };
@@ -2010,6 +2781,11 @@ function renderRoundsTrack(status) {
       : Math.trunc(Number(cr?.branch_id)) + 1;
     if (fork > 0) forkByRound.set(round, fork);
   }
+  const topicByFork = new Map();
+  for (const branch of Array.isArray(status.branches) ? status.branches : []) {
+    const fork = Math.trunc(Number(branch?.id)) + 1;
+    if (fork > 0 && branch?.theme_tag) topicByFork.set(fork, String(branch.theme_tag));
+  }
   const progressByFork = forkProgressByNumber(status);
   const items = [];
   for (let i = 1; i <= total; i += 1) {
@@ -2023,6 +2799,7 @@ function renderRoundsTrack(status) {
       crossroad: crossroads.has(i),
       unlocked: unlockedCross.has(i),
       fork,
+      topic: fork ? (topicByFork.get(fork) || "") : "",
       forkProgress: fork ? (progressByFork.get(fork) || null) : null,
       label: `${t("track.kindRound")} ${i}`,
     });
@@ -2040,7 +2817,8 @@ function renderRoundsTrack(status) {
 
 function renderFragmentsTrack(status) {
   if (!el.fragmentsTrack) return;
-  if (status?.practice) {
+  if (status?.practice || isRealmMaster(status)) {
+    // Realm Master has no fragments or Grand Goal; the Realms checklist is the goal HUD.
     if (el.fragmentsBlock) el.fragmentsBlock.classList.add("hidden");
     if (el.goalRow) el.goalRow.classList.add("hidden");
     setHoverWikiTitle(el.goalHover, "");
@@ -2135,7 +2913,8 @@ function renderToolIcons(status) {
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
   const key = el.toolIconsRow.querySelector('[data-tool="key"]');
-  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0;
+  // Topic Realms use Portals (shown in the Realms list), not Branch Keys; the practice Realm needs neither.
+  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0 && !status.topic_portals && !status.practice;
   const keyCount = Math.max(0, Number(status.branch_keys_available) || 0);
   if (key) {
     key.classList.toggle("hidden", !hasBranches);
@@ -2160,7 +2939,7 @@ function renderLensIcons(status) {
     node.className = "item-icon";
     node.title = t(lock.i18nKey);
     setIconState(node, status?.[lock.unlockedKey] ? "ok" : "locked");
-    node.textContent = lock.glyph;
+    node.textContent = t(lock.glyphKey);
     el.lensIconsRow.appendChild(node);
   }
 }
@@ -2446,11 +3225,11 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
   wrap.className = "bingo-grid-wrap";
   const tickD = document.createElement("span");
   tickD.className = "bingo-diag-tick bingo-diag-d";
-  tickD.textContent = "D";
+  tickD.textContent = t("bingo.diagShort");
   tickD.title = t("bingo.diag");
   const tickAd = document.createElement("span");
   tickAd.className = "bingo-diag-tick bingo-diag-ad";
-  tickAd.textContent = "AD";
+  tickAd.textContent = t("bingo.antidiagShort");
   tickAd.title = t("bingo.antidiag");
   wrap.append(tickD, tickAd, grid);
   for (let row = 0; row < n; row += 1) {
@@ -2931,6 +3710,15 @@ function renderBingoHud(status) {
     totalLines += lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
   }
 
+  if (status.practice && status.practice_bingo_full) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-quiet practice-new";
+    btn.textContent = t("practice.newBoard");
+    btn.addEventListener("click", () => void requestPracticeRefresh("new-board"));
+    el.bingoBoards.appendChild(btn);
+  }
+
   if (el.bingoMeta) {
     if (!unlocked) {
       el.bingoMeta.textContent = t("bingo.noBoards");
@@ -3253,6 +4041,9 @@ function applyHUDStatus(status) {
     : [];
   noteResumeIdentityFromStatus(status);
   state.status = status;
+  // Nothing loaded yet (or Practice just ended): show only what to do first.
+  const idle = !status.practice && !status.connected_to_ap && !status.current_target && !status.current_start;
+  document.body.classList.toggle("is-idle", idle);
   const remoteClicks = Number(status.clicks_used);
   if (status.practice) {
     state.clicksUsed = Number.isFinite(remoteClicks) ? remoteClicks : state.clicksUsed;
@@ -3284,14 +4075,21 @@ function applyHUDStatus(status) {
   if (wasPractice && !status.practice && !status.connected_to_ap) {
     clearStickyConnectionError();
   }
-  if (!wasConnected && status.connected_to_ap) {
+  if (wasPractice && !status.practice) {
+    // The URL still names the last practice page: a room joined next must start from its own round.
+    clearStickyArticleResume();
+  }
+  if (!wasConnected && status.connected_to_ap && !isJourneyStandaloneWindow()) {
     clearStickyConnectionError();
     toast(t("toast.connected"), "ok", 4500);
-    // /connect returns before AP handshake finishes; restore once we are actually online.
-    void restoreArticleView(true);
+    // /connect returns before AP handshake finishes; resume once we are actually online.
+    void resumeAfterReconnect();
   }
   if (status.boss_completed) {
     el.targetText.textContent = t("hud.goalComplete");
+    setTargetSummaryTitle("");
+  } else if (!status.current_target && isRealmMaster(status)) {
+    el.targetText.textContent = t("hud.mainRoadDone");
     setTargetSummaryTitle("");
   } else {
     el.targetText.textContent = status.current_target || "...";
@@ -3303,15 +4101,16 @@ function applyHUDStatus(status) {
   renderFragmentsTrack(status);
   renderBranchTargets(status);
   renderCrossroadBadge(status);
+  renderRealmsBlock(status);
   if (el.journeyBtn) {
     el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
   }
 
   el.compassHint.textContent = status.compass_unlocked
-    ? (I18n?.localizeCompassHint
-      ? I18n.localizeCompassHint(status.warmer_colder || "Calibrating")
-      : (status.warmer_colder || t("hud.calibrating")))
+    ? compassHintText(status)
     : t("hud.locked");
+  renderPhoneBar(status);
+  syncPhoneMenuForStatus(status);
   renderSearchStatus();
   renderToolIcons(status);
   renderLensIcons(status);
@@ -3331,7 +4130,8 @@ function applyHUDStatus(status) {
     state.announcedGoalComplete = true;
     openVictoryOverlay(status);
   }
-  const nextUnlocked = Array.isArray(status.unlocked_branch_ids)
+  // The practice Realm is open from the start: no "unlocked" announcement.
+  const nextUnlocked = Array.isArray(status.unlocked_branch_ids) && !status.practice
     ? status.unlocked_branch_ids.map((id) => Number(id))
     : [];
   for (const id of nextUnlocked) {
@@ -3339,7 +4139,12 @@ function applyHUDStatus(status) {
     const path = (Array.isArray(status.paths) ? status.paths : []).find(
       (item) => item && item.id === `branch:${id}`
     );
-    toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
+    const branch = branchById(status, id);
+    if (branch?.portal_item) {
+      toast(t("toast.realmUnlocked", { realm: realmName(branch, status) }), "ok", 7000);
+    } else {
+      toast(t("toast.branchUnlocked", { n: forkNumber(path) || Number(id) + 1 }), "ok", 7000);
+    }
   }
   // Connection/auth errors: toast once and keep visible (poll must not spam).
   if (status.last_error) {
@@ -3351,9 +4156,50 @@ function applyHUDStatus(status) {
     lastStickyError = "";
   }
   saveLocalProgress();
-  if (Array.isArray(status.pending_events) && status.pending_events.length) {
-    processPendingEvents(status.pending_events);
+  const events = status.pending_events;
+  if (Array.isArray(events) && events.length) {
+    // This status object is redrawn again on language and display changes: run its events only once.
+    status.pending_events = [];
+    if (!isJourneyStandaloneWindow()) processPendingEvents(events);
   }
+}
+
+function connectionIdentity(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  return server && slot ? `${server}::${slot}` : "";
+}
+
+/** Remember a page clicked while the room is unreachable. Not after Disconnect: that is browsing only. */
+function queueOfflineVisit(title) {
+  const identity = connectionIdentity(state.status);
+  if (!identity || state.userDisconnected || state.status?.practice) return false;
+  state.offlineVisits.push({ identity, title });
+  if (state.offlineVisits.length > MAX_OFFLINE_VISITS) state.offlineVisits.shift();
+  return true;
+}
+
+/** Back online: send the pages clicked meanwhile, in order, then keep the page already on screen. */
+async function resumeAfterReconnect() {
+  const identity = connectionIdentity(state.status);
+  const queued = state.offlineVisits.filter((visit) => visit.identity === identity);
+  state.offlineVisits = [];
+  for (const visit of queued) {
+    try {
+      const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
+        page_title: visit.title,
+        clicks_used: state.clicksUsed,
+        submit_check: true,
+        travel_kind: "nav",
+      });
+      announceCheckResult(result);
+      if (result.status) updateHUD(result.status);
+    } catch {
+      break;
+    }
+  }
+  // Reloading would jump to the top, re-roll bombs and use up a queued trap: only load a page if none is shown.
+  await restoreArticleView(!state.currentTitle);
 }
 
 function isDisplayUnlocked(unlockedKey) {
@@ -3388,6 +4234,9 @@ function applyDebugMenuAvailability(info) {
   const allowed = isDebugMenuAllowed(info);
   const wrap = document.getElementById("debugUnlockWrap");
   if (wrap) wrap.classList.toggle("hidden", !allowed);
+  // The path solver link is always shown; the toggle only leads to the debug menu.
+  el.stuckToggleBtn?.classList.toggle("hidden", !allowed);
+  if (!allowed) setStuckPanelOpen(false);
   if (!allowed && (debugDisplayEnabled || debugPanelReady)) {
     disableDebugDisplayMenu();
   }
@@ -3536,10 +4385,16 @@ function initDebugDisplayPanel() {
     debugBtn("All lenses", () => runDebugAction("grant_lenses")),
     debugBtn("Letters A–Z", () => runDebugAction("grant_letters")),
     debugBtn("Max scroll", () => runDebugAction("grant_scroll")),
+    debugBtn("Open all branches / Portals", () => runDebugAction("unlock_all_branches")),
+    debugBtn("Advance live Realms +1", () => runDebugAction("complete_branch_rounds")),
   ]));
   const itemSelect = document.createElement("select");
   itemSelect.className = "debug-input";
+  const seedPortals = (Array.isArray(state.status?.branches) ? state.status.branches : [])
+    .map((branch) => String(branch?.portal_item || ""))
+    .filter(Boolean);
   for (const name of [
+    ...seedPortals,
     "Progressive Back", "Progressive Reroll", "Progressive Bingo Card", "Progressive Bingo Stamp",
     "Branch Key",
     "Wiki Compass", "Ctrl+F Lens", "Progressive Scroll Speed",
@@ -3779,7 +4634,8 @@ function bindStuckHelper() {
 async function pollStatus() {
   try {
     await ensureSession();
-    const data = await api(`/api/session/${state.sessionId}/status`);
+    const peek = isJourneyStandaloneWindow() ? "?peek=1" : "";
+    const data = await api(`/api/session/${state.sessionId}/status${peek}`);
     updateHUD(data.status);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
@@ -4363,7 +5219,7 @@ async function openArticle(title, options = {}) {
     el.articleTitle.textContent = displayLang !== seedLang
       ? `${displayTitle} · ${displayLang}`
       : displayTitle;
-    el.articleBody.scrollTop = 0;
+    resetArticleScroll();
     consumeTrapQueueForPage(checkTitle, state.status, { skip: appliedWrongWiki || skipTraps });
 
     if (prepared?.root) {
@@ -4411,7 +5267,9 @@ async function openArticle(title, options = {}) {
     // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
     if (skipBridgeCheck) return;
     if (!isPlayable()) {
-      if (countAsClick && submitCheck) toast(t("toast.disconnectedChecks"), "warn");
+      if (countAsClick && submitCheck) {
+        toast(queueOfflineVisit(checkTitle) ? t("toast.offlineQueued") : t("toast.disconnectedChecks"), "warn");
+      }
       return;
     }
 
@@ -4427,7 +5285,14 @@ async function openArticle(title, options = {}) {
       if (result.matched && (result.status?.practice || result.practice_rolled)) {
         // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
-        resetRoundVisits(displayTitle);
+        const practiceParts = [
+          ...(Array.isArray(result.hits) ? result.hits : [])
+            .filter((hit) => hit.kind === "branch")
+            .map((hit) => t("toast.targetHit", { title: `${hit.target} (${realmName(hit, result.status)})` })),
+          ...formatBingoCompletionParts(result.bingo_completed),
+        ];
+        if (practiceParts.length) toast(practiceParts.join(" · "), "ok", 7000);
+        if (result.practice_rolled) resetRoundVisits(displayTitle);
         const nextClicks = Number(result.status?.clicks_used);
         if (Number.isFinite(nextClicks)) {
           state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
@@ -4435,31 +5300,7 @@ async function openArticle(title, options = {}) {
         saveLocalProgress();
         return;
       }
-      if (result.matched) {
-        const hits = Array.isArray(result.hits) ? result.hits : [];
-        const parts = hits.length
-          ? hits.map((hit) => {
-            const title = hit.target || result.target;
-            const base = hit.kind === "branch"
-              ? t("toast.branchHit", {
-                n: forkNumber(hit),
-                title,
-              })
-              : t("toast.targetHit", { title });
-            return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
-          })
-          : [t("toast.targetHit", { title: result.target })];
-        if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
-          parts[0] += ` — ${result.sent_text}`;
-        }
-        const bingoParts = formatBingoCompletionParts(result.bingo_completed);
-        if (bingoParts.length) parts.push(bingoParts.join(" · "));
-        toast(parts.join(" · "), "ok", 8000);
-      } else {
-        toastBingoCompletions(result.bingo_completed);
-      }
-      if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
-      if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
+      announceCheckResult(result);
     } else {
       toastBingoCompletions(result.bingo_completed);
     }
@@ -4469,6 +5310,35 @@ async function openArticle(title, options = {}) {
     // Page is already visible; do not pretend the Wikipedia fetch failed.
     toast(err?.message || t("toast.syncFailed"), "warn");
   }
+}
+
+/** Toasts for a scored check: targets hit (with what they sent), bingo lines, locked rounds. */
+function announceCheckResult(result) {
+  if (result.matched) {
+    const hits = Array.isArray(result.hits) ? result.hits : [];
+    const parts = hits.length
+      ? hits.map((hit) => {
+        const title = hit.target || result.target;
+        let base = t("toast.targetHit", { title });
+        if (hit.kind === "branch") {
+          base = hit.theme_tag
+            ? t("toast.targetHit", { title: `${title} (${realmName(hit, result.status)})` })
+            : t("toast.branchHit", { n: forkNumber(hit), title });
+        }
+        return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
+      })
+      : [t("toast.targetHit", { title: result.target })];
+    if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
+      parts[0] += ` — ${result.sent_text}`;
+    }
+    const bingoParts = formatBingoCompletionParts(result.bingo_completed);
+    if (bingoParts.length) parts.push(bingoParts.join(" · "));
+    toast(parts.join(" · "), "ok", 8000);
+  } else {
+    toastBingoCompletions(result.bingo_completed);
+  }
+  if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
+  if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
 }
 
 async function restoreArticleView(force = false) {
@@ -4545,16 +5415,19 @@ function isEventInSidePanel(target) {
 }
 
 function applyArticleWheel(deltaY) {
-  if (!el.articleBody) return;
+  const scroller = articleScroller();
+  if (!scroller) return;
   const factor = state.status?.scrollsanity ? scrollFactor() : 1;
-  el.articleBody.scrollTop += deltaY * factor;
+  scroller.scrollTop += deltaY * factor;
 }
 
 // One scroll path: always drive #articleBody ourselves (except side panel / bingo overlay).
 // Native scrolling over nested overflow:auto hosts was latching the wheel at mid-page.
 window.addEventListener("wheel", (e) => {
   if (isEventInSidePanel(e.target)) return;
-  if (e.target?.closest?.("#bingoOverlay")) return;
+  if (e.target?.closest?.("#bingoOverlay, #journeyOverlay, #victoryOverlay")) return;
+  // Phone menu view: the HUD cards scroll with the page as usual.
+  if (isPhoneLayout() && isPhoneMenuOpen()) return;
   if (!el.articleBody) return;
 
   const nest = e.target?.closest?.(".table-scroll.is-scrollable-x");
@@ -4596,6 +5469,7 @@ el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
     const slotName = el.slotInput.value.trim();
+    state.userDisconnected = false;
     const prevIdentity = state.resumeIdentity;
     saveConnection(server, slotName);
     clearStickyConnectionError();
@@ -4616,7 +5490,8 @@ el.connectBtn.addEventListener("click", async () => {
       clearStickyArticleResume();
     }
     state.resumeIdentity = nextIdentity;
-    await restoreArticleView(true);
+    // Same slot with a page on screen (reconnecting after a drop): keep it. A new slot cleared it above.
+    await restoreArticleView(!state.currentTitle);
   } catch (err) {
     toastSticky(err.message || t("toast.connectFailedShort"), "warn");
   }
@@ -4624,6 +5499,7 @@ el.connectBtn.addEventListener("click", async () => {
 
 el.practiceBtn?.addEventListener("click", async () => {
   try {
+    state.offlineVisits = [];
     clearStickyConnectionError();
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/practice`, "POST", {
@@ -4648,6 +5524,8 @@ el.practiceBtn?.addEventListener("click", async () => {
 el.disconnectBtn?.addEventListener("click", async () => {
   try {
     const leavingPractice = isPracticeMode();
+    state.userDisconnected = true;
+    state.offlineVisits = [];
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
     if (result.status) updateHUD(result.status);
@@ -4744,21 +5622,30 @@ document.addEventListener("keydown", (e) => {
       End: 1_000_000,
       " ": e.shiftKey ? -320 : 320,
     };
-    if (Object.prototype.hasOwnProperty.call(keyToAmount, e.key)) {
+    const scroller = articleScroller();
+    if (scroller && Object.prototype.hasOwnProperty.call(keyToAmount, e.key)) {
       e.preventDefault();
       const amount = keyToAmount[e.key];
       if (e.key === "Home") {
-        el.articleBody.scrollTop = 0;
+        scroller.scrollTop = 0;
       } else if (e.key === "End") {
-        el.articleBody.scrollTop = el.articleBody.scrollHeight;
+        scroller.scrollTop = scroller.scrollHeight;
       } else {
-        el.articleBody.scrollTop += amount * factor;
+        scroller.scrollTop += amount * factor;
       }
     }
   }
 });
 
 window.addEventListener("popstate", async (e) => {
+  if (state.ignoreNextPopstate) {
+    state.ignoreNextPopstate = false;
+    return;
+  }
+  if (isPhoneMenuOpen()) {
+    setPhoneMenu(false, { fromHistory: true });
+    return;
+  }
   if (state.status && !canGoBackNow()) {
     rePushCurrentHistory();
     backBlockedToast();
@@ -4785,14 +5672,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function showMigrateBannerIfNeeded() {
-  const banner = document.getElementById("migrateBanner");
-  if (!banner) return;
-  if (window.location.hostname.endsWith("onrender.com")) {
-    banner.classList.remove("hidden");
-  }
-}
-
 ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
@@ -4808,9 +5687,11 @@ if (el.teleportBtn) {
 bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();
+bindThemeToggle();
+bindDisplayPanel();
+bindPhoneLayout();
 bindStuckHelper();
 initSidePanelToggles();
-showMigrateBannerIfNeeded();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;

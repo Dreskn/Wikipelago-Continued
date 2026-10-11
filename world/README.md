@@ -1,18 +1,18 @@
-APWorld source lives in `APWorldSource`.
+APWorld source lives in `world/APWorldSource`. Commands below run from the repo root.
 
-World package version: **1.0.3** (`world_version` and `full_version` in `APWorldSource/wikipelago/archipelago.json`).
+World package version: **1.1.0** (`world_version` and `full_version` in `world/APWorldSource/wikipelago/archipelago.json`).
 
-The live runtime article pools are `APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
+The live runtime article pools are `world/APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 
 Build APWorld:
 
 ```powershell
-.\build_apworld.ps1
+./world/build_apworld.ps1
 ```
 
 Output:
 
-`APWorld\wikipelago.apworld`
+`world/APWorld/wikipelago.apworld`
 
 The zip is lowercase (`wikipelago.apworld` → inner folder `wikipelago/` with `archipelago.json` inside), per Archipelago’s apworld spec.
 
@@ -23,33 +23,34 @@ The build injects Archipelago packaging fields (`version` / `compatible_version`
 Bingo boards sample pairs using title-frequency weights for the slot’s Wikipedia language. Pair extraction follows each language’s Scrabble alphabet (distinct tiles stay distinct; other diacritics fold; German `ß` → `SS`). Rebuild after dump updates or alphabet rule changes:
 
 ```powershell
-python .\build_letter_pair_weights.py --lang all
+python world/build_letter_pair_weights.py --lang all
 ```
 
-This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/` if needed, then writes `APWorldSource/wikipelago/letter_pair_weights_{lang}.json` for `en, fr, de, es, it, pt, nl, sv, pl`.
+This downloads each `{lang}wiki-latest-all-titles-in-ns0.gz` into `world/_cache/` if needed, then writes `world/APWorldSource/wikipelago/letter_pair_weights_{lang}.json` for `en, fr, de, es, it, pt, nl, sv, pl`.
 
-### Optional / experimental pool builder
+### Rebuilding the article pools
 
-`build_article_pool.ps1` / `build_article_pool.py` and the pageviews export tools refresh `data/pool_*.json`. Every commit runs Smoke and Generate (EN / FR / PL seeds against Archipelago **0.6.7**, `world/ci_generate.py`). Pool validation against live Wikipedia (`python world/validate_article_pool.py --lang all --strict`) runs weekly and on pool-file pushes to `main`; it does not auto-drop titles.
+The shipped pools (`world/APWorldSource/wikipelago/data/pool_{lang}.json`) come from this pipeline. Run the steps in order; each script keeps its settings at the top of the file.
+
+1. `python world/pageviews/pageviews_aggregate.py`: Wikipedia page-view tops per language, written to `world/pageviews/pageviews_aggregate_{lang}.json`.
+2. `python world/pageviews/annotate_pools.py`: Wikidata tags and the sensitive flag for every title, written to `world/pageviews/annotated/pool_annotated_{lang}.json`. Set `SAMPLE_N` (1000 for a dry run, 0 for the full lists).
+3. `python world/enrich_pool_from_popular_pages.py`: adds titles from the English WikiProject "Popular pages" lists (and their other-language versions) to the annotated pools. Writes `world/pool_enrichment_report.json` (not tracked).
+4. `python world/pageviews/export_apworld_pools.py`: writes the compact `world/APWorldSource/wikipelago/data/pool_{lang}.json` files the world ships.
+5. `python world/validate_article_pool.py --lang all --strict`: checks every title against live Wikipedia. Writes `world/pool_validation_report.json` (not tracked).
+
+Then rebuild the apworld (`./world/build_apworld.ps1`) and run `./world/release_check.ps1`.
+
+Steps 2 and 3 cache Wikidata answers in `world/pageviews/qid_annotation_cache.json`. Delete that file before a full re-annotation, so changes to the tag or sensitive rules apply to every title instead of reusing old answers.
+
+### Testing
+
+Details and troubleshooting are in `world/SIMPLE_TESTING.md`.
 
 ```powershell
-# Build to 5,000 titles (keeps existing and expands)
-.\build_article_pool.ps1 -TargetCount 5000
-
-# Rebuild from scratch to 20,000 titles
-.\build_article_pool.ps1 -TargetCount 20000 -Replace
+./world/release_check.ps1               # build the apworld + smoke test
+./world/smoke_test.ps1 -BuildApworld    # what CI's Smoke job runs
+./world/fuzz_test.ps1 -Runs 25          # random options vs the world's rules; no Archipelago needed
+./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "PATH_TO_ARCHIPELAGO"   # real generation; needs an Archipelago 0.6.7 checkout or install
 ```
 
-Optional tuning:
-
-```powershell
-# Increase random sampling share (0.0 to 1.0)
-.\build_article_pool.ps1 -TargetCount 10000 -RandomShare 0.5
-
-# Deterministic shuffle source
-.\build_article_pool.ps1 -TargetCount 10000 -Seed 4242
-```
-
-Notes:
-- The experimental builder mixes many topic categories plus random pages and filters low-value pages.
-- If you adopt a generated pool into the runtime world, update the AP package source accordingly, then run `build_apworld.ps1` again.
+CI (`.github/workflows/ci.yml`) runs on every push and pull request: Smoke (`./world/smoke_test.ps1 -BuildApworld`) and Generate, which builds the apworld and generates six fixed seeds against Archipelago **0.6.7** with `world/ci_generate.py` (EN defaults, FR, PL with branches, EN Topic Realms, FR Realm Master with Topic Realms, EN Realm Master with plain branches). Pool validation (`.github/workflows/pool-validate.yml`) runs weekly and on pool-file pushes to `main`; it reports dead titles and never removes them.
