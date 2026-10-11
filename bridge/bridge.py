@@ -235,9 +235,15 @@ def _bingo_alphabet(lang: str) -> str:
     return _SCRABBLE_LETTERS.get(code, _SCRABBLE_LETTERS["en"])
 
 
+# Ligatures Unicode does not decompose; Scrabble plays them as two tiles (French Œuf = O-E).
+_BINGO_LIGATURES: dict[str, str] = {"œ": "OE", "Œ": "OE", "æ": "AE", "Æ": "AE"}
+
+
 def _fold_bingo_base_latin(ch: str) -> str:
     if ch in ("ß", "ẞ"):
         return "SS"
+    if ch in _BINGO_LIGATURES:
+        return _BINGO_LIGATURES[ch]
     decomposed = unicodedata.normalize("NFKD", ch)
     out: list[str] = []
     for part in decomposed:

@@ -55,10 +55,16 @@ def all_pairs_for_lang(lang: str) -> list[str]:
     return [a + b for a in alphabet for b in alphabet]
 
 
+# Ligatures Unicode does not decompose; Scrabble plays them as two tiles (French Œuf = O-E).
+LIGATURE_LETTERS: dict[str, str] = {"œ": "OE", "Œ": "OE", "æ": "AE", "Æ": "AE"}
+
+
 def _fold_base_latin(ch: str) -> str:
     """Fold a non-Scrabble character toward base Latin (may be empty)."""
     if ch in ("ß", "ẞ"):
         return "SS"
+    if ch in LIGATURE_LETTERS:
+        return LIGATURE_LETTERS[ch]
     decomposed = unicodedata.normalize("NFKD", ch)
     out: list[str] = []
     for part in decomposed:
