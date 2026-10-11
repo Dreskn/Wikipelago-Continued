@@ -11,6 +11,10 @@ __pycache__/
 world/APWorld/
 world/fuzz_output/
 world/_cache/
+# Pool pipeline outputs and cache (see world/README.md)
+world/pool_enrichment_report.json
+world/pool_validation_report.json
+world/pageviews/qid_annotation_cache.json
 generate-work/
 
 # OS / IDE

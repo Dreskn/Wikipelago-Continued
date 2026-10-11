@@ -10,7 +10,7 @@ Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based o
 
 - `world/APWorldSource/wikipelago/` — the APWorld (Python, loaded by the AP generator).
   - `__init__.py` world logic and item pool; `Items.py`, `Locations.py`, `Regions.py`; `Options.py` (YAML options)
-  - `grand_goal.py`, `letter_pairs.py` (bingo), `article_pool.py`, `entertainment_articles.py`
+  - `grand_goal.py`, `letter_pairs.py` (bingo), `article_pool.py`
   - `data/pool_{lang}.json` curated multi-tag article pools; `letter_pair_weights_{lang}.json` bingo weights
   - `archipelago.json` version metadata
   - Built to `world/APWorld/wikipelago.apworld` (gitignored).
@@ -18,7 +18,7 @@ Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based o
 - `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`. Fonts are self-hosted WOFF2 in `web/fonts/` (OFL, licence next to each family); no third-party CDNs.
 - `docs/` — player docs; `docs/grand-goal/` is the Grand Goal question bank and its build scripts.
 - `yaml/Wikipelago.yaml` — player YAML template.
-- `world/` — build, test and pool-maintenance scripts.
+- `world/` — build, test and pool-maintenance scripts. Article pools are rebuilt with the pipeline in `world/README.md` (pageviews → Wikidata annotation → enrichment → export → validation); `world/pageviews/` holds its data.
 
 ## Commands (PowerShell, repo root)
 
