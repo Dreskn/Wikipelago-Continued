@@ -5380,7 +5380,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Attentato di via Rasella",
@@ -9470,7 +9470,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Carlo I d'Inghilterra",
@@ -9856,14 +9856,14 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cartello di Medellín",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Casa Savoia",
@@ -9943,14 +9943,14 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Ariel Castro",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Carretta",
@@ -9971,14 +9971,14 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Omicidio dei coniugi Maso",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caso Moro",
@@ -10632,7 +10632,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Che Dio ci aiuti",
@@ -11261,7 +11261,7 @@
       "tags": [
         "art_literature"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cinquanta sfumature di grigio (film)",
@@ -11282,7 +11282,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cinquanta sfumature di rosso (film)",
@@ -12269,7 +12269,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Conor McGregor",
@@ -14357,7 +14357,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Delitto di Avetrana",
@@ -14392,7 +14392,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Delitto di via Marsala",
@@ -37586,7 +37586,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "MOSE",
@@ -39834,7 +39834,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Massacro di Sabra e Shatila",
@@ -42501,14 +42501,14 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Morte di Breonna Taylor",
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Morte di Diana Spencer",
@@ -43533,7 +43533,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Neil Armstrong",
@@ -45042,7 +45042,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Omicidio di Giulio Regeni",
@@ -45077,7 +45077,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Omicidio di Meredith Kercher",
@@ -45105,7 +45105,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Omicidio di Yara Gambirasio",
@@ -50125,7 +50125,7 @@
         "famous_people",
         "politics"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Renata Polverini",
@@ -53539,7 +53539,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Serbia",
@@ -56825,7 +56825,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Tecla Insolia",
@@ -62507,7 +62507,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "XVII Giochi olimpici invernali",
@@ -65240,7 +65240,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ponyo sulla scogliera",
@@ -65296,7 +65296,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fullmetal Alchemist",
@@ -65999,7 +65999,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Inuyasha",
@@ -66042,7 +66042,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cosplay",
@@ -66915,7 +66915,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "To Your Eternity",
@@ -68282,7 +68282,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Riso (alimento)",
@@ -70487,7 +70487,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Stato d'emergenza in India",

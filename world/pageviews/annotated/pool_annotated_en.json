@@ -402,7 +402,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'1993 Michael Jackson sexual abuse allegations'"
     },
     {
@@ -5416,7 +5416,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "6ix9ine",
@@ -9075,7 +9075,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Anand Kumar",
@@ -12036,7 +12036,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ava (2020 film)",
@@ -17577,7 +17577,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Caliban (comics)",
@@ -18654,7 +18654,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cat",
@@ -18875,7 +18875,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Cephalopod intelligence",
@@ -19530,7 +19530,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Chaudhry Aslam Khan",
@@ -24306,7 +24306,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Killing of Elijah McClain'"
     },
     {
@@ -24402,7 +24402,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Death of Michael Jackson",
@@ -28356,7 +28356,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Kidnapping of Elizabeth Smart'"
     },
     {
@@ -28861,7 +28861,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Emmy Raver-Lampman",
@@ -30737,7 +30737,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fifty Shades Darker (film)",
@@ -30764,7 +30764,7 @@
       "tags": [
         "art_literature"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Fighter (2024 film)",
@@ -30964,7 +30964,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Five Feet Apart",
@@ -31934,7 +31934,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "From (TV series)",
@@ -43338,7 +43338,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "John Darwin disappearance case",
@@ -43843,7 +43843,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Johnnie Cochran",
@@ -47425,7 +47425,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kidnapping of Elizabeth Smart",
@@ -47434,7 +47434,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kidnapping of Shannon Matthews",
@@ -47443,7 +47443,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Kiefer Sutherland",
@@ -47572,7 +47572,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Killing of Alex Pretti",
@@ -47666,7 +47666,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Killing of JonBenét Ramsey",
@@ -47684,7 +47684,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Killing of Laken Riley",
@@ -47731,7 +47731,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Vallow-Daybell murders'"
     },
     {
@@ -48194,7 +48194,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Kobe Bryant sexual assault allegations'"
     },
     {
@@ -51568,7 +51568,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "List of United States presidential elections by popular vote margin",
@@ -52286,7 +52286,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Lists of school shootings in the United States'"
     },
     {
@@ -53467,7 +53467,7 @@
         "famous_people",
         "movies"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Luka Modrić",
@@ -56360,7 +56360,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Master (2021 film)",
@@ -56425,7 +56425,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Materialists (film)",
@@ -56860,7 +56860,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Pelicot rape case'"
     },
     {
@@ -56962,7 +56962,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Medha Shankar",
@@ -60402,7 +60402,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Murder of Felicia Gayle",
@@ -60493,7 +60493,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Murder of Odin Lloyd",
@@ -60511,7 +60511,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Murder of Reena Virk",
@@ -60529,7 +60529,7 @@
       "tags": [
         "famous_people"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Murder of Sian O'Callaghan",
@@ -61548,7 +61548,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Ned Beatty",
@@ -66702,7 +66702,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Poker Face (TV series)",
@@ -74946,7 +74946,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Sex worker",
@@ -75726,7 +75726,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "redirected→'Killing of Breonna Taylor'"
     },
     {
@@ -87285,7 +87285,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Trial of Arne Cheyenne Johnson",
@@ -87294,7 +87294,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Triangle",
@@ -87679,7 +87679,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "Twelve-Day War",
@@ -89069,7 +89069,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "USS Bonhomme Richard (LHD-6)",
@@ -93597,7 +93597,7 @@
       "tags": [
         "technology"
       ],
-      "sensitive": false
+      "sensitive": true
     },
     {
       "title": "XO, Kitty",
@@ -98038,7 +98038,7 @@
         "anime_manga",
         "movies"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -98115,7 +98115,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -98358,7 +98358,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -99318,7 +99318,7 @@
         "anime_manga",
         "art_literature"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -99376,7 +99376,7 @@
         "technology",
         "video_games"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -100912,7 +100912,7 @@
       "tags": [
         "anime_manga"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -103171,7 +103171,7 @@
       "tags": [
         "food_cuisine"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {
@@ -106976,7 +106976,7 @@
       "tags": [
         "history"
       ],
-      "sensitive": false,
+      "sensitive": true,
       "note": "popular_pages_enrich"
     },
     {

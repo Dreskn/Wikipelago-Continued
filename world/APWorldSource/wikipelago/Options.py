@@ -230,9 +230,10 @@ class IncludeArtLiterature(Toggle):
 
 
 class IncludeMythologyFolklore(Toggle):
-    """Allow mythology- and folklore-tagged articles in the round and Grand Goal pools.
+    """Allow Legends & Beliefs articles (myths, folklore, legends, cryptids, religious figures)
+    in the round and Grand Goal pools.
     Titles are kept if any tag matches an enabled category (OR)."""
-    display_name = "Include Mythology and Folklore"
+    display_name = "Include Legends and Beliefs"
     default = 1
 
 

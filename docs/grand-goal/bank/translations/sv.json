@@ -90,7 +90,7 @@
     "source": "native-lead"
   },
   "Q56887972": {
-    "question": "Vilken Wikipedia-artikel samlar partiernas stöd i mätningar inför det svenska riksdagsvalet 2022?",
+    "question": "Vilken Wikipedia-artikel samlar partiernas väljarstöd enligt olika mätinstitut inför det allmänna val som hölls den 11 september 2022?",
     "lead_fact": "Artikeln innehåller opinionsmätningar inför riksdagsvalet 2022.",
     "source": "native-lead"
   },
@@ -115,7 +115,7 @@
     "source": "translated-from-en"
   },
   "Q844": {
-    "question": "Vilken fiktiv brittisk spion, även kallad Agent 007, skapades 1953 av Ian Fleming?",
+    "question": "Vilken fiktiv brittisk spion vid MI6, med licens att döda, skapades 1953 av Ian Fleming?",
     "lead_fact": "Agent 007; skapad 1953 av Ian Fleming.",
     "source": "native-lead"
   },
@@ -140,12 +140,12 @@
     "source": "translated-from-en"
   },
   "Q33": {
-    "question": "Vilken nordisk republik är officiellt tvåspråkig med finska och svenska, och har det svenskspråkiga Åland som självstyrande landskap?",
+    "question": "Vilken nordisk republik har två officiella språk, varav svenska är det ena, och har det svenskspråkiga Åland som självstyrande landskap?",
     "lead_fact": "Officiellt tvåspråkigt; Åland självstyrande.",
     "source": "native-lead"
   },
   "Q52878": {
-    "question": "Vilken svensk kung, son till Gustaf V och Victoria och farfar till Carl XVI Gustaf, regerade från den 29 oktober 1950 till sin död 1973?",
+    "question": "Vilken svensk kung, gift först med Margareta av Storbritannien och sedan med Louise av Battenberg, var farfar till den nuvarande kungen och regerade från den 29 oktober 1950 till sin död 1973?",
     "lead_fact": "Kung 1950–1973; farfar till Carl XVI Gustaf; gift med Margareta och Louise.",
     "source": "native-lead"
   },
@@ -180,7 +180,7 @@
     "source": "translated-from-en"
   },
   "Q52934": {
-    "question": "Vilken svensk kung, även hertig av Pfalz-Zweibrücken under namnet Karl II, tillbringade merparten av sin regeringstid i fält under stora nordiska kriget och dog 1718 i Fredrikshald?",
+    "question": "Vilken svensk kung, även hertig av Pfalz-Zweibrücken, tillbringade merparten av sin regeringstid i fält under stora nordiska kriget och dog 1718 i Fredrikshald?",
     "lead_fact": "Hertig av Pfalz-Zweibrücken som Karl II; stupade i Fredrikshald 1718.",
     "source": "native-lead"
   },
@@ -195,12 +195,12 @@
     "source": "translated-from-en"
   },
   "Q3189895": {
-    "question": "Vilken årligen återkommande TV-serie i SVT, fram till 1971 kallad Adventskalendern, har sänts med en ny serie varje år sedan 1960 och har en tillhörande papperskalender?",
+    "question": "Vilken årligen återkommande adventsserie i svensk public service-tv har fått en ny serie varje år sedan 1960 och åtföljs av ett tryckt ark med luckor att öppna?",
     "lead_fact": "Kallad Adventskalendern till 1971; ny serie varje år sedan 1960.",
     "source": "native-lead"
   },
   "Q52890": {
-    "question": "Vilken svensk kung, den femte regenten av huset Bernadotte, regerade från 1907 i nästan 43 år och var son till Oscar II?",
+    "question": "Vilken svensk kung av huset Bernadotte regerade från 1907 i nästan 43 år och var son till Oscar II?",
     "lead_fact": "Femte Bernadotte-kungen; regerade från 1907 nästan 43 år; son till Oscar II.",
     "source": "native-lead"
   },
@@ -245,7 +245,7 @@
     "source": "native-lead"
   },
   "Q142": {
-    "question": "Vilken västeuropeisk republik har kust mot Atlanten, Engelska kanalen och Medelhavet, och omfattar även utomeuropeiska departement som Franska Guyana?",
+    "question": "Vilken västeuropeisk republik har kust mot Atlanten, Engelska kanalen och Medelhavet, och omfattar även utomeuropeiska departement som Guadeloupe och Réunion?",
     "lead_fact": "Tre kuster; utomeuropeiska departement inklusive Franska Guyana.",
     "source": "native-lead"
   },
@@ -285,7 +285,7 @@
     "source": "native-lead"
   },
   "Q258": {
-    "question": "Vilken afrikansk republik längst söderut på kontinenten omger Lesotho som enklav och gränsar bland annat till Namibia, Botswana, Zimbabwe och Moçambique?",
+    "question": "Vilken republik omger Lesotho som enklav, har kust mot både Atlanten och Indiska oceanen och gränsar bland annat till Namibia, Botswana, Zimbabwe och Moçambique?",
     "lead_fact": "Lesotho som enklav; längst söderut i Afrika.",
     "source": "native-lead"
   },
@@ -315,12 +315,12 @@
     "source": "native-lead"
   },
   "Q55": {
-    "question": "Vilket västeuropeiskt land, traditionellt ofta kallat Holland, har regering och generalstater i Haag medan Amsterdam är huvudstad, och omfattar även Bonaire, Saba och Sint Eustatius?",
+    "question": "Vilket västeuropeiskt land har regering och generalstater i Haag medan Amsterdam är huvudstad, och omfattar även Bonaire, Saba och Sint Eustatius?",
     "lead_fact": "Regeringen i Haag, Amsterdam huvudstad; karibiska kommunerna Bonaire, Saba och Sint Eustatius.",
     "source": "native-lead"
   },
   "Q6062217": {
-    "question": "Vilken svensk skådespelare, född i Örgryte 1948 och tidigare folkbokförd Rahmberg, avled i augusti 2026 på Ersta hospice?",
+    "question": "Vilken svensk skådespelare, född i Örgryte i Göteborg 1948, avled i augusti 2026 på Ersta hospice på Södermalm?",
     "lead_fact": "Född Örgryte 1948; död Ersta hospice 14 augusti 2026.",
     "source": "native-lead"
   },
@@ -345,7 +345,7 @@
     "source": "native-lead"
   },
   "Q3360074": {
-    "question": "Vilken sjöolycka inträffade den 28 september 1994 när en estnisk bil- och passagerarfärja förliste på väg från Tallinn till Stockholm, med 852 omkomna av 989 ombord?",
+    "question": "Vilken sjöolycka inträffade den 28 september 1994 när en bil- och passagerarfärja förliste på väg från Tallinn till Stockholm, med 852 omkomna av 989 ombord?",
     "lead_fact": "28 september 1994; M/S Estonia; 852 av 989 omkom.",
     "source": "native-lead"
   },
@@ -360,7 +360,7 @@
     "source": "native-lead"
   },
   "Q8084616": {
-    "question": "Vilken sidmall på svenskspråkiga Wikipedia listar landets tätorter sorterade efter invånarantal?",
+    "question": "Vilken navigationsmall på svenskspråkiga Wikipedia rangordnar landets mest folkrika samhällen efter invånarantal?",
     "lead_fact": "Wikipedia-mall över Sveriges tätorter efter folkmängd.",
     "source": "native-lead"
   },
@@ -405,7 +405,7 @@
     "source": "native-lead"
   },
   "Q160826": {
-    "question": "Vilket herrlandslag, ofta kallat Blågult, spelar huvudsakligen sina hemmamatcher på Strawberry Arena i Solna och organiseras av Svenska Fotbollförbundet?",
+    "question": "Vilket landslag för män, ofta kallat Blågult, spelar huvudsakligen sina hemmamatcher på Strawberry Arena i Solna och har haft stjärnor som Gunnar Nordahl och Henrik Larsson?",
     "lead_fact": "Blågult; hemmamatcher på Strawberry Arena; SvFF.",
     "source": "native-lead"
   },
@@ -460,7 +460,7 @@
     "source": "native-lead"
   },
   "Q582603": {
-    "question": "Vilken svensk kriminolog och deckarförfattare, född Leif Gustav Willy 1945 i Oscars församling, är känd för sina deckare och framträdanden i tv och tidningar?",
+    "question": "Vilken svensk kriminolog och deckarförfattare, född 1945 i Oscars församling i Stockholm, är känd för sina deckare och framträdanden i tv och tidningar?",
     "lead_fact": "Kriminolog och deckarförfattare; född 1945 i Oscars församling.",
     "source": "native-lead"
   },
@@ -480,7 +480,7 @@
     "source": "native-lead"
   },
   "Q8740": {
-    "question": "Vilken konflikt i Vietnam, Laos och Kambodja slutade den 30 april 1975 efter att USA-styrkorna dragit sig tillbaka två år tidigare?",
+    "question": "Vilken konflikt i forna Franska Indokina slutade den 30 april 1975 efter att USA-styrkorna dragit sig tillbaka två år tidigare?",
     "lead_fact": "Ca 1955–30 april 1975; USA-tillbakadragande 1973.",
     "source": "translated-from-en"
   },
@@ -490,7 +490,7 @@
     "source": "translated-from-en"
   },
   "Q544": {
-    "question": "Vilket planetsystem består av solen och de himlakroppar den binder med gravitation, med ursprung i ett gas- och stoftmoln för 4,5 miljarder år sedan?",
+    "question": "Vilket planetsystem består av vår stjärna och de himlakroppar den binder med gravitation, med ursprung i ett gas- och stoftmoln för 4,5 miljarder år sedan?",
     "lead_fact": "Solen plus gravitationsbundna kroppar; ursprung för 4,5 miljarder år sedan.",
     "source": "native-lead"
   },
@@ -535,7 +535,7 @@
     "source": "translated-from-en"
   },
   "Q1211796": {
-    "question": "Vilken svensk-dansk kriminalserie, med dansk titel Broen, hade Sofia Helin och Kim Bodnia i huvudrollerna och började sändas på SVT den 21 september 2011?",
+    "question": "Vilken svensk-dansk kriminalserie hade Sofia Helin och Kim Bodnia i huvudrollerna och började sändas på SVT den 21 september 2011?",
     "lead_fact": "Dansk titel Broen; Sofia Helin och Kim Bodnia; SVT 21 september 2011.",
     "source": "native-lead"
   },
@@ -560,7 +560,7 @@
     "source": "translated-from-en"
   },
   "Q18244945": {
-    "question": "Vilken svensk dokusåpa, baserad på ett amerikanskt hotellformat från 2003, hade första svenska säsongen 2005 och kortades 2022 i namnet under tre säsonger?",
+    "question": "Vilken dokusåpa, en svensk version av ett amerikanskt format från 2003, hade första säsongen 2005 och kortades 2022 i namnet under tre säsonger?",
     "lead_fact": "Amerikanskt format 2003; svensk premiär 2005; namnbyte till Paradise 2022–2024.",
     "source": "native-lead"
   },
@@ -570,7 +570,7 @@
     "source": "native-lead"
   },
   "Q489772": {
-    "question": "Vilken hävdvunnen förteckning från antiken listar sju byggnadsverk som ansågs representera människans då största bedrifter?",
+    "question": "Vilken hävdvunnen förteckning från antiken listar de byggnader och monument som ansågs representera människans då största bedrifter?",
     "lead_fact": "Antik lista över sju byggnadsverk.",
     "source": "native-lead"
   },
@@ -610,12 +610,12 @@
     "source": "native-lead"
   },
   "Q6534": {
-    "question": "Vilken omvälvning i Frankrike inleddes med stormningen av Bastiljen den 14 juli 1789 och avslutades med Brumairekuppen 1799?",
+    "question": "Vilken omvälvning inleddes med stormningen av Bastiljen den 14 juli 1789 och avslutades med Brumairekuppen 1799?",
     "lead_fact": "Bastiljen 14 juli 1789; Brumairekuppen 1799.",
     "source": "native-lead"
   },
   "Q10553898": {
-    "question": "Vilka svenska landskapssymboler röstades fram via ICA-kuriren hösten 1987 och offentliggjordes den 8 februari 1988, med kungen som hedersledamot i juryn?",
+    "question": "Vilka symboler för Sveriges historiska provinser röstades fram via ICA-kuriren hösten 1987 och offentliggjordes den 8 februari 1988, med kungen som hedersledamot i juryn?",
     "lead_fact": "ICA-kuriren 1987; offentliggjorda 8 februari 1988; kungen hedersledamot.",
     "source": "native-lead"
   },
@@ -640,12 +640,12 @@
     "source": "native-lead"
   },
   "Q66016": {
-    "question": "Vilka gudinnor i grekisk mytologi rådde över sång, musik och skaldekonst, med romersk motsvarighet i camenae, och lever kvar i orden musik och museum?",
+    "question": "Vilka gudinnor i grekisk mytologi rådde över sång, tonkonst och skaldekonst, med romersk motsvarighet i camenae?",
     "lead_fact": "Sångens och skaldekonstens gudinnor; camenae; orden musik och museum.",
     "source": "native-lead"
   },
   "Q128285": {
-    "question": "Vilken samling förkristna myter i Norden, ofta förknippade med vikingatiden, omgavs av en religion som på 1800-talet kom att kallas asatro?",
+    "question": "Vilken samling förkristna gudasagor från Skandinavien, ofta förknippade med vikingatiden, omgavs av en religion som på 1800-talet kom att kallas asatro?",
     "lead_fact": "Förkristna nordiska myter; religionen kallad asatro från 1800-talet.",
     "source": "native-lead"
   },
@@ -660,7 +660,7 @@
     "source": "native-lead"
   },
   "Q12184": {
-    "question": "Vad kallas en epidemi som sprids över stora delar av världen och drabbar många individer, till skillnad från utbrott som bara berör enskilda länder?",
+    "question": "Vad kallas ett utbrott av smittsam sjukdom som sprids över stora delar av världen och drabbar många individer, till skillnad från utbrott som bara berör enskilda länder?",
     "lead_fact": "Epidemi över stora delar av världen; grekiska pandemias, hela folket.",
     "source": "native-lead"
   },
@@ -685,7 +685,7 @@
     "source": "native-lead"
   },
   "Q146": {
-    "question": "Vilket litet domesticerat rovdjur, Felis catus, är en obligat köttätare med infällbara klor?",
+    "question": "Vilket litet rovdjur, den enda domesticerade arten i familjen Felidae, är en obligat köttätare med infällbara klor?",
     "lead_fact": "Felis catus; obligat köttätare; infällbara klor.",
     "source": "translated-from-en"
   },
@@ -700,7 +700,7 @@
     "source": "translated-from-en"
   },
   "Q10731891": {
-    "question": "Vilket släkte partåiga hovdjur, de största nu levande hjortdjuren, delas efter fylogenetiska studier i europeisk Alces alces och amerikansk Alces americanus?",
+    "question": "Vilket släkte partåiga hovdjur, de största nu levande hjortdjuren, delas efter fylogenetiska studier i en europeisk och en amerikansk art?",
     "lead_fact": "Släktet Alces; två arter efter fylogenetiska studier.",
     "source": "native-lead"
   },
@@ -715,17 +715,17 @@
     "source": "native-lead"
   },
   "Q2845": {
-    "question": "Vilken psykoaktiv drog, känd som marijuana i växtform och hasch som hoppressade trikomer, har tetrahydrocannabinol som den främsta av 483 kända aktiva komponenter?",
+    "question": "Vilken psykoaktiv drog, som används som torkade blomtoppar eller som pressad kåda, har THC som den främsta av 483 kända aktiva komponenter?",
     "lead_fact": "THC som främsta av 483 aktiva komponenter; marijuana och hasch.",
     "source": "native-lead"
   },
   "Q1139319": {
-    "question": "Vilken skandinavisk bakelse av ljust vetebröd med mandelmassa och grädde äts traditionellt på fettisdagen, och kallas även fastlagsbulle eller hetvägg med varm mjölk?",
+    "question": "Vilken skandinavisk bakelse av ljust vetebröd med mandelmassa och grädde äts traditionellt på fettisdagen och serveras ibland i en skål varm mjölk?",
     "lead_fact": "Mandelmassa och grädde; fettisdagen; även fastlagsbulle och hetvägg.",
     "source": "native-lead"
   },
   "Q12204": {
-    "question": "Vilken infektionssjukdom, historiskt kallad lungsot, orsakas av Mycobacterium tuberculosis och angriper vanligtvis lungorna?",
+    "question": "Vilken infektionssjukdom, historiskt kallad lungsot, orsakas av en bakterie i släktet Mycobacterium och angriper vanligtvis lungorna?",
     "lead_fact": "Mycobacterium tuberculosis; historiskt lungsot; vanligen pulmonell.",
     "source": "translated-from-en"
   },
@@ -740,7 +740,7 @@
     "source": "native-lead"
   },
   "Q205985": {
-    "question": "Vad kallas en kvinnlig gudom i polyteistiska religioner, ofta odödlig och kopplad till fenomen som kärlek, jakt eller krig?",
+    "question": "Vad kallas en kvinnlig gestalt som dyrkas i polyteistiska religioner, ofta odödlig och kopplad till fenomen som kärlek, jakt eller krig?",
     "lead_fact": "Kvinnlig gudom i polyteism; ofta odödlig.",
     "source": "native-lead"
   },
@@ -830,7 +830,7 @@
     "source": "translated-from-en"
   },
   "Q68": {
-    "question": "Vilken maskin, tidigare kallad datamaskin eller matematikmaskin, bearbetar data och utför beräkningar automatiskt med hjälp av lagrade instruktioner?",
+    "question": "Vilken maskin, tidigare även kallad matematikmaskin, bearbetar information och utför beräkningar automatiskt med hjälp av lagrade instruktioner?",
     "lead_fact": "Tidigare datamaskin/matematikmaskin; lagrade program i primärminnet.",
     "source": "native-lead"
   },
@@ -870,7 +870,7 @@
     "source": "native-lead"
   },
   "Q1107": {
-    "question": "Vad kallas den japanska vardagsförkortningen av animēshon, som utanför Japan särskilt betecknar tecknad film från Japan i mangastil?",
+    "question": "Vad kallas den japanska vardagsförkortningen av ett engelskt lånord för tecknad film, som utanför Japan särskilt betecknar tecknad film från Japan i mangastil?",
     "lead_fact": "Japansk förkortning av animation; utanför Japan japansk tecknad film.",
     "source": "native-lead"
   },
@@ -895,7 +895,7 @@
     "source": "native-lead"
   },
   "Q80873": {
-    "question": "Vilken humoristisk manga av Kiyohiko Azuma i strippformat, tryckt 1999–2002, handlar om ett gäng skolflickor och deras lärare och blev en 26 avsnitts anime 2002?",
+    "question": "Vilken humoristisk japansk manga i strippformat, tryckt 1999–2002, handlar om ett gäng skolflickor och deras lärare och blev en 26 avsnitts anime 2002?",
     "lead_fact": "Kiyohiko Azuma; strippformat 1999–2002; 26 avsnitts anime.",
     "source": "native-lead"
   },

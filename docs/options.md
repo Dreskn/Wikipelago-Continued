@@ -156,6 +156,8 @@ Each `include_*` toggle shapes which articles can appear in rounds and (when ran
 | `include_biology_medicine` | `true` |
 | `include_miscellaneous` | `true` |
 
+`include_mythology_folklore` is the **Legends & Beliefs** category in the game (myths, folklore, legends, cryptids and religious figures; Portal: `Legends & Beliefs Portal`).
+
 `board_games` was removed in 0.6. Leave at least one category enabled.
 
 ## Sensitive pages

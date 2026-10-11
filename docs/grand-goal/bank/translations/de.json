@@ -145,7 +145,7 @@
     "source": "native-lead"
   },
   "Q2386078": {
-    "question": "Welcher private bayerische Regionalsender für Unterfranken hieß früher TV Touring und erreicht bis zu 350.000 Zuschauer?",
+    "question": "Welcher private bayerische Regionalsender für den Regierungsbezirk mit Sitz in Würzburg hieß früher TV Touring und erreicht bis zu 350.000 Zuschauer?",
     "lead_fact": "Privater Regionalsender Unterfranken; früher TV Touring.",
     "source": "native-lead"
   },
@@ -180,7 +180,7 @@
     "source": "translated-from-en"
   },
   "Q273008": {
-    "question": "Welche Übersicht stellt Identitäten der Dreieckslehre wie Sinus- und Kosinussatz sowie Additionstheoreme tabellarisch zum Nachschlagen zusammen?",
+    "question": "Welche Übersicht stellt Identitäten wie Sinus- und Kosinussatz sowie Additionstheoreme tabellarisch zum Nachschlagen zusammen?",
     "lead_fact": "Tabellarische Sammlung trigonometrischer Identitäten und Sätze.",
     "source": "native-lead"
   },
@@ -190,12 +190,12 @@
     "source": "native-lead"
   },
   "Q462": {
-    "question": "Welches Film-Franchise begann 1977 mit Krieg der Sterne, stammt von George Lucas und wurde 2012 mit Lucasfilm an Disney verkauft?",
+    "question": "Welches von George Lucas geschaffene Film-Franchise begann 1977 mit einer Weltraumoper und wurde 2012 mit Lucasfilm an Disney verkauft?",
     "lead_fact": "Beginn 1977; Lucasfilm-Verkauf an Disney 2012.",
     "source": "native-lead"
   },
   "Q96251657": {
-    "question": "Welche Liste beschreibt fiktive Personen und Gruppen aus Comics des US-Verlags Marvel, deren Zahl über 6000 liegt?",
+    "question": "Welche Liste beschreibt fiktive Personen und Gruppen aus Comics des US-Verlags von Spider-Man und den X-Men, deren Zahl über 6000 liegt?",
     "lead_fact": "Über 6000 Figuren aus Marvel-Comics; Übersichtsartikel.",
     "source": "native-lead"
   },
@@ -260,7 +260,7 @@
     "source": "native-lead"
   },
   "Q19317": {
-    "question": "Welches alle vier Jahre ausgetragene FIFA-Turnier ermittelt in einer rund vierwöchigen Endrunde den Weltmeister der Männer-Nationalmannschaften?",
+    "question": "Welches alle vier Jahre ausgetragene FIFA-Turnier ermittelt in einer rund vierwöchigen Endrunde die beste Männer-Nationalmannschaft des Planeten?",
     "lead_fact": "FIFA-Turnier alle vier Jahre; Männer-Nationalmannschaften.",
     "source": "native-lead"
   },
@@ -275,12 +275,12 @@
     "source": "translated-from-en"
   },
   "Benutzer:Plenz/OSM for Wiki/languages": {
-    "question": "Auf welcher Benutzerunterseite stehen die Sprachtexte der osm4wiki-Karte, mit der Anweisung, [xx] als letzte Zeile zu lassen und HTML-kodierte Zeichen zu verwenden?",
+    "question": "Auf welcher Benutzerunterseite stehen die Oberflächentexte eines Kartenwerkzeugs in mehreren Sprachen, mit der Anweisung, [xx] als letzte Zeile zu lassen und HTML-kodierte Zeichen zu verwenden?",
     "lead_fact": "Sprachdatei für osm4wiki; [xx] als letzte Zeile; HTML-Zeichen.",
     "source": "native-lead"
   },
   "Q458": {
-    "question": "Welcher Staatenverbund umfasst 27 Mitglieder, davon 26 in Europa und Zypern geographisch in Asien, und zählt etwa 450 Millionen Einwohner?",
+    "question": "Welcher Staatenverbund umfasst 27 Mitglieder, von denen nur Zypern geographisch in Asien liegt, und zählt etwa 450 Millionen Einwohner?",
     "lead_fact": "27 Staaten; ~450 Millionen Einwohner; supranational.",
     "source": "native-lead"
   },
@@ -365,7 +365,7 @@
     "source": "translated-from-en"
   },
   "Q15789": {
-    "question": "Welcher Münchner Sportverein wurde am 27. Februar 1900 gegründet und zählt mit über 400.000 Mitgliedern zu den beiden mitgliederstärksten der Welt?",
+    "question": "Welcher Sportverein aus der Isar-Metropole wurde am 27. Februar 1900 gegründet und zählt mit über 400.000 Mitgliedern zu den beiden mitgliederstärksten der Welt?",
     "lead_fact": "Gegründet 27. Februar 1900; einer der zwei mitgliederstärksten Vereine.",
     "source": "native-lead"
   },
@@ -385,7 +385,7 @@
     "source": "translated-from-en"
   },
   "Q2579463": {
-    "question": "Welche kanadisch-irische Fernsehserie verbindet die Wikingerzeit mit den Sagen um Ragnar Lodbrok, seine Söhne und die Schildmaid Lagertha und startete 2013 bei History Television?",
+    "question": "Welche kanadisch-irische Fernsehserie verbindet das frühmittelalterliche Skandinavien mit den Sagen um Ragnar Lodbrok, seine Söhne und die Schildmaid Lagertha und startete 2013 bei History Television?",
     "lead_fact": "History Television 2013; Ragnar, Söhne, Lagertha.",
     "source": "native-lead"
   },
@@ -435,7 +435,7 @@
     "source": "native-lead"
   },
   "Q51805": {
-    "question": "Welcher Artikel gibt einen Überblick über die wichtigsten Personen des von George Lucas geschaffenen Universums, das 1977 mit Krieg der Sterne begann?",
+    "question": "Welcher Artikel gibt einen Überblick über die wichtigsten Personen des von George Lucas geschaffenen Universums, das 1977 mit einer Weltraumoper im Kino begann?",
     "lead_fact": "Übersicht der Figuren des von Lucas geschaffenen Universums.",
     "source": "native-lead"
   },
@@ -455,7 +455,7 @@
     "source": "native-lead"
   },
   "Q8216": {
-    "question": "Welches Schriftsystem mit heute 24 Buchstaben dient seit etwa dem 9. Jahrhundert v. Chr. der griechischen Sprache und erhielt im Hellenismus Betonungs- und Hauchzeichen?",
+    "question": "Welches Schriftsystem mit heute 24 Buchstaben wird seit etwa dem 9. Jahrhundert v. Chr. für die Sprache Homers verwendet und erhielt im Hellenismus Betonungs- und Hauchzeichen?",
     "lead_fact": "24 Buchstaben seit ca. 9. Jh. v. Chr.; hellenistische Diakritika.",
     "source": "native-lead"
   },
@@ -505,7 +505,7 @@
     "source": "native-lead"
   },
   "Q8740": {
-    "question": "Welcher Konflikt in Vietnam, Laos und Kambodscha endete am 30. April 1975, zwei Jahre nach dem Abzug der US-Truppen?",
+    "question": "Welcher Konflikt im ehemaligen Französisch-Indochina endete am 30. April 1975, zwei Jahre nach dem Abzug der US-Truppen?",
     "lead_fact": "Etwa 1955 bis 30. April 1975; US-Abzug 1973.",
     "source": "translated-from-en"
   },
@@ -525,12 +525,12 @@
     "source": "native-lead"
   },
   "Q83889294": {
-    "question": "Welches regionale Pandemiegeschehen begann in Deutschland am 27. Januar 2020 mit einem Fall bei der Firma Webasto, während die WHO den internationalen Notstand im Mai 2023 aufhob?",
+    "question": "Welches regionale Pandemiegeschehen begann am 27. Januar 2020 mit einem Fall bei der Firma Webasto, während die WHO den internationalen Notstand im Mai 2023 aufhob?",
     "lead_fact": "Erster Fall 27. Januar 2020 bei Webasto; WHO-Notstand bis Mai 2023.",
     "source": "native-lead"
   },
   "Q12204": {
-    "question": "Welche Infektionskrankheit, historisch Schwindsucht genannt, wird durch Mycobacterium tuberculosis verursacht und befällt meist die Lunge?",
+    "question": "Welche Infektionskrankheit, historisch Schwindsucht genannt, wird durch ein Bakterium der Gattung Mycobacterium verursacht und befällt meist die Lunge?",
     "lead_fact": "Mycobacterium tuberculosis; historisch Schwindsucht; meist die Lunge.",
     "source": "translated-from-en"
   },
@@ -550,7 +550,7 @@
     "source": "native-lead"
   },
   "Q111012213": {
-    "question": "Welche Übersicht listet Ereignisse seit der russischen Invasion in der Ukraine ab 2022 chronologisch auf?",
+    "question": "Welche Übersicht listet die Ereignisse des 2022 begonnenen Angriffskriegs Moskaus gegen Kiew in zeitlicher Reihenfolge auf?",
     "lead_fact": "Chronologische Übersicht der Invasion ab 2022.",
     "source": "native-lead"
   },
@@ -560,7 +560,7 @@
     "source": "translated-from-en"
   },
   "Q12548": {
-    "question": "Wie hieß vom Spätmittelalter bis 1806 das Herrschaftsgebiet der römisch-deutschen Kaiser, das sich seit dem 10. Jahrhundert aus zahlreichen Territorien zusammensetzte?",
+    "question": "Wie hieß vom Spätmittelalter bis 1806 das aus zahlreichen Territorien bestehende Herrschaftsgebiet jener Kaiser, die sich seit dem 10. Jahrhundert als Nachfolger der antiken Caesaren verstanden?",
     "lead_fact": "Offizieller Name bis 1806; römisch-deutsche Kaiser seit dem 10. Jahrhundert.",
     "source": "native-lead"
   },
@@ -585,7 +585,7 @@
     "source": "native-lead"
   },
   "Q135622": {
-    "question": "Welcher Onlinedienst von Alphabet übersetzt Texte und Webseiten maschinell, startete 2006 nur zwischen Englisch und Arabisch und unterstützte 2022 bereits 133 Sprachen?",
+    "question": "Welcher Onlinedienst von Alphabet überträgt Texte und Webseiten maschinell in andere Sprachen, startete 2006 nur zwischen Englisch und Arabisch und unterstützte 2022 bereits 133 Sprachen?",
     "lead_fact": "Start 2006 Englisch–Arabisch; 2022 bereits 133 Sprachen.",
     "source": "native-lead"
   },
@@ -635,7 +635,7 @@
     "source": "native-lead"
   },
   "Q15860072": {
-    "question": "Welcher Konflikt begann Ende Februar 2014 mit einem bewaffneten Geschehen auf der Krim, gefolgt von deren Annexion und prorussischen Milizen im Donbass?",
+    "question": "Welcher Konflikt begann Ende Februar 2014 mit einem bewaffneten Geschehen auf der Krim, gefolgt von deren Annexion und von Moskau unterstützten Milizen im Donbass?",
     "lead_fact": "Beginn Februar 2014 auf der Krim; Annexion und Donbass.",
     "source": "native-lead"
   },
@@ -685,7 +685,7 @@
     "source": "translated-from-en"
   },
   "Q34726": {
-    "question": "Wie heißt die Gesamtheit der antiken Mythen von Göttern und Heroen des antiken Griechenlands?",
+    "question": "Wie heißt die Gesamtheit der antiken Sagen um die olympischen Götter und Heroen wie Herakles?",
     "lead_fact": "Gesamtheit der Götter- und Heldenmythen des antiken Griechenlands.",
     "source": "native-lead"
   },
@@ -700,12 +700,12 @@
     "source": "native-lead"
   },
   "Q146": {
-    "question": "Welches kleine domestizierte Raubtier, Felis catus, ist ein obligatorischer Fleischfresser mit einziehbaren Krallen?",
+    "question": "Welches kleine Raubtier, die einzige domestizierte Art der Familie Felidae, ist ein obligatorischer Fleischfresser mit einziehbaren Krallen?",
     "lead_fact": "Felis catus; obligatorischer Fleischfresser; einziehbare Krallen.",
     "source": "translated-from-en"
   },
   "Q130882": {
-    "question": "Welche Lauchart (Allium ursinum) ist ein Frühlingsblüher mit Zwiebel, riecht knoblauchähnlich durch Methiin und Alliin und ist eng mit dem Knoblauch verwandt?",
+    "question": "Welche Allium-Art ist ein Frühlingsblüher mit Zwiebel, riecht knoblauchähnlich durch Methiin und Alliin und ist eng mit dem Knoblauch verwandt?",
     "lead_fact": "Allium ursinum; knoblauchähnlicher Geruch durch Methiin und Alliin.",
     "source": "native-lead"
   },
@@ -725,7 +725,7 @@
     "source": "native-lead"
   },
   "Q162691": {
-    "question": "Welches Hochfest am 15. August feiert die leibliche Aufnahme Marias in den Himmel und wird mindestens seit dem 5. Jahrhundert begangen?",
+    "question": "Welches Hochfest am 15. August feiert, dass die Mutter Jesu am Ende ihres irdischen Lebens mit Leib und Seele zu Gott erhoben wurde, und wird mindestens seit dem 5. Jahrhundert begangen?",
     "lead_fact": "15. August; leibliche Aufnahme Mariens; mindestens seit dem 5. Jahrhundert.",
     "source": "native-lead"
   },
@@ -745,7 +745,7 @@
     "source": "native-lead"
   },
   "Q42562": {
-    "question": "Welche Ingwergewächs-Art (Curcuma longa) stammt aus Südasien; ihr intensiv gelbes Rhizom dient als Gewürz und Farbstoff?",
+    "question": "Welche Ingwergewächs-Art stammt aus Südasien; ihr intensiv gelbes Rhizom dient als Gewürz und Farbstoff?",
     "lead_fact": "Curcuma longa; gelbes Rhizom als Gewürz und Farbstoff.",
     "source": "native-lead"
   },
@@ -770,7 +770,7 @@
     "source": "native-lead"
   },
   "Q1070684": {
-    "question": "Welche therapeutische Ernährungsform reduziert Kohlenhydrate so weit, dass der Körper Energie vor allem aus Fett und Ketonkörpern statt aus Glukose gewinnt?",
+    "question": "Welche therapeutische Ernährungsform reduziert Kohlenhydrate so weit, dass der Körper Energie vor allem aus Fett und daraus gebildeten Ersatzstoffen statt aus Glukose gewinnt?",
     "lead_fact": "Kohlenhydratlimitiert; Energie aus Fett und Ketonkörpern.",
     "source": "native-lead"
   },
@@ -795,7 +795,7 @@
     "source": "native-lead"
   },
   "Q37525": {
-    "question": "Welches natürlich vorkommende Monosaccharid heißt fachsprachlich auch Traubenzucker oder Dextrose und ist in der D-Form die häufigste Zuckerart?",
+    "question": "Welches natürlich vorkommende Monosaccharid ist in der D-Form die häufigste Zuckerart und hat seinen Namen vom griechischen Wort für „süß“?",
     "lead_fact": "D-Form natürlich; Traubenzucker/Dextrose; häufigstes Monosaccharid.",
     "source": "native-lead"
   },
@@ -835,7 +835,7 @@
     "source": "native-lead"
   },
   "Q33972": {
-    "question": "Welches ursprünglich mechanische, heute meist elektronische Gerät startet nach Münz- oder Scheineinwurf einen Spielverlauf aus Zufall und Spielerbetätigung, oft in der Hoffnung auf Gewinn?",
+    "question": "Welches ursprünglich mechanische, heute meist elektronische Gerät setzt nach Münz- oder Scheineinwurf eine Runde in Gang, deren Ergebnis Zufall und Bedienung bestimmen, oft in der Hoffnung auf Gewinn?",
     "lead_fact": "Mechanisch dann elektronisch; Zufall plus Spieleraktion; Gewinnhoffnung.",
     "source": "native-lead"
   },
@@ -845,7 +845,7 @@
     "source": "native-lead"
   },
   "Q339962": {
-    "question": "Welche arcadelastige Flugsimulationsreihe von Namco begann 1995 mit Air Combat für die erste PlayStation und verknüpft Missionen durch eine fortlaufende Geschichte?",
+    "question": "Welche arcadelastige Flugsimulationsreihe von Namco begann 1995 auf der ersten PlayStation und verknüpft Missionen durch eine fortlaufende Geschichte?",
     "lead_fact": "Namco; Start als Air Combat 1995; fortlaufende Missionsgeschichte.",
     "source": "native-lead"
   },
@@ -870,7 +870,7 @@
     "source": "native-lead"
   },
   "Q335340": {
-    "question": "Welcher US-amerikanisch-japanische Animationsfilm von 2003 versammelt neun Kurzfilme in der Welt der Matrix, meist unter japanischen Anime-Regisseuren gemeinsam mit den Wachowskis?",
+    "question": "Welcher US-amerikanisch-japanische Episodenfilm von 2003 versammelt neun Zeichentrick- und Computer-Kurzfilme aus dem Universum von Neo und Morpheus, meist unter japanischen Regisseuren gemeinsam mit den Wachowskis?",
     "lead_fact": "Neun Kurzfilme 2003; Matrix-Welt; Wachowskis und japanische Regisseure.",
     "source": "native-lead"
   },

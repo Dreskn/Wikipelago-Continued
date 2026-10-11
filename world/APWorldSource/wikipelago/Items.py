@@ -55,7 +55,7 @@ PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
     "geography": "Geography Portal",
     "food_cuisine": "Food Portal",
     "art_literature": "Arts & Literature Portal",
-    "mythology_folklore": "Mythology Portal",
+    "mythology_folklore": "Legends & Beliefs Portal",
     "music": "Music Portal",
     "politics": "Politics Portal",
     "famous_people": "People Portal",

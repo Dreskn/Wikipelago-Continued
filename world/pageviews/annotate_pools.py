@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import random
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -35,7 +36,7 @@ BATCH = 50
 SLEEP_S = 0.05
 MAX_RETRIES = 8
 CACHE_SAVE_EVERY = 200  # new QIDs classified between disk saves
-CACHE_SCHEMA = 6       # bump when classification rules change (invalidates old cache)
+CACHE_SCHEMA = 7       # bump when classification rules change (invalidates old cache)
 
 UA = "WikipelagoPoolAnnotate/0.1 (https://github.com/Dreskn/Wikipelago-Continued)"
 MISC_TAG = "miscellaneous"
@@ -60,11 +61,73 @@ TAXON = "Q16521"
 ADULT_TOPIC_QIDS = {
     "Q1361427",  # sexual roleplay
     "Q2211650",  # sadomasochism
-    "Q83372",    # sadism and masochism (legacy Wikidata item)
     "Q185529",   # pornographic film
     "Q291",      # pornography (topic)
     "Q190845",   # BDSM
     "Q5873",     # sexual intercourse
+    "Q309227",   # lolicon
+    "Q597887",   # shotacon
+    "Q660567",   # child pornography
+}
+
+# Matched on the page's type only (P31 + P279 walk), never as P921 main subject or
+# P136 genre: as subjects they also hit mainstream works (Pretty Woman, Taxi Driver,
+# Narcos, Scarface, Trainspotting).
+SENSITIVE_TYPE_QIDS = {
+    # Sexual acts, practices and paraphilias (sex positions, oral/anal sex,
+    # masturbation, pedophilia, fetishes), sexual abuse.
+    "Q608",       # human sexual behavior
+    "Q178059",    # paraphilia
+    "Q207791",    # sexual fetishism
+    "Q5801919",   # sex crime
+    "Q43414",     # sexual abuse
+    "Q26553",     # child sexual abuse
+    "Q95252032",  # child sexual abuse scandal
+    "Q673281",    # sexual assault
+    "Q558075",    # sexual violence
+    # Pornography.
+    "Q11074464",  # pornography website (adult tube / camming sites)
+    "Q30941437",  # pornographic film studio
+    "Q90404711",  # pornographic actor or erotic model database
+    "Q49148153",  # pornography genre
+    "Q172067",    # hentai (eroge, tentacle erotica)
+    "Q136926229", # hentai genre
+    # Violent crime.
+    "Q3199915",   # massacre
+    "Q21480300",  # mass shooting
+    "Q473853",    # school shooting
+    "Q81672",     # attempted murder
+    # Illicit drugs. Medicines (opioids, ketamine, amphetamine) stay in.
+    "Q10268802",  # illegal drug (cocaine, heroin)
+    "Q1902558",   # soft drug (cannabis)
+    "Q24892366",  # hard drug
+    "Q7708739",   # recreational drug use (chemsex)
+    "Q1260006",   # drug cartel
+}
+
+# Single items whose Wikidata classes miss the rules above (checked 2026-10),
+# matched as the entity itself. Prefer a class in SENSITIVE_QIDS when one fits.
+SENSITIVE_ITEM_QIDS = {
+    "Q608",       # human sexual behavior (de "Sex", pl "Seks")
+    "Q7283",      # terrorism
+    "Q484188",    # serial killer
+    "Q57013596",  # XNXX (typed only as website)
+    "Q22080762",  # Chaturbate (typed only as website)
+    "Q48893332",  # Sexlog
+    "Q108208464", # Clop (erotic fan art)
+    "Q3271262",   # list of female pornographic film actors
+    "Q15832295",  # de: Liste von Abkürzungen in der Sexarbeit
+    "Q119821735", # Pelicot rape case (typed as trial / criminal case)
+    "Q191924",    # methamphetamine (chemistry classes only)
+    "Q44909815",  # methamphetamine, racemic (enwiki)
+    "Q330694",    # crack cocaine
+    "Q69488",     # MDMA
+    "Q23118",     # LSD
+    "Q262613",    # mephedrone
+    "Q336358",    # psilocybin mushroom
+    "Q899641",    # lean (codeine drink)
+    "Q1046933",   # Medellín Cartel (typed as an economic cartel)
+    "Q4927359",   # Blog del Narco
 }
 
 SENSITIVE_QIDS: dict[str, set[str]] = {
@@ -73,22 +136,144 @@ SENSITIVE_QIDS: dict[str, set[str]] = {
         "Q17127659", "Q7283", "Q2223653",
         "Q132821", "Q149086", "Q484188", "Q750215",
         "Q47092", "Q365680", "Q7458798",  # sexual misconduct
-        "Q83871", "Q11367", "Q844924",
-        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+        "Q83871", "Q844924",
+        *ADULT_TOPIC_QIDS,
+        *SENSITIVE_TYPE_QIDS,
     },
-    "P106": {"Q484188"},
+    # No "rapist" / "sex offender" / "terrorist": Wikidata gives those occupations to
+    # people who were only accused, and to fictional characters.
+    "P106": {
+        "Q484188",    # serial killer
+        "Q488111",    # pornographic film actor
+        "Q17456089",  # pornographic film director
+        "Q17456111",  # pornographic film producer
+    },
     "P136": {
         "Q185529", "Q599558",
-        "Q291", "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+        "Q21997246",  # hentai manga
+        "Q49148153",  # pornography genre
+        "Q451532",    # BDSM-themed literature
+        "Q20669546",  # BDSM-themed fiction
+        *ADULT_TOPIC_QIDS,
     },
     "P360": {
-        "Q47092", "Q365680", "Q7458798", "Q185529", "Q291",
-        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+        "Q47092", "Q365680", "Q7458798",
+        "Q488111",    # lists of pornographic actors
+        "Q43414", "Q26553", "Q673281",  # sexual abuse / assault
+        "Q21480300", "Q473853",         # mass / school shootings
+        *ADULT_TOPIC_QIDS,
     },
+    # Not Q5873 sexual intercourse: as main subject it reaches infidelity / adultery
+    # and flags mainstream dramas (Homeland).
     "P921": {
-        "Q47092", "Q365680", "Q7458798", "Q185529", "Q291",
-        "Q1361427", "Q2211650", "Q83372", "Q190845", "Q5873",
+        "Q47092", "Q365680", "Q7458798",
+        *(ADULT_TOPIC_QIDS - {"Q5873"}),
     },
+}
+
+# Curated title rules per wiki language, for pages whose Wikidata item is missing or
+# lacks the classes above. Whole-title match, case-insensitive: exact titles, or
+# anchored patterns for crime-case naming ("Murder of …", "Mord an …"). They are also
+# checked against the item's titles on the other wikis (sitelinks), so keep them
+# narrow: bare keywords ("sex", "porn", "drug", "massacre", "Mord", "… Murders") would
+# hit Sex Pistols, Porno Graffitti, medicines, The Texas Chain Saw Massacre, Mord mit
+# Aussicht or Midsomer Murders.
+SENSITIVE_TITLE_PATTERNS: dict[str, tuple[str, ...]] = {
+    "en": (
+        r"murders? of .+",
+        r"killing of .+",
+        r"kidnapping of .+",
+        r".+ \(serial killer\)",
+        r".+ (gang )?rape (case|trial|and murder)",
+        r".+ sex(ual)? (abuse|assault|misconduct) (allegations|scandal|cases?)",
+    ),
+    "fr": (
+        r"meurtres? d(e |u |es |’|').+",
+        r"affaire des viols d.+",
+    ),
+    "de": (
+        r"mord an .+",
+        r"mordfall .+",
+        r"kriminalfall .+",
+        r"entführung(en)? von .+",
+        r"entführungsfall .+",
+    ),
+    "es": (
+        r"asesinatos? de .+",
+        r"secuestro de .+",
+        r"casos? de abuso sexual .+",
+    ),
+    "it": (
+        r"omicidi[oi] d(i|el|ella|ello|ei|egli|elle) .+",
+        r"delitto d(i|el|ella|ei) .+",
+        r"sequestro di .+",
+    ),
+    "pt": (
+        r"(sequestro e )?assassinatos? d(e|o|a|os|as) .+",
+    ),
+    "nl": (
+        r"moord op .+",
+        r"ontvoering van .+",
+    ),
+    # No sv / pl patterns: "Mordet på …", "Zabójstwo …", "Morderstwo …" are also
+    # used for films and series (Morderstwo w Orient Expressie).
+}
+
+SENSITIVE_TITLES: dict[str, set[str]] = {
+    "en": {
+        "Turpin case", "Fritzl case", "Central Park jogger case", "Vallow-Daybell murders",
+        "Trial of Alex Murdaugh", "Trial of Arne Cheyenne Johnson",
+        "Casualties of the September 11 attacks",
+        "Mass shootings in the United States",
+        "Lists of school shootings in the United States",
+    },
+    "fr": {
+        "Affaire Agnès Le Roux", "Affaire Air Cocaïne", "Affaire Clément Méric",
+        "Affaire Daval", "Affaire Dominique Strauss-Kahn", "Affaire Dupont de Ligonnès",
+        "Affaire Epstein", "Affaire Estelle Mouzin", "Affaire Flactif", "Affaire Fritzl",
+        "Affaire Frédéric Péchier", "Affaire Joël Le Scouarnec", "Affaire Jubillar",
+        "Affaire Lyhanna", "Affaire Malik Oussekine", "Affaire Marina Sabatier",
+        "Affaire Maëlys", "Affaire Natascha Kampusch", "Affaire Roman Polanski",
+        "Affaire Romand", "Affaire Seznec", "Affaire d'Outreau",
+        "Affaire de la joggeuse de Central Park", "Affaire du Coral",
+        "Affaire Éric Peugeot",
+        "MILF",  # P136 "MILF pornography" is an instance, not a subclass, of a porn genre
+    },
+    "de": {
+        "Attentat auf Wolfgang Schäuble",
+        "Liste von Amokläufen an Bildungseinrichtungen",
+        "Liste von Pornodarstellerinnen",
+        "Prozess um die Vergewaltigungs-Serie an Gisèle Pelicot",
+    },
+    "es": {
+        "Caso de La Manada", "Crimen de Alcácer", "Caso Arny", "Caso Matute Johns",
+        "Masacre de Allende",
+    },
+    "it": {
+        "Caso Ariel Castro", "Caso Fritzl", "Attentato di via Fauro",
+    },
+    "pt": {
+        "Caso Araceli", "Caso Aída Curi", "Caso Evandro", "Caso Gil Rugai",
+        "Caso Mangue 937", "Atentado do Riocentro",
+    },
+    "nl": {
+        "Zaak-Fritzl", "Zaak van de Central Park-jogger",
+    },
+    "sv": {
+        "Arbogafallet", "Förlösamordet", "Helénmordet", "Överfallet på Morö Backe",
+        "Polismordet i Nyköping 1966", "Fritzlfallet", "Hagamannen", "Nytorgsmannen",
+    },
+    "pl": {
+        "Sprawa Łomiarza", "Zbrodnia połaniecka", "Zabójstwo małżeństwa Jaroszewiczów",
+    },
+}
+
+_SENSITIVE_TITLE_RES: dict[str, re.Pattern[str]] = {
+    lang: re.compile("|".join(f"(?:{p})" for p in pats), re.IGNORECASE)
+    for lang, pats in SENSITIVE_TITLE_PATTERNS.items()
+}
+_SENSITIVE_TITLES_CF: dict[str, set[str]] = {
+    lang: {t.casefold() for t in titles} for lang, titles in SENSITIVE_TITLES.items()
 }
 
 QID_MAP: dict[str, dict[str, set[str]]] = {
@@ -407,17 +592,36 @@ def tags_for_expanded(expanded: dict[str, set[str]]) -> set[str]:
     return tags
 
 
+def title_is_sensitive(lang: str, title: str) -> bool:
+    """True if a page title matches the curated SENSITIVE_TITLES / patterns for its wiki."""
+    t = norm_title(title or "")
+    if not t:
+        return False
+    if t.casefold() in _SENSITIVE_TITLES_CF.get(lang, ()):
+        return True
+    rx = _SENSITIVE_TITLE_RES.get(lang)
+    return bool(rx and rx.fullmatch(t))
+
+
+def sitelinks_sensitive(entity: dict) -> bool:
+    """True if the item's title on any wiki matches that language's title rules."""
+    for site, title in sitelinks_map(entity).items():
+        if site.endswith("wiki") and title_is_sensitive(site[: -len("wiki")], title):
+            return True
+    return False
+
+
 def is_sensitive(entity: dict, expanded: dict[str, set[str]]) -> bool:
-    """True if this item *is* an adult denylist concept, or claims expand into the denylist."""
+    """True if this item *is* a denylisted concept, or claims expand into the denylist."""
     qid = entity.get("id")
-    if qid and qid in ADULT_TOPIC_QIDS:
+    if qid and (qid in ADULT_TOPIC_QIDS or qid in SENSITIVE_ITEM_QIDS):
         return True
     if claim_targets(entity, "P3461"):
         return True
     for prop, denylist in SENSITIVE_QIDS.items():
         if expanded.get(prop, set()) & denylist:
             return True
-    return False
+    return sitelinks_sensitive(entity)
 
 
 def finalize_tags(tags: set[str]) -> list[str]:
@@ -791,11 +995,13 @@ def annotate_language(
     for t in titles:
         qid = title_qid.get(t)
         canonical = title_canonical.get(t, t)
+        # Curated title rules also cover titles without a Wikidata item.
+        title_sensitive = title_is_sensitive(lang, t) or title_is_sensitive(lang, canonical)
         if not qid:
             no_qid += 1
             misc_only += 1
             tags = [MISC_TAG]
-            sensitive = False
+            sensitive = title_sensitive
             row = {
                 "title": t,
                 "canonical_title": canonical,
@@ -811,7 +1017,7 @@ def annotate_language(
                 no_qid += 1
                 misc_only += 1
                 tags = [MISC_TAG]
-                sensitive = False
+                sensitive = title_sensitive
                 row = {
                     "title": t,
                     "canonical_title": canonical,
@@ -824,11 +1030,9 @@ def annotate_language(
                 if qid not in entities_for_classify:
                     reused_qid += 1
                 tags = list(ann["tags"])
-                sensitive = bool(ann["sensitive"])
+                sensitive = bool(ann["sensitive"]) or title_sensitive
                 if tags == [MISC_TAG]:
                     misc_only += 1
-                if sensitive:
-                    sensitive_flagged += 1
                 row = {
                     "title": t,
                     "canonical_title": canonical,
@@ -838,6 +1042,8 @@ def annotate_language(
                 }
                 if canonical != t:
                     row["note"] = f"redirected→{canonical!r}"
+        if sensitive:
+            sensitive_flagged += 1
         for tag in row["tags"]:
             tag_counts[tag] += 1
         entries.append(row)
