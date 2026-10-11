@@ -6,6 +6,8 @@ Play at https://wikipelago.dreskn.fr/. The page is the Wikipedia article on the 
 
 Optional cards (Sanity, Bingo, Lenses, Difficulty) only appear when your seed uses those options.
 
+Next to the language menu, the **sun/moon** button switches between dark and light, and the **Aa** button opens the display settings: text size (100% to 150%), **High contrast** (follows your system's contrast setting until you choose), and **Colorblind-friendly colors** (Realms are colored by their order with a colorblind-safe palette; success and warning notifications become blue and orange). Your choices are remembered in this browser.
+
 ## Legend
 
 1. **current build**

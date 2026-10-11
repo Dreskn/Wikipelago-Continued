@@ -295,6 +295,10 @@ const el = {
   teleportBtn: document.getElementById("teleportBtn"),
   teleportBtnLabel: document.getElementById("teleportBtnLabel"),
   phoneBar: document.getElementById("phoneBar"),
+  displayBtn: document.getElementById("displayBtn"),
+  displayPanel: document.getElementById("displayPanel"),
+  contrastToggle: document.getElementById("contrastToggle"),
+  cvdToggle: document.getElementById("cvdToggle"),
   phoneTargets: document.getElementById("phoneTargets"),
   phoneMenuBtn: document.getElementById("phoneMenuBtn"),
   phoneTools: document.getElementById("phoneTools"),
@@ -636,6 +640,7 @@ function onUiLanguageChanged(code) {
   refreshSidePanelToggles();
   syncThemeToggle();
   syncPhoneMenuButton();
+  syncDisplayPanel();
 }
 
 // Light / dark theme. index.html applies the saved choice before first paint;
@@ -668,6 +673,94 @@ function applyTheme(theme, { persist = true } = {}) {
     state.journeyLayoutKey = "";
     drawJourneyPath(state.journeyPayload);
   }
+}
+
+// Display settings ("Aa"): text size, high contrast, colorblind-friendly colors.
+// index.html applies the saved choices before first paint; high contrast follows the system until chosen.
+const DISPLAY_PREFS = { scale: "wikipelago_text_scale", contrast: "wikipelago_contrast", cvd: "wikipelago_cvd" };
+const CONTRAST_QUERY = window.matchMedia("(prefers-contrast: more)");
+
+function readDisplayPref(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function writeDisplayPref(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* storage blocked */ }
+}
+
+function syncDisplayPanel() {
+  const root = document.documentElement;
+  const scale = root.style.getPropertyValue("--text-scale").trim() || "1";
+  el.displayPanel?.querySelectorAll("[data-scale]").forEach((btn) => {
+    btn.setAttribute("aria-checked", String(btn.dataset.scale === scale));
+  });
+  if (el.contrastToggle) el.contrastToggle.checked = root.dataset.contrast === "more";
+  if (el.cvdToggle) el.cvdToggle.checked = root.dataset.cvd === "1";
+  const label = t("display.open");
+  el.displayBtn?.setAttribute("aria-label", label);
+  if (el.displayBtn) el.displayBtn.title = label;
+}
+
+function applyDisplaySettings({ scale, contrast, cvd } = {}) {
+  const root = document.documentElement;
+  if (scale !== undefined) root.style.setProperty("--text-scale", scale);
+  if (contrast !== undefined) {
+    if (contrast) root.dataset.contrast = "more";
+    else delete root.dataset.contrast;
+  }
+  if (cvd !== undefined) {
+    if (cvd) root.dataset.cvd = "1";
+    else delete root.dataset.cvd;
+  }
+  syncDisplayPanel();
+  // Widths and colors changed: redraw what measures or reads them.
+  if (state.status) updateHUD(state.status);
+  if (state.journeyOpen && state.journeyPayload) {
+    state.journeyLayoutKey = "";
+    drawJourneyPath(state.journeyPayload);
+  }
+}
+
+function setDisplayPanelOpen(open) {
+  if (!el.displayPanel || !el.displayBtn) return;
+  el.displayPanel.classList.toggle("hidden", !open);
+  el.displayBtn.setAttribute("aria-expanded", String(Boolean(open)));
+}
+
+function bindDisplayPanel() {
+  if (!el.displayBtn || !el.displayPanel) return;
+  el.displayBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    setDisplayPanelOpen(el.displayPanel.classList.contains("hidden"));
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest?.(".display-menu")) setDisplayPanelOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !el.displayPanel.classList.contains("hidden")) {
+      setDisplayPanelOpen(false);
+      el.displayBtn.focus();
+    }
+  });
+  el.displayPanel.querySelectorAll("[data-scale]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      writeDisplayPref(DISPLAY_PREFS.scale, btn.dataset.scale);
+      applyDisplaySettings({ scale: btn.dataset.scale });
+    });
+  });
+  el.contrastToggle?.addEventListener("change", () => {
+    // An explicit choice stops following the system setting.
+    writeDisplayPref(DISPLAY_PREFS.contrast, el.contrastToggle.checked ? "more" : "normal");
+    applyDisplaySettings({ contrast: el.contrastToggle.checked });
+  });
+  el.cvdToggle?.addEventListener("change", () => {
+    writeDisplayPref(DISPLAY_PREFS.cvd, el.cvdToggle.checked ? "1" : "0");
+    applyDisplaySettings({ cvd: el.cvdToggle.checked });
+  });
+  CONTRAST_QUERY.addEventListener("change", () => {
+    if (!readDisplayPref(DISPLAY_PREFS.contrast)) applyDisplaySettings({ contrast: CONTRAST_QUERY.matches });
+  });
+  syncDisplayPanel();
 }
 
 function bindThemeToggle() {
@@ -1074,11 +1167,21 @@ function topicLabel(tag) {
   return label === key ? formatThemeTag(raw) : label;
 }
 
+/** Realm order (0-based) for a topic in this seed: colorblind mode colors Realms by order. */
+function realmIndexForTopic(tag, status = state.status) {
+  const branches = Array.isArray(status?.branches) ? status.branches : [];
+  const branch = branches.find((item) => String(item?.theme_tag || "") === tag);
+  return branch ? Number(branch.id) || 0 : -1;
+}
+
 function setTopic(node, tag) {
   if (!node) return;
   const raw = String(tag || "").trim();
   if (REALM_TOPICS.has(raw)) node.dataset.topic = raw;
   else delete node.dataset.topic;
+  const index = raw ? realmIndexForTopic(raw) : -1;
+  if (index >= 0) node.dataset.realmIndex = String(index % 8);
+  else delete node.dataset.realmIndex;
 }
 
 function isRealmMaster(status) {
@@ -1753,7 +1856,10 @@ function journeyNodeFill(node) {
   if (node.mainRound) return { fill: cssVar("--brass", "#e0915a"), stroke: ink };
   if (node.forks.length) {
     const topic = forkTopic(node.forks[0]);
-    const realm = topic ? cssVar(`--topic-${topic}`, "") : "";
+    const colorblind = document.documentElement.dataset.cvd === "1";
+    const realm = colorblind
+      ? cssVar(`--cvd-realm-${(Number(node.forks[0]) - 1) % 8}`, "")
+      : (topic ? cssVar(`--topic-${topic}`, "") : "");
     return { fill: realm || cssVar("--sea", "#8fa8ff"), stroke: ink };
   }
   if (node.stamp) return { fill: cssVar("--stamp", "#b57bff"), stroke: ink };
@@ -5512,6 +5618,7 @@ bindBingoOverlayUi();
 bindJourneyOverlayUi();
 bindVictoryOverlayUi();
 bindThemeToggle();
+bindDisplayPanel();
 bindPhoneLayout();
 bindStuckHelper();
 initSidePanelToggles();

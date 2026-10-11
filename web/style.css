@@ -217,7 +217,8 @@ html, body {
   height: 100%;
 }
 html {
-  font-size: 18px;
+  /* --text-scale comes from the Display panel (100% to 150%). */
+  font-size: calc(18px * var(--text-scale, 1));
 }
 body {
   margin: 0;
@@ -277,7 +278,7 @@ body {
   padding: 14px 16px 16px;
   display: flex;
   flex-direction: column;
-  --side-w: clamp(420px, calc(420px + (100vw - 1200px) * 246 / 720), 666px);
+  --side-w: min(calc(clamp(420px, calc(420px + (100vw - 1200px) * 246 / 720), 666px) * var(--text-scale, 1)), 48vw);
 }
 .topbar {
   display: grid;
@@ -582,7 +583,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
   padding: 4px 10px 12px 2px;
   min-width: 0;
   font-family: var(--font-read);
-  font-size: 17px;
+  font-size: calc(17px * var(--text-scale, 1));
   color: var(--page-text);
   transition: filter 160ms ease, opacity 160ms ease;
   scrollbar-color: var(--page-3) transparent;
@@ -2480,7 +2481,7 @@ body.journey-window #journeyPopupBtn {
 
 /* Mid-size windows: keep both columns, with a narrower HUD. */
 @media (max-width: 1200px) {
-  .layout { --side-w: clamp(330px, 38vw, 420px); }
+  .layout { --side-w: min(calc(clamp(330px, 38vw, 420px) * var(--text-scale, 1)), 50vw); }
 }
 
 /* ------------------------------------------------------------------ */
@@ -2592,11 +2593,11 @@ body.journey-window #journeyPopupBtn {
 }
 
 @media (max-width: 560px) {
-  html { font-size: 16px; }
+  html { font-size: calc(16px * var(--text-scale, 1)); }
   .layout { padding: 10px 12px 12px; }
   .article-panel { padding: 14px 12px 10px; }
   .article-title { font-size: 1.45rem; }
-  .article-body { font-size: 16px; }
+  .article-body { font-size: calc(16px * var(--text-scale, 1)); }
 }
 
 .support-dock {
@@ -2887,4 +2888,189 @@ body.journey-window #journeyPopupBtn {
   .realm-note,
   .card label,
   .support-btn { font-size: max(12px, 0.75rem); }
+}
+
+/* ------------------------------------------------------------------ */
+/* Display panel ("Aa"): text size, high contrast, colorblind colors.  */
+/* ------------------------------------------------------------------ */
+.display-menu { position: relative; }
+.display-btn {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.display-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 70;
+  display: grid;
+  gap: 12px;
+  width: min(290px, calc(100vw - 24px));
+  padding: 12px 14px 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line-strong);
+  background: var(--ink-1);
+  color: var(--text);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+}
+.display-panel.hidden { display: none; }
+.display-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+}
+.display-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.display-sizes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+.display-sizes button {
+  min-height: 2rem;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--ink-2);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.display-sizes button[aria-checked="true"] {
+  background: var(--brass);
+  border-color: var(--brass);
+  color: var(--brass-ink);
+}
+.display-switch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.display-switch input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brass);
+}
+
+/* High contrast (dark and light): pure black/white, strong borders, underlined bright links. */
+:root[data-contrast="more"] {
+  --ink-0: #000000;
+  --ink-1: #000000;
+  --ink-2: #141414;
+  --line: #8c8c8c;
+  --line-strong: #ffffff;
+  --text: #ffffff;
+  --muted: #e6e6e6;
+  --faint: #cccccc;
+  --brass: #ffb454;
+  --brass-hi: #ffd08a;
+  --brass-ink: #000000;
+  --page: #000000;
+  --page-2: #141414;
+  --page-3: #3a3a3a;
+  --page-text: #ffffff;
+  --page-heading: #ffffff;
+  --page-muted: #e0e0e0;
+  --page-line: #8c8c8c;
+  --page-link: #ffe066;
+  --page-link-hover: #ffffff;
+  --paper: #ffffff;
+  --paper-ink: #000000;
+  --paper-muted: #333333;
+  --shadow: none;
+}
+:root[data-contrast="more"][data-theme="light"] {
+  --ink-0: #ffffff;
+  --ink-1: #ffffff;
+  --ink-2: #f0f0f0;
+  --line: #6b6b6b;
+  --line-strong: #000000;
+  --text: #000000;
+  --muted: #1a1a1a;
+  --faint: #333333;
+  --brass: #002b80;
+  --brass-hi: #001a4d;
+  --brass-ink: #ffffff;
+  --page: #ffffff;
+  --page-2: #f0f0f0;
+  --page-3: #cccccc;
+  --page-text: #000000;
+  --page-heading: #000000;
+  --page-muted: #222222;
+  --page-line: #6b6b6b;
+  --page-link: #0000cc;
+  --page-link-hover: #000080;
+}
+:root[data-contrast="more"] body { background-image: none; }
+:root[data-contrast="more"] .card,
+:root[data-contrast="more"] .article-panel,
+:root[data-contrast="more"] .phone-bar,
+:root[data-contrast="more"] .toast {
+  border-color: var(--line-strong);
+  box-shadow: none;
+}
+:root[data-contrast="more"] .article-body a {
+  text-decoration: underline;
+  text-decoration-color: currentColor;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+:root[data-contrast="more"] :focus-visible { outline-width: 3px; }
+
+/* Colorblind-friendly: Realms are colored by their order (Okabe-Ito based palette) instead of
+   by topic, and success / warning become blue / orange instead of green / amber. */
+:root[data-cvd="1"] {
+  --cvd-realm-0: #56b4e9;
+  --cvd-realm-1: #f0e442;
+  --cvd-realm-2: #e8743b;
+  --cvd-realm-3: #1fb58a;
+  --cvd-realm-4: #cc79a7;
+  --cvd-realm-5: #ffffff;
+  --cvd-realm-6: #3b8ed0;
+  --cvd-realm-7: #a0a0a0;
+  --moss: #56b4e9;
+  --warn: #e69f00;
+}
+:root[data-cvd="1"][data-theme="light"] {
+  --cvd-realm-0: #0072b2;
+  --cvd-realm-1: #8c7c00;
+  --cvd-realm-2: #b34a00;
+  --cvd-realm-3: #007a5a;
+  --cvd-realm-4: #a84d86;
+  --cvd-realm-5: #222222;
+  --cvd-realm-6: #3f86c4;
+  --cvd-realm-7: #6b6b6b;
+  --moss: #0072b2;
+  --warn: #9a5b00;
+}
+:root[data-cvd="1"] [data-realm-index="0"] { --realm: var(--cvd-realm-0); }
+:root[data-cvd="1"] [data-realm-index="1"] { --realm: var(--cvd-realm-1); }
+:root[data-cvd="1"] [data-realm-index="2"] { --realm: var(--cvd-realm-2); }
+:root[data-cvd="1"] [data-realm-index="3"] { --realm: var(--cvd-realm-3); }
+:root[data-cvd="1"] [data-realm-index="4"] { --realm: var(--cvd-realm-4); }
+:root[data-cvd="1"] [data-realm-index="5"] { --realm: var(--cvd-realm-5); }
+:root[data-cvd="1"] [data-realm-index="6"] { --realm: var(--cvd-realm-6); }
+:root[data-cvd="1"] [data-realm-index="7"] { --realm: var(--cvd-realm-7); }
+
+/* Windows contrast themes replace most colors: keep the game's own colors where they carry state. */
+@media (forced-colors: active) {
+  .rounds-track .seg,
+  .fragments-track .seg,
+  .bingo-cell,
+  .realm-swatch,
+  .realm-bar,
+  .journey-path-svg {
+    forced-color-adjust: none;
+  }
 }
