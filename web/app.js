@@ -135,14 +135,14 @@ const TRACK_CROSSROAD_MIN_PX = 24;
 const TRACK_PAD_X_PX = 4;
 
 const DISPLAY_LOCKS = [
-  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyph: "Tbl" },
-  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyph: "Pic" },
-  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyph: "Led" },
-  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyph: "Inf" },
-  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyph: "Toc" },
-  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyph: "Nav" },
-  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyph: "Hat" },
-  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyph: "Ref" },
+  { unlockedKey: "tables_unlocked", randomizeKey: "randomize_tables", lockClass: "lock-tables", i18nKey: "lens.tables", glyphKey: "lens.tablesShort" },
+  { unlockedKey: "pictures_unlocked", randomizeKey: "randomize_pictures", lockClass: "lock-pictures", i18nKey: "lens.pictures", glyphKey: "lens.picturesShort" },
+  { unlockedKey: "incipit_unlocked", randomizeKey: "randomize_incipit", lockClass: "lock-incipit", i18nKey: "lens.lead", glyphKey: "lens.leadShort" },
+  { unlockedKey: "infoboxes_unlocked", randomizeKey: "randomize_infoboxes", lockClass: "lock-infoboxes", i18nKey: "lens.infoboxes", glyphKey: "lens.infoboxesShort" },
+  { unlockedKey: "toc_unlocked", randomizeKey: "randomize_toc", lockClass: "lock-toc", i18nKey: "lens.contents", glyphKey: "lens.contentsShort" },
+  { unlockedKey: "navboxes_unlocked", randomizeKey: "randomize_navboxes", lockClass: "lock-navboxes", i18nKey: "lens.navboxes", glyphKey: "lens.navboxesShort" },
+  { unlockedKey: "hatnotes_unlocked", randomizeKey: "randomize_hatnotes", lockClass: "lock-hatnotes", i18nKey: "lens.hatnotes", glyphKey: "lens.hatnotesShort" },
+  { unlockedKey: "references_unlocked", randomizeKey: "randomize_references", lockClass: "lock-references", i18nKey: "lens.references", glyphKey: "lens.referencesShort" },
 ];
 
 function lucideIcon(inner) {
@@ -196,8 +196,8 @@ let debugPanelReady = false;
 
 const SCROLL_SPEED_FACTORS = [0.18, 0.28, 0.42, 0.6, 0.8, 1];
 const CONNECTION_STORAGE_KEY = "wikipelago_connection";
-const DEFAULT_SERVER = "archipelago.gg:";
-const DEFAULT_SLOT = "WikiTester";
+// Pages clicked while the room is unreachable, replayed once it is back (a target reached offline still counts).
+const MAX_OFFLINE_VISITS = 50;
 
 const state = {
   sessionId: localStorage.getItem("wikipelago_session_id") || "",
@@ -208,6 +208,10 @@ const state = {
   clicksUsed: 0,
   announcedGoalComplete: false,
   restoringArticle: false,
+  /** {identity, title} visits made while the room was unreachable; see queueOfflineVisit. */
+  offlineVisits: [],
+  /** True after the player pressed Disconnect: clicks made afterwards are browsing only. */
+  userDisconnected: false,
   bingoStampSyncKey: "",
   bingoRemoteStampCount: 0,
   bingoUi: null,
@@ -376,14 +380,14 @@ const el = {
 function loadSavedConnection() {
   try {
     const raw = localStorage.getItem(CONNECTION_STORAGE_KEY);
-    if (!raw) return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+    if (!raw) return { server: "", slot: "" };
     const parsed = JSON.parse(raw);
     return {
-      server: String(parsed?.server || "").trim() || DEFAULT_SERVER,
-      slot: String(parsed?.slot || "").trim() || DEFAULT_SLOT,
+      server: String(parsed?.server || "").trim(),
+      slot: String(parsed?.slot || "").trim(),
     };
   } catch {
-    return { server: DEFAULT_SERVER, slot: DEFAULT_SLOT };
+    return { server: "", slot: "" };
   }
 }
 
@@ -1082,7 +1086,9 @@ async function teleportToRandomPage() {
 
 function updateRerollTargetControls(status) {
   if (!el.rerollTargetBtn || !el.rerollTargetMeta) return;
-  const max = Number(status?.target_rerolls_max) || 3;
+  const maxRaw = Number(status?.target_rerolls_max);
+  const max = Number.isFinite(maxRaw) ? Math.max(0, maxRaw) : 0;
+  el.rerollTargetBtn.title = t("hud.rerollTitle", { n: max });
   const remaining = Number(status?.target_rerolls_remaining);
   const playable = Boolean(status?.connected_to_ap || status?.practice);
   const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
@@ -2933,7 +2939,7 @@ function renderLensIcons(status) {
     node.className = "item-icon";
     node.title = t(lock.i18nKey);
     setIconState(node, status?.[lock.unlockedKey] ? "ok" : "locked");
-    node.textContent = lock.glyph;
+    node.textContent = t(lock.glyphKey);
     el.lensIconsRow.appendChild(node);
   }
 }
@@ -3219,11 +3225,11 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
   wrap.className = "bingo-grid-wrap";
   const tickD = document.createElement("span");
   tickD.className = "bingo-diag-tick bingo-diag-d";
-  tickD.textContent = "D";
+  tickD.textContent = t("bingo.diagShort");
   tickD.title = t("bingo.diag");
   const tickAd = document.createElement("span");
   tickAd.className = "bingo-diag-tick bingo-diag-ad";
-  tickAd.textContent = "AD";
+  tickAd.textContent = t("bingo.antidiagShort");
   tickAd.title = t("bingo.antidiag");
   wrap.append(tickD, tickAd, grid);
   for (let row = 0; row < n; row += 1) {
@@ -4035,6 +4041,9 @@ function applyHUDStatus(status) {
     : [];
   noteResumeIdentityFromStatus(status);
   state.status = status;
+  // Nothing loaded yet (or Practice just ended): show only what to do first.
+  const idle = !status.practice && !status.connected_to_ap && !status.current_target && !status.current_start;
+  document.body.classList.toggle("is-idle", idle);
   const remoteClicks = Number(status.clicks_used);
   if (status.practice) {
     state.clicksUsed = Number.isFinite(remoteClicks) ? remoteClicks : state.clicksUsed;
@@ -4066,11 +4075,15 @@ function applyHUDStatus(status) {
   if (wasPractice && !status.practice && !status.connected_to_ap) {
     clearStickyConnectionError();
   }
-  if (!wasConnected && status.connected_to_ap) {
+  if (wasPractice && !status.practice) {
+    // The URL still names the last practice page: a room joined next must start from its own round.
+    clearStickyArticleResume();
+  }
+  if (!wasConnected && status.connected_to_ap && !isJourneyStandaloneWindow()) {
     clearStickyConnectionError();
     toast(t("toast.connected"), "ok", 4500);
-    // /connect returns before AP handshake finishes; restore once we are actually online.
-    void restoreArticleView(true);
+    // /connect returns before AP handshake finishes; resume once we are actually online.
+    void resumeAfterReconnect();
   }
   if (status.boss_completed) {
     el.targetText.textContent = t("hud.goalComplete");
@@ -4143,9 +4156,50 @@ function applyHUDStatus(status) {
     lastStickyError = "";
   }
   saveLocalProgress();
-  if (Array.isArray(status.pending_events) && status.pending_events.length) {
-    processPendingEvents(status.pending_events);
+  const events = status.pending_events;
+  if (Array.isArray(events) && events.length) {
+    // This status object is redrawn again on language and display changes: run its events only once.
+    status.pending_events = [];
+    if (!isJourneyStandaloneWindow()) processPendingEvents(events);
   }
+}
+
+function connectionIdentity(status) {
+  const server = String(status?.ap_server || "").trim().toLowerCase();
+  const slot = String(status?.slot_name || "").trim().toLowerCase();
+  return server && slot ? `${server}::${slot}` : "";
+}
+
+/** Remember a page clicked while the room is unreachable. Not after Disconnect: that is browsing only. */
+function queueOfflineVisit(title) {
+  const identity = connectionIdentity(state.status);
+  if (!identity || state.userDisconnected || state.status?.practice) return false;
+  state.offlineVisits.push({ identity, title });
+  if (state.offlineVisits.length > MAX_OFFLINE_VISITS) state.offlineVisits.shift();
+  return true;
+}
+
+/** Back online: send the pages clicked meanwhile, in order, then keep the page already on screen. */
+async function resumeAfterReconnect() {
+  const identity = connectionIdentity(state.status);
+  const queued = state.offlineVisits.filter((visit) => visit.identity === identity);
+  state.offlineVisits = [];
+  for (const visit of queued) {
+    try {
+      const result = await api(`/api/session/${state.sessionId}/check`, "POST", {
+        page_title: visit.title,
+        clicks_used: state.clicksUsed,
+        submit_check: true,
+        travel_kind: "nav",
+      });
+      announceCheckResult(result);
+      if (result.status) updateHUD(result.status);
+    } catch {
+      break;
+    }
+  }
+  // Reloading would jump to the top, re-roll bombs and use up a queued trap: only load a page if none is shown.
+  await restoreArticleView(!state.currentTitle);
 }
 
 function isDisplayUnlocked(unlockedKey) {
@@ -4180,6 +4234,9 @@ function applyDebugMenuAvailability(info) {
   const allowed = isDebugMenuAllowed(info);
   const wrap = document.getElementById("debugUnlockWrap");
   if (wrap) wrap.classList.toggle("hidden", !allowed);
+  // The path solver link is always shown; the toggle only leads to the debug menu.
+  el.stuckToggleBtn?.classList.toggle("hidden", !allowed);
+  if (!allowed) setStuckPanelOpen(false);
   if (!allowed && (debugDisplayEnabled || debugPanelReady)) {
     disableDebugDisplayMenu();
   }
@@ -4533,6 +4590,22 @@ function refreshSidePanelToggles() {
   document.querySelectorAll("[data-panel]").forEach(syncPanelToggle);
 }
 
+/** Welcome panel shown before a room or Practice is running. */
+function bindIdleIntro() {
+  document.getElementById("idlePracticeBtn")?.addEventListener("click", () => el.practiceBtn?.click());
+  document.getElementById("idleConnectBtn")?.addEventListener("click", () => {
+    const empty = [el.serverInput, el.slotInput].find((input) => input && !input.value.trim());
+    if (!empty) {
+      el.connectBtn.click();
+      return;
+    }
+    // On phones the connection form lives in the menu view.
+    if (PHONE_QUERY.matches) setPhoneMenu(true, { addHistory: true });
+    el.connectionCard?.scrollIntoView({ block: "nearest" });
+    empty.focus();
+  });
+}
+
 function bindStuckHelper() {
   if (el.stuckToggleBtn && el.stuckPanel) {
     el.stuckToggleBtn.addEventListener("click", () => {
@@ -4577,7 +4650,8 @@ function bindStuckHelper() {
 async function pollStatus() {
   try {
     await ensureSession();
-    const data = await api(`/api/session/${state.sessionId}/status`);
+    const peek = isJourneyStandaloneWindow() ? "?peek=1" : "";
+    const data = await api(`/api/session/${state.sessionId}/status${peek}`);
     updateHUD(data.status);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
@@ -5209,7 +5283,9 @@ async function openArticle(title, options = {}) {
     // Always visit/stamp when playable. Only intentional wiki clicks score rounds.
     if (skipBridgeCheck) return;
     if (!isPlayable()) {
-      if (countAsClick && submitCheck) toast(t("toast.disconnectedChecks"), "warn");
+      if (countAsClick && submitCheck) {
+        toast(queueOfflineVisit(checkTitle) ? t("toast.offlineQueued") : t("toast.disconnectedChecks"), "warn");
+      }
       return;
     }
 
@@ -5240,31 +5316,7 @@ async function openArticle(title, options = {}) {
         saveLocalProgress();
         return;
       }
-      if (result.matched) {
-        const hits = Array.isArray(result.hits) ? result.hits : [];
-        const parts = hits.length
-          ? hits.map((hit) => {
-            const title = hit.target || result.target;
-            let base = t("toast.targetHit", { title });
-            if (hit.kind === "branch") {
-              base = hit.theme_tag
-                ? t("toast.targetHit", { title: `${title} (${realmName(hit, result.status)})` })
-                : t("toast.branchHit", { n: forkNumber(hit), title });
-            }
-            return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
-          })
-          : [t("toast.targetHit", { title: result.target })];
-        if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
-          parts[0] += ` — ${result.sent_text}`;
-        }
-        const bingoParts = formatBingoCompletionParts(result.bingo_completed);
-        if (bingoParts.length) parts.push(bingoParts.join(" · "));
-        toast(parts.join(" · "), "ok", 8000);
-      } else {
-        toastBingoCompletions(result.bingo_completed);
-      }
-      if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
-      if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
+      announceCheckResult(result);
     } else {
       toastBingoCompletions(result.bingo_completed);
     }
@@ -5274,6 +5326,35 @@ async function openArticle(title, options = {}) {
     // Page is already visible; do not pretend the Wikipedia fetch failed.
     toast(err?.message || t("toast.syncFailed"), "warn");
   }
+}
+
+/** Toasts for a scored check: targets hit (with what they sent), bingo lines, locked rounds. */
+function announceCheckResult(result) {
+  if (result.matched) {
+    const hits = Array.isArray(result.hits) ? result.hits : [];
+    const parts = hits.length
+      ? hits.map((hit) => {
+        const title = hit.target || result.target;
+        let base = t("toast.targetHit", { title });
+        if (hit.kind === "branch") {
+          base = hit.theme_tag
+            ? t("toast.targetHit", { title: `${title} (${realmName(hit, result.status)})` })
+            : t("toast.branchHit", { n: forkNumber(hit), title });
+        }
+        return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
+      })
+      : [t("toast.targetHit", { title: result.target })];
+    if (result.sent_text && !hits.some((hit) => hit.sent_text)) {
+      parts[0] += ` — ${result.sent_text}`;
+    }
+    const bingoParts = formatBingoCompletionParts(result.bingo_completed);
+    if (bingoParts.length) parts.push(bingoParts.join(" · "));
+    toast(parts.join(" · "), "ok", 8000);
+  } else {
+    toastBingoCompletions(result.bingo_completed);
+  }
+  if (result.locked) toast(t("toast.roundLocked"), "warn", 6500);
+  if (result.not_connected) toast(t("toast.disconnectedChecks"), "warn", 6500);
 }
 
 async function restoreArticleView(force = false) {
@@ -5404,6 +5485,7 @@ el.connectBtn.addEventListener("click", async () => {
   try {
     const server = el.serverInput.value.trim();
     const slotName = el.slotInput.value.trim();
+    state.userDisconnected = false;
     const prevIdentity = state.resumeIdentity;
     saveConnection(server, slotName);
     clearStickyConnectionError();
@@ -5424,7 +5506,8 @@ el.connectBtn.addEventListener("click", async () => {
       clearStickyArticleResume();
     }
     state.resumeIdentity = nextIdentity;
-    await restoreArticleView(true);
+    // Same slot with a page on screen (reconnecting after a drop): keep it. A new slot cleared it above.
+    await restoreArticleView(!state.currentTitle);
   } catch (err) {
     toastSticky(err.message || t("toast.connectFailedShort"), "warn");
   }
@@ -5432,6 +5515,7 @@ el.connectBtn.addEventListener("click", async () => {
 
 el.practiceBtn?.addEventListener("click", async () => {
   try {
+    state.offlineVisits = [];
     clearStickyConnectionError();
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/practice`, "POST", {
@@ -5456,6 +5540,8 @@ el.practiceBtn?.addEventListener("click", async () => {
 el.disconnectBtn?.addEventListener("click", async () => {
   try {
     const leavingPractice = isPracticeMode();
+    state.userDisconnected = true;
+    state.offlineVisits = [];
     await ensureSession();
     const result = await api(`/api/session/${state.sessionId}/disconnect`, "POST", {});
     if (result.status) updateHUD(result.status);
@@ -5621,6 +5707,7 @@ bindThemeToggle();
 bindDisplayPanel();
 bindPhoneLayout();
 bindStuckHelper();
+bindIdleIntro();
 initSidePanelToggles();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {

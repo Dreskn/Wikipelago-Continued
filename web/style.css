@@ -922,6 +922,22 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .article-body .table-scroll.is-scrollable-x {
   overflow-x: auto;
 }
+/* Wide article column: info tables sit on the right like on Wikipedia, so the text starts at the top.
+   Narrow columns (phones, small windows) keep them full width above the text. */
+.article-body { container-type: inline-size; }
+@container (min-width: 640px) {
+  .article-body .table-scroll:has(> table.infobox, > table.infobox_v2, > table.infobox_v3),
+  .article-body div.infobox,
+  .article-body div.infobox_v3 {
+    float: right;
+    clear: right;
+    max-width: min(45%, 24rem);
+    margin: 4px 0 16px 20px;
+  }
+  /* Headings and other tables make room beside the box instead of running under it. */
+  .article-body h2,
+  .article-body .table-scroll { display: flow-root; }
+}
 .article-body table {
   display: table;
   width: auto;
@@ -970,12 +986,20 @@ button:active:not(:disabled) { transform: translateY(1px); }
 /* ------------------------------------------------------------------ */
 /* Side panel: the logbook                                              */
 /* ------------------------------------------------------------------ */
+/* Sidebar column: the scrolling cards, then one row of links that never covers them. */
+.side-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
 .side-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1 1 auto;
   min-height: 0;
-  height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1397,6 +1421,42 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 .helper-panel.hidden { display: none; }
 .helper-line { margin: 0; }
+.helper-line + .helper-toggle { margin-top: 6px; }
+
+/* Before a room or Practice is running: only the connection card and the welcome panel. */
+body.is-idle .side-panel > .card:not(#connectionCard),
+body.is-idle .helper-box,
+body.is-idle .article-title,
+body.is-idle #searchOverlay,
+body.is-idle #articleBody { display: none !important; }
+body.is-idle .topbar-teleport { visibility: hidden; }
+body:not(.is-idle) .idle-intro { display: none; }
+.idle-intro {
+  margin: auto;
+  max-width: 34rem;
+  padding: 24px 16px;
+  text-align: center;
+  font-family: var(--font-ui);
+  color: var(--page-text);
+}
+.idle-intro h2 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--page-heading);
+}
+.idle-intro p {
+  margin: 0 0 18px;
+  line-height: 1.55;
+  color: var(--page-muted);
+}
+.idle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
 .helper-line a {
   color: var(--sea);
   text-decoration: underline;
@@ -2601,18 +2661,14 @@ body.journey-window #journeyPopupBtn {
 }
 
 .support-dock {
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
-  z-index: 45;
+  flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
-  pointer-events: none;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px 18px;
+  padding: 8px 4px 0;
 }
 .support-btn {
-  pointer-events: auto;
   padding: 2px 4px;
   color: var(--muted);
   font-family: var(--font-mono);
@@ -2620,8 +2676,6 @@ body.journey-window #journeyPopupBtn {
   font-weight: 500;
   letter-spacing: 0.04em;
   text-decoration: none;
-  /* Text only; a soft halo keeps it readable over the cards. */
-  text-shadow: 0 0 6px var(--ink-0), 0 0 2px var(--ink-0);
 }
 @media (hover: hover) {
   .support-btn:hover {
@@ -2844,12 +2898,17 @@ body.journey-window #journeyPopupBtn {
     max-height: none;
     padding: 4px 2px 12px;
   }
+  .side-column {
+    display: block;
+    height: auto;
+  }
   .side-panel {
     height: auto;
     max-height: none;
     overflow: visible;
     padding-right: 0;
   }
+  .idle-intro { padding: 32px 8px; }
   /* Search and loading stay in view while the page scrolls. */
   .search-overlay {
     position: fixed;
