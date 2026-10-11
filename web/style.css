@@ -2200,6 +2200,11 @@ button:active:not(:disabled) { transform: translateY(1px); }
   max-width: 13em;
   text-align: right;
 }
+.practice-new {
+  list-style: none;
+  justify-self: start;
+  margin-top: 6px;
+}
 .realm-bar {
   grid-column: 2 / 4;
   height: 3px;

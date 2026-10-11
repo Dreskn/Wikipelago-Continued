@@ -1230,7 +1230,7 @@ function renderPhoneBar(status) {
     if (!status.practice && !isRealmMaster(status) && status.boss_ready && !status.boss_completed && question) {
       rows.push({ label: t("hud.grandGoal").replace(/\s*:\s*$/, ""), text: question, wiki: "", main: true });
     }
-    const live = !status.practice && !status.boss_completed && Array.isArray(status.live_branch_targets)
+    const live = !status.boss_completed && Array.isArray(status.live_branch_targets)
       ? status.live_branch_targets
       : [];
     for (const item of live.slice(0, PHONE_BAR_BRANCH_ROWS)) {
@@ -1406,7 +1406,7 @@ function unlockedBranchPaths(status) {
 function renderBranchTargets(status) {
   if (!el.branchTargets) return;
   const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
-  const show = !status?.practice && !status?.boss_completed && live.length > 0;
+  const show = !status?.boss_completed && live.length > 0;
   el.branchTargets.classList.toggle("hidden", !show);
   el.branchTargets.innerHTML = "";
   if (!show) return;
@@ -1435,7 +1435,7 @@ function renderBranchTracks(status) {
 function renderRealmsBlock(status) {
   if (!el.realmsBlock || !el.realmsList) return;
   const realms = Array.isArray(status?.realms) ? status.realms : [];
-  const show = !status?.practice && realms.length > 0;
+  const show = realms.length > 0;
   el.realmsBlock.classList.toggle("hidden", !show);
   el.realmsList.innerHTML = "";
   if (!show) return;
@@ -1482,6 +1482,32 @@ function renderRealmsBlock(status) {
       : `${realmName(realm, status)} · ${t("track.kindRound")} ${crossroad}`;
     row.append(swatch, name, note, bar);
     el.realmsList.appendChild(row);
+  }
+  if (status.practice && status.practice_realm_cleared) {
+    const item = document.createElement("li");
+    item.className = "practice-new";
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-quiet";
+    btn.textContent = t("practice.newRealm");
+    btn.addEventListener("click", () => void requestPracticeRefresh("new-realm"));
+    item.appendChild(btn);
+    el.realmsList.appendChild(item);
+  }
+}
+
+/** Practice only: replace a full bingo board or a cleared Realm. */
+async function requestPracticeRefresh(kind) {
+  if (!state.sessionId || !state.status?.practice) return;
+  try {
+    const result = await api(`/api/session/${state.sessionId}/practice/${kind}`, "POST", {});
+    if (kind === "new-board") {
+      // The finished board was auto-collapsed; show the new one open.
+      ensureBingoUiState(result.status || state.status).boards["1"] = { collapsed: false, autoHidden: false };
+    }
+    if (result.status) updateHUD(result.status);
+  } catch (err) {
+    toast(err?.message || t("toast.syncFailed"), "warn");
   }
 }
 
@@ -2775,8 +2801,8 @@ function renderToolIcons(status) {
   if (search) setIconState(search, status.ctrl_f_unlocked ? "ok" : "locked");
   if (compass) setIconState(compass, status.compass_unlocked ? "ok" : "locked");
   const key = el.toolIconsRow.querySelector('[data-tool="key"]');
-  // Topic Realms use Portals (shown in the Realms list), not Branch Keys.
-  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0 && !status.topic_portals;
+  // Topic Realms use Portals (shown in the Realms list), not Branch Keys; the practice Realm needs neither.
+  const hasBranches = Array.isArray(status.branches) && status.branches.length > 0 && !status.topic_portals && !status.practice;
   const keyCount = Math.max(0, Number(status.branch_keys_available) || 0);
   if (key) {
     key.classList.toggle("hidden", !hasBranches);
@@ -3572,6 +3598,15 @@ function renderBingoHud(status) {
     totalLines += lineKeys.length || (n > 0 ? (2 * n + 3) : 0);
   }
 
+  if (status.practice && status.practice_bingo_full) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-quiet practice-new";
+    btn.textContent = t("practice.newBoard");
+    btn.addEventListener("click", () => void requestPracticeRefresh("new-board"));
+    el.bingoBoards.appendChild(btn);
+  }
+
   if (el.bingoMeta) {
     if (!unlocked) {
       el.bingoMeta.textContent = t("bingo.noBoards");
@@ -3976,7 +4011,8 @@ function applyHUDStatus(status) {
     state.announcedGoalComplete = true;
     openVictoryOverlay(status);
   }
-  const nextUnlocked = Array.isArray(status.unlocked_branch_ids)
+  // The practice Realm is open from the start: no "unlocked" announcement.
+  const nextUnlocked = Array.isArray(status.unlocked_branch_ids) && !status.practice
     ? status.unlocked_branch_ids.map((id) => Number(id))
     : [];
   for (const id of nextUnlocked) {
@@ -5083,7 +5119,14 @@ async function openArticle(title, options = {}) {
       if (result.matched && (result.status?.practice || result.practice_rolled)) {
         // Unlimited practice: new target only — stay on this page (AP-style chaining).
         if (result.status) updateHUD(result.status);
-        resetRoundVisits(displayTitle);
+        const practiceParts = [
+          ...(Array.isArray(result.hits) ? result.hits : [])
+            .filter((hit) => hit.kind === "branch")
+            .map((hit) => t("toast.targetHit", { title: `${hit.target} (${realmName(hit, result.status)})` })),
+          ...formatBingoCompletionParts(result.bingo_completed),
+        ];
+        if (practiceParts.length) toast(practiceParts.join(" · "), "ok", 7000);
+        if (result.practice_rolled) resetRoundVisits(displayTitle);
         const nextClicks = Number(result.status?.clicks_used);
         if (Number.isFinite(nextClicks)) {
           state.clicksUsed = Math.max(state.clicksUsed || 0, nextClicks);
@@ -5096,12 +5139,12 @@ async function openArticle(title, options = {}) {
         const parts = hits.length
           ? hits.map((hit) => {
             const title = hit.target || result.target;
-            const base = hit.kind === "branch"
-              ? t("toast.branchHit", {
-                n: forkNumber(hit),
-                title,
-              })
-              : t("toast.targetHit", { title });
+            let base = t("toast.targetHit", { title });
+            if (hit.kind === "branch") {
+              base = hit.theme_tag
+                ? t("toast.targetHit", { title: `${title} (${realmName(hit, result.status)})` })
+                : t("toast.branchHit", { n: forkNumber(hit), title });
+            }
             return hit.sent_text ? `${base} — ${hit.sent_text}` : base;
           })
           : [t("toast.targetHit", { title: result.target })];

@@ -22,7 +22,7 @@ A numbered map of every control is in the [web client UI](ui.md) guide.
 
 UI language (the dropdown) only changes menus, toasts and the language in Practice mode. The Wikipedia edition you play on in an AP game is set in your YAML (`wikipedia_language`) and does not follow the dropdown.
 
-**Practice** loads random articles from the same language pool with no Archipelago room. Use it to learn the client.
+**Practice** loads random articles from the same language pool with no Archipelago room. Use it to learn the client. It also gives you a 5×5 letter-pair bingo board and one open Realm (5 targets on one topic); when the board is full or the Realm is cleared, a **New board** / **New Realm** button deals another. Nothing is sent to Archipelago.
 
 ## What does randomization do?
 

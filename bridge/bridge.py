@@ -299,6 +299,12 @@ PRACTICE_POOL_DIR = (
 )
 PRACTICE_SUPPORTED_LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 _PRACTICE_POOL_CACHE: dict[str, list[str]] = {}
+# Practice extras: one 5x5 bingo board and one open Realm, each replaceable once finished. No checks.
+PRACTICE_BINGO_GRID = 5
+PRACTICE_REALM_LENGTH = 5
+PRACTICE_REALM_REROLL_MAX = 300
+_PRACTICE_TOPIC_CACHE: dict[str, dict[str, list[str]]] = {}
+_LETTER_PAIRS_MODULE: Any = None
 
 
 def load_practice_titles(lang: str = "en", *, include_sensitive: bool = False) -> list[str]:
@@ -332,6 +338,41 @@ def load_practice_titles(lang: str = "en", *, include_sensitive: bool = False) -
         raise RuntimeError(f"Practice pool for '{code}' is too small ({len(titles)} titles).")
     _PRACTICE_POOL_CACHE[cache_key] = titles
     return list(titles)
+
+
+def load_practice_topics(lang: str = "en") -> dict[str, list[str]]:
+    """Non-sensitive practice titles grouped by Realm topic tag (same pools and tags as the apworld)."""
+    code = (lang or "en").strip().lower()
+    cached = _PRACTICE_TOPIC_CACHE.get(code)
+    if cached is not None:
+        return {tag: list(titles) for tag, titles in cached.items()}
+    path = PRACTICE_POOL_DIR / f"pool_{code}.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    by_tag: dict[str, list[str]] = {}
+    for entry in payload.get("entries") or []:
+        title = str(entry.get("title") or "").strip()
+        if not title or bool(entry.get("sensitive")):
+            continue
+        for tag in entry.get("tags") or []:
+            if tag in PORTAL_ITEM_BY_TOPIC:
+                by_tag.setdefault(str(tag), []).append(title)
+    by_tag = {tag: list(dict.fromkeys(titles)) for tag, titles in by_tag.items()}
+    _PRACTICE_TOPIC_CACHE[code] = by_tag
+    return {tag: list(titles) for tag, titles in by_tag.items()}
+
+
+def letter_pairs_module() -> Any:
+    """The apworld's letter_pairs.py, for building practice boards with the same weights as real seeds."""
+    global _LETTER_PAIRS_MODULE
+    if _LETTER_PAIRS_MODULE is None:
+        import importlib.util
+
+        path = PRACTICE_POOL_DIR.parent / "letter_pairs.py"
+        spec = importlib.util.spec_from_file_location("wikipelago_letter_pairs", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _LETTER_PAIRS_MODULE = module
+    return _LETTER_PAIRS_MODULE
 
 
 @dataclass
@@ -376,6 +417,8 @@ class SessionState:
     bingo_stamped_pairs: dict[str, set[str]] = field(default_factory=dict)
     bingo_stamps_used: int = 0
     bingo_storage_ready: bool = False
+    # Practice only: bingo lines already completed per board (no AP locations to tick).
+    practice_bingo_lines: dict[str, set[str]] = field(default_factory=dict)
     pending_events: list[dict[str, Any]] = field(default_factory=list)
     round_pairs: list[dict[str, str]] = field(default_factory=list)
     goal_article_title: str = ""
@@ -491,6 +534,9 @@ class SessionState:
         return self.round_pairs[-1]["target"] if self.round_pairs else ""
 
     def realm_cleared(self, branch_id: int) -> bool:
+        if self.practice:
+            pairs = self.branch_pairs(branch_id)
+            return bool(pairs) and int(self.branch_round_index.get(int(branch_id), 0) or 0) >= len(pairs)
         try:
             loc_ids = self.location_branch_ids[int(branch_id)]
         except Exception:
@@ -701,6 +747,9 @@ class SessionState:
         return [branch_id for _main, branch_id in completed]
 
     def unlocked_branch_ids(self) -> list[int]:
+        if self.practice:
+            # The practice Realm is open from the start: no crossroad, key or Portal.
+            return [int(branch.get("id") or 0) for branch in self.branches]
         if self.topic_portals:
             # Topic Realms: finished crossroad + that Realm's own Portal, in any order.
             return [
@@ -916,8 +965,22 @@ class SessionState:
             completed.append("full")
         return completed
 
+    def bingo_line_keys(self, board_key: str) -> list[str]:
+        n = len(self.bingo_board_for_key(board_key))
+        if n <= 0:
+            return []
+        return [f"row_{i}" for i in range(1, n + 1)] + [f"col_{i}" for i in range(1, n + 1)] + ["diag", "anti", "full"]
+
+    def practice_board_full(self) -> bool:
+        return self.practice and self.bingo_letterpairs and "full" in self.bingo_completed_line_keys_for_board("1")
+
     def bingo_lines_checked(self) -> dict[str, dict[str, bool]]:
         result: dict[str, dict[str, bool]] = {}
+        if self.practice:
+            for board_key in self.unlocked_bingo_board_keys():
+                done = set(self.bingo_completed_line_keys_for_board(board_key))
+                result[board_key] = {key: key in done for key in self.bingo_line_keys(board_key)}
+            return result
         for board_key, id_map in self.bingo_letterpairs_location_ids.items():
             if not isinstance(id_map, dict):
                 continue
@@ -941,6 +1004,8 @@ class SessionState:
             "topic_portals": self.topic_portals,
             "realms": self.realms_payload(),
             "realms_cleared": self.realms_cleared_count(),
+            "practice_bingo_full": self.practice_board_full(),
+            "practice_realm_cleared": bool(self.practice and self.branches and self.realm_cleared(0)),
             "ap_server": self.ap_server,
             "slot_name": self.slot_name,
             "current_start": self.current_start(),
@@ -1101,11 +1166,12 @@ class APConnection:
         self.state.path_last_page["main"] = start
         self.state.active_path = "main"
         self.state.crossroads = []
-        self.state.branches = []
-        self.state.branch_round_index = {}
         self.state.goal = "grand_goal"
         self.state.topic_portals = False
         if fresh_race:
+            # A chained practice round keeps its Realm; only a fresh race starts without one.
+            self.state.branches = []
+            self.state.branch_round_index = {}
             self.state.clicks_used = 0
             self.state.path_last_page = {"main": start}
             self.state.travel_events = []
@@ -1115,6 +1181,69 @@ class APConnection:
         self.state.reset_compass()
         self.state.boss_completed = False
         self.state.goal_status_sent = False
+
+    def _new_practice_board(self) -> None:
+        """A fresh 5x5 practice board, built like a real seed's (same per-language pair weights)."""
+        lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        board = letter_pairs_module().build_letter_pair_bingo_board(random.Random(), PRACTICE_BINGO_GRID, lang)
+        self.state.bingo_letterpairs = True
+        self.state.bingo_letterpairs_grid = PRACTICE_BINGO_GRID
+        self.state.bingo_letterpairs_boards = [board]
+        self.state.bingo_cards_start = 1
+        self.state.bingo_stamped_pairs.clear()
+        self.state.practice_bingo_lines = {}
+
+    def _new_practice_realm(self, *, avoid_topic: str = "") -> None:
+        """One open practice Realm: PRACTICE_REALM_LENGTH targets from a single topic."""
+        lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        by_tag = load_practice_topics(lang)
+
+        def _norm(title: str) -> str:
+            return str(title or "").replace("_", " ").strip().casefold()
+
+        here = self.state.last_page or self.state.current_start()
+        busy = {_norm(here), _norm(self.state.current_target())}
+        options = {
+            tag: [title for title in titles if _norm(title) not in busy]
+            for tag, titles in by_tag.items()
+            if tag != avoid_topic
+        }
+        viable = sorted(tag for tag, titles in options.items() if len(titles) >= PRACTICE_REALM_LENGTH)
+        if not viable:
+            self.state.branches = []
+            self.state.branch_round_index = {}
+            return
+        tag = random.choice(viable)
+        titles = options[tag]
+        random.shuffle(titles)
+        targets = titles[:PRACTICE_REALM_LENGTH]
+        starts = [here] + targets[:-1]
+        self.state.branches = [{
+            "id": 0,
+            "theme_tag": tag,
+            "pairs": [{"start": start, "target": target} for start, target in zip(starts, targets)],
+            # Realm rerolls stay on topic.
+            "reroll_pool": titles[PRACTICE_REALM_LENGTH:PRACTICE_REALM_LENGTH + PRACTICE_REALM_REROLL_MAX],
+        }]
+        self.state.branch_round_index = {0: 0}
+
+    async def new_practice_board(self) -> dict[str, Any]:
+        if not self.state.practice:
+            return {"ok": False, "error": "practice only", "status": self.state.to_status()}
+        if not self.state.practice_board_full():
+            return {"ok": False, "error": "board not full yet", "status": self.state.to_status()}
+        self._new_practice_board()
+        return {"ok": True, "status": self.state.to_status()}
+
+    async def new_practice_realm(self) -> dict[str, Any]:
+        if not self.state.practice:
+            return {"ok": False, "error": "practice only", "status": self.state.to_status()}
+        if not (self.state.branches and self.state.realm_cleared(0)):
+            return {"ok": False, "error": "realm not cleared yet", "status": self.state.to_status()}
+        previous = str((self.state.branch_by_id(0) or {}).get("theme_tag") or "")
+        self._new_practice_realm(avoid_topic=previous)
+        self._schedule_compass(self.state.last_page)
+        return {"ok": True, "status": self.state.to_status()}
 
     async def start_practice(self, wikipedia_language: str = "en") -> dict[str, Any]:
         """Begin unlimited local Practice (no Archipelago). Exits any AP connection."""
@@ -1171,6 +1300,8 @@ class APConnection:
             DEFAULT_ITEMS["Ctrl+F Lens"],
         ]
         self._roll_practice_race()
+        self._new_practice_board()
+        self._new_practice_realm()
         LOG.info(
             "Practice started lang=%s pool=%s start=%s target=%s",
             lang,
@@ -1288,6 +1419,12 @@ class APConnection:
             self.state.active_path = "main"
             self.state.crossroads = []
             self.state.branches = []
+            self.state.branch_round_index = {}
+            # Practice bingo board goes with practice.
+            self.state.bingo_letterpairs = False
+            self.state.bingo_letterpairs_boards = []
+            self.state.bingo_stamped_pairs.clear()
+            self.state.practice_bingo_lines = {}
             self.state.reset_compass()
         if self.reader_task and not self.reader_task.done():
             self.reader_task.cancel()
@@ -2103,6 +2240,8 @@ class APConnection:
         """Stamp letter-pair cells for this page; send newly completed bingo line checks."""
         if not self.state.bingo_letterpairs or not self.state.bingo_letterpairs_boards:
             return []
+        if self.state.practice:
+            return await self._apply_practice_bingo_visit(page_title)
         if not self.state.connected_to_ap or self.ws is None:
             return []
 
@@ -2117,6 +2256,28 @@ class APConnection:
             await self._persist_bingo_stamps()
             extra = {"pair": pair} if pair else None
             await self._append_travel_event("bingo_cell", page_title, extra=extra)
+        return events
+
+    async def _apply_practice_bingo_visit(self, page_title: str) -> list[dict[str, Any]]:
+        """Practice: stamp the page's pair and report newly finished lines. Nothing is sent to AP."""
+        wiki_lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        pair = letter_pair_from_title(page_title, wiki_lang)
+        if not pair or not self._stamp_pair_on_unlocked_boards(pair):
+            return []
+        events: list[dict[str, Any]] = []
+        for board_key in self.state.unlocked_bingo_board_keys():
+            done = self.state.practice_bingo_lines.setdefault(board_key, set())
+            for key in self.state.bingo_completed_line_keys_for_board(board_key):
+                if key in done:
+                    continue
+                done.add(key)
+                events.append({
+                    "board": board_key,
+                    "key": key,
+                    "label": self._bingo_line_label(key, board_key),
+                    "sent_text": "",
+                })
+        await self._append_travel_event("bingo_cell", page_title, extra={"pair": pair})
         return events
 
     async def merge_bingo_stamps(self, stamped_pairs: Any) -> list[dict[str, Any]]:
@@ -2911,13 +3072,36 @@ class APConnection:
         }
 
         if self.state.practice:
+            hits: list[dict[str, Any]] = []
             if matched_main:
                 await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
                 # Chain like AP: keep the player on the cleared target; only roll a new target.
                 self._roll_practice_race(continue_from=page_title)
                 result["advanced"] = True
                 result["practice_rolled"] = True
-                result["hits"] = [{"kind": "main", "target": target}]
+                hits.append({"kind": "main", "target": target})
+            for bid in list(self.state.unlocked_branch_ids()):
+                branch_target = self.state.branch_current_target(bid)
+                if not branch_target:
+                    continue
+                branch_target = await self._canonicalize_title(branch_target)
+                if not await self._titles_match(page_title, branch_target):
+                    continue
+                idx = int(self.state.branch_round_index.get(bid, 0) or 0)
+                self.state.branch_round_index[bid] = idx + 1
+                branch = self.state.branch_by_id(bid) or {}
+                hits.append({
+                    "kind": "branch",
+                    "branch_id": bid,
+                    "fork": bid + 1,
+                    "target": branch_target,
+                    "round": idx + 1,
+                    "theme_tag": str(branch.get("theme_tag") or ""),
+                })
+                result["advanced"] = True
+                await self._append_travel_event("round_complete", page_title, extra={"path": f"branch:{bid}"})
+            result["hits"] = hits
+            result["matched"] = bool(hits)
             self._schedule_compass(page_title)
             result["status"] = self.state.to_status()
             result["next_target"] = self.state.current_target()
@@ -3734,6 +3918,20 @@ class App:
             return web.json_response({"ok": False, "error": str(exc)}, status=400)
         return web.json_response(result)
 
+    async def practice_new_board(self, request: web.Request) -> web.StreamResponse:
+        session = self.sessions.get(request.match_info["sid"])
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.new_practice_board()
+        return web.json_response(result, status=200 if result.get("ok") else 400)
+
+    async def practice_new_realm(self, request: web.Request) -> web.StreamResponse:
+        session = self.sessions.get(request.match_info["sid"])
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.new_practice_realm()
+        return web.json_response(result, status=200 if result.get("ok") else 400)
+
     async def disconnect_session(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -3788,7 +3986,7 @@ class App:
         await session.conn._persist_clicks()
         session.conn._remember_page(page_title)
         bingo_completed: list[dict[str, Any]] = []
-        if session.state.connected_to_ap:
+        if session.state.connected_to_ap or session.state.practice:
             bingo_completed = await session.conn.apply_bingo_visit(page_title)
 
         if travel_kind == "nav":
@@ -3931,6 +4129,8 @@ class App:
         app.router.add_post("/api/session", self.create_session)
         app.router.add_post("/api/session/{sid}/connect", self.connect_session)
         app.router.add_post("/api/session/{sid}/practice", self.practice_session)
+        app.router.add_post("/api/session/{sid}/practice/new-board", self.practice_new_board)
+        app.router.add_post("/api/session/{sid}/practice/new-realm", self.practice_new_realm)
         app.router.add_post("/api/session/{sid}/disconnect", self.disconnect_session)
         app.router.add_get("/api/session/{sid}/status", self.session_status)
         app.router.add_post("/api/session/{sid}/death", self.session_death)

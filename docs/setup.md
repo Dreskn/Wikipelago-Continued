@@ -61,7 +61,7 @@ Use this when the Archipelago room is reachable from the public internet (`archi
 5. Play available rounds: Start → Target by clicking Wikipedia links.
 6. Collect Knowledge Fragments to unlock the Grand Goal question, then find the answer page.
 
-**Practice** (no room needed) uses the same client and a random article pool in the UI language. It does not connect to Archipelago and does not send checks.
+**Practice** (no room needed) uses the same client and a random article pool in the UI language, with a 5×5 bingo board and one open Realm to try those too. It does not connect to Archipelago and does not send checks.
 
 ### Option 2 — Local client (private / VPN rooms)
 
