@@ -3,7 +3,7 @@
 Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
 
 - Continued fork of [Skrumptily69's original Wikipelago](https://github.com/Skrumptily69/Wikipelago), used with permission. Keep the credit (README.md, LICENSE).
-- Live client: https://wikipelago.dreskn.fr/ — bug reports come from the Wikipelago thread on the Archipelago Discord (link in README).
+- Live client: https://wikipelago.dreskn.fr/ — bug reports come from GitHub Issues and the Wikipelago thread on the Archipelago Discord (links in README).
 - 9 Wikipedia languages: en, fr, de, es, it, pt, nl, sv, pl (`UI_LANGS` in `web/i18n.js`, `WikipediaLanguage` in `Options.py`).
 
 ## Layout
