@@ -4590,22 +4590,6 @@ function refreshSidePanelToggles() {
   document.querySelectorAll("[data-panel]").forEach(syncPanelToggle);
 }
 
-/** Welcome panel shown before a room or Practice is running. */
-function bindIdleIntro() {
-  document.getElementById("idlePracticeBtn")?.addEventListener("click", () => el.practiceBtn?.click());
-  document.getElementById("idleConnectBtn")?.addEventListener("click", () => {
-    const empty = [el.serverInput, el.slotInput].find((input) => input && !input.value.trim());
-    if (!empty) {
-      el.connectBtn.click();
-      return;
-    }
-    // On phones the connection form lives in the menu view.
-    if (PHONE_QUERY.matches) setPhoneMenu(true, { addHistory: true });
-    el.connectionCard?.scrollIntoView({ block: "nearest" });
-    empty.focus();
-  });
-}
-
 function bindStuckHelper() {
   if (el.stuckToggleBtn && el.stuckPanel) {
     el.stuckToggleBtn.addEventListener("click", () => {
@@ -5707,7 +5691,6 @@ bindThemeToggle();
 bindDisplayPanel();
 bindPhoneLayout();
 bindStuckHelper();
-bindIdleIntro();
 initSidePanelToggles();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {

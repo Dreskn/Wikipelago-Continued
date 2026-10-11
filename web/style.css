@@ -1447,15 +1447,9 @@ body:not(.is-idle) .idle-intro { display: none; }
   color: var(--page-heading);
 }
 .idle-intro p {
-  margin: 0 0 18px;
+  margin: 0;
   line-height: 1.55;
   color: var(--page-muted);
-}
-.idle-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
 }
 .helper-line a {
   color: var(--sea);
