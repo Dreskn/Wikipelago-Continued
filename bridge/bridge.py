@@ -1,11 +1,14 @@
 
 import argparse
 import asyncio
+import functools
+import ipaddress
 import json
 import logging
 import math
 import os
 import random
+import socket
 import subprocess
 import time
 import urllib.parse
@@ -29,6 +32,25 @@ TELEPORT_COOLDOWN_SEC = 60
 COMPASS_BACKLINK_PAGES = 2
 # Wikimedia asks API clients for a descriptive User-Agent with a contact URL; vague ones get throttled first.
 WIKI_USER_AGENT = f"WikipelagoBridge/{CLIENT_VERSION} (https://github.com/Dreskn/Wikipelago-Continued)"
+# The 9 wikis the apworld supports. Anything else from slot_data or a request falls back to English,
+# so a room can't point the bridge's Wikipedia requests at another host.
+WIKI_LANGUAGES = frozenset({"en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl"})
+WIKI_MAX_RESPONSE_BYTES = 4 * 1024 * 1024
+# Per-session Compass/title caches are small LRUs: targets stay hot, old pages fall out.
+LINK_CACHE_SIZE = 40
+BACKLINK_CACHE_SIZE = 20
+TITLE_CACHE_SIZE = 2000
+# Wikipedia titles are at most 255 bytes; anything much longer is not a page.
+MAX_TITLE_CHARS = 300
+MAX_REQUEST_BYTES = 256 * 1024
+MAX_SESSIONS = 1000
+MAX_SESSIONS_PER_CLIENT = 40
+# A full server or client may reclaim sessions idle this long (they still expire after SESSION_TTL_SECONDS).
+SESSION_RECLAIM_IDLE_SECONDS = 120
+PRIVATE_SERVER_ERROR = (
+    "This address is on a private network, which the hosted client can't reach. "
+    "For private or VPN rooms, run the client on your own computer (see the setup guide)."
+)
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -47,7 +69,7 @@ def debug_menu_enabled() -> bool:
 
 
 def _git_output(*args: str) -> str:
-    """Best-effort git identity for self-hosted/VPS deploys (Render sets env instead)."""
+    """Best-effort git identity for self-hosted deploys."""
     try:
         out = subprocess.check_output(
             ["git", *args],
@@ -61,21 +83,28 @@ def _git_output(*args: str) -> str:
         return ""
 
 
+@functools.lru_cache(maxsize=1)
+def _git_identity() -> tuple[str, str]:
+    """(branch, commit) of the checkout, read once: a deploy restarts the bridge, so they can't change while it runs."""
+    branch = _git_output("rev-parse", "--abbrev-ref", "HEAD")
+    if branch == "HEAD":
+        # Detached checkout — keep a usable label if possible.
+        branch = _git_output("name-rev", "--name-only", "--no-undefined", "HEAD") or "HEAD"
+    return branch, _git_output("rev-parse", "HEAD")
+
+
 def build_info() -> dict[str, Any]:
     """Deploy identity for the UI: WIKIPELAGO_* overrides, then `git` in the repo root."""
     branch = _env_first("WIKIPELAGO_GIT_BRANCH")
     commit_full = _env_first("WIKIPELAGO_GIT_COMMIT")
     service = _env_first("WIKIPELAGO_SERVICE_NAME")
 
-    if not branch:
-        branch = _git_output("rev-parse", "--abbrev-ref", "HEAD")
-        if branch == "HEAD":
-            # Detached checkout — keep a usable label if possible.
-            branch = _git_output("name-rev", "--name-only", "--no-undefined", "HEAD") or "HEAD"
+    if not branch or not commit_full:
+        git_branch, git_commit = _git_identity()
+        branch = branch or git_branch
+        commit_full = commit_full or git_commit
     if not branch:
         branch = "local"
-    if not commit_full:
-        commit_full = _git_output("rev-parse", "HEAD")
 
     commit = commit_full[:7] if commit_full else ""
     staging = branch not in ("main", "master")
@@ -128,7 +157,7 @@ PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
     "geography": "Geography Portal",
     "food_cuisine": "Food Portal",
     "art_literature": "Arts & Literature Portal",
-    "mythology_folklore": "Mythology Portal",
+    "mythology_folklore": "Legends & Beliefs Portal",
     "music": "Music Portal",
     "politics": "Politics Portal",
     "famous_people": "People Portal",
@@ -145,6 +174,8 @@ LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
 # Fallback max for legacy seeds that omit target_rerolls_start.
 TARGET_REROLLS_PER_ROUND = 3
 MAX_TRAVEL_EVENTS = 5000
+# The stored journey may run this far past MAX_TRAVEL_EVENTS before it is rewritten trimmed.
+TRAVEL_TRIM_SLACK = 500
 PROGRESSIVE_STACK_ITEMS = frozenset({
     "Knowledge Fragment",
     "Round Access",
@@ -192,9 +223,113 @@ MAX_AP_CONNECT_ATTEMPTS = 3
 
 
 def normalize_title(title: str) -> str:
+    # Accents stay: in many wikis "Año" and "Ano", or "Bürger" and "Burger", are different articles.
     spaced = " ".join(title.replace("_", " ").strip().split())
-    deaccented = "".join(ch for ch in unicodedata.normalize("NFKD", spaced) if not unicodedata.combining(ch))
-    return deaccented.casefold()
+    return unicodedata.normalize("NFC", spaced).casefold()
+
+
+def wiki_language(value: Any) -> str:
+    """A supported Wikipedia language code, or "" when the value isn't one."""
+    code = str(value or "").strip().lower()
+    return code if code in WIKI_LANGUAGES else ""
+
+
+def cache_get(cache: dict[str, Any], key: str) -> Any:
+    """Read from a dict used as a small LRU cache; a hit moves the entry to the newest end."""
+    if key not in cache:
+        return None
+    value = cache.pop(key)
+    cache[key] = value
+    return value
+
+
+def cache_put(cache: dict[str, Any], key: str, value: Any, limit: int) -> None:
+    cache.pop(key, None)
+    cache[key] = value
+    while len(cache) > limit:
+        del cache[next(iter(cache))]
+
+
+def _is_public_ip(address: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(str(address or "").split("%", 1)[0])
+    except ValueError:
+        return False
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+        ip = ip.ipv4_mapped
+    return ip.is_global
+
+
+def client_address(request: web.Request) -> str:
+    """The browser's address. Behind Caddy the bridge only sees 127.0.0.1, so use the address the proxy appended."""
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[-1].strip()
+    return request.remote or ""
+
+
+def is_local_request(request: web.Request) -> bool:
+    """True when the browser reaches this bridge directly from this machine or its own network, not through
+    a reverse proxy: only then may it connect to Archipelago servers on private addresses."""
+    if any(name in request.headers for name in ("X-Forwarded-For", "Forwarded", "X-Real-IP")):
+        return False
+    remote = request.remote or ""
+    try:
+        ipaddress.ip_address(remote.split("%", 1)[0])
+    except ValueError:
+        return False
+    return not _is_public_ip(remote)
+
+
+def split_server_address(server: str) -> tuple[str, int | None]:
+    """(host, port) from what players type: "archipelago.gg:38281", "wss://host:port/", "[::1]:38281"."""
+    cleaned = str(server or "").strip()
+    for prefix in ("wss://", "ws://", "https://", "http://"):
+        if cleaned.lower().startswith(prefix):
+            cleaned = cleaned[len(prefix):]
+            break
+    hostport = cleaned.strip("/").split("/", 1)[0]
+    port_text = ""
+    if hostport.startswith("["):
+        host, _, rest = hostport[1:].partition("]")
+        port_text = rest[1:] if rest.startswith(":") else ""
+    elif hostport.count(":") == 1:
+        host, port_text = hostport.split(":", 1)
+    else:
+        host = hostport
+    port: int | None = None
+    if port_text:
+        try:
+            port = int(port_text)
+        except ValueError:
+            port = None
+    return host.strip().lower(), port
+
+
+async def ap_server_address_error(server: str, allow_private: bool) -> str:
+    """Why this Archipelago address can't be used, or "". A public bridge must not let visitors reach
+    machines on the network behind it, so private, loopback and similar addresses are refused there."""
+    host, port = split_server_address(server)
+    if not host:
+        return "Unable to reach server. Check the address."
+    if allow_private:
+        return ""
+    try:
+        infos = await asyncio.get_running_loop().getaddrinfo(host, port or 38281, type=socket.SOCK_STREAM)
+    except (OSError, UnicodeError):
+        return "Unable to reach server. Check the address."
+    if not infos or any(not _is_public_ip(info[4][0]) for info in infos):
+        return PRIVATE_SERVER_ERROR
+    return ""
+
+
+async def read_json_body(request: web.Request) -> dict[str, Any]:
+    """The request's JSON object, or {} when the body is missing or malformed."""
+    try:
+        data = await request.json()
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
 
 
 def compass_hint(previous: tuple[int, int] | None, current: tuple[int, int]) -> str:
@@ -1075,7 +1210,9 @@ class SessionState:
             "bingo_stamped_cells": self.bingo_stamped_cells(),
             "bingo_lines_checked": self.bingo_lines_checked(),
             "bingo_storage_ready": self.bingo_storage_ready,
-            "pending_events": list(self.pending_events),
+            # Filled only by the endpoints that drain the queue (/status, /debug): every other
+            # response carries a status too, and listing events there delivered them twice.
+            "pending_events": [],
             "tables_unlocked": (not self.randomize_tables) or self.has_item("Table Lens"),
             "pictures_unlocked": (not self.randomize_pictures) or self.has_item("Picture Lens"),
             "incipit_unlocked": (not self.randomize_incipit) or self.has_item("Lead Lens"),
@@ -1122,9 +1259,13 @@ class APConnection:
         self.slot_name = ""
         self.password = ""
         self.items_seen = 0
+        self.allow_private = False
         self.link_cache: dict[str, set[str]] = {}
         self.backlink_cache: dict[str, tuple[set[str], set[str]]] = {}
         self.resolved_title_cache: dict[str, str] = {}
+        # Length of the travel list in AP DataStorage, which only grows between full rewrites.
+        self._travel_stored_len = 0
+        self._clicks_persisted = -1
         self._compass_seq = 0
         self._compass_tasks: set[asyncio.Task] = set()
         self._scout_waiters: dict[int, asyncio.Future] = {}
@@ -1254,8 +1395,10 @@ class APConnection:
     async def start_practice(self, wikipedia_language: str = "en") -> dict[str, Any]:
         """Begin unlimited local Practice (no Archipelago). Exits any AP connection."""
         # Drop AP without treating this as "exit practice" (we are entering it).
+        lang = wiki_language(wikipedia_language or "en")
+        if not lang:
+            raise ValueError("Unsupported Wikipedia language.")
         await self.disconnect(leave_practice=False)
-        lang = (wikipedia_language or "en").strip().lower() or "en"
         titles = load_practice_titles(lang, include_sensitive=False)
 
         self.state.practice = True
@@ -1317,7 +1460,7 @@ class APConnection:
         )
         return {"ok": True, "status": self.state.to_status()}
 
-    async def connect(self, server: str, slot_name: str, password: str = "") -> None:
+    async def connect(self, server: str, slot_name: str, password: str = "", *, allow_private: bool = False) -> None:
         prev_server = (self.server or "").strip().lower()
         prev_slot = (self.slot_name or "").strip().lower()
         next_server = (server or "").strip().lower()
@@ -1330,6 +1473,7 @@ class APConnection:
         self.server = server
         self.slot_name = slot_name
         self.password = password
+        self.allow_private = allow_private
 
         self.state.ap_server = server
         self.state.slot_name = slot_name
@@ -1387,6 +1531,8 @@ class APConnection:
         self.link_cache.clear()
         self.backlink_cache.clear()
         self.resolved_title_cache.clear()
+        self._travel_stored_len = 0
+        self._clicks_persisted = -1
         self._datapackage_requested = False
         for fut in self._scout_waiters.values():
             if not fut.done():
@@ -1445,6 +1591,12 @@ class APConnection:
         fail_streak = 0
         while True:
             try:
+                # Checked on every attempt: the name could resolve differently on a retry.
+                address_error = await ap_server_address_error(self.server, self.allow_private)
+                if address_error:
+                    self.state.connected_to_ap = False
+                    self.state.last_error = address_error
+                    return
                 ws_url = self._to_ws_url(self.server)
                 async with websockets.connect(ws_url, ping_interval=20, ping_timeout=20, max_size=2**24) as ws:
                     self.ws = ws
@@ -1495,7 +1647,8 @@ class APConnection:
             return "Unable to reach server. Check the address."
         if "timed out" in lowered or "timeout" in lowered:
             return "Connection timed out."
-        return message
+        # Raw socket errors would tell visitors which ports answer on the target; keep it generic.
+        return "Unable to connect to the server. Check the address and that the room is running."
 
     async def _handshake(self, ws: Any) -> None:
         room_info_raw = await asyncio.wait_for(ws.recv(), timeout=30)
@@ -1694,11 +1847,10 @@ class APConnection:
         else:
             self.state.goal_question = ""
 
-        wiki_lang = slot_data.get("wikipedia_language", "en")
-        if isinstance(wiki_lang, str) and wiki_lang.strip():
-            self.state.wikipedia_language = wiki_lang.strip().lower()
-        else:
-            self.state.wikipedia_language = "en"
+        wiki_lang = wiki_language(slot_data.get("wikipedia_language", "en"))
+        if not wiki_lang:
+            LOG.info("Unsupported wikipedia_language in slot_data: %r; using en", slot_data.get("wikipedia_language"))
+        self.state.wikipedia_language = wiki_lang or "en"
 
         reroll_pool = slot_data.get("reroll_pool")
         if isinstance(reroll_pool, list):
@@ -2325,7 +2477,14 @@ class APConnection:
         return f"wikipelago_clicks_{self.state.team}_{self.state.slot}"
 
     def _travel_storage_key(self) -> str:
+        # 1.0 saves: one dict replaced on every click. Still read so older journeys carry over.
         return f"wikipelago_travel_{self.state.team}_{self.state.slot}"
+
+    def _travel_events_key(self) -> str:
+        return f"wikipelago_travel_events_{self.state.team}_{self.state.slot}"
+
+    def _travel_visits_key(self) -> str:
+        return f"wikipelago_travel_visits_{self.state.team}_{self.state.slot}"
 
     def _resolve_retrieved(self, packet: dict[str, Any]) -> None:
         keys = packet.get("keys")
@@ -2333,13 +2492,13 @@ class APConnection:
             return
         bingo_key = self._bingo_storage_key()
         clicks_key = self._clicks_storage_key()
-        travel_key = self._travel_storage_key()
+        travel_keys = (self._travel_storage_key(), self._travel_events_key(), self._travel_visits_key())
         if bingo_key in keys:
             asyncio.create_task(self._apply_bingo_storage_payload(keys.get(bingo_key), source="Retrieved"))
         if clicks_key in keys:
             asyncio.create_task(self._apply_clicks_storage_payload(keys.get(clicks_key), source="Retrieved"))
-        if travel_key in keys:
-            asyncio.create_task(self._apply_travel_storage_payload(keys.get(travel_key), source="Retrieved"))
+        if any(key in keys for key in travel_keys):
+            asyncio.create_task(self._apply_travel_retrieved(*(keys.get(key) for key in travel_keys)))
 
     def _resolve_set_reply(self, packet: dict[str, Any]) -> None:
         key = packet.get("key")
@@ -2348,8 +2507,6 @@ class APConnection:
             asyncio.create_task(self._apply_bingo_storage_payload(raw, source="SetReply"))
         elif key == self._clicks_storage_key():
             asyncio.create_task(self._apply_clicks_storage_payload(raw, source="SetReply"))
-        elif key == self._travel_storage_key():
-            asyncio.create_task(self._apply_travel_storage_payload(raw, source="SetReply"))
 
     async def _request_bingo_stamps_from_storage(self) -> None:
         """Subscribe + Get stamped pairs from Archipelago DataStorage."""
@@ -2533,6 +2690,9 @@ class APConnection:
             return
         key = self._clicks_storage_key()
         value = {"clicks_used": max(0, int(self.state.clicks_used or 0))}
+        if not force and value["clicks_used"] == self._clicks_persisted:
+            return
+        self._clicks_persisted = value["clicks_used"]
         payload = [{
             "cmd": "Set",
             "key": key,
@@ -2553,59 +2713,96 @@ class APConnection:
         if self.ws is None or not self.state.connected_to_ap or self.state.practice:
             return
         self.state.travel_storage_ready = False
-        key = self._travel_storage_key()
-        payload = [
-            {"cmd": "SetNotify", "keys": [key]},
-            {"cmd": "Get", "keys": [key]},
-        ]
-        try:
-            async with self.send_lock:
-                await self.ws.send(json.dumps(payload))
-        except Exception as exc:
-            LOG.info("Travel DataStorage Get/SetNotify request failed: %s", exc)
-
-    async def _apply_travel_storage_payload(self, raw: Any, *, source: str = "") -> None:
-        if self.state.practice:
-            self.state.travel_storage_ready = True
-            return
-        incoming_events, incoming_visits = self._parse_travel_storage_payload(raw)
-        self._merge_travel_state(incoming_events, incoming_visits)
-        self.state.travel_storage_ready = True
-        merged_events, merged_visits = self.state.travel_events, self.state.visit_counts
-        incoming_keys = {self._travel_event_key(item) for item in incoming_events}
-        merged_keys = {self._travel_event_key(item) for item in merged_events if isinstance(item, dict)}
-        visits_changed = any(
-            int(merged_visits.get(title, 0) or 0) > int(incoming_visits.get(title, 0) or 0)
-            for title in set(merged_visits) | set(incoming_visits)
-        )
-        if merged_keys != incoming_keys or visits_changed:
-            await self._persist_travel(force=True)
-
-    async def _persist_travel(self, *, force: bool = False) -> None:
-        if self.state.practice or self.ws is None or not self.state.connected_to_ap:
-            return
-        if not force and not self.state.travel_storage_ready:
-            return
-        key = self._travel_storage_key()
-        value = {
-            "events": list(self.state.travel_events),
-            "visit_counts": dict(self.state.visit_counts),
-        }
+        # Get only: a SetNotify subscription would send the whole journey back after every click.
         payload = [{
-            "cmd": "Set",
-            "key": key,
-            "default": {"events": [], "visit_counts": {}},
-            "want_reply": True,
-            "operations": [{
-                "operation": "replace",
-                "value": value,
-            }],
+            "cmd": "Get",
+            "keys": [self._travel_storage_key(), self._travel_events_key(), self._travel_visits_key()],
         }]
         try:
             async with self.send_lock:
                 await self.ws.send(json.dumps(payload))
         except Exception as exc:
-            LOG.info("Travel DataStorage Set failed for %s: %s", key, exc)
+            LOG.info("Travel DataStorage Get request failed: %s", exc)
+
+    async def _apply_travel_retrieved(self, legacy: Any, events_raw: Any, visits_raw: Any) -> None:
+        if self.state.practice:
+            self.state.travel_storage_ready = True
+            return
+        legacy_events, legacy_visits = self._parse_travel_storage_payload(legacy)
+        stored_events, stored_visits = self._parse_travel_storage_payload(
+            {"events": events_raw, "visit_counts": visits_raw}
+        )
+        self._merge_travel_state(legacy_events, legacy_visits)
+        self._merge_travel_state(stored_events, stored_visits)
+        self.state.travel_storage_ready = True
+        self._travel_stored_len = len(stored_events)
+        stored_keys = {self._travel_event_key(item) for item in stored_events}
+        merged_keys = {self._travel_event_key(item) for item in self.state.travel_events if isinstance(item, dict)}
+        visits_behind = any(
+            int(count or 0) > int(stored_visits.get(title, 0) or 0)
+            for title, count in self.state.visit_counts.items()
+        )
+        if merged_keys != stored_keys or len(stored_events) != len(merged_keys) or visits_behind:
+            # A 1.0 save seen for the first time, or steps taken while the room was unreachable.
+            await self._persist_travel()
+
+    async def _persist_travel(self) -> None:
+        """Rewrite the whole journey. Clicks only send their new step (_send_travel_step)."""
+        if self.state.practice or self.ws is None or not self.state.connected_to_ap:
+            return
+        if not self.state.travel_storage_ready:
+            return
+        payload = [
+            {
+                "cmd": "Set",
+                "key": self._travel_events_key(),
+                "default": [],
+                "operations": [{"operation": "replace", "value": list(self.state.travel_events)}],
+            },
+            {
+                "cmd": "Set",
+                "key": self._travel_visits_key(),
+                "default": {},
+                "operations": [{"operation": "replace", "value": dict(self.state.visit_counts)}],
+            },
+        ]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+            self._travel_stored_len = len(self.state.travel_events)
+        except Exception as exc:
+            LOG.info("Travel DataStorage Set failed: %s", exc)
+
+    async def _send_travel_step(self, event: dict[str, Any], visited: str) -> None:
+        """Append one step to the stored journey instead of resending all of it."""
+        if self.state.practice or self.ws is None or not self.state.connected_to_ap:
+            return
+        if not self.state.travel_storage_ready:
+            # The Get reply merges this step in and rewrites the journey.
+            return
+        if self._travel_stored_len >= MAX_TRAVEL_EVENTS + TRAVEL_TRIM_SLACK:
+            # "add" only grows the stored list; now and then rewrite it trimmed to the local window.
+            await self._persist_travel()
+            return
+        payload = [{
+            "cmd": "Set",
+            "key": self._travel_events_key(),
+            "default": [],
+            "operations": [{"operation": "add", "value": [event]}],
+        }]
+        if visited:
+            payload.append({
+                "cmd": "Set",
+                "key": self._travel_visits_key(),
+                "default": {},
+                "operations": [{"operation": "update", "value": {visited: self.state.visit_counts.get(visited, 0)}}],
+            })
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+            self._travel_stored_len += 1
+        except Exception as exc:
+            LOG.info("Travel DataStorage step failed: %s", exc)
 
     async def _append_travel_event(
         self,
@@ -2624,10 +2821,13 @@ class APConnection:
         self.state.travel_events.append(event)
         if len(self.state.travel_events) > MAX_TRAVEL_EVENTS:
             self.state.travel_events = self.state.travel_events[-MAX_TRAVEL_EVENTS:]
+        visited = ""
         if event["kind"] == "nav" and event["title"]:
             key = event["title"]
-            self.state.visit_counts[key] = int(self.state.visit_counts.get(key, 0) or 0) + 1
-        await self._persist_travel()
+            if key in self.state.visit_counts or len(self.state.visit_counts) < MAX_TRAVEL_EVENTS:
+                self.state.visit_counts[key] = int(self.state.visit_counts.get(key, 0) or 0) + 1
+                visited = key
+        await self._send_travel_step(event, visited)
 
     def _set_active_pair_target(self, new_target: str) -> bool:
         title = str(new_target or "").strip()
@@ -2775,7 +2975,7 @@ class APConnection:
 
     def _canonicalize_title_sync(self, title: str) -> str:
         norm = normalize_title(title)
-        cached = self.resolved_title_cache.get(norm)
+        cached = cache_get(self.resolved_title_cache, norm)
         if cached:
             return cached
 
@@ -2785,8 +2985,8 @@ class APConnection:
         except Exception:
             resolved = canonical
 
-        self.resolved_title_cache[norm] = resolved
-        self.resolved_title_cache[normalize_title(resolved)] = resolved
+        cache_put(self.resolved_title_cache, norm, resolved, TITLE_CACHE_SIZE)
+        cache_put(self.resolved_title_cache, normalize_title(resolved), resolved, TITLE_CACHE_SIZE)
         return resolved
 
     async def _canonicalize_title(self, title: str) -> str:
@@ -2808,7 +3008,7 @@ class APConnection:
 
     def _fetch_page_links(self, title: str) -> set[str]:
         norm = normalize_title(title)
-        cached = self.link_cache.get(norm)
+        cached = cache_get(self.link_cache, norm)
         if cached is not None:
             return cached
 
@@ -2829,17 +3029,7 @@ class APConnection:
             if plcontinue:
                 params["plcontinue"] = plcontinue
 
-            url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": WIKI_USER_AGENT,
-                    "Accept": "application/json",
-                },
-            )
-            with urllib.request.urlopen(req, timeout=8) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-
+            payload = self._wiki_api_json(params)
             pages = payload.get("query", {}).get("pages", {})
             for page_data in pages.values():
                 for link in page_data.get("links", []):
@@ -2852,17 +3042,33 @@ class APConnection:
             if not plcontinue:
                 break
 
-        self.link_cache[norm] = links
+        cache_put(self.link_cache, norm, links, LINK_CACHE_SIZE)
         return links
 
     def _wikipedia_api_root(self) -> str:
-        lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
+        lang = wiki_language(self.state.wikipedia_language) or "en"
         return f"https://{lang}.wikipedia.org"
+
+    def _wiki_api_json(self, params: dict[str, str]) -> dict[str, Any]:
+        url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": WIKI_USER_AGENT,
+                "Accept": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=8) as response:
+            body = response.read(WIKI_MAX_RESPONSE_BYTES + 1)
+        if len(body) > WIKI_MAX_RESPONSE_BYTES:
+            raise ValueError("Wikipedia response too large")
+        payload = json.loads(body.decode("utf-8"))
+        return payload if isinstance(payload, dict) else {}
 
     def _fetch_backlinks(self, title: str) -> tuple[set[str], set[str]]:
         """(articles linking to `title`, redirects to `title`), capped for very popular pages."""
         norm = normalize_title(title)
-        cached = self.backlink_cache.get(norm)
+        cached = cache_get(self.backlink_cache, norm)
         if cached is not None:
             return cached
 
@@ -2882,17 +3088,7 @@ class APConnection:
             if blcontinue:
                 params["blcontinue"] = blcontinue
 
-            url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
-            req = urllib.request.Request(
-                url,
-                headers={
-                    "User-Agent": WIKI_USER_AGENT,
-                    "Accept": "application/json",
-                },
-            )
-            with urllib.request.urlopen(req, timeout=8) as response:
-                payload = json.loads(response.read().decode("utf-8"))
-
+            payload = self._wiki_api_json(params)
             for entry in payload.get("query", {}).get("backlinks", []):
                 entry_title = str(entry.get("title", "")).strip()
                 if entry_title:
@@ -2906,7 +3102,7 @@ class APConnection:
             if not blcontinue:
                 break
 
-        self.backlink_cache[norm] = (backlinks, redirects)
+        cache_put(self.backlink_cache, norm, (backlinks, redirects), BACKLINK_CACHE_SIZE)
         return backlinks, redirects
 
     def _compass_reading(self, page_title: str, page_links: set[str], target_title: str) -> tuple[int, int]:
@@ -2931,17 +3127,7 @@ class APConnection:
             "redirects": "1",
             "format": "json",
         }
-        url = f"{self._wikipedia_api_root()}/w/api.php?" + urllib.parse.urlencode(params)
-        req = urllib.request.Request(
-            url,
-            headers={
-                "User-Agent": WIKI_USER_AGENT,
-                "Accept": "application/json",
-            },
-        )
-        with urllib.request.urlopen(req, timeout=8) as response:
-            payload = json.loads(response.read().decode("utf-8"))
-
+        payload = self._wiki_api_json(params)
         pages = payload.get("query", {}).get("pages", {})
         for page_data in pages.values():
             resolved = str(page_data.get("title", "")).strip()
@@ -3055,14 +3241,20 @@ class APConnection:
 
         self.state.merge_clicks(clicks_used)
         await self._persist_clicks()
+        # Two checks can run at once (a double-click on a link). Remember which round this one is
+        # about, so only the first can complete it and the second can't also complete the next.
+        main_index = self.state.round_index
+        raw_target = self.state.current_target()
         page_title = await self._canonicalize_title(page_title)
         self._remember_page(page_title)
 
-        raw_target = self.state.current_target()
         if raw_target:
             target = await self._canonicalize_title(raw_target)
-            self._set_active_pair_target(target)
+            if self.state.round_index == main_index:
+                self._set_active_pair_target(target)
             matched_main = await self._titles_match(page_title, target)
+            if self.state.round_index != main_index or self.state.current_target() != target:
+                matched_main = False
         else:
             # Realm Master after the last main round: only Realm targets remain.
             target = ""
@@ -3080,18 +3272,21 @@ class APConnection:
         if self.state.practice:
             hits: list[dict[str, Any]] = []
             if matched_main:
-                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
                 # Chain like AP: keep the player on the cleared target; only roll a new target.
+                # Roll before awaiting anything, so a concurrent check no longer matches the old target.
                 self._roll_practice_race(continue_from=page_title)
+                await self._append_travel_event("round_complete", page_title, extra={"path": "main"})
                 result["advanced"] = True
                 result["practice_rolled"] = True
                 hits.append({"kind": "main", "target": target})
             for bid in list(self.state.unlocked_branch_ids()):
-                branch_target = self.state.branch_current_target(bid)
-                if not branch_target:
+                raw_branch_target = self.state.branch_current_target(bid)
+                if not raw_branch_target:
                     continue
-                branch_target = await self._canonicalize_title(branch_target)
+                branch_target = await self._canonicalize_title(raw_branch_target)
                 if not await self._titles_match(page_title, branch_target):
+                    continue
+                if self.state.branch_current_target(bid) != raw_branch_target:
                     continue
                 idx = int(self.state.branch_round_index.get(bid, 0) or 0)
                 self.state.branch_round_index[bid] = idx + 1
@@ -3121,10 +3316,16 @@ class APConnection:
             if round_number > self.state.unlocked_rounds():
                 result["locked"] = True
             else:
-                round_id = self.state.location_round_ids[self.state.round_index]
-                scouted = await self.scout_locations([round_id])
-                await self.send_location_checks([round_id])
-                self.state.round_index += 1
+                round_id = self.state.location_round_ids[main_index]
+                # Claim the round before awaiting, so a concurrent check sees it as done.
+                self.state.round_index = main_index + 1
+                try:
+                    scouted = await self.scout_locations([round_id])
+                    await self.send_location_checks([round_id])
+                except Exception:
+                    if self.state.round_index == main_index + 1:
+                        self.state.round_index = main_index
+                    raise
                 self.state.sync_target_reroll_counter()
                 self.state.sync_back_counter()
                 result["advanced"] = True
@@ -3146,10 +3347,17 @@ class APConnection:
             branch_target = await self._canonicalize_title(self.state.branch_current_target(bid))
             if not branch_target or not await self._titles_match(page_title, branch_target):
                 continue
+            if int(self.state.branch_round_index.get(bid, 0) or 0) != idx:
+                continue  # a concurrent check already completed this Realm round
             loc_id = loc_ids[idx]
-            scouted = await self.scout_locations([loc_id])
-            await self.send_location_checks([loc_id])
             self.state.branch_round_index[bid] = idx + 1
+            try:
+                scouted = await self.scout_locations([loc_id])
+                await self.send_location_checks([loc_id])
+            except Exception:
+                if self.state.branch_round_index.get(bid) == idx + 1:
+                    self.state.branch_round_index[bid] = idx
+                raise
             result["advanced"] = True
             result["matched"] = True
             hit = {
@@ -3813,18 +4021,48 @@ class Session:
     id: str
     state: SessionState
     conn: APConnection
+    client: str = ""
 
 
 class SessionManager:
     def __init__(self):
         self.sessions: dict[str, Session] = {}
 
-    def create(self) -> Session:
+    def create(self, client: str = "") -> Session | None:
+        """A new session, or None when this client or the whole server has too many active ones."""
+        self._make_room(client)
+        mine = sum(1 for session in self.sessions.values() if client and session.client == client)
+        if len(self.sessions) >= MAX_SESSIONS or mine >= MAX_SESSIONS_PER_CLIENT:
+            return None
         sid = uuid.uuid4().hex
         state = SessionState()
-        session = Session(id=sid, state=state, conn=APConnection(state))
+        session = Session(id=sid, state=state, conn=APConnection(state), client=client)
         self.sessions[sid] = session
         return session
+
+    def _make_room(self, client: str) -> None:
+        """Drop idle sessions of this client, then idle ones anywhere if the server is full."""
+        now = time.time()
+        idle = sorted(
+            (s for s in self.sessions.values() if now - s.state.last_seen > SESSION_RECLAIM_IDLE_SECONDS),
+            key=lambda s: s.state.last_seen,
+        )
+        mine = [s for s in self.sessions.values() if client and s.client == client]
+        for session in idle:
+            if not client or session.client != client or len(mine) < MAX_SESSIONS_PER_CLIENT:
+                continue
+            self.drop(session.id)
+            mine.remove(session)
+        for session in idle:
+            if len(self.sessions) < MAX_SESSIONS:
+                break
+            if session.id in self.sessions:
+                self.drop(session.id)
+
+    def drop(self, sid: str) -> None:
+        session = self.sessions.pop(sid, None)
+        if session and session.conn.reader_task and not session.conn.reader_task.done():
+            session.conn.reader_task.cancel()
 
     def get(self, sid: str) -> Session | None:
         session = self.sessions.get(sid)
@@ -3837,9 +4075,7 @@ class SessionManager:
             now = time.time()
             stale = [sid for sid, session in self.sessions.items() if now - session.state.last_seen > SESSION_TTL_SECONDS]
             for sid in stale:
-                session = self.sessions.pop(sid)
-                if session.conn.reader_task and not session.conn.reader_task.done():
-                    session.conn.reader_task.cancel()
+                self.drop(sid)
             await asyncio.sleep(120)
 
 class App:
@@ -3848,8 +4084,7 @@ class App:
         self.sessions = SessionManager()
 
     async def index(self, request: web.Request) -> web.StreamResponse:
-        # Embed deploy identity in HTML so the badge does not depend on a separate
-        # /health fetch (Render free-tier cold starts often 404 that first request).
+        # Embed deploy identity in HTML so the badge does not depend on a separate /health fetch.
         html = (self.web_root / "index.html").read_text(encoding="utf-8")
         payload = json.dumps(build_info(), separators=(",", ":"))
         injection = f'<script type="application/json" id="build-info">{payload}</script>\n'
@@ -3886,7 +4121,9 @@ class App:
         return web.json_response(info)
 
     async def create_session(self, request: web.Request) -> web.StreamResponse:
-        session = self.sessions.create()
+        session = self.sessions.create(client_address(request))
+        if session is None:
+            return web.json_response({"ok": False, "error": "Too many open sessions. Close some tabs and try again."}, status=503)
         return web.json_response({"ok": True, "session_id": session.id})
 
     async def connect_session(self, request: web.Request) -> web.StreamResponse:
@@ -3895,15 +4132,21 @@ class App:
         if not session:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
 
-        data = await request.json()
+        data = await read_json_body(request)
         server = str(data.get("server", "")).strip()
         slot_name = str(data.get("slot_name", "")).strip()
         password = str(data.get("password", "")).strip()
 
         if not server or not slot_name:
             return web.json_response({"ok": False, "error": "server and slot_name are required"}, status=400)
+        if len(server) > 255 or len(slot_name) > 64 or len(password) > 256:
+            return web.json_response({"ok": False, "error": "server, slot name or password is too long"}, status=400)
+        allow_private = is_local_request(request)
+        address_error = await ap_server_address_error(server, allow_private)
+        if address_error:
+            return web.json_response({"ok": False, "error": address_error}, status=400)
 
-        await session.conn.connect(server, slot_name, password)
+        await session.conn.connect(server, slot_name, password, allow_private=allow_private)
         return web.json_response({"ok": True})
 
     async def practice_session(self, request: web.Request) -> web.StreamResponse:
@@ -3952,8 +4195,9 @@ class App:
         if not session:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
         status = session.state.to_status()
-        events = session.conn.take_pending_events()
-        status["pending_events"] = events
+        # The Journey pop-out window polls with ?peek=1 so it never takes the main window's deaths and traps.
+        if request.query.get("peek") != "1":
+            status["pending_events"] = session.conn.take_pending_events()
         return web.json_response({"ok": True, "status": status})
 
     async def session_death(self, request: web.Request) -> web.StreamResponse:
@@ -3963,8 +4207,8 @@ class App:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
         if not session.state.connected_to_ap:
             return web.json_response({"ok": False, "error": "not connected"}, status=400)
-        data = await request.json()
-        cause = str(data.get("cause") or "").strip()
+        data = await read_json_body(request)
+        cause = str(data.get("cause") or "").strip()[:200]
         await session.conn.send_death_link(cause)
         return web.json_response({"ok": True})
 
@@ -3974,9 +4218,12 @@ class App:
         if not session:
             return web.json_response({"ok": False, "error": "invalid session"}, status=404)
 
-        data = await request.json()
+        data = await read_json_body(request)
         page_title = str(data.get("page_title", "")).strip()
-        clicks_used = int(data.get("clicks_used", 0))
+        try:
+            clicks_used = max(0, int(data.get("clicks_used", 0)))
+        except (TypeError, ValueError):
+            clicks_used = 0
         # Strict mode: display/restore callers must not score. Only intentional
         # in-article clicks should send submit_check=true (client default).
         submit_check = bool(data.get("submit_check", True))
@@ -3986,6 +4233,8 @@ class App:
 
         if not page_title:
             return web.json_response({"ok": False, "error": "page_title is required"}, status=400)
+        if len(page_title) > MAX_TITLE_CHARS:
+            return web.json_response({"ok": False, "error": "page_title is too long"}, status=400)
 
         session.conn.state.last_seen = time.time()
         session.conn.state.merge_clicks(clicks_used)
@@ -4126,7 +4375,7 @@ class App:
         return web.json_response(result, status=status_code)
 
     def build(self) -> web.Application:
-        app = web.Application()
+        app = web.Application(client_max_size=MAX_REQUEST_BYTES)
         app.router.add_get("/", self.index)
         app.router.add_get("/favicon.ico", self.favicon)
         app.router.add_get("/manifest.webmanifest", self.manifest)
