@@ -1749,25 +1749,65 @@ function journeyNodeTipLines(node) {
 }
 
 function hideJourneyTip() {
+  state.journeyTipNode = null;
   if (!el.journeyTip) return;
   el.journeyTip.classList.add("hidden");
   el.journeyTip.innerHTML = "";
 }
 
-function showJourneyTip(node, clientX, clientY) {
-  if (!el.journeyTip || !el.journeyPath) return;
-  const lines = journeyNodeTipLines(node);
-  el.journeyTip.innerHTML = "";
+/** The page on real Wikipedia, in the seed's language. */
+function openJourneyArticle(node) {
+  const url = `${wikipediaOrigin()}/wiki/${encodeURIComponent(String(node.title).replace(/ /g, "_"))}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+/** Title, what happened there, then the same summary as the target preview. */
+function fillJourneyTip(node) {
+  const tip = el.journeyTip;
+  tip.innerHTML = "";
   const title = document.createElement("strong");
   title.textContent = node.title;
-  el.journeyTip.appendChild(title);
-  for (const line of lines) {
+  tip.appendChild(title);
+  for (const line of journeyNodeTipLines(node)) {
     const kind = document.createElement("div");
     kind.className = "journey-tip-kind";
     kind.textContent = line;
-    el.journeyTip.appendChild(kind);
+    tip.appendChild(kind);
   }
+  const summary = document.createElement("p");
+  summary.className = "journey-tip-summary loading";
+  summary.textContent = t("hud.loadingEllipsis");
+  tip.appendChild(summary);
+  const hint = document.createElement("div");
+  hint.className = "journey-tip-hint";
+  hint.textContent = TOUCH_QUERY.matches ? t("journey.tapToOpen") : t("journey.clickToOpen");
+  tip.appendChild(hint);
+  const settle = (text) => {
+    if (state.journeyTipNode !== node) return;
+    summary.classList.remove("loading");
+    summary.textContent = text;
+    positionJourneyTip(state.journeyTipX, state.journeyTipY);
+  };
+  fetchTargetSummary(node.title)
+    .then((text) => settle(text || t("hud.noDescription")))
+    .catch(() => settle(t("hud.descriptionFailed")));
+}
+
+function showJourneyTip(node, clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath) return;
+  // Build once per point: moving the pointer only repositions, so the summary is not refetched.
+  if (state.journeyTipNode !== node) {
+    state.journeyTipNode = node;
+    fillJourneyTip(node);
+  }
+  state.journeyTipX = clientX;
+  state.journeyTipY = clientY;
   el.journeyTip.classList.remove("hidden");
+  positionJourneyTip(clientX, clientY);
+}
+
+function positionJourneyTip(clientX, clientY) {
+  if (!el.journeyTip || !el.journeyPath || el.journeyTip.classList.contains("hidden")) return;
   const originEl = el.journeyPath.parentElement || el.journeyPath;
   const wrap = originEl.getBoundingClientRect();
   const tipW = el.journeyTip.offsetWidth || 160;
@@ -1852,11 +1892,32 @@ function drawJourneyPath(payload) {
     hit.setAttribute("r", String(Math.max(node.r + 6, 11)));
     hit.setAttribute("fill", "transparent");
     hit.setAttribute("tabindex", "0");
-    hit.setAttribute("role", "img");
+    hit.setAttribute("role", "link");
     hit.setAttribute("aria-label", [node.title, ...journeyNodeTipLines(node)].join(", "));
-    hit.addEventListener("pointerenter", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
-    hit.addEventListener("pointermove", (ev) => showJourneyTip(node, ev.clientX, ev.clientY));
-    hit.addEventListener("pointerleave", hideJourneyTip);
+    // Touch has no hover: the first tap shows the info, a second tap on the same point opens the page.
+    hit.addEventListener("pointerenter", (ev) => {
+      if (ev.pointerType !== "touch") showJourneyTip(node, ev.clientX, ev.clientY);
+    });
+    hit.addEventListener("pointermove", (ev) => {
+      if (ev.pointerType !== "touch") showJourneyTip(node, ev.clientX, ev.clientY);
+    });
+    hit.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType !== "touch") hideJourneyTip();
+    });
+    hit.addEventListener("click", (ev) => {
+      const touch = ev.pointerType === "touch" || TOUCH_QUERY.matches;
+      if (touch && state.journeyTipNode !== node) {
+        showJourneyTip(node, ev.clientX, ev.clientY);
+        return;
+      }
+      openJourneyArticle(node);
+    });
+    hit.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        openJourneyArticle(node);
+      }
+    });
     hit.addEventListener("focus", () => showJourneyTip(node, host.getBoundingClientRect().left + node.x, host.getBoundingClientRect().top + node.y));
     hit.addEventListener("blur", hideJourneyTip);
     svg.appendChild(hit);
@@ -2013,6 +2074,10 @@ function bindJourneyOverlayUi() {
     void toggleJourneyFullscreen();
   });
   el.journeyPopupBtn?.addEventListener("click", openJourneyPopup);
+  // Touch: tapping the map away from a point closes its info.
+  el.journeyPath?.addEventListener("click", (ev) => {
+    if (!ev.target.closest?.(".journey-node-hit")) hideJourneyTip();
+  });
   document.addEventListener("fullscreenchange", () => {
     syncJourneyFullscreenButton();
     if (state.journeyOpen && state.journeyPayload) {

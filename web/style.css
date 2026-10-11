@@ -2331,7 +2331,7 @@ button:active:not(:disabled) { transform: translateY(1px); }
 .journey-tip {
   position: absolute;
   z-index: 4;
-  max-width: 220px;
+  max-width: min(320px, calc(100% - 16px));
   padding: 7px 9px;
   border-radius: var(--radius-sm);
   border: 1px solid #c9b995;
@@ -2350,6 +2350,21 @@ button:active:not(:disabled) { transform: translateY(1px); }
 }
 .journey-tip-kind {
   color: #8a5f12;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+}
+/* Same summary as the target preview. */
+.journey-tip-summary {
+  margin: 6px 0 0;
+  font-family: var(--font-read);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+.journey-tip-summary.loading { color: var(--paper-muted); font-style: italic; }
+.journey-tip-hint {
+  margin-top: 6px;
+  color: var(--paper-muted);
   font-family: var(--font-mono);
   font-size: 0.66rem;
 }
