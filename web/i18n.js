@@ -19,7 +19,6 @@
   const STRINGS = {
     en: {
       "meta.description": "Play Wikipedia racing rounds connected to Archipelago.",
-      "migrate.renderBanner": "This Render URL is outdated. Open the game at <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a> instead.",
       "banner.release10": "This web client always uses the <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">latest release</a>. Please report any issues on the <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Archipelago Discord</a>. To continue playing on previous clients, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">host the bridge locally</a>.",
       "badge.offline": "Offline",
       "badge.connected": "Connected",
@@ -323,7 +322,6 @@
   STRINGS.fr = {
     ...STRINGS.en,
     "meta.description": "Jouez à des courses Wikipedia connectées à Archipelago.",
-    "migrate.renderBanner": "Cette adresse Render n'est plus à jour. Ouvrez le jeu sur <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Ce client web utilise toujours la <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">dernière version</a>. Merci de signaler tout problème sur le <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Discord d'Archipelago</a>. Pour continuer à jouer sur les anciens clients, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">hébergez le bridge en local</a>.",
     "badge.offline": "Hors ligne",
     "badge.connected": "Connecté",
@@ -611,7 +609,6 @@
   STRINGS.de = {
     ...STRINGS.en,
     "meta.description": "Spiele Wikipedia-Rennrunden verbunden mit Archipelago.",
-    "migrate.renderBanner": "Diese Render-Adresse ist veraltet. Öffne das Spiel unter <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Dieser Web-Client verwendet immer die <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">neueste Version</a>. Bitte meldet Probleme auf dem <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Archipelago-Discord</a>. Um mit älteren Clients weiterzuspielen, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">hostet die Bridge lokal</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Verbunden",
@@ -898,7 +895,6 @@
   STRINGS.es = {
     ...STRINGS.en,
     "meta.description": "Juega rondas de carreras en Wikipedia conectadas a Archipelago.",
-    "migrate.renderBanner": "Esta dirección de Render ya no está actualizada. Abre el juego en <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Este cliente web usa siempre la <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">última versión</a>. Informad de cualquier problema en el <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Discord de Archipelago</a>. Para seguir jugando en clientes anteriores, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">alojad el bridge en local</a>.",
     "badge.offline": "Desconectado",
     "badge.connected": "Conectado",
@@ -1186,7 +1182,6 @@
   STRINGS.it = {
     ...STRINGS.en,
     "meta.description": "Gioca a round di corsa su Wikipedia collegati ad Archipelago.",
-    "migrate.renderBanner": "Questo indirizzo Render non è più aggiornato. Apri il gioco su <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Questo client web usa sempre l'<a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">ultima versione</a>. Segnalate eventuali problemi sul <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Discord di Archipelago</a>. Per continuare a giocare sui client precedenti, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">avviate il bridge in locale</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Connesso",
@@ -1473,7 +1468,6 @@
   STRINGS.pt = {
     ...STRINGS.en,
     "meta.description": "Jogue corridas na Wikipedia ligadas ao Archipelago.",
-    "migrate.renderBanner": "Este endereço Render está desatualizado. Abra o jogo em <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Este cliente web usa sempre a <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">última versão</a>. Por favor, reportem qualquer problema no <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Discord do Archipelago</a>. Para continuar a jogar nos clientes anteriores, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">hospedem o bridge localmente</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Conectado",
@@ -1760,7 +1754,6 @@
   STRINGS.nl = {
     ...STRINGS.en,
     "meta.description": "Speel Wikipedia-race rondes verbonden met Archipelago.",
-    "migrate.renderBanner": "Dit Render-adres is verouderd. Open het spel op <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Deze webclient gebruikt altijd de <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">laatste release</a>. Meld problemen op de <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Archipelago-Discord</a>. Om verder te spelen op eerdere clients, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">host de bridge lokaal</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Verbonden",
@@ -2046,7 +2039,6 @@
   STRINGS.sv = {
     ...STRINGS.en,
     "meta.description": "Spela Wikipedia-racingrundor kopplade till Archipelago.",
-    "migrate.renderBanner": "Den här Render-adressen är inaktuell. Öppna spelet på <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Den här webbklienten använder alltid den <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">senaste versionen</a>. Rapportera gärna problem på <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Archipelagos Discord</a>. För att fortsätta spela på tidigare klienter, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">kör bridgen lokalt</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Ansluten",
@@ -2333,7 +2325,6 @@
   STRINGS.pl = {
     ...STRINGS.en,
     "meta.description": "Graj w wyścigi na Wikipedii połączone z Archipelago.",
-    "migrate.renderBanner": "Ten adres Render jest nieaktualny. Otwórz grę na <a href=\"https://wikipelago.dreskn.fr/\">wikipelago.dreskn.fr</a>.",
     "banner.release10": "Ten klient WWW zawsze korzysta z <a href=\"https://github.com/Dreskn/Wikipelago-Continued/releases\">najnowszej wersji</a>. Prosimy zgłaszać problemy na <a href=\"https://discord.com/channels/731205301247803413/1462007968902938768\">Discordzie Archipelago</a>. Aby dalej grać na poprzednich klientach, <a href=\"https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms\">uruchomcie bridge lokalnie</a>.",
     "badge.offline": "Offline",
     "badge.connected": "Połączono",

@@ -2359,7 +2359,6 @@ button:active:not(:disabled) { transform: translateY(1px); }
   font-size: 0.82rem;
 }
 body.journey-window #releaseBanner,
-body.journey-window #migrateBanner,
 body.journey-window #phoneBar,
 body.journey-window .layout,
 body.journey-window #supportDock,

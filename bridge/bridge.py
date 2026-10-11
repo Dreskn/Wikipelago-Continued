@@ -62,14 +62,10 @@ def _git_output(*args: str) -> str:
 
 
 def build_info() -> dict[str, Any]:
-    """Deploy identity for the UI.
-
-    Prefer Render-injected RENDER_GIT_* / RENDER_SERVICE_NAME. On a VPS or local
-    checkout, fall back to WIKIPELAGO_* overrides, then `git` in the repo root.
-    """
-    branch = _env_first("RENDER_GIT_BRANCH", "WIKIPELAGO_GIT_BRANCH")
-    commit_full = _env_first("RENDER_GIT_COMMIT", "WIKIPELAGO_GIT_COMMIT")
-    service = _env_first("RENDER_SERVICE_NAME", "WIKIPELAGO_SERVICE_NAME")
+    """Deploy identity for the UI: WIKIPELAGO_* overrides, then `git` in the repo root."""
+    branch = _env_first("WIKIPELAGO_GIT_BRANCH")
+    commit_full = _env_first("WIKIPELAGO_GIT_COMMIT")
+    service = _env_first("WIKIPELAGO_SERVICE_NAME")
 
     if not branch:
         branch = _git_output("rev-parse", "--abbrev-ref", "HEAD")

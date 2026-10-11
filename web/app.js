@@ -5388,14 +5388,6 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-function showMigrateBannerIfNeeded() {
-  const banner = document.getElementById("migrateBanner");
-  if (!banner) return;
-  if (window.location.hostname.endsWith("onrender.com")) {
-    banner.classList.remove("hidden");
-  }
-}
-
 ensureToolIcons();
 bindTargetTooltip();
 bindUiLanguageControls();
@@ -5415,7 +5407,6 @@ bindThemeToggle();
 bindPhoneLayout();
 bindStuckHelper();
 initSidePanelToggles();
-showMigrateBannerIfNeeded();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {
   let trackResizeTimer = 0;

@@ -19,7 +19,6 @@ Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based o
 - `docs/` — player docs; `docs/grand-goal/` is the Grand Goal question bank and its build scripts.
 - `yaml/Wikipelago.yaml` — player YAML template.
 - `world/` — build, test and pool-maintenance scripts.
-- `Dockerfile`, `Procfile`, `render.yaml` — older/alternative deploy configs.
 
 ## Commands (PowerShell, repo root)
 
