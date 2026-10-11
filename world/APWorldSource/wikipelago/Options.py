@@ -482,7 +482,7 @@ class TopicPortals(Toggle):
     Each Realm needs a distinct enabled category with at least Branch Length unused articles.
     Additional Branch Keys is ignored when this is on."""
     display_name = "Topic Portals"
-    default = 0
+    default = 1
 
 
 class Goal(Choice):

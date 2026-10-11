@@ -55,7 +55,7 @@ On the client: live branch targets list under the main road, a small crossroad c
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `topic_portals` | `false` (template: `true`) | Every branch becomes a **Realm** with its own topic (History, Music, Sports, ...). Each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...) instead of Branch Keys, so Realms open in whatever order their Portals arrive. |
+| `topic_portals` | `true` | Every branch becomes a **Realm** with its own topic (History, Music, Sports, ...). Each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...) instead of Branch Keys, so Realms open in whatever order their Portals arrive. |
 
 - A Realm needs its Portal **and** its crossroad round finished (either order).
 - Every Realm gets a different enabled category with at least `branch_length` spare articles. Generation stops with a clear message if there are not enough, so lower `branch_count` / `branch_length` or enable more `include_*` categories.
