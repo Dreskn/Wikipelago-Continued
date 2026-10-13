@@ -70,7 +70,7 @@ Non-article namespaces (File, Template, Wikipedia:, Portail, Plik, and the same 
 
 ## What happened to `goal_article_preset` / `random_goal_article`?
 
-They are ignored. The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs still generate; they just no longer pick a preset series.
+They were removed in 1.1.1 (they had been ignored since 1.0). The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs that still contain them generate fine; Archipelago only logs a warning that the option is unknown.
 
 ## I picked Realm Master. Where are my Knowledge Fragments and the Grand Goal?
 

@@ -98,8 +98,6 @@ try {
     if (-not (Test-StrictUtf8File $yamlToCheck)) {
         throw "YAML template is not strict UTF-8: $yamlToCheck"
     }
-    Assert-NoPattern $yamlToCheck 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset alias found'
-    Assert-HasPattern $yamlToCheck 'Deprecated and ignored' 'YAML template must mark goal_article_preset as deprecated'
     Assert-HasPattern $yamlToCheck 'searchsanity:\s*(true|false)' 'YAML template is missing searchsanity'
     Assert-HasPattern $yamlToCheck 'scrollsanity:\s*(true|false)' 'YAML template is missing scrollsanity'
     Assert-HasPattern $yamlToCheck 'search_starting_letters:\s*(none|all_vowels|etaoi|raise)' 'YAML template is missing search_starting_letters'
@@ -152,7 +150,6 @@ try {
     $poolEnPath = Join-Path $worldRoot "data\pool_en.json"
 
     Assert-NoPattern $initPath '`r`n' 'Literal backtick newline text regression found in __init__.py'
-    Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
     Assert-NoPattern $optionsPath 'include_board_games' 'board_games category should be removed in 0.6'
     Assert-HasPattern $articlePoolPath 'def load_article_pool' 'article_pool.load_article_pool missing'
     Assert-HasPattern $articlePoolPath 'def is_blocked_wiki_title' 'article_pool.is_blocked_wiki_title missing'

@@ -605,6 +605,8 @@ class SessionState:
     last_page: str = ""
     last_teleport_at: float = 0.0
     crossroads: list[dict[str, Any]] = field(default_factory=list)
+    # False for Realm Master seeds from 1.1.1 on: a Realm opens with its Portal (or keys) alone.
+    realms_need_crossroad: bool = True
     branches: list[dict[str, Any]] = field(default_factory=list)
     branch_round_index: dict[int, int] = field(default_factory=dict)
     travel_events: list[dict[str, Any]] = field(default_factory=list)
@@ -699,7 +701,7 @@ class SessionState:
         """One row per branch / Realm for the HUD (locked, open, cleared)."""
         unlocked = set(self.unlocked_branch_ids())
         crossroad_by_branch: dict[int, int] = {}
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 crossroad_by_branch[int(cr.get("branch_id") or 0)] = int(cr.get("main_round") or 0)
             except Exception:
@@ -892,7 +894,14 @@ class SessionState:
             return max(self.check_count, 1)
         return min(self.round_index + 1, max(self.check_count, 1))
 
+    def active_crossroads(self) -> list[dict[str, Any]]:
+        """Crossroads that gate a Realm in this seed (none when Realms open with their Portal / keys alone)."""
+        return self.crossroads if self.realms_need_crossroad else []
+
     def completed_crossroad_branch_ids(self) -> list[int]:
+        if not self.realms_need_crossroad:
+            # No crossroad to finish: every Realm is reachable, in id order (the keys' FIFO order).
+            return sorted(int(branch.get("id") or 0) for branch in self.branches)
         completed: list[tuple[int, int]] = []
         for cr in self.crossroads:
             try:
@@ -929,7 +938,7 @@ class SessionState:
 
     def revealed_crossroad(self) -> dict[str, Any] | None:
         current_round = self.reached_main_round()
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
                 branch_id = int(cr.get("branch_id") or 0)
@@ -955,7 +964,7 @@ class SessionState:
     def crossroad_rounds(self) -> list[int]:
         current = self.reached_main_round()
         rounds: list[int] = []
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
             except Exception:
@@ -968,7 +977,7 @@ class SessionState:
         reached = set(self.crossroad_rounds())
         unlocked = set(self.unlocked_branch_ids())
         rounds: list[int] = []
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
                 branch_id = int(cr.get("branch_id") or 0)
@@ -1239,7 +1248,7 @@ class SessionState:
             "teleport_cooldown_remaining": self.teleport_cooldown_remaining(),
             "last_error": self.last_error,
             "paths": self.path_payload(),
-            "crossroads": list(self.crossroads),
+            "crossroads": list(self.active_crossroads()),
             "crossroad_rounds": self.crossroad_rounds(),
             "unlocked_crossroad_rounds": self.unlocked_crossroad_rounds(),
             "branches": [
@@ -1776,6 +1785,8 @@ class APConnection:
         self.state.crossroads = []
         self.state.branches = []
         self.state.branch_round_index = {}
+        # 1.1.0 seeds have no flag and always gated Realms behind their crossroad.
+        self.state.realms_need_crossroad = bool(slot_data.get("realms_need_crossroad", True))
         crossroads_raw = slot_data.get("crossroads")
         if isinstance(crossroads_raw, list):
             parsed_cross: list[dict[str, Any]] = []

@@ -1574,7 +1574,7 @@ function renderRealmsBlock(status) {
     const crossroad = Number(realm.crossroad_round) || 0;
     if (stateName === "cleared") note.textContent = t("realm.cleared");
     else if (stateName === "open") note.textContent = `${Number(realm.completed) || 0}/${Number(realm.length) || 0}`;
-    else if (stateName === "ready") note.textContent = t("realm.atRound", { n: crossroad });
+    else if (stateName === "ready" && crossroad > 0) note.textContent = t("realm.atRound", { n: crossroad });
     else if (realm.portal_item) note.textContent = t("realm.needs", { portal: portalName(realm.theme_tag) });
     else note.textContent = t("realm.needsKey");
 

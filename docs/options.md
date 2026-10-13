@@ -57,7 +57,7 @@ On the client: live branch targets list under the main road, a small crossroad c
 | --- | --- | --- |
 | `topic_portals` | `true` | Every branch becomes a **Realm** with its own topic (History, Music, Sports, ...). Each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...) instead of Branch Keys, so Realms open in whatever order their Portals arrive. |
 
-- A Realm needs its Portal **and** its crossroad round finished (either order).
+- In Grand Goal games a Realm needs its Portal **and** its crossroad round finished (either order). In Realm Master games the Portal alone opens it.
 - Every Realm gets a different enabled category with at least `branch_length` spare articles. Generation stops with a clear message if there are not enough, so lower `branch_count` / `branch_length` or enable more `include_*` categories.
 - Realm target rerolls stay on topic (off-topic only once the Realm's own slice runs dry).
 - `additional_branch_keys` is ignored while this is on.
@@ -72,7 +72,7 @@ On the client each Realm has its own color on the round track, in the target lis
 | --- | --- | --- |
 | `goal` | `grand_goal` | `grand_goal`: collect `required_fragments`, then land on the answer to the Grand Goal question. `realm_master`: clear the last round of every branch / Realm. |
 
-`realm_master` needs `branch_count` of at least 1. It generates no Knowledge Fragments and no Grand Goal; the **Realms** checklist is your goal tracker. It works with or without `topic_portals`, but it is built for it.
+`realm_master` needs `branch_count` of at least 1. It generates no Knowledge Fragments and no Grand Goal; the **Realms** checklist is your goal tracker. Realms open with their Portal (or, with plain branches, their Branch Keys) alone: no crossroad round to reach first. It works with or without `topic_portals`, but it is built for it.
 
 ### Letter-pair bingo
 
@@ -86,8 +86,6 @@ On the client: unlocked boards stamp in parallel from page titles; click a board
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `random_goal_article` | `true` | Kept for old YAMLs; ignored. The Grand Goal always comes from that wiki language's goal pool (answer page preferred from enabled categories). |
-| `goal_article_preset` | `dark_souls` | Deprecated and ignored. Kept so older YAMLs still generate. |
 
 ---
 

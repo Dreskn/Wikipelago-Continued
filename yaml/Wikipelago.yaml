@@ -27,10 +27,10 @@ Wikipelago:
   # start_rounds_unlocked: rounds playable immediately at seed start (1–999).
   # rounds_per_unlock: additional rounds each Round Access item unlocks (1–999).
   # Grand Goal is always a closed question from that wiki language's goal pool
-  # (answer page preferred from enabled categories). random_goal_article is kept for
-  # old YAMLs and is ignored.
+  # (answer page preferred from enabled categories).
   # goal: grand_goal (fragments, then the Grand Goal question) |
-  #   realm_master (clear every branch / Realm; needs branch_count >= 1; no fragments or Grand Goal).
+  #   realm_master (clear every branch / Realm; needs branch_count >= 1; no fragments or Grand Goal;
+  #   a Realm opens with its Portal or keys alone, no crossroad round needed).
   goal: grand_goal
   progression_balancing: 50
   check_count: 40
@@ -38,10 +38,6 @@ Wikipelago:
   additional_fragments_in_pool: 2
   start_rounds_unlocked: 10
   rounds_per_unlock: 5
-  random_goal_article: true
-  # Deprecated and ignored. Kept so older YAMLs still generate. The Grand Goal
-  # always comes from the language goal pool, not this list.
-  goal_article_preset: dark_souls
 
   # =============================================================================
   # Progressive tools — Back & target rerolls

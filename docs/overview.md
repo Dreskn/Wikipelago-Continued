@@ -74,7 +74,7 @@ The Progression card lists each live branch target under the main road. **Journe
 
 **Topic Realms** (1.1, `topic_portals: true`) turn every branch into a **Realm** with its own topic (History, Music, Sports, ...). Instead of Branch Keys, each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...), so Realms open in whatever order their Portals arrive.
 
-- A Realm opens once you have its Portal **and** have finished its crossroad round (either order).
+- A Realm opens once you have its Portal **and** have finished its crossroad round (either order). In Realm Master games the Portal alone opens it.
 - Realm targets come from the Realm's topic, and rerolls stay on topic.
 - Each Realm has its own color on the round track, in the target list, in the **Realms** checklist and on the Journey map. The main road stays brass.
 
@@ -86,9 +86,9 @@ It depends on `goal` in your YAML.
 
 **Grand Goal** (`goal: grand_goal`, the default): collect enough **Knowledge Fragments** (count set by `required_fragments`). The pool may contain extras (`additional_fragments_in_pool`); only the required count unlocks the goal. The Grand Goal is then revealed as a **closed question** in your wiki language. Reach the answer article to finish your slot.
 
-The question comes from that language’s Grand Goal pool (answer page preferred from your enabled categories). Old YAML presets such as `goal_article_preset` are ignored.
+The question comes from that language’s Grand Goal pool (answer page preferred from your enabled categories).
 
-**Realm Master** (`goal: realm_master`, 1.1): clear the last round of every branch / Realm. There are no Knowledge Fragments and no Grand Goal question; the **Realms to master** checklist shows what is left. It needs `branch_count` of at least 1 and is built for Topic Realms (it also works with plain Branch Keys). The main road only has to take you to each crossroad; if you finish it first, the target line reads "Main road cleared — finish your Realms". See [Options — Goal](options.md#goal).
+**Realm Master** (`goal: realm_master`, 1.1): clear the last round of every branch / Realm. There are no Knowledge Fragments and no Grand Goal question; the **Realms to master** checklist shows what is left. It needs `branch_count` of at least 1 and is built for Topic Realms (it also works with plain Branch Keys). A Realm opens as soon as you have its Portal (or, with plain branches, enough Branch Keys): no crossroad round to reach first, so the main road is only there for its checks. If you finish it, the target line reads "Main road cleared — finish your Realms". See [Options — Goal](options.md#goal).
 
 ## Useful items
 

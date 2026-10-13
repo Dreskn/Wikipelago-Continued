@@ -8,7 +8,7 @@ from worlds.generic.Rules import set_rule
 
 from .Items import PORTAL_ITEM_BY_TOPIC, PORTAL_ITEM_NAMES, TRAP_ITEM_NAMES, item_table
 from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
-from .Options import WikipelagoOptions
+from .Options import WikipelagoOptions, wikipelago_option_groups
 from .Regions import create_regions
 from .article_pool import SUPPORTED_LANGS, is_usable_title, load_article_pool
 from .grand_goal import pick_grand_goal_card
@@ -101,6 +101,7 @@ UT_SLOT_DATA_OPTIONS: tuple[str, ...] = (
 
 class WikipelagoWeb(WebWorld):
     theme = "stone"
+    option_groups = wikipelago_option_groups
 
 
 class WikipelagoItem(Item):
@@ -310,6 +311,15 @@ class WikipelagoWorld(World):
             unlocks.append("Reference Lens")
         return unlocks
 
+    def _realms_need_crossroad(self) -> bool:
+        """Grand Goal games open a Realm with its Portal (or keys) plus its crossroad round;
+        Realm Master games with the Portal (or keys) alone, so Realms don't wait on the main road."""
+        ut_slot_data = self._ut_slot_data()
+        if ut_slot_data is not None:
+            # 1.1.0 seeds carry no flag: they always needed the crossroad.
+            return bool(ut_slot_data.get("realms_need_crossroad", True))
+        return self._goal_is_grand_goal()
+
     def _ut_slot_data(self) -> dict[str, Any] | None:
         """The real seed's slot_data while Universal Tracker regenerates this slot, else None."""
         passthrough = getattr(self.multiworld, "re_gen_passthrough", None)
@@ -428,8 +438,7 @@ class WikipelagoWorld(World):
         self.goal_question = ""
         self.goal_qid = None
         if self._goal_is_grand_goal():
-            # random_goal_article / goal_article_preset are kept so old YAMLs still
-            # parse; generate always picks from this wiki language's goal pool.
+            # Always from this wiki language's goal pool.
             try:
                 card = pick_grand_goal_card(
                     self.random,
@@ -731,7 +740,8 @@ class WikipelagoWorld(World):
 
         if branch_count > 0:
             # branch_id is assigned in main_round order in generate_early, matching
-            # client FIFO: Branch N needs N keys and the Round Access of its crossroad.
+            # client FIFO: Branch N needs N keys and (Grand Goal) the Round Access of its crossroad.
+            need_crossroad = self._realms_need_crossroad()
             crossroad_round_by_branch = {
                 int(cr["branch_id"]) + 1: int(cr["main_round"])
                 for cr in (getattr(self, "crossroads", None) or [])
@@ -744,11 +754,11 @@ class WikipelagoWorld(World):
             for branch in range(1, branch_count + 1):
                 keys_needed = branch
                 main_round = crossroad_round_by_branch.get(branch)
-                need_ra = self._round_access_needed(main_round) if main_round else 0
+                need_ra = self._round_access_needed(main_round) if (main_round and need_crossroad) else 0
                 entrance = self.multiworld.get_entrance(f"To Branch {branch}", self.player)
                 portal = portal_by_branch.get(branch)
                 if portal:
-                    # Topic Realms: own Portal + reaching the crossroad; no FIFO key count.
+                    # Topic Realms: own Portal (+ reaching the crossroad in Grand Goal games); no FIFO key count.
                     set_rule(
                         entrance,
                         lambda state, portal=portal, need_ra=need_ra: (
@@ -809,6 +819,7 @@ class WikipelagoWorld(World):
         return {
             "goal": self._goal_name(),
             "topic_portals": self._topic_portals(),
+            "realms_need_crossroad": self._realms_need_crossroad(),
             "check_count": round_count,
             "required_fragments": required_fragments,
             "start_rounds_unlocked": start_unlocked,

@@ -856,6 +856,14 @@ def install_archipelago_stand_ins():
     options.Choice = Choice
     options.PerGameCommonOptions = PerGameCommonOptions
 
+    class OptionGroup:
+        def __init__(self, name, options, start_collapsed=False):
+            self.name = name
+            self.options = options
+            self.start_collapsed = start_collapsed
+
+    options.OptionGroup = OptionGroup
+
     worlds = types.ModuleType("worlds")
     worlds.__path__ = []
     auto_world = types.ModuleType("worlds.AutoWorld")
