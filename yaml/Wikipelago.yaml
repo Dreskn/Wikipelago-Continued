@@ -12,7 +12,7 @@ description: Default Wikipelago player template
 requires:
   version: 0.6.7
   game:
-    Wikipelago: 1.1.0
+    Wikipelago: 1.1.1
 
 Wikipelago:
 

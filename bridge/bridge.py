@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-bridge")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.1.0"
+CLIENT_VERSION = "1.1.1"
 TELEPORT_COOLDOWN_SEC = 60
 # Wiki Compass: backlink pages (500 titles each) fetched per target, once per session.
 COMPASS_BACKLINK_PAGES = 2

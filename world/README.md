@@ -1,6 +1,6 @@
 APWorld source lives in `world/APWorldSource`. Commands below run from the repo root.
 
-World package version: **1.1.0** (`world_version` and `full_version` in `world/APWorldSource/wikipelago/archipelago.json`).
+World package version: **1.1.1** (`world_version` and `full_version` in `world/APWorldSource/wikipelago/archipelago.json`).
 
 The live runtime article pools are `world/APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 
