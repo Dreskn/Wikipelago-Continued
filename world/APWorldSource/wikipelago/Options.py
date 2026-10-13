@@ -14,7 +14,8 @@ class CheckCount(Range):
 
 class RequiredFragments(Range):
     """Knowledge Fragments needed to reveal and clear the Grand Goal.
-    Landing on the answer page finishes the slot."""
+    Landing on the answer page finishes the slot.
+    Capped at Round Count: a higher value needs (and puts in the pool) only Round Count fragments."""
     display_name = "Required Fragments"
     range_start = 1
     range_end = 200

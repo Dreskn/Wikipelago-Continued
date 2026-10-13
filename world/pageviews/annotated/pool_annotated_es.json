@@ -2950,7 +2950,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Alquimia",
@@ -14880,7 +14880,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Clorfenamina",
@@ -17621,7 +17621,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Cory Monteith",

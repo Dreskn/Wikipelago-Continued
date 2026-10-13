@@ -196,12 +196,12 @@
   },
   "Q1049511": {
     "question": "¿Qué mensajero, fundado por dos antiguos empleados de Yahoo!, se lanzó en mayo de 2009 y más tarde fue comprado por Facebook?",
-    "lead_fact": "Nombre que evoca «what's up»; lanzamiento en mayo de 2009; compra por Facebook.",
+    "lead_fact": "Fundado por dos antiguos empleados de Yahoo!; lanzamiento en mayo de 2009; compra por Facebook.",
     "source": "translated-from-en"
   },
   "Q68750": {
     "question": "¿Qué guerra civil en Nueva España puso fin al dominio español y dio lugar al imperio de Agustín de Iturbide, cuya pérdida supuso para España cerca del ochenta por ciento de sus caudales americanos?",
-    "lead_fact": "Fin del dominio español en Nueva España; Primer Imperio; 80 % de los caudales americanos.",
+    "lead_fact": "Fin del dominio español en Nueva España; imperio de Iturbide; 80 % de los caudales americanos.",
     "source": "native-lead"
   },
   "Q1734": {
@@ -276,12 +276,12 @@
   },
   "Q8682": {
     "question": "¿Qué club de la capital española se registró oficialmente el 6 de marzo de 1902 —con orígenes en una sociedad futbolística de 1900— y tuvo como valedores a Julián Palacios y a los hermanos Padrós?",
-    "lead_fact": "Registro el 6 de marzo de 1902; Palacios y los hermanos Padrós; decano del fútbol madrileño.",
+    "lead_fact": "Registro el 6 de marzo de 1902; orígenes en 1900; Julián Palacios y los hermanos Padrós.",
     "source": "native-lead"
   },
   "Q2736": {
     "question": "¿Qué deporte de equipo enfrentan dos conjuntos de once jugadores, es practicado por unos 270 millones de personas y debe su nombre a la primera federación oficial del mundo, creada en Inglaterra?",
-    "lead_fact": "Once contra once; unos 270 millones de practicantes; fútbol asociación.",
+    "lead_fact": "Once contra once; unos 270 millones de practicantes; nombre de la primera federación (inglesa).",
     "source": "native-lead"
   },
   "Q517": {
@@ -341,7 +341,7 @@
   },
   "Q184795": {
     "question": "¿Qué torneo anual de clubes de la Conmebol, creado en 1960 para los campeones de liga sudamericanos, adoptó en 1965 su denominación actual?",
-    "lead_fact": "Creada en 1960; en 1965 toma el nombre de los libertadores de América.",
+    "lead_fact": "Creada en 1960 para campeones de liga sudamericanos; nombre actual desde 1965.",
     "source": "native-lead"
   },
   "Q7181": {
@@ -361,7 +361,7 @@
   },
   "Q7868": {
     "question": "¿Qué unidad morfológica y funcional, la de menor tamaño que se considera viva, permite clasificar a los organismos según estén formados por una sola o por muchas de ellas?",
-    "lead_fact": "Unidad mínima considerada viva; unicelulares frente a pluricelulares.",
+    "lead_fact": "Unidad mínima considerada viva; organismos formados por una sola o por muchas.",
     "source": "native-lead"
   },
   "Q12554": {
@@ -391,12 +391,12 @@
   },
   "Q34623": {
     "question": "¿Qué conjunto de principios éticos y de adoración, recogido en el Éxodo y el Deuteronomio, ocupa un lugar central en el judaísmo y el cristianismo?",
-    "lead_fact": "Decálogo; en hebreo «las diez palabras»; ética y adoración bíblicas.",
+    "lead_fact": "Éxodo y Deuteronomio; principios éticos y de adoración; judaísmo y cristianismo.",
     "source": "native-lead"
   },
   "Q6223": {
     "question": "¿Qué ideología totalitaria, ultranacionalista y de extrema derecha toma su nombre de una palabra italiana que alude al haz de varas de los magistrados romanos?",
-    "lead_fact": "Del italiano fascio / fasces romanos; totalitarismo ultranacionalista de extrema derecha.",
+    "lead_fact": "Nombre italiano alusivo al haz de varas romano; totalitarismo ultranacionalista de extrema derecha.",
     "source": "native-lead"
   },
   "Q58734": {
@@ -456,7 +456,7 @@
   },
   "Q1489": {
     "question": "¿Qué entidad federativa de 1495 km², dividida en dieciséis demarcaciones, es sede de los Poderes de la Unión y colinda al sur con Morelos?",
-    "lead_fact": "Ex Distrito Federal; 16 demarcaciones en el valle de México.",
+    "lead_fact": "1495 km²; 16 demarcaciones; sede de los Poderes de la Unión; Morelos al sur.",
     "source": "native-lead"
   },
   "Q134160": {
@@ -466,7 +466,7 @@
   },
   "Q542": {
     "question": "¿Qué deporte olímpico, cuyo nombre viene de una palabra griega que significa ‘competencia’, agrupa carreras, saltos y lanzamientos, con referencias desde 776 a. C. en Grecia?",
-    "lead_fact": "Del griego athlon; carreras, saltos y lanzamientos; 776 a. C.",
+    "lead_fact": "Nombre griego que significa ‘competencia’; carreras, saltos y lanzamientos; 776 a. C.",
     "source": "native-lead"
   },
   "Q16": {
@@ -476,7 +476,7 @@
   },
   "Q8458": {
     "question": "¿Qué principios morales, reconocidos como inalienables a toda persona por el mero hecho de serlo, se consagran a menudo como garantías legales internas e internacionales según la ONU?",
-    "lead_fact": "Inalienables por ser humano; consagrados en derecho interno e internacional.",
+    "lead_fact": "Inalienables a toda persona; garantías legales internas e internacionales según la ONU.",
     "source": "native-lead"
   },
   "Q42005": {
@@ -531,7 +531,7 @@
   },
   "Q11016": {
     "question": "¿Qué suma de métodos, habilidades y procesos se usa para producir bienes o servicios o alcanzar objetivos como la investigación científica, y puede integrarse en máquinas?",
-    "lead_fact": "Técnicas y procesos para producir bienes o lograr objetivos; integrable en máquinas.",
+    "lead_fact": "Métodos, habilidades y procesos para producir bienes o lograr objetivos; integrable en máquinas.",
     "source": "native-lead"
   },
   "Q10738": {
@@ -576,7 +576,7 @@
   },
   "Q15978631": {
     "question": "¿Qué especie de primate catarrino, nativa de África y luego extendida por el mundo, es la única superviviente de su género?",
-    "lead_fact": "Primate catarrino homínido nativo de África; ser humano o persona.",
+    "lead_fact": "Primate catarrino nativo de África; única especie superviviente de su género.",
     "source": "native-lead"
   },
   "Q283": {
@@ -596,7 +596,7 @@
   },
   "Q586025": {
     "question": "¿Qué manga de Hajime Isayama, serializado de 2009 a 2021, transcurre tras murallas que contienen a gigantes antropófagos?",
-    "lead_fact": "Isayama; Bessatsu Shōnen 2009-2021; murallas y titanes.",
+    "lead_fact": "Isayama; Bessatsu Shōnen 2009-2021; murallas y gigantes antropófagos.",
     "source": "translated-from-en"
   },
   "Q314492": {
@@ -641,12 +641,12 @@
   },
   "Q692989": {
     "question": "¿Qué plataforma de juegos, creada por David Baszucki y Erik Cassel, se lanzó al público en 2006 y permite a los usuarios programar sus propios juegos y jugar a los de otros?",
-    "lead_fact": "Baszucki y Cassel; lanzamiento público en 2006; moneda Robux.",
+    "lead_fact": "Baszucki y Cassel; lanzamiento público en 2006; juegos programados por los usuarios.",
     "source": "translated-from-en"
   },
   "Q178275": {
     "question": "¿Qué brote mundial causado por el virus H1N1, surgido en el último año de la Primera Guerra Mundial, se estima que mató al menos a 17 millones de personas, también a jóvenes sanos?",
-    "lead_fact": "Pandemia de H1N1 de 1918-1920; 17-50 millones de muertes.",
+    "lead_fact": "H1N1 al final de la Primera Guerra Mundial; al menos 17 millones de muertes.",
     "source": "translated-from-en"
   },
   "Q9174": {
@@ -696,7 +696,7 @@
   },
   "Q178342": {
     "question": "¿Qué tipo de ser celestial de rango superior, cuyo prefijo griego indica jefatura, forma uno de los nueve coros y es el penúltimo en la jerarquía celeste?",
-    "lead_fact": "Prefijo arc-/archi- de jefatura; penúltimo coro de la jerarquía angelical.",
+    "lead_fact": "Prefijo griego de jefatura; penúltimo de los nueve coros de la jerarquía celeste.",
     "source": "native-lead"
   },
   "Q764": {
@@ -716,7 +716,7 @@
   },
   "Q756": {
     "question": "¿Qué reino de organismos con células de pared de celulosa, en general fotosintéticos y sin locomoción, agrupa de forma monofilética a los vegetales terrestres y algas emparentadas?",
-    "lead_fact": "Paredes de celulosa; fotosíntesis; plantas terrestres y algas afines.",
+    "lead_fact": "Paredes de celulosa; fotosíntesis; vegetales terrestres y algas afines.",
     "source": "native-lead"
   },
   "Q49740": {
@@ -726,7 +726,7 @@
   },
   "Q1107": {
     "question": "¿Qué estilo de animación tradicional o por computadora, de origen japonés, se llamó primero senga eiga y hacia 1960 recibió el nombre de un préstamo del inglés que luego se acortó?",
-    "lead_fact": "Animación japonesa; de senga eiga a animēshon y su abreviatura.",
+    "lead_fact": "Animación japonesa; de senga eiga a un préstamo del inglés luego abreviado.",
     "source": "native-lead"
   },
   "Q6895044": {
@@ -766,7 +766,7 @@
   },
   "Q232755": {
     "question": "¿Qué fruto de cactáceas del género Selenicereus, cuyo nombre significa «fruta escamosa» en lengua antillana, es originario del sur de México y las costas del Pacífico centroamericano?",
-    "lead_fact": "Selenicereus; fruta del dragón; origen en el sur de México y el Pacífico centroamericano.",
+    "lead_fact": "Selenicereus; «fruta escamosa» en lengua antillana; sur de México y Pacífico centroamericano.",
     "source": "native-lead"
   },
   "Q19839121": {
@@ -796,7 +796,7 @@
   },
   "Q420292": {
     "question": "¿Qué saga de videojuegos de Ubisoft enfrenta a una hermandad secreta con los templarios a través de un dispositivo llamado Ánimus?",
-    "lead_fact": "Ubisoft; asesinos contra templarios; dispositivo Ánimus.",
+    "lead_fact": "Ubisoft; hermandad secreta contra templarios; dispositivo Ánimus.",
     "source": "native-lead"
   },
   "Q17015916": {
@@ -806,7 +806,7 @@
   },
   "Q145909": {
     "question": "¿Qué semilla de las plantas de la familia Fabaceae se desarrolla en una vaina de un carpelo que se abre en dos valvas, con las semillas en una hilera?",
-    "lead_fact": "Semilla de leguminosas; vaina de un carpelo en dos valvas.",
+    "lead_fact": "Semilla de Fabaceae; vaina de un carpelo en dos valvas; semillas en hilera.",
     "source": "native-lead"
   },
   "Q430": {
@@ -821,7 +821,7 @@
   },
   "Q202526": {
     "question": "¿Qué hidrozoo colonial sifonóforo de aguas cálidas, presente sobre todo en mar abierto en los océanos Pacífico e Índico y en la corriente del Golfo, inflige una picadura peligrosa y muy dolorosa?",
-    "lead_fact": "Sifonóforo colonial; carabela portuguesa; picadura peligrosa.",
+    "lead_fact": "Sifonóforo colonial; mar abierto (Pacífico, Índico, corriente del Golfo); picadura peligrosa.",
     "source": "native-lead"
   },
   "Q245388": {

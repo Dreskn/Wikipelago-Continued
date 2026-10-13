@@ -12,10 +12,6 @@ SRC = HERE / "questions-en-union-source.json"
 OUT = HERE / "questions-en-union.md"
 
 EXTRA: dict[str, dict[str, str]] = {
-    "AMGTV": {
-        "question": "Which American digital multicast network uses the letters AMG and is aimed at family-oriented over-the-air viewers?",
-        "fact": "No Wikipedia lead was returned; clue is a placeholder — check or reject.",
-    },
     "Earth": {
         "question": "Which planet is third from the Sun and the only astronomical object known to harbor life?",
         "fact": "Third planet; only known world with life; ocean covers 70.8% of the crust.",
@@ -82,11 +78,11 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Apple Inc.": {
         "question": "Which Cupertino company was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne to market a computer designed by Wozniak?",
-        "fact": "Founded 1976; Apple I; Jobs, Wozniak, Wayne.",
+        "fact": "Founded 1976 by Jobs, Wozniak, Wayne; first product a Wozniak-designed computer.",
     },
     "Skathi (moon)": {
         "question": "Which irregular moon of Saturn, also called Saturn XXVII, was discovered in 2000 and named after a figure from Norse mythology?",
-        "fact": "Saturn XXVII; discovered 23 Sep 2000; named for Skaði.",
+        "fact": "Saturn XXVII; discovered 23 Sep 2000; named after a Norse mythology figure.",
     },
     "Coronavirus": {
         "question": "Which group of RNA viruses includes the pathogens behind SARS, MERS, and COVID-19?",
@@ -98,7 +94,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Cat": {
         "question": "Which small carnivore, the only domesticated species of the family Felidae, is an obligate meat-eater with retractable claws?",
-        "fact": "Felis catus; obligate carnivore; retractable claws.",
+        "fact": "Only domesticated Felidae species; obligate carnivore; retractable claws.",
     },
     "Limonene": {
         "question": "Which cyclic monoterpene is the main fragrant component of citrus fruit peels and takes its name from the Italian for lemon?",
@@ -110,7 +106,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Wordle": {
         "question": "Which daily web game, created by a Welsh software engineer for himself and his partner, gives players six tries to guess a shared five-letter word?",
-        "fact": "Josh Wardle; six guesses; one shared daily five-letter word.",
+        "fact": "Welsh software engineer, made for his partner; six guesses; one shared daily five-letter word.",
     },
     "Raindrop cake": {
         "question": "Which Japanese confection made of water and agar resembles a large, clear bead of water and became popular in 2014?",
@@ -126,7 +122,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Halloween": {
         "question": "Which 31 October observance sits on the night before All Saints' Day and opens the Christian season of remembering the dead?",
-        "fact": "31 October; All Hallows' Eve / All Saints' Eve.",
+        "fact": "31 October; eve of All Saints' Day; opens the Christian season of remembering the dead.",
     },
     "Minecraft": {
         "question": "Which sandbox game, developed by Mojang, had a public alpha in 2009 and a full PC release in November 2011?",
@@ -134,7 +130,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Roblox": {
         "question": "Which game platform, created by David Baszucki and Erik Cassel, launched publicly in 2006 and lets users program their own games and play other users' creations?",
-        "fact": "Baszucki and Cassel; public 2006; Robux.",
+        "fact": "Baszucki and Cassel; public 2006; users program games and play others' creations.",
     },
     "Steven Spielberg": {
         "question": "Which American director is the highest-grossing filmmaker of all time and a pioneer of the modern blockbuster?",
@@ -154,7 +150,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "MacOS": {
         "question": "Which Apple desktop OS succeeded the company's classic operating system after Apple acquired NeXT and based the system on NeXTSTEP?",
-        "fact": "Succeeded classic Mac OS; architecture from NeXT/NeXTSTEP.",
+        "fact": "Succeeded Apple's classic OS; architecture from NeXT/NeXTSTEP.",
     },
     "Coca-Cola": {
         "question": "Which soft drink was invented in Atlanta by John Stith Pemberton and later sold to Asa Candler in 1888?",
@@ -170,7 +166,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Attack on Titan": {
         "question": "Which manga by Hajime Isayama, serialized from 2009 to 2021, is set behind walls that keep out man-eating giants?",
-        "fact": "Isayama; Bessatsu Shōnen 2009–2021; Titans and walls.",
+        "fact": "Isayama; Bessatsu Shōnen 2009–2021; walls against man-eating giants.",
     },
     "2026 Iran war": {
         "question": "Which 2026 war began after U.S.–Israeli airstrikes killed senior officials, including Supreme Leader Ali Khamenei?",
@@ -226,7 +222,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Bermuda Triangle": {
         "question": "Which loosely defined North Atlantic region, bounded roughly by Florida, Puerto Rico, and a British island territory, is the subject of a disappearance urban legend?",
-        "fact": "Florida–Bermuda–Puerto Rico; urban legend, no unusual evidence.",
+        "fact": "Florida, Puerto Rico and a British island territory; urban legend, no unusual evidence.",
     },
     "COVID-19 vaccine": {
         "question": "Which class of vaccine, with first clinical trials in March 2020, was developed at unprecedented speed against SARS-CoV-2?",
@@ -278,7 +274,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Demon Slayer: Kimetsu no Yaiba – The Movie: Infinity Castle": {
         "question": "Which 2025 Demon Slayer film, directed by Haruo Sotozaki, adapts the arc set in Muzan Kibutsuji's fortress as a sequel to the anime's fourth season?",
-        "fact": "2025; Sotozaki / Ufotable; Infinity Castle arc.",
+        "fact": "2025; Sotozaki / Ufotable; arc in Muzan Kibutsuji's fortress.",
     },
     "Annabelle (doll)": {
         "question": "Which Raggedy Ann doll did paranormal investigators Ed and Lorraine Warren claim was haunted and later moved to their Connecticut museum?",
@@ -298,7 +294,7 @@ EXTRA: dict[str, dict[str, str]] = {
     },
     "Beast of Gévaudan": {
         "question": "Which man-eating animal, or animals, terrorized south-central France between 1764 and 1767 in a former province roughly matching today's Lozère department?",
-        "fact": "1764–1767; Gévaudan / Lozère.",
+        "fact": "1764–1767; former province roughly matching today's Lozère.",
     },
     "Black cat": {
         "question": "Which coat colour in domestic cats is often linked to witch folklore, and is the only colour of the Bombay breed?",

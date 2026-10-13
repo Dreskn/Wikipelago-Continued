@@ -61,7 +61,7 @@
   },
   "Q18756": {
     "question": "Que competição de clubes da UEFA começou em 1955 como Taça da Europa e foi renomeada e reformulada em 1992?",
-    "lead_fact": "Criada em 1955 como Taça dos Campeões Europeus.",
+    "lead_fact": "Criada em 1955 como Taça da Europa; renomeada e reformulada em 1992.",
     "source": "translated-from-en"
   },
   "Q615": {
@@ -86,7 +86,7 @@
   },
   "Q1049511": {
     "question": "Que serviço de mensagens, fundado por dois antigos funcionários da Yahoo!, foi lançado em maio de 2009 e mais tarde comprado pelo Facebook?",
-    "lead_fact": "Nome ≈ «what's up»; lançado em maio de 2009; aquisição pelo Facebook.",
+    "lead_fact": "Fundadores ex-Yahoo!; lançado em maio de 2009; aquisição pelo Facebook.",
     "source": "translated-from-en"
   },
   "Q361": {
@@ -111,7 +111,7 @@
   },
   "Q31179581": {
     "question": "Que canal de entretenimento do estúdio de Hollywood sediado em Culver City, transmitido em exclusivo na América Latina, encerrou as emissões em Portugal a 14 de abril de 2012 para dar lugar ao AXN White?",
-    "lead_fact": "Canal da Sony Pictures só na América Latina; em Portugal deu lugar ao AXN White em 2012.",
+    "lead_fact": "Canal de um estúdio de Culver City só na América Latina; em Portugal deu lugar ao AXN White em 2012.",
     "source": "native-lead"
   },
   "Q2747556": {
@@ -121,7 +121,7 @@
   },
   "Q7224921": {
     "question": "Que canal de televisão por assinatura, resultado da associação da TV por cabo do Grupo Globo com um grupo de cineastas e produtores, se dedica a produções audiovisuais nacionais?",
-    "lead_fact": "Associação Globo cabo + Grupo Consórcio Brasil; programação audiovisual nacional.",
+    "lead_fact": "Associação Globo cabo + grupo de cineastas e produtores; programação audiovisual nacional.",
     "source": "native-lead"
   },
   "Q352": {
@@ -151,7 +151,7 @@
   },
   "Q206813": {
     "question": "Que liga profissional de clubes atribui cinco das sete vagas da CBF na Copa Libertadores e cujo campeão disputa a Supercopa Rei no ano seguinte?",
-    "lead_fact": "Principal liga brasileira; cinco vagas na Libertadores; campeão na Supercopa Rei.",
+    "lead_fact": "Liga de clubes; cinco das sete vagas da CBF na Libertadores; campeão na Supercopa Rei.",
     "source": "native-lead"
   },
   "Q15869": {
@@ -161,7 +161,7 @@
   },
   "Q184795": {
     "question": "Qual é a principal competição de futebol entre clubes da América do Sul, organizada pela CONMEBOL desde 1960 e considerada uma das mais prestigiadas do mundo?",
-    "lead_fact": "CONMEBOL desde 1960; nome em homenagem aos libertadores da América do Sul.",
+    "lead_fact": "CONMEBOL desde 1960; principal prova de clubes da América do Sul; das mais prestigiadas.",
     "source": "native-lead"
   },
   "Q83459": {
@@ -201,12 +201,12 @@
   },
   "Q39444": {
     "question": "Que médio-ofensivo brasileiro, nascido em Porto Alegre em 1980, é considerado um dos jogadores mais talentosos da história pelo drible e pela técnica refinada?",
-    "lead_fact": "Ronaldo de Assis Moreira; dribles e técnica; geração dos anos 2000.",
+    "lead_fact": "Nascido em Porto Alegre em 1980; dribles e técnica; geração dos anos 2000.",
     "source": "native-lead"
   },
   "Q2294549": {
     "question": "Que golpe político-militar de 15 de novembro de 1889, liderado pelo marechal Deodoro da Fonseca no Rio de Janeiro, depôs D. Pedro II e pôs fim à monarquia no país?",
-    "lead_fact": "15 de novembro de 1889; Deodoro depõe Ouro Preto e proclama a República.",
+    "lead_fact": "15 de novembro de 1889; golpe de Deodoro; deposição de D. Pedro II e fim da monarquia.",
     "source": "native-lead"
   },
   "Q41726": {
@@ -231,7 +231,7 @@
   },
   "Q7553": {
     "question": "Que atividade consiste em interpretar o significado de um texto numa língua e produzir outro texto equivalente noutra língua, a que alude um trocadilho italiano que a associa à traição?",
-    "lead_fact": "Interpretação de um texto-fonte e produção de equivalente; «traduttore, traditore».",
+    "lead_fact": "Interpretação de um texto-fonte e produção de equivalente; trocadilho italiano com traição.",
     "source": "native-lead"
   },
   "Q2831": {
@@ -246,7 +246,7 @@
   },
   "Q8682": {
     "question": "Que clube espanhol, fundado em 1902, joga de branco desde a origem, recebeu da Coroa espanhola um título honorífico em 1920 e manda os jogos no Estádio Bernabéu desde 1947?",
-    "lead_fact": "Fundado em 1902; uniforme branco; título real; Estádio Bernabéu.",
+    "lead_fact": "Fundado em 1902; uniforme branco; título honorífico da Coroa em 1920; Estádio Bernabéu.",
     "source": "native-lead"
   },
   "Q6186": {
@@ -291,12 +291,12 @@
   },
   "Q1548600": {
     "question": "Que processo histórico, ocorrido entre 1821 e 1825 e associado ao Grito do Ipiranga, separou politicamente o reino sul-americano dos Bragança do Reino de Portugal e Algarves?",
-    "lead_fact": "Separação política de Portugal (1821–1825); formação do Império do Brasil.",
+    "lead_fact": "Separação de Portugal (1821–1825); Grito do Ipiranga; reino sul-americano dos Bragança.",
     "source": "native-lead"
   },
   "Q939": {
     "question": "Que filho de João VI fundou o Império do Brasil em 1822, reinou até à abdicação em 1831 e foi também rei de Portugal durante alguns meses de 1826?",
-    "lead_fact": "Primeiro imperador do Brasil (1822–1831); Pedro IV de Portugal em 1826.",
+    "lead_fact": "Filho de João VI; fundou o Império do Brasil (1822–1831); rei de Portugal em 1826.",
     "source": "native-lead"
   },
   "Q907311": {
@@ -316,7 +316,7 @@
   },
   "Q55": {
     "question": "Que nação constituinte do seu reino, na Europa Ocidental, é banhada pelo mar do Norte e faz fronteira com a Bélgica a sul e com a Alemanha a leste?",
-    "lead_fact": "Mar do Norte; fronteiras com Bélgica e Alemanha; informalmente «Holanda». Não a capital.",
+    "lead_fact": "Nação constituinte do seu reino; mar do Norte; fronteiras com Bélgica e Alemanha. Não a capital.",
     "source": "native-lead"
   },
   "Q2015904": {
@@ -381,7 +381,7 @@
   },
   "Q9334": {
     "question": "Que serviço de correio eletrónico da empresa de Mountain View, anunciado a 1 de abril de 2004, oferecia inicialmente 1 GB de armazenamento, muito acima dos concorrentes da Yahoo! e da Microsoft?",
-    "lead_fact": "Anunciado a 1 de abril de 2004; 1 GB inicial frente aos webmails da época.",
+    "lead_fact": "Anunciado a 1 de abril de 2004; empresa de Mountain View; 1 GB inicial acima dos rivais.",
     "source": "native-lead"
   },
   "Q82194": {
@@ -481,7 +481,7 @@
   },
   "Q221695": {
     "question": "Que clube da capital gaúcha, fundado a 15 de setembro de 1903, com cores azul, preto e branco, foi três vezes campeão da Copa Libertadores da América?",
-    "lead_fact": "Fundado em 1903; três Libertadores; Arena do Grêmio.",
+    "lead_fact": "Fundado em 1903; capital gaúcha; azul, preto e branco; três Libertadores.",
     "source": "native-lead"
   },
   "Q13580495": {
@@ -536,7 +536,7 @@
   },
   "Q29647346": {
     "question": "Que série policial espanhola de Álex Pina segue dois assaltos preparados por um homem conhecido como O Professor, primeiro à Fábrica Nacional de Moeda e Selo e depois ao Banco de Espanha?",
-    "lead_fact": "Criada por Álex Pina; O Professor; Casa da Moeda e Banco de Espanha.",
+    "lead_fact": "Criada por Álex Pina; O Professor; Fábrica Nacional de Moeda e Selo e Banco de Espanha.",
     "source": "native-lead"
   },
   "Q7272": {
@@ -561,7 +561,7 @@
   },
   "Q544": {
     "question": "Que conjunto formado pela nossa estrela e pelos corpos sob o seu domínio gravitacional se formou há cerca de 4,6 mil milhões de anos a partir do colapso de uma nuvem molecular?",
-    "lead_fact": "Sol e corpos orbitais; formação há ~4,6 mil milhões de anos.",
+    "lead_fact": "Estrela central e corpos orbitais; formação há ~4,6 mil milhões de anos.",
     "source": "native-lead"
   },
   "Q40572": {
@@ -596,12 +596,12 @@
   },
   "Q692989": {
     "question": "Que plataforma de jogos, criada por David Baszucki e Erik Cassel, foi lançada ao público em 2006 e permite aos utilizadores programar os seus próprios jogos e jogar os de outros?",
-    "lead_fact": "Baszucki e Cassel; público em 2006; moeda Robux.",
+    "lead_fact": "Baszucki e Cassel; público em 2006; jogos criados pelos utilizadores.",
     "source": "translated-from-en"
   },
   "Q12554": {
     "question": "Que período da história da Europa, entre os séculos V e XV, começa com a queda do Império Romano do Ocidente e é classicamente o intervalo entre a Antiguidade e a época moderna?",
-    "lead_fact": "séc. V–XV; da queda de Roma à transição para a Idade Moderna.",
+    "lead_fact": "séc. V–XV; da queda de Roma à transição para a época moderna.",
     "source": "native-lead"
   },
   "Q859": {
@@ -641,7 +641,7 @@
   },
   "Q146": {
     "question": "Que pequeno carnívoro, a única espécie domesticada da família Felidae, é um comedor obrigatório de carne e tem garras retráteis?",
-    "lead_fact": "Felis catus; carnívoro obrigatório; garras retráteis.",
+    "lead_fact": "Única espécie domesticada de Felidae; carnívoro obrigatório; garras retráteis.",
     "source": "translated-from-en"
   },
   "Q57751738": {
@@ -651,7 +651,7 @@
   },
   "Q12562": {
     "question": "Que movimento do século XVI no cristianismo ocidental desafiou a autoridade papal e os abusos do clero, deu origem ao luteranismo e ao calvinismo e é visto como marco entre a Idade Média e a Idade Moderna?",
-    "lead_fact": "séc. XVI; desafio à autoridade papal; início do protestantismo.",
+    "lead_fact": "séc. XVI; desafio à autoridade papal; origem do luteranismo e do calvinismo.",
     "source": "native-lead"
   },
   "Q180627": {
@@ -661,7 +661,7 @@
   },
   "Q34726": {
     "question": "Que conjunto de narrativas sobre os deuses do Olimpo e heróis como Héracles ilustra as origens do mundo e é estudado para compreender a sociedade e os rituais da Antiguidade clássica?",
-    "lead_fact": "Mitos dos gregos antigos; origens do mundo, deuses e heróis.",
+    "lead_fact": "Narrativas sobre os deuses do Olimpo e heróis como Héracles; origens do mundo.",
     "source": "native-lead"
   },
   "Q5": {
@@ -726,7 +726,7 @@
   },
   "Q586025": {
     "question": "Que mangá de Hajime Isayama, serializado de 2009 a 2021, se passa atrás de muralhas que protegem a humanidade de gigantes devoradores de pessoas?",
-    "lead_fact": "Isayama; Bessatsu Shōnen 2009–2021; Titãs e muralhas.",
+    "lead_fact": "Isayama; Bessatsu Shōnen 2009–2021; gigantes e muralhas.",
     "source": "translated-from-en"
   },
   "Q283": {
@@ -796,7 +796,7 @@
   },
   "Q486851": {
     "question": "Que condição, ligada à atonia natural da fase REM, deixa o corpo temporariamente imóvel logo após acordar ou, mais raramente, ao adormecer?",
-    "lead_fact": "Paralisia pós-despertar ligada à atonia do sono REM.",
+    "lead_fact": "Imobilidade pós-despertar ligada à atonia da fase REM.",
     "source": "native-lead"
   },
   "Q232755": {
@@ -816,7 +816,7 @@
   },
   "Q82235406": {
     "question": "Que jogo integrado no Google Chrome, criado em 2014 como ovo de Páscoa, aparece ao ficar offline e começa ao premir a barra de espaços, com um dinossauro a correr?",
-    "lead_fact": "Easter egg do Chrome (2014); tiranossauro ao ficar offline.",
+    "lead_fact": "Easter egg do Chrome (2014); dinossauro a correr ao ficar offline.",
     "source": "native-lead"
   },
   "Q185749": {
@@ -876,7 +876,7 @@
   },
   "Q163873": {
     "question": "Que tubarão extinto, cujo nome científico significa «dente grande», viveu há cerca de 23 a 3,6 milhões de anos e pertence à família Otodontidae, não à dos tubarões-brancos?",
-    "lead_fact": "Otodus megalodon; Mioceno–Plioceno; família Otodontidae.",
+    "lead_fact": "Nome científico «dente grande»; Mioceno–Plioceno; família Otodontidae.",
     "source": "native-lead"
   },
   "Q21082": {

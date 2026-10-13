@@ -1,8 +1,10 @@
-"""Load multi-tag article pools shipped under data/pool_{lang}.json."""
+"""Load multi-tag article pools shipped under data/pool_{lang}.json, and the title rules
+generate uses on them (no Archipelago imports, so tools can load this file by path)."""
 
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 
@@ -160,6 +162,135 @@ def is_blocked_wiki_title(title: str) -> bool:
     """True when the title is a non-article wiki namespace the client refuses to open."""
     ns = wiki_namespace(title)
     return bool(ns) and ns in BLOCKED_WIKI_NAMESPACES
+
+
+# Matched as whole words, case-insensitive: "Acid", "Periodic table" and "David Bowie
+# discography" are dropped; Grey's Anatomy, Sex Pistols, Atomic Blonde, Lake Placid,
+# "Acidente nuclear de Chernobil" and "(futbolista nacido en 1995)" are not.
+BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
+    "rifle",
+    "pistol",
+    "shotgun",
+    "revolver",
+    "machine gun",
+    "submachine gun",
+    "discography",
+    "chemistry",
+    "chemical",
+    "compound",
+    "acid",
+    "molecule",
+    "molecular",
+    "atom",
+    "isotope",
+    "reaction",
+    "periodic table",
+    "organic chemistry",
+    "inorganic chemistry",
+)
+
+BANNED_TITLE_SUFFIXES: tuple[str, ...] = (
+    "(programming language)",
+    "(operating system)",
+    "(software)",
+    "(computer)",
+)
+
+_BANNED_TITLE_WORDS_RE = re.compile(
+    r"\b(?:" + "|".join(re.escape(keyword) for keyword in BANNED_TITLE_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+# "List of ..." style pages in the 9 wikis (lowercase prefixes).
+LIST_PAGE_PREFIXES: tuple[str, ...] = (
+    "list of ",
+    "lists of ",
+    "outline of ",
+    "timeline of ",
+    "index of ",
+    "anexo:",  # es list namespace
+    "lista polaków",  # pl "List of Poles who ..." (the capital P hides it from the rule below)
+)
+
+# These words start a list page when the next word is lowercase or a number: "Liste des",
+# "Liste d'", "Liste von", "Liste der", "Lista de", "Lista di", "Lista över", "Lijst van",
+# "Lista odcinków", "Elenco de", "Wykaz ras", "Chronologie des". Named lists and parties
+# keep their capital and stay ("Lijst Pim Fortuyn", "Lista Clinton", "Lista Macierewicza").
+LIST_PAGE_WORDS: frozenset[str] = frozenset(
+    {
+        "liste",
+        "lista",
+        "lijst",
+        "elenco",
+        "wykaz",
+        "chronologie",
+        "cronologia",
+        "cronología",
+        "kalendarium",
+    }
+)
+
+
+def is_list_page_title(title: str) -> bool:
+    """True for "List of ..." style pages in any of the 9 wikis."""
+    stripped = str(title or "").strip()
+    if stripped.lower().startswith(LIST_PAGE_PREFIXES):
+        return True
+    first, _, rest = stripped.partition(" ")
+    return first.lower() in LIST_PAGE_WORDS and bool(rest) and (rest[0].islower() or rest[0].isdigit())
+
+
+# Pages a keyword rule drops by mistake, per wiki: a rapper, a YouTuber, a Polish gold coin.
+KEYWORD_EXCEPTIONS: dict[str, frozenset[str]] = {
+    "it": frozenset({"Rosa Chemical"}),
+    "nl": frozenset({"Acid (youtuber)"}),
+    "pl": frozenset({"Pistol"}),
+}
+
+
+def has_banned_title_word(title: str, lang: str = "") -> bool:
+    """True when the title has a weapon / chemistry / discography keyword as a whole word."""
+    if title in KEYWORD_EXCEPTIONS.get(lang, ()):
+        return False
+    return bool(_BANNED_TITLE_WORDS_RE.search(str(title or "")))
+
+
+def is_reasonable_title(title: str) -> bool:
+    if len(title) < 3 or len(title) > 120:
+        return False
+    if "$" in title:
+        return False
+    if not re.search(r"[A-Za-z]", title):
+        return False
+    if re.search(r"^[^A-Za-z0-9]+$", title):
+        return False
+    return True
+
+
+def looks_common_knowledge(title: str, lang: str = "") -> bool:
+    if is_blocked_wiki_title(title):
+        return False
+    lowered = title.lower().strip()
+    if is_list_page_title(title):
+        return False
+    if has_banned_title_word(title, lang):
+        return False
+    if any(lowered.endswith(suffix) for suffix in BANNED_TITLE_SUFFIXES):
+        return False
+    if any(ch in title for ch in ('"', "$", "%", "@", "#")):
+        return False
+    if title.count(",") > 2:
+        return False
+    if re.search(r"\(disambiguation|magazine|journal\)$", lowered):
+        return False
+    if len(title.split()) > 12:
+        return False
+    return True
+
+
+def is_usable_title(title: str, lang: str = "") -> bool:
+    """Titles generate may pick as a Start / Target (the practice mode uses the same rule)."""
+    return is_reasonable_title(title) and looks_common_knowledge(title, lang)
 
 
 def _read_pool_json(code: str) -> str:

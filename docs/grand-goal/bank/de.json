@@ -3,7 +3,7 @@
   "wiki": "dewiki",
   "schema_version": 1,
   "rule": "top 100 overall ∪ top 10 per pool tag",
-  "count": 178,
+  "count": 177,
   "per_tag_top10": {
     "video_games": [
       {
@@ -671,10 +671,6 @@
       {
         "qid": "Q49653",
         "title": "ARD"
-      },
-      {
-        "qid": null,
-        "title": "Benutzer:Plenz/OSM for Wiki/languages"
       }
     ],
     "animals": [
@@ -1555,7 +1551,7 @@
       "answer_title": "TV Mainfranken",
       "answer_url": "https://de.wikipedia.org/wiki/TV_Mainfranken",
       "question": "Welcher private bayerische Regionalsender für den Regierungsbezirk mit Sitz in Würzburg hieß früher TV Touring und erreicht bis zu 350.000 Zuschauer?",
-      "lead_fact": "Privater Regionalsender Unterfranken; früher TV Touring.",
+      "lead_fact": "Privater Regionalsender für den Bezirk um Würzburg; früher TV Touring.",
       "lead": "TV Mainfranken, kurz TVM (Eigenschreibweise tvm), (vormals TV Touring, Eigenschreibweise TV touring) ist ein privater bayerischer Regionalfernsehsender für die Region Unterfranken mit einer Reichweite von bis zu 350.000 Zuschauern.",
       "question_en": null,
       "lead_fact_en": null,
@@ -1737,7 +1733,7 @@
       "answer_title": "Formelsammlung Trigonometrie",
       "answer_url": "https://de.wikipedia.org/wiki/Formelsammlung_Trigonometrie",
       "question": "Welche Übersicht stellt Identitäten wie Sinus- und Kosinussatz sowie Additionstheoreme tabellarisch zum Nachschlagen zusammen?",
-      "lead_fact": "Tabellarische Sammlung trigonometrischer Identitäten und Sätze.",
+      "lead_fact": "Tabellarische Sammlung von Identitäten; Sinus-, Kosinussatz, Additionstheoreme.",
       "lead": "",
       "question_en": null,
       "lead_fact_en": null,
@@ -1813,7 +1809,7 @@
       "answer_title": "Figuren aus dem Marvel-Universum",
       "answer_url": "https://de.wikipedia.org/wiki/Figuren_aus_dem_Marvel-Universum",
       "question": "Welche Liste beschreibt fiktive Personen und Gruppen aus Comics des US-Verlags von Spider-Man und den X-Men, deren Zahl über 6000 liegt?",
-      "lead_fact": "Über 6000 Figuren aus Marvel-Comics; Übersichtsartikel.",
+      "lead_fact": "Über 6000 fiktive Personen und Gruppen; Verlag von Spider-Man und X-Men.",
       "lead": "Die Liste Figuren aus dem Marvel-Universum beschreibt bekannte Figuren aus dem Marvel-Universum. Es sind fiktive Personen und Gruppen, die in Comics des US-amerikanischen Comicverlages Marvel Comics auftreten. Die Anzahl aller Figuren beläuft sich auf über 6000. Viele sind jedoch eher unbekannt und werden daher hier nicht aufgeführt.",
       "question_en": null,
       "lead_fact_en": null,
@@ -2206,31 +2202,6 @@
       "views_summed_from_monthly_tops": 10039526,
       "sensitive": false,
       "question_source": "translated-from-en",
-      "notes": ""
-    },
-    {
-      "qid": null,
-      "answer_title": "Benutzer:Plenz/OSM for Wiki/languages",
-      "answer_url": "https://de.wikipedia.org/wiki/Benutzer%3APlenz/OSM_for_Wiki/languages",
-      "question": "Auf welcher Benutzerunterseite stehen die Oberflächentexte eines Kartenwerkzeugs in mehreren Sprachen, mit der Anweisung, [xx] als letzte Zeile zu lassen und HTML-kodierte Zeichen zu verwenden?",
-      "lead_fact": "Sprachdatei für osm4wiki; [xx] als letzte Zeile; HTML-Zeichen.",
-      "lead": "PLEASE – before you add a new language:\nunderstand the principle, know what you are doing, don't mess it up!\nuse HTML-coded characters (ä ß é Δ œ)\nleave [xx] as last line\nuse preview and save only if everything looks absolutely perfect!\nafter that, go back to the osm4wiki map, open the tool box and click the update link!\n[en]\nopenall = open all sections\nclosall = close all sections\nshowall = show all icons\nhideall = hide all icons\nmbigger = bigger map window\nmsmaler = smaller map window\nnodata  = sorry, no data to show\nerrdata = Toolserver Error:\narticle = article\ncatgory = Category\ncluster = Clustering on/off\ncoords  = coordinates\nsetting = Settings\nsetcook = permanently stored in cookies\npopwith = show Popup Text\npopauof = Popup Text disappears automatically\npopdel0 = at once\npopdel1 = delayed\nithead  = Twist Icons:\nitrload = Reload necessary\nitrlcl  = Click\nitnever = no icons at…",
-      "question_en": null,
-      "lead_fact_en": null,
-      "tags": [
-        "miscellaneous"
-      ],
-      "via": [
-        "overall",
-        "miscellaneous"
-      ],
-      "overall_rank": 56,
-      "category_ranks": {
-        "miscellaneous": 10
-      },
-      "views_summed_from_monthly_tops": 9952839,
-      "sensitive": false,
-      "question_source": "native-lead",
       "notes": ""
     },
     {
@@ -3398,7 +3369,7 @@
       "lead_fact": "Hawaiisch „schnell“; erste solche Seite von Ward Cunningham 1995.",
       "lead": "Ein Wiki (hawaiisch für „schnell“) ist eine Website, deren Inhalte von den Besuchern nicht nur gelesen, sondern auch direkt im Webbrowser bearbeitet und geändert werden können (Web-2.0-Anwendung).\nDas Ziel ist häufig, Erfahrung und Wissen gemeinschaftlich zu sammeln (kollektive Intelligenz) und in für die Zielgruppe verständlicher Form zu dokumentieren. Die Autoren erarbeiten hierzu gemeinschaftlich Texte, die ggf. durch Fotos oder andere Medien ergänzt werden (kollaboratives Schreiben, E-Collaboration). Ermöglicht wird dies durch ein vereinfachtes Content-Management-System, die sogenannte Wiki-Software oder Wiki-Engine.\nDas bekannteste Wiki ist die Online-Enzyklopädie Wikipedia, welche die Wiki-Software MediaWiki einsetzt. Zudem nutzen auch viele Unternehmen Wikis als Teil des Wissensmanagementsystems in ihrem Intranet (standortübergreifend), siehe Enterprise Wiki. Ein einzelnes…",
       "question_en": "Which kind of collaboratively edited website takes its name, via the first user-editable site, from a Hawaiian word for 'quick'?",
-      "lead_fact_en": "Hawaiian 'quick'; WikiWikiWeb as the first example.",
+      "lead_fact_en": "Collaboratively edited site; name from Hawaiian 'quick' via the first user-editable site.",
       "tags": [
         "technology"
       ],
@@ -3467,10 +3438,10 @@
       "answer_title": "Tuberkulose",
       "answer_url": "https://de.wikipedia.org/wiki/Tuberkulose",
       "question": "Welche Infektionskrankheit, historisch Schwindsucht genannt, wird durch ein Bakterium der Gattung Mycobacterium verursacht und befällt meist die Lunge?",
-      "lead_fact": "Mycobacterium tuberculosis; historisch Schwindsucht; meist die Lunge.",
+      "lead_fact": "Bakterium der Gattung Mycobacterium; historisch Schwindsucht; meist die Lunge.",
       "lead": "Die Tuberkulose (kurz Tb oder Tbc; so benannt wegen des charakteristischen histopathologischen Bildes, von lateinisch Tuberculosis, von lateinisch tuberculum‚ kleine Geschwulst) ist eine weltweit durch Bakterien verbreitete Infektionskrankheit. Die früher auch als Schwindsucht oder in Österreich als Lunglbrand bezeichnete Erkrankung wird durch verschiedene Mykobakterien verursacht. Mit über einer Million Toten jährlich ist sie die tödlichste Infektionskrankheit weltweit. Beim Menschen ist die Lungentuberkulose die häufigste Form. Bei Immundefekten zeigt sich vermehrt auch ein Befall außerhalb der Lunge.",
       "question_en": "Which infectious disease, historically called consumption, is caused by a bacterium of the genus Mycobacterium and usually attacks the lungs?",
-      "lead_fact_en": "Mycobacterium tuberculosis; historically consumption; typically pulmonary.",
+      "lead_fact_en": "Bacterium of the genus Mycobacterium; historically consumption; typically pulmonary.",
       "tags": [
         "biology_medicine",
         "science_space"
@@ -3567,7 +3538,7 @@
       "answer_title": "Chronologie des russischen Überfalls auf die Ukraine",
       "answer_url": "https://de.wikipedia.org/wiki/Chronologie_des_russischen_%C3%9Cberfalls_auf_die_Ukraine",
       "question": "Welche Übersicht listet die Ereignisse des 2022 begonnenen Angriffskriegs Moskaus gegen Kiew in zeitlicher Reihenfolge auf?",
-      "lead_fact": "Chronologische Übersicht der Invasion ab 2022.",
+      "lead_fact": "Zeitliche Übersicht; Angriffskrieg Moskaus gegen Kiew ab 2022.",
       "lead": "Diese Chronologie des russischen Überfalls auf die Ukraine gibt eine Übersicht über Ereignisse seit der russischen Invasion in der Ukraine ab 2022.",
       "question_en": null,
       "lead_fact_en": null,
@@ -3616,7 +3587,7 @@
       "answer_title": "Heiliges Römisches Reich",
       "answer_url": "https://de.wikipedia.org/wiki/Heiliges_R%C3%B6misches_Reich",
       "question": "Wie hieß vom Spätmittelalter bis 1806 das aus zahlreichen Territorien bestehende Herrschaftsgebiet jener Kaiser, die sich seit dem 10. Jahrhundert als Nachfolger der antiken Caesaren verstanden?",
-      "lead_fact": "Offizieller Name bis 1806; römisch-deutsche Kaiser seit dem 10. Jahrhundert.",
+      "lead_fact": "Offizieller Name bis 1806; Kaiser seit dem 10. Jahrhundert als Nachfolger der Caesaren.",
       "lead": "Heiliges Römisches Reich (lateinisch Sacrum Imperium Romanum oder Sacrum Romanum Imperium) war vom Spätmittelalter bis 1806 die offizielle Bezeichnung für das seit dem 10. Jahrhundert aus zahlreichen Territorien bestehende Herrschaftsgebiet der römisch-deutschen Kaiser. Der Name leitet sich vom Anspruch seiner mittelalterlichen Herrscher ab, Nachfolger der römischen Kaiser der Antike und im Sinne des Gottesgnadentums die universalen weltlichen Oberhäupter der Christenheit zu sein, im Rang also über allen anderen Königen Europas zu stehen. Im späten 15. bis 16. Jahrhundert etablierte sich zeitweise auch die Bezeichnung „Heiliges Römisches Reich Deutscher Nation“. Diese Bezeichnung wurde nach der Auflösung des Reiches ab dem 19. Jahrhundert wieder popularisiert, vor allem zur Bezeichnung des neuzeitlichen Reiches. Zur Unterscheidung von dem 1871 als Nationalstaat gegründeten Deutschen…",
       "question_en": null,
       "lead_fact_en": null,
@@ -4242,7 +4213,7 @@
       "answer_title": "Griechische Mythologie",
       "answer_url": "https://de.wikipedia.org/wiki/Griechische_Mythologie",
       "question": "Wie heißt die Gesamtheit der antiken Sagen um die olympischen Götter und Heroen wie Herakles?",
-      "lead_fact": "Gesamtheit der Götter- und Heldenmythen des antiken Griechenlands.",
+      "lead_fact": "Gesamtheit der antiken Sagen; olympische Götter und Heroen wie Herakles.",
       "lead": "Die griechische Mythologie umfasst die Gesamtheit der antiken griechischen Mythen, also der Geschichten der Götter und Helden (Heroen) des antiken Griechenlands.",
       "question_en": null,
       "lead_fact_en": null,
@@ -4316,10 +4287,10 @@
       "answer_title": "Hauskatze",
       "answer_url": "https://de.wikipedia.org/wiki/Hauskatze",
       "question": "Welches kleine Raubtier, die einzige domestizierte Art der Familie Felidae, ist ein obligatorischer Fleischfresser mit einziehbaren Krallen?",
-      "lead_fact": "Felis catus; obligatorischer Fleischfresser; einziehbare Krallen.",
+      "lead_fact": "Einzige domestizierte Felidae-Art; obligatorischer Fleischfresser; einziehbare Krallen.",
       "lead": "Die Hauskatze (Felis catus, Synonym: Felis domestica) ist die Haustierform der Falbkatze. Sie zählt zu den beliebtesten Heimtieren. In der Rassekatzenzucht werden oft nur die Tiere als Hauskatze bezeichnet, die keiner anerkannten Rasse angehören.\nIn Deutschland sind Hauskatzen die am häufigsten gehaltenen Haustiere.\nAufgrund ihres Jagdverhaltens sind freilaufende Hauskatzen mancherorts eine Bedrohung der Artenvielfalt und zählen zu den problematischsten invasiven Arten der Welt.",
       "question_en": "Which small carnivore, the only domesticated species of the family Felidae, is an obligate meat-eater with retractable claws?",
-      "lead_fact_en": "Felis catus; obligate carnivore; retractable claws.",
+      "lead_fact_en": "Only domesticated Felidae species; obligate carnivore; retractable claws.",
       "tags": [
         "animals"
       ],
@@ -4340,7 +4311,7 @@
       "answer_title": "Bärlauch",
       "answer_url": "https://de.wikipedia.org/wiki/B%C3%A4rlauch",
       "question": "Welche Allium-Art ist ein Frühlingsblüher mit Zwiebel, riecht knoblauchähnlich durch Methiin und Alliin und ist eng mit dem Knoblauch verwandt?",
-      "lead_fact": "Allium ursinum; knoblauchähnlicher Geruch durch Methiin und Alliin.",
+      "lead_fact": "Allium-Art; Frühlingsblüher; knoblauchähnlicher Geruch durch Methiin und Alliin.",
       "lead": "Der Bärlauch (Allium ursinum) ist eine Pflanzenart aus der Gattung Lauch (Allium) und eng mit dem Knoblauch (Allium sativum) verwandt. Die ausdauernde, krautige Pflanze ist ein Frühlingsblüher mit einer Zwiebel als Speicherorgan. Bärlauch besitzt einen charakteristischen, knoblauchähnlichen Geruch, der durch schwefelhaltige Verbindungen verursacht wird, die typisch für Vertreter der Gattung Allium sind. Bei Allium ursinum sind dies vor allem Methiin und Alliin. Die Pflanze ist seit dem Altertum als Heil- und Gewürzpflanze bekannt und wird als beliebtes Wildgemüse gesammelt. Durch Verwechslung mit anderen Pflanzenarten, insbesondere der Herbstzeitlosen (Colchicum autumnale), kommt es immer wieder zu schweren Vergiftungen, die auch zum Tod führen können. Bärlauch ist in Europa und im westlichen Asien weit verbreitet. Die Pflanze gedeiht vor allem in Laubwäldern auf feuchten Böden, wo sie…",
       "question_en": null,
       "lead_fact_en": null,
@@ -4439,7 +4410,7 @@
       "answer_title": "Mariä Aufnahme in den Himmel",
       "answer_url": "https://de.wikipedia.org/wiki/Mari%C3%A4_Aufnahme_in_den_Himmel",
       "question": "Welches Hochfest am 15. August feiert, dass die Mutter Jesu am Ende ihres irdischen Lebens mit Leib und Seele zu Gott erhoben wurde, und wird mindestens seit dem 5. Jahrhundert begangen?",
-      "lead_fact": "15. August; leibliche Aufnahme Mariens; mindestens seit dem 5. Jahrhundert.",
+      "lead_fact": "15. August; Mutter Jesu mit Leib und Seele erhoben; mindestens seit dem 5. Jahrhundert.",
       "lead": "Mariä Aufnahme in den Himmel (lateinisch Assumptio Beatae Mariae Virginis  ‚Aufnahme der seligen Jungfrau Maria‘) oder Mariä Himmelfahrt (oder Mariae Himmelfahrt, „Himmelfahrt Marias“) ist das Hochfest der leiblichen Aufnahme Mariens in den Himmel am 15. August, das von mehreren christlichen Konfessionen gefeiert wird und in manchen Staaten und Regionen auch ein gesetzlicher Feiertag ist. Es wird mindestens seit dem 5. Jahrhundert begangen. Andere Bezeichnungen sind „Vollendung Mariens“ oder „Heimgang Mariens“, früher auch „unser frauen auffarttag“ und „auffahrt unser frauen“. Im Zentrum des Festes steht der Glaube, dass Maria, die Mutter Jesu, wegen ihrer einzigartigen Verbindung mit der Erlösungstat Jesu Christi als die „Ersterlöste“ an der Auferstehungsgestalt Christi teilnimmt und dass bei ihr die allen Menschen von Gott versprochene Zukunft des ganzen Menschen mit Leib und Seele in…",
       "question_en": null,
       "lead_fact_en": null,
@@ -4538,7 +4509,7 @@
       "answer_title": "Kurkuma",
       "answer_url": "https://de.wikipedia.org/wiki/Kurkuma",
       "question": "Welche Ingwergewächs-Art stammt aus Südasien; ihr intensiv gelbes Rhizom dient als Gewürz und Farbstoff?",
-      "lead_fact": "Curcuma longa; gelbes Rhizom als Gewürz und Farbstoff.",
+      "lead_fact": "Ingwergewächs aus Südasien; gelbes Rhizom als Gewürz und Farbstoff.",
       "lead": "Die Kurkuma oder Kurkume (Curcuma longa), auch Gelber Ingwer, Safranwurz(el), Gelbwurz(el), Gilbwurz(el) oder Curcuma genannt, ist eine Pflanzenart aus der Gattung Curcuma innerhalb der Familie der Ingwergewächse (Zingiberaceae). Sie stammt aus Südasien und wird in den Tropen kultiviert.\nDas Rhizom ähnelt stark dem des Ingwers, ist jedoch intensiv gelb; das geschälte Rhizom wird frisch und getrocknet als Gewürz und Farbstoff verwendet. Es sind bis zu fünf Prozent typische ätherische Öle sowie bis zu drei Prozent des gelbfärbenden Curcumins bzw. dessen Derivate enthalten. Das Rhizom wirkt verdauungsanregend.",
       "question_en": null,
       "lead_fact_en": null,
@@ -4661,7 +4632,7 @@
       "answer_title": "Ketogene Diät",
       "answer_url": "https://de.wikipedia.org/wiki/Ketogene_Di%C3%A4t",
       "question": "Welche therapeutische Ernährungsform reduziert Kohlenhydrate so weit, dass der Körper Energie vor allem aus Fett und daraus gebildeten Ersatzstoffen statt aus Glukose gewinnt?",
-      "lead_fact": "Kohlenhydratlimitiert; Energie aus Fett und Ketonkörpern.",
+      "lead_fact": "Kohlenhydratlimitiert; Energie vor allem aus Fett statt aus Glukose.",
       "lead": "Ketogene Diät ist eine in der Medizin zu therapeutischen Zwecken eingesetzte Diät. Hierbei wird die Kohlenhydratzufuhr so reduziert, dass der Körper beginnt, seinen Energiebedarf nicht aus Glukose, sondern vorrangig oder ausschließlich aus Fett und aus den daraus im Körper aufgebauten namensgebenden Ketonkörpern zu decken, die als Ersatzstoffe für Glukose dienen. Damit ist die ketogene Diät eine spezielle Form der Low-Carb-Diät.\nDie ketogene Diät ist eine kohlenhydratlimitierte, protein- und energiebilanzierte therapeutische Ernährungsform, die den Hungerstoffwechsel in bestimmten Aspekten imitiert. Als Therapieverfahren wird sie vor allem bei Kindern mit pharmakoresistenter Epilepsie, Glukosetransporterstörung (beispielsweise GLUT1-Defizit-Syndrom) und Pyruvatdehydrogenasemangel eingesetzt. In diesem Rahmen muss sie individuell berechnet und ärztlich überwacht werden.\nKetogene…",
       "question_en": null,
       "lead_fact_en": null,
@@ -4785,7 +4756,7 @@
       "answer_title": "Glucose",
       "answer_url": "https://de.wikipedia.org/wiki/Glucose",
       "question": "Welches natürlich vorkommende Monosaccharid ist in der D-Form die häufigste Zuckerart und hat seinen Namen vom griechischen Wort für „süß“?",
-      "lead_fact": "D-Form natürlich; Traubenzucker/Dextrose; häufigstes Monosaccharid.",
+      "lead_fact": "D-Form natürlich; häufigstes Monosaccharid; Name vom griechischen Wort für „süß“.",
       "lead": "Glucose (fachsprachlich; Abkürzung: Glc), Glukose oder Glykose (von griechisch γλυκύς glykýs ‚süß‘, und -ose als Suffix für Zucker) ist ein natürlich vorkommendes Kohlenhydrat. Von den Glucoseenantiomeren ist die D-Glucose die natürliche Form. Sie wird auch als Traubenzucker oder bei Lebensmittelinhaltstoffen als Dextrose (auch Saccharum amylaceum) bezeichnet und ist das häufigste Monosaccharid (Einfachzucker). L-Glucose kann synthetisch dargestellt werden, besitzt aber nur geringe Bedeutung (für eine Erklärung der Bezeichnungen „D“ und „L“ siehe Fischer-Projektion). Wenn Glucose ohne weiteren Namenszusatz (Präfix) erwähnt wird, ist D-Glucose gemeint.\nGlucose entsteht in Pflanzen und den meisten Algen mit Hilfe der Photosynthese aus Wasser und Kohlenstoffdioxid. In lebenden Organismen ist Glucose die Hauptenergiequelle. Sie wird als polymeres Glucan gespeichert, in…",
       "question_en": null,
       "lead_fact_en": null,
@@ -4986,7 +4957,7 @@
       "answer_title": "Spielautomat",
       "answer_url": "https://de.wikipedia.org/wiki/Spielautomat",
       "question": "Welches ursprünglich mechanische, heute meist elektronische Gerät setzt nach Münz- oder Scheineinwurf eine Runde in Gang, deren Ergebnis Zufall und Bedienung bestimmen, oft in der Hoffnung auf Gewinn?",
-      "lead_fact": "Mechanisch dann elektronisch; Zufall plus Spieleraktion; Gewinnhoffnung.",
+      "lead_fact": "Mechanisch dann elektronisch; Zufall plus Bedienung; Gewinnhoffnung.",
       "lead": "Ein Spielautomat ist ein ursprünglich mechanisch, später elektromechanisch und heute meist elektronisch funktionierendes, Screen-basiertes Gerät, das nach Münzeinwurf, Eingabe einer Banknote oder eines werthaltigen Tickets einen Spielverlauf startet, dessen Ergebnis durch Zufall und Spielerbetätigungen bestimmt wird.\nMotiv zum Spielen sind Unterhaltung und Hoffnung auf einen Gewinn. Kommerzielle Nutznießer des Automaten sind in der Regel der Betreiber sowie der Staat, der – sofern es sich um legal aufgestellte Geräte handelt – einen nicht unbeträchtlichen Teil des Gewinnes als Vergnügungs- bzw. Spielbankabgabe erhält.",
       "question_en": null,
       "lead_fact_en": null,
@@ -5036,7 +5007,7 @@
       "answer_title": "Ace Combat",
       "answer_url": "https://de.wikipedia.org/wiki/Ace_Combat",
       "question": "Welche arcadelastige Flugsimulationsreihe von Namco begann 1995 auf der ersten PlayStation und verknüpft Missionen durch eine fortlaufende Geschichte?",
-      "lead_fact": "Namco; Start als Air Combat 1995; fortlaufende Missionsgeschichte.",
+      "lead_fact": "Namco; Start 1995 auf der ersten PlayStation; fortlaufende Missionsgeschichte.",
       "lead": "Ace Combat ist eine Serie von arcadelastigen Videospielen der japanischen Softwarefirma Namco für verschiedene Plattformen aus der Kategorie der militärischen Flugsimulationen bzw. Actionspiele.\nDer erste Teil erschien 1995 unter dem Titel Air Combat für die erste Sony PlayStation und war so erfolgreich, dass gleich mehrere Sequels, später auch auf der PlayStation 2, erschienen.\nDie Spiele zeichnen sich dadurch aus, dass die einzelnen Missionen durch eine fortlaufende Geschichte miteinander verwoben sind. Allerdings ist dieses Merkmal bei einigen Teilen der europäischen Versionen entfernt worden. Außerdem wurden bei den europäischen PAL-Fassungen für die PlayStation 2 einige in den entsprechenden japanischen oder amerikanischen NTSC-Versionen vorhandenen Besonderheiten wie die multilinguale Sprachausgabe entfernt (nur noch englische anstatt zusätzlicher japanischer Sprachausgabe).\nIm…",
       "question_en": null,
       "lead_fact_en": null,
@@ -5161,7 +5132,7 @@
       "answer_title": "Animatrix",
       "answer_url": "https://de.wikipedia.org/wiki/Animatrix",
       "question": "Welcher US-amerikanisch-japanische Episodenfilm von 2003 versammelt neun Zeichentrick- und Computer-Kurzfilme aus dem Universum von Neo und Morpheus, meist unter japanischen Regisseuren gemeinsam mit den Wachowskis?",
-      "lead_fact": "Neun Kurzfilme 2003; Matrix-Welt; Wachowskis und japanische Regisseure.",
+      "lead_fact": "Neun Kurzfilme 2003; Universum von Neo und Morpheus; Wachowskis und japanische Regisseure.",
       "lead": "Animatrix (Originaltitel: The Animatrix) ist ein US-amerikanisch-japanischer Animationsfilm aus dem Jahr 2003. Der Film besteht aus einer Sammlung von neun verschiedenen Computeranimations- und Zeichentrick-Kurzfilmen, die in der Welt der Matrix-Filme spielen. Die Regie bei diesen Kurzfilmen führten in den meisten Fällen bekannte japanische Anime-Regisseure, die zusammen mit den Wachowskis auch die Drehbücher schrieben.\nAuf den Inhalt einiger Kurzfilme nehmen die Filme Matrix Reloaded und Matrix Revolutions sowie das Videospiel Enter the Matrix Bezug. Der Film erschien auf DVD und später auch auf Blu-ray.",
       "question_en": null,
       "lead_fact_en": null,

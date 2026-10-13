@@ -846,7 +846,8 @@ def install_archipelago_stand_ins():
 
     @dataclasses.dataclass
     class PerGameCommonOptions:
-        pass
+        def as_dict(self, *option_names):
+            return {name: getattr(self, name).value for name in option_names}
 
     options.Option = Option
     options.Toggle = Toggle

@@ -14,7 +14,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. |
+| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. Capped at `check_count`: a higher value needs (and puts in the pool) only `check_count` fragments. |
 | `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
@@ -100,6 +100,8 @@ On the client: unlocked boards stamp in parallel from page titles; click a board
 | `scrollsanity` | `false` | If true, scrolling starts slow and improves with **Progressive Scroll Speed** items. |
 
 These add friction; leave them off for a first playtest or casual multiworld.
+
+Scrollsanity only slows the mouse wheel (laptop touchpads too, since browsers report them as a wheel) and the arrow, Page Up / Page Down and Space keys. It doesn't affect touch (finger) scrolling on phones and tablets.
 
 ---
 

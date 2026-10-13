@@ -106,7 +106,7 @@
   },
   "Q153815": {
     "question": "Welke jongere dochter van George VI bleef tijdens de Tweede Wereldoorlog op een koninklijk kasteel in Berkshire in plaats van naar Canada te worden geëvacueerd?",
-    "lead_fact": "Bleef in WO II op Windsor; enige zus van Elizabeth II.",
+    "lead_fact": "Jongere dochter van George VI; in WO II op kasteel in Berkshire.",
     "source": "translated-from-en"
   },
   "Q519588": {
@@ -206,7 +206,7 @@
   },
   "Q35657": {
     "question": "Welke vijftig deelgebieden van de Amerikaanse federatie kunnen in zekere mate onafhankelijk van de federale overheid opereren?",
-    "lead_fact": "Vijftig staten met eigen bevoegdheden naast de federale overheid.",
+    "lead_fact": "Vijftig deelgebieden met eigen bevoegdheden naast de federale overheid.",
     "source": "native-lead"
   },
   "Q78454": {
@@ -271,7 +271,7 @@
   },
   "Q14518837": {
     "question": "Welk Nederlands AVROTROS-spelprogramma, een remake van een Vlaams format van Woestijnvis, laat kandidaten geld verdienen terwijl één van hen in het geheim saboteert?",
-    "lead_fact": "Remake van De Mol; AVROTROS/IDTV; één saboteur onder de kandidaten.",
+    "lead_fact": "Remake van Vlaams Woestijnvis-format; AVROTROS/IDTV; één saboteur onder de kandidaten.",
     "source": "native-lead"
   },
   "Q448936": {
@@ -331,7 +331,7 @@
   },
   "Q29647346": {
     "question": "Welke Spaanse kraakserie van Álex Pina ging op 2 mei 2017 in première op Antena 3 en werd later een wereldwijd succes op Netflix?",
-    "lead_fact": "Álex Pina; Antena 3, 2 mei 2017; Netflix-titel Money Heist.",
+    "lead_fact": "Álex Pina; Antena 3, 2 mei 2017; later wereldsucces op Netflix.",
     "source": "native-lead"
   },
   "Q6223": {
@@ -386,7 +386,7 @@
   },
   "Q7184": {
     "question": "Welk militair bondgenootschap ontstond na de Tweede Wereldoorlog op basis van een pact dat op 4 april 1949 in Washington D.C. werd ondertekend, met wederzijdse verdediging als kern?",
-    "lead_fact": "Noord-Atlantisch Verdrag, Washington 4 april 1949; wederzijdse verdediging.",
+    "lead_fact": "Militair bondgenootschap; pact Washington 4 april 1949; wederzijdse verdediging.",
     "source": "native-lead"
   },
   "Q46": {
@@ -416,7 +416,7 @@
   },
   "Q2599262": {
     "question": "Welk overzicht rangschikt alle gemeenten van Vlaanderen, Wallonië en Brussel naar inwonertal, met onder meer oppervlakte, bevolkingsdichtheid en welvaartsindex voor jaren als 1846 en 2026?",
-    "lead_fact": "Alle Belgische gemeenten op inwonertal; cijfers 1846–2026 en welvaartsindex.",
+    "lead_fact": "Gemeenten van Vlaanderen, Wallonië en Brussel op inwonertal; 1846–2026; welvaartsindex.",
     "source": "native-lead"
   },
   "Q1028": {
@@ -441,7 +441,7 @@
   },
   "Q39": {
     "question": "Welk Europees land grenst in het noorden aan Duitsland, in het westen aan Frankrijk en in het zuiden aan Italië, en is een Alpenland zonder kust?",
-    "lead_fact": "Officiële namen in het Duits, Frans en Latijn; noorderbuur Duitsland.",
+    "lead_fact": "Buren Duitsland, Frankrijk en Italië; Alpenland zonder kust.",
     "source": "native-lead"
   },
   "Q252": {
@@ -471,12 +471,12 @@
   },
   "Q3044": {
     "question": "Welke zoon van Pepijn de Korte werd vanaf 768 koning der Franken en op 25 december 800 de eerste keizer van het Heilige Roomse Rijk?",
-    "lead_fact": "Karolinger; koning der Franken vanaf 768; keizer vanaf 25 december 800.",
+    "lead_fact": "Zoon van Pepijn de Korte; koning der Franken vanaf 768; keizer vanaf 25 december 800.",
     "source": "native-lead"
   },
   "Q251868": {
     "question": "Welk feest op 31 oktober valt op de avond voor Allerheiligen en opent de christelijke periode waarin de doden worden herdacht?",
-    "lead_fact": "31 oktober; All Hallows' Eve / vooravond van Allerheiligen.",
+    "lead_fact": "31 oktober; vooravond van Allerheiligen; begin christelijke dodenherdenking.",
     "source": "translated-from-en"
   },
   "Q167541": {
@@ -491,7 +491,7 @@
   },
   "Q326461": {
     "question": "Onder welke naam wordt een onbepaalde groep muzikanten en beroemdheden aangeduid die op dezelfde jonge leeftijd overleden, zoals Jimi Hendrix, Janis Joplin en Kurt Cobain?",
-    "lead_fact": "Beroemdheden overleden op 27-jarige leeftijd; ook Forever 27 genoemd.",
+    "lead_fact": "Beroemdheden jong overleden op dezelfde leeftijd; o.a. Hendrix, Joplin en Cobain.",
     "source": "native-lead"
   },
   "Q133903": {
@@ -526,7 +526,7 @@
   },
   "Q8216": {
     "question": "Welk schrift van 24 letters, in de 9e eeuw v.Chr. ontwikkeld uit dat van de Feniciërs, wordt nog altijd gebruikt voor de taal van Homerus en Plato?",
-    "lead_fact": "24 letters; uit het Fenicisch; nog in gebruik in Griekenland en Cyprus.",
+    "lead_fact": "24 letters; uit het Fenicisch; schrift voor de taal van Homerus en Plato.",
     "source": "native-lead"
   },
   "Q762": {
@@ -586,7 +586,7 @@
   },
   "Q133780": {
     "question": "Welke door de bacterie Yersinia veroorzaakte ziekte, met builen- en longvorm, eiste tijdens de Zwarte Dood van 1347–1351 naar schatting een derde van de Europeanen?",
-    "lead_fact": "Yersinia pestis; builen- en longvorm; Zwarte Dood 1347–1351.",
+    "lead_fact": "Bacterie Yersinia; builen- en longvorm; Zwarte Dood 1347–1351.",
     "source": "native-lead"
   },
   "Q131755": {
@@ -606,7 +606,7 @@
   },
   "Q171": {
     "question": "Welk soort website ontleent zijn naam, via de eerste door bezoekers bewerkbare site, aan een Hawaïaans woord voor snel?",
-    "lead_fact": "Hawaïaans voor 'snel'; WikiWikiWeb als eerste voorbeeld.",
+    "lead_fact": "Hawaïaans voor 'snel'; naam via de eerste door bezoekers bewerkbare site.",
     "source": "translated-from-en"
   },
   "Q6534": {
@@ -631,7 +631,7 @@
   },
   "Q405": {
     "question": "Welke enige natuurlijke satelliet van de Aarde, de vijfde grootste in het zonnestelsel, staat zo'n 380.000 kilometer ver en draait in ruim 27 dagen om onze planeet?",
-    "lead_fact": "Enige natuurlijke satelliet van de Aarde; circa 380.000 km; omlooptijd een maand.",
+    "lead_fact": "Enige natuurlijke satelliet van de Aarde; circa 380.000 km; omlooptijd ruim 27 dagen.",
     "source": "native-lead"
   },
   "Q544": {
@@ -656,7 +656,7 @@
   },
   "Q261008": {
     "question": "Van welke tandvlinder leven de harige larven op Quercus-bomen en staan ze bekend om hun brandharen, in België en Nederland een plaagsoort?",
-    "lead_fact": "Thaumetopoea processionea; rupsen op eik; brandharen.",
+    "lead_fact": "Tandvlinder; harige larven op Quercus; brandharen; plaagsoort.",
     "source": "native-lead"
   },
   "Q161790": {
@@ -671,7 +671,7 @@
   },
   "Q12184": {
     "question": "Hoe heet een uitbraak van een besmettelijke ziekte op wereldwijde schaal, naar de Griekse woorden voor geheel en volk?",
-    "lead_fact": "Wereldwijde epidemie; van pan (geheel) en dêmos (volk).",
+    "lead_fact": "Wereldwijde uitbraak van besmettelijke ziekte; naar Grieks voor geheel en volk.",
     "source": "native-lead"
   },
   "Q41662": {
@@ -686,12 +686,12 @@
   },
   "Q12204": {
     "question": "Welke infectieziekte, historisch tering genoemd, wordt veroorzaakt door een bacterie uit het geslacht Mycobacterium en treft meestal de longen?",
-    "lead_fact": "Mycobacterium tuberculosis; historisch tering; meestal longen.",
+    "lead_fact": "Bacterie uit het geslacht Mycobacterium; historisch tering; meestal longen.",
     "source": "translated-from-en"
   },
   "Q2840": {
     "question": "Welke seizoensgebonden virusziekte tast de luchtwegen aan, is ernstiger dan een gewone verkoudheid en kan tot sterfte leiden?",
-    "lead_fact": "Influenzavirus in de luchtwegen; ernstiger dan verkoudheid; kan fataal zijn.",
+    "lead_fact": "Seizoensgebonden virusziekte; luchtwegen; ernstiger dan verkoudheid; kan fataal zijn.",
     "source": "native-lead"
   },
   "Q314492": {
@@ -706,7 +706,7 @@
   },
   "Q146": {
     "question": "Welk klein roofdier, de enige gedomesticeerde soort uit de familie Felidae, is een obligate vleeseter met intrekbare klauwen?",
-    "lead_fact": "Felis silvestris catus; obligate vleeseter; intrekbare klauwen.",
+    "lead_fact": "Enige gedomesticeerde soort uit de Felidae; obligate vleeseter; intrekbare klauwen.",
     "source": "translated-from-en"
   },
   "Q220453": {
@@ -716,12 +716,12 @@
   },
   "Q134747": {
     "question": "Welk insect uit de familie Bombycidae wordt gekweekt omdat de larve een cocon van één stevige draad spint, waarvan een kostbaar textiel wordt gemaakt?",
-    "lead_fact": "Bombyx mori; cocon van één draad; zijdeteelt.",
+    "lead_fact": "Bombycidae; cocon van één stevige draad; kostbaar textiel.",
     "source": "native-lead"
   },
   "Q18421053": {
     "question": "Welke uit Oost-Azië stammende plant uit de familie Polygonaceae staat op de IUCN-lijst van honderd meest invasieve soorten ter wereld?",
-    "lead_fact": "Fallopia japonica; IUCN top 100 invasief; oorsprong Oost-Azië.",
+    "lead_fact": "Familie Polygonaceae; IUCN top 100 invasief; oorsprong Oost-Azië.",
     "source": "native-lead"
   },
   "Q315796": {
@@ -781,17 +781,17 @@
   },
   "Q128285": {
     "question": "Welk geheel van godenverhalen uit Scandinavië deelt grotendeels dezelfde goden en helden met de Germaanse, en is in West-Europa een van de bekendere?",
-    "lead_fact": "Deel van de Germaanse mythologie; toonaangevend voor Noord-Europa.",
+    "lead_fact": "Godenverhalen uit Scandinavië; goden en helden gedeeld met de Germaanse.",
     "source": "native-lead"
   },
   "Q1357": {
     "question": "Welke orde van geleedpotigen (Araneae) binnen de klasse Arachnida telt ruim 50.000 beschreven soorten en komt over de hele wereld voor?",
-    "lead_fact": "Orde Araneae; ruim 50.000 soorten; echte spinnen versus andere arachniden.",
+    "lead_fact": "Orde Araneae binnen Arachnida; ruim 50.000 soorten; wereldwijd verspreid.",
     "source": "native-lead"
   },
   "Q9174": {
     "question": "Onder welk begrip, van Latijnse oorsprong, valt gewoonlijk zingeving waarbij een hogere macht centraal staat, hoewel sommige stromingen in boeddhisme en taoïsme non-theïstisch zijn?",
-    "lead_fact": "Van religio; meestal een god of hogere macht; sommige stromingen non-theïstisch.",
+    "lead_fact": "Latijnse oorsprong; meestal een god of hogere macht; sommige stromingen non-theïstisch.",
     "source": "native-lead"
   },
   "Q163873": {
@@ -811,7 +811,7 @@
   },
   "Q207047": {
     "question": "Welke in 1912 door een Amerikaanse apotheker ontwikkelde schaal meet de scherpte van chilipeper, oorspronkelijk via verdunning tot testers de pittigheid niet meer waarnemen?",
-    "lead_fact": "Wilbur Scoville, 1912; Scoville heat units via smaakverdunning.",
+    "lead_fact": "Amerikaanse apotheker, 1912; scherpte van chilipeper via smaakverdunning.",
     "source": "native-lead"
   },
   "Q822331": {
@@ -826,7 +826,7 @@
   },
   "Q162691": {
     "question": "Welk christelijk feest op 15 augustus herdenkt dat de moeder van Jezus met lichaam en ziel tot God werd verheven, in de Orthodoxe Kerk ook Ontslapenis van de Moeder Gods genoemd?",
-    "lead_fact": "15 augustus; Maria met lichaam en ziel ten hemel; orthodox: Ontslapenis.",
+    "lead_fact": "15 augustus; moeder van Jezus met lichaam en ziel tot God verheven; orthodox: Ontslapenis.",
     "source": "native-lead"
   },
   "Q20966579": {
@@ -866,7 +866,7 @@
   },
   "Q126720803": {
     "question": "Welke pejoratieve term uit de jaren 2020 duidt op massaal geproduceerde teksten en beelden van lage kwaliteit uit generatieve modellen, vergelijkbaar met spam?",
-    "lead_fact": "Lage kwaliteit generatieve AI-media; pejoratief, vergelijkbaar met spam.",
+    "lead_fact": "Massale media van lage kwaliteit uit generatieve modellen; pejoratief, als spam.",
     "source": "native-lead"
   },
   "Q542634": {
@@ -886,12 +886,12 @@
   },
   "Q1107": {
     "question": "Welk Japans leenwoord, een afkorting van een Engels woord, wordt buiten Japan gebruikt voor tekenfilms en -series uit Japan?",
-    "lead_fact": "Japanse afkorting van animēshon; buiten Japan voor Japanse animatie.",
+    "lead_fact": "Japans leenwoord, afkorting van een Engels woord; buiten Japan voor Japanse tekenfilms.",
     "source": "native-lead"
   },
   "Q368215": {
     "question": "Welk digitaal distributieplatform van Apple laat gebruikers software downloaden die met de iOS SDK is gemaakt, voor iPhone, iPad en onder meer Apple Watch?",
-    "lead_fact": "Apple-winkel voor iOS-apps via de iOS SDK; iPhone, iPad, Watch.",
+    "lead_fact": "Distributieplatform van Apple; software via de iOS SDK; iPhone, iPad, Watch.",
     "source": "native-lead"
   },
   "Q672642": {
@@ -901,7 +901,7 @@
   },
   "Q699835": {
     "question": "Welke Studio Ghibli-animefilm uit 2010 van Hiromasa Yonebayashi is gebaseerd op een jeugdboek van de Britse schrijfster Mary Norton?",
-    "lead_fact": "Studio Ghibli, 2010; Yonebayashi; naar The Borrowers van Mary Norton.",
+    "lead_fact": "Studio Ghibli, 2010; Yonebayashi; naar een jeugdboek van Mary Norton.",
     "source": "native-lead"
   },
   "Q308950": {
@@ -916,7 +916,7 @@
   },
   "Q80873": {
     "question": "Welke komische schoolmanga in yonkoma-formaat (1999–2002) verscheen in een tijdschrift van MediaWorks en werd in 2002 een 26-delige animeserie?",
-    "lead_fact": "Kiyohiko Azuma; yonkoma 1999–2002; anime van 26 afleveringen in 2002.",
+    "lead_fact": "Yonkoma 1999–2002; tijdschrift van MediaWorks; anime van 26 afleveringen in 2002.",
     "source": "native-lead"
   },
   "Q18558978": {

@@ -162,7 +162,8 @@ try {
     Assert-HasPattern $articlePoolPath 'sjabloon' 'article_pool blocked namespaces must include Dutch Sjabloon'
     Assert-HasPattern $articlePoolPath 'szablon' 'article_pool blocked namespaces must include Polish Szablon'
     Assert-HasPattern $articlePoolPath 'portail' 'article_pool blocked namespaces must include French Portail'
-    Assert-HasPattern $initPath 'is_blocked_wiki_title' 'Generate must skip blocked wiki namespaces'
+    Assert-HasPattern $articlePoolPath 'if is_blocked_wiki_title\(title\)' 'The usable-title filter must skip blocked wiki namespaces'
+    Assert-HasPattern $initPath 'is_usable_title\(' 'Generate must filter titles with article_pool.is_usable_title'
     if (-not (Test-Path -LiteralPath $poolEnPath)) {
         throw "EN multi-tag pool data/pool_en.json missing [$poolEnPath]"
     }

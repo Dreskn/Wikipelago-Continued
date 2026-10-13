@@ -91,7 +91,7 @@
   },
   "Q56887972": {
     "question": "Vilken Wikipedia-artikel samlar partiernas väljarstöd enligt olika mätinstitut inför det allmänna val som hölls den 11 september 2022?",
-    "lead_fact": "Artikeln innehåller opinionsmätningar inför riksdagsvalet 2022.",
+    "lead_fact": "Partiernas väljarstöd enligt mätinstitut; allmänna valet 11 september 2022.",
     "source": "native-lead"
   },
   "Q183": {
@@ -116,7 +116,7 @@
   },
   "Q844": {
     "question": "Vilken fiktiv brittisk spion vid MI6, med licens att döda, skapades 1953 av Ian Fleming?",
-    "lead_fact": "Agent 007; skapad 1953 av Ian Fleming.",
+    "lead_fact": "Brittisk spion vid MI6 med licens att döda; skapad 1953 av Ian Fleming.",
     "source": "native-lead"
   },
   "Q4994483": {
@@ -146,7 +146,7 @@
   },
   "Q52878": {
     "question": "Vilken svensk kung, gift först med Margareta av Storbritannien och sedan med Louise av Battenberg, var farfar till den nuvarande kungen och regerade från den 29 oktober 1950 till sin död 1973?",
-    "lead_fact": "Kung 1950–1973; farfar till Carl XVI Gustaf; gift med Margareta och Louise.",
+    "lead_fact": "Kung 1950–1973; farfar till nuvarande kungen; gift med Margareta och Louise.",
     "source": "native-lead"
   },
   "Q25287": {
@@ -181,7 +181,7 @@
   },
   "Q52934": {
     "question": "Vilken svensk kung, även hertig av Pfalz-Zweibrücken, tillbringade merparten av sin regeringstid i fält under stora nordiska kriget och dog 1718 i Fredrikshald?",
-    "lead_fact": "Hertig av Pfalz-Zweibrücken som Karl II; stupade i Fredrikshald 1718.",
+    "lead_fact": "Hertig av Pfalz-Zweibrücken; stora nordiska kriget; stupade i Fredrikshald 1718.",
     "source": "native-lead"
   },
   "Q178275": {
@@ -196,12 +196,12 @@
   },
   "Q3189895": {
     "question": "Vilken årligen återkommande adventsserie i svensk public service-tv har fått en ny serie varje år sedan 1960 och åtföljs av ett tryckt ark med luckor att öppna?",
-    "lead_fact": "Kallad Adventskalendern till 1971; ny serie varje år sedan 1960.",
+    "lead_fact": "Årlig adventsserie i public service-tv; ny serie varje år sedan 1960; tryckt ark med luckor.",
     "source": "native-lead"
   },
   "Q52890": {
     "question": "Vilken svensk kung av huset Bernadotte regerade från 1907 i nästan 43 år och var son till Oscar II?",
-    "lead_fact": "Femte Bernadotte-kungen; regerade från 1907 nästan 43 år; son till Oscar II.",
+    "lead_fact": "Bernadotte-kung; regerade från 1907 nästan 43 år; son till Oscar II.",
     "source": "native-lead"
   },
   "Q1795024": {
@@ -246,7 +246,7 @@
   },
   "Q142": {
     "question": "Vilken västeuropeisk republik har kust mot Atlanten, Engelska kanalen och Medelhavet, och omfattar även utomeuropeiska departement som Guadeloupe och Réunion?",
-    "lead_fact": "Tre kuster; utomeuropeiska departement inklusive Franska Guyana.",
+    "lead_fact": "Tre kuster; utomeuropeiska departement som Guadeloupe och Réunion.",
     "source": "native-lead"
   },
   "Q29": {
@@ -286,7 +286,7 @@
   },
   "Q258": {
     "question": "Vilken republik omger Lesotho som enklav, har kust mot både Atlanten och Indiska oceanen och gränsar bland annat till Namibia, Botswana, Zimbabwe och Moçambique?",
-    "lead_fact": "Lesotho som enklav; längst söderut i Afrika.",
+    "lead_fact": "Lesotho som enklav; kust mot Atlanten och Indiska oceanen.",
     "source": "native-lead"
   },
   "Q866": {
@@ -346,7 +346,7 @@
   },
   "Q3360074": {
     "question": "Vilken sjöolycka inträffade den 28 september 1994 när en bil- och passagerarfärja förliste på väg från Tallinn till Stockholm, med 852 omkomna av 989 ombord?",
-    "lead_fact": "28 september 1994; M/S Estonia; 852 av 989 omkom.",
+    "lead_fact": "28 september 1994; färja Tallinn–Stockholm; 852 av 989 omkom.",
     "source": "native-lead"
   },
   "Q794": {
@@ -357,11 +357,6 @@
   "Q56434717": {
     "question": "Vilken svensk klimataktivist började i augusti 2018 sitta utanför riksdagen varje fredag med plakatet \"Skolstrejk för klimatet\"?",
     "lead_fact": "Fredagsstrejk utanför riksdagen från augusti 2018; plakatet Skolstrejk för klimatet.",
-    "source": "native-lead"
-  },
-  "Q8084616": {
-    "question": "Vilken navigationsmall på svenskspråkiga Wikipedia rangordnar landets mest folkrika samhällen efter invånarantal?",
-    "lead_fact": "Wikipedia-mall över Sveriges tätorter efter folkmängd.",
     "source": "native-lead"
   },
   "Q355": {
@@ -406,7 +401,7 @@
   },
   "Q160826": {
     "question": "Vilket landslag för män, ofta kallat Blågult, spelar huvudsakligen sina hemmamatcher på Strawberry Arena i Solna och har haft stjärnor som Gunnar Nordahl och Henrik Larsson?",
-    "lead_fact": "Blågult; hemmamatcher på Strawberry Arena; SvFF.",
+    "lead_fact": "Blågult; hemmamatcher på Strawberry Arena; Gunnar Nordahl och Henrik Larsson.",
     "source": "native-lead"
   },
   "Q191": {
@@ -491,7 +486,7 @@
   },
   "Q544": {
     "question": "Vilket planetsystem består av vår stjärna och de himlakroppar den binder med gravitation, med ursprung i ett gas- och stoftmoln för 4,5 miljarder år sedan?",
-    "lead_fact": "Solen plus gravitationsbundna kroppar; ursprung för 4,5 miljarder år sedan.",
+    "lead_fact": "Vår stjärna plus gravitationsbundna kroppar; ursprung för 4,5 miljarder år sedan.",
     "source": "native-lead"
   },
   "Q4628": {
@@ -536,7 +531,7 @@
   },
   "Q1211796": {
     "question": "Vilken svensk-dansk kriminalserie hade Sofia Helin och Kim Bodnia i huvudrollerna och började sändas på SVT den 21 september 2011?",
-    "lead_fact": "Dansk titel Broen; Sofia Helin och Kim Bodnia; SVT 21 september 2011.",
+    "lead_fact": "Svensk-dansk kriminalserie; Sofia Helin och Kim Bodnia; SVT 21 september 2011.",
     "source": "native-lead"
   },
   "Q42005": {
@@ -561,7 +556,7 @@
   },
   "Q18244945": {
     "question": "Vilken dokusåpa, en svensk version av ett amerikanskt format från 2003, hade första säsongen 2005 och kortades 2022 i namnet under tre säsonger?",
-    "lead_fact": "Amerikanskt format 2003; svensk premiär 2005; namnbyte till Paradise 2022–2024.",
+    "lead_fact": "Svensk version av amerikanskt format 2003; premiär 2005; kortat namn 2022–2024.",
     "source": "native-lead"
   },
   "Q243": {
@@ -571,7 +566,7 @@
   },
   "Q489772": {
     "question": "Vilken hävdvunnen förteckning från antiken listar de byggnader och monument som ansågs representera människans då största bedrifter?",
-    "lead_fact": "Antik lista över sju byggnadsverk.",
+    "lead_fact": "Antik lista över byggnader och monument; människans då största bedrifter.",
     "source": "native-lead"
   },
   "Q22663": {
@@ -641,12 +636,12 @@
   },
   "Q66016": {
     "question": "Vilka gudinnor i grekisk mytologi rådde över sång, tonkonst och skaldekonst, med romersk motsvarighet i camenae?",
-    "lead_fact": "Sångens och skaldekonstens gudinnor; camenae; orden musik och museum.",
+    "lead_fact": "Sångens, tonkonstens och skaldekonstens gudinnor; romersk motsvarighet camenae.",
     "source": "native-lead"
   },
   "Q128285": {
     "question": "Vilken samling förkristna gudasagor från Skandinavien, ofta förknippade med vikingatiden, omgavs av en religion som på 1800-talet kom att kallas asatro?",
-    "lead_fact": "Förkristna nordiska myter; religionen kallad asatro från 1800-talet.",
+    "lead_fact": "Förkristna gudasagor från Skandinavien; religionen kallad asatro från 1800-talet.",
     "source": "native-lead"
   },
   "Q134949": {
@@ -661,7 +656,7 @@
   },
   "Q12184": {
     "question": "Vad kallas ett utbrott av smittsam sjukdom som sprids över stora delar av världen och drabbar många individer, till skillnad från utbrott som bara berör enskilda länder?",
-    "lead_fact": "Epidemi över stora delar av världen; grekiska pandemias, hela folket.",
+    "lead_fact": "Utbrott av smittsam sjukdom över stora delar av världen; många drabbade.",
     "source": "native-lead"
   },
   "Q366886": {
@@ -686,7 +681,7 @@
   },
   "Q146": {
     "question": "Vilket litet rovdjur, den enda domesticerade arten i familjen Felidae, är en obligat köttätare med infällbara klor?",
-    "lead_fact": "Felis catus; obligat köttätare; infällbara klor.",
+    "lead_fact": "Enda domesticerade arten i Felidae; obligat köttätare; infällbara klor.",
     "source": "translated-from-en"
   },
   "Q43375": {
@@ -701,7 +696,7 @@
   },
   "Q10731891": {
     "question": "Vilket släkte partåiga hovdjur, de största nu levande hjortdjuren, delas efter fylogenetiska studier i en europeisk och en amerikansk art?",
-    "lead_fact": "Släktet Alces; två arter efter fylogenetiska studier.",
+    "lead_fact": "Största nu levande hjortdjuren; europeisk och amerikansk art efter fylogenetiska studier.",
     "source": "native-lead"
   },
   "Q525": {
@@ -716,17 +711,17 @@
   },
   "Q2845": {
     "question": "Vilken psykoaktiv drog, som används som torkade blomtoppar eller som pressad kåda, har THC som den främsta av 483 kända aktiva komponenter?",
-    "lead_fact": "THC som främsta av 483 aktiva komponenter; marijuana och hasch.",
+    "lead_fact": "THC som främsta av 483 aktiva komponenter; torkade blomtoppar eller pressad kåda.",
     "source": "native-lead"
   },
   "Q1139319": {
     "question": "Vilken skandinavisk bakelse av ljust vetebröd med mandelmassa och grädde äts traditionellt på fettisdagen och serveras ibland i en skål varm mjölk?",
-    "lead_fact": "Mandelmassa och grädde; fettisdagen; även fastlagsbulle och hetvägg.",
+    "lead_fact": "Mandelmassa och grädde; fettisdagen; ibland i varm mjölk.",
     "source": "native-lead"
   },
   "Q12204": {
     "question": "Vilken infektionssjukdom, historiskt kallad lungsot, orsakas av en bakterie i släktet Mycobacterium och angriper vanligtvis lungorna?",
-    "lead_fact": "Mycobacterium tuberculosis; historiskt lungsot; vanligen pulmonell.",
+    "lead_fact": "Bakterie i släktet Mycobacterium; historiskt lungsot; vanligen pulmonell.",
     "source": "translated-from-en"
   },
   "Q2376772": {
@@ -741,7 +736,7 @@
   },
   "Q205985": {
     "question": "Vad kallas en kvinnlig gestalt som dyrkas i polyteistiska religioner, ofta odödlig och kopplad till fenomen som kärlek, jakt eller krig?",
-    "lead_fact": "Kvinnlig gudom i polyteism; ofta odödlig.",
+    "lead_fact": "Kvinnlig gestalt som dyrkas i polyteism; ofta odödlig.",
     "source": "native-lead"
   },
   "Q315796": {
@@ -831,7 +826,7 @@
   },
   "Q68": {
     "question": "Vilken maskin, tidigare även kallad matematikmaskin, bearbetar information och utför beräkningar automatiskt med hjälp av lagrade instruktioner?",
-    "lead_fact": "Tidigare datamaskin/matematikmaskin; lagrade program i primärminnet.",
+    "lead_fact": "Tidigare matematikmaskin; lagrade program i primärminnet.",
     "source": "native-lead"
   },
   "Q266224": {
@@ -871,7 +866,7 @@
   },
   "Q1107": {
     "question": "Vad kallas den japanska vardagsförkortningen av ett engelskt lånord för tecknad film, som utanför Japan särskilt betecknar tecknad film från Japan i mangastil?",
-    "lead_fact": "Japansk förkortning av animation; utanför Japan japansk tecknad film.",
+    "lead_fact": "Japansk förkortning av engelskt lånord; utanför Japan japansk tecknad film.",
     "source": "native-lead"
   },
   "Q308950": {
@@ -896,7 +891,7 @@
   },
   "Q80873": {
     "question": "Vilken humoristisk japansk manga i strippformat, tryckt 1999–2002, handlar om ett gäng skolflickor och deras lärare och blev en 26 avsnitts anime 2002?",
-    "lead_fact": "Kiyohiko Azuma; strippformat 1999–2002; 26 avsnitts anime.",
+    "lead_fact": "Japansk humormanga om skolflickor; strippformat 1999–2002; 26 avsnitts anime.",
     "source": "native-lead"
   },
   "Q18558978": {

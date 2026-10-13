@@ -146,7 +146,7 @@
   },
   "Q2386078": {
     "question": "Welcher private bayerische Regionalsender für den Regierungsbezirk mit Sitz in Würzburg hieß früher TV Touring und erreicht bis zu 350.000 Zuschauer?",
-    "lead_fact": "Privater Regionalsender Unterfranken; früher TV Touring.",
+    "lead_fact": "Privater Regionalsender für den Bezirk um Würzburg; früher TV Touring.",
     "source": "native-lead"
   },
   "Q38": {
@@ -181,7 +181,7 @@
   },
   "Q273008": {
     "question": "Welche Übersicht stellt Identitäten wie Sinus- und Kosinussatz sowie Additionstheoreme tabellarisch zum Nachschlagen zusammen?",
-    "lead_fact": "Tabellarische Sammlung trigonometrischer Identitäten und Sätze.",
+    "lead_fact": "Tabellarische Sammlung von Identitäten; Sinus-, Kosinussatz, Additionstheoreme.",
     "source": "native-lead"
   },
   "Q9671": {
@@ -196,7 +196,7 @@
   },
   "Q96251657": {
     "question": "Welche Liste beschreibt fiktive Personen und Gruppen aus Comics des US-Verlags von Spider-Man und den X-Men, deren Zahl über 6000 liegt?",
-    "lead_fact": "Über 6000 Figuren aus Marvel-Comics; Übersichtsartikel.",
+    "lead_fact": "Über 6000 fiktive Personen und Gruppen; Verlag von Spider-Man und X-Men.",
     "source": "native-lead"
   },
   "Q1055": {
@@ -273,11 +273,6 @@
     "question": "Welches ostasiatische Land gliedert sich in 33 Einheiten auf Provinzebene einschließlich zweier Sonderverwaltungszonen und wurde 221 v. Chr. erstmals unter den Qin geeint?",
     "lead_fact": "33 Einheiten auf Provinzebene plus 2 Sonderverwaltungszonen; Qin 221 v. Chr. Nicht die Hauptstadt.",
     "source": "translated-from-en"
-  },
-  "Benutzer:Plenz/OSM for Wiki/languages": {
-    "question": "Auf welcher Benutzerunterseite stehen die Oberflächentexte eines Kartenwerkzeugs in mehreren Sprachen, mit der Anweisung, [xx] als letzte Zeile zu lassen und HTML-kodierte Zeichen zu verwenden?",
-    "lead_fact": "Sprachdatei für osm4wiki; [xx] als letzte Zeile; HTML-Zeichen.",
-    "source": "native-lead"
   },
   "Q458": {
     "question": "Welcher Staatenverbund umfasst 27 Mitglieder, von denen nur Zypern geographisch in Asien liegt, und zählt etwa 450 Millionen Einwohner?",
@@ -531,7 +526,7 @@
   },
   "Q12204": {
     "question": "Welche Infektionskrankheit, historisch Schwindsucht genannt, wird durch ein Bakterium der Gattung Mycobacterium verursacht und befällt meist die Lunge?",
-    "lead_fact": "Mycobacterium tuberculosis; historisch Schwindsucht; meist die Lunge.",
+    "lead_fact": "Bakterium der Gattung Mycobacterium; historisch Schwindsucht; meist die Lunge.",
     "source": "translated-from-en"
   },
   "Q81068910": {
@@ -551,7 +546,7 @@
   },
   "Q111012213": {
     "question": "Welche Übersicht listet die Ereignisse des 2022 begonnenen Angriffskriegs Moskaus gegen Kiew in zeitlicher Reihenfolge auf?",
-    "lead_fact": "Chronologische Übersicht der Invasion ab 2022.",
+    "lead_fact": "Zeitliche Übersicht; Angriffskrieg Moskaus gegen Kiew ab 2022.",
     "source": "native-lead"
   },
   "Q355": {
@@ -561,7 +556,7 @@
   },
   "Q12548": {
     "question": "Wie hieß vom Spätmittelalter bis 1806 das aus zahlreichen Territorien bestehende Herrschaftsgebiet jener Kaiser, die sich seit dem 10. Jahrhundert als Nachfolger der antiken Caesaren verstanden?",
-    "lead_fact": "Offizieller Name bis 1806; römisch-deutsche Kaiser seit dem 10. Jahrhundert.",
+    "lead_fact": "Offizieller Name bis 1806; Kaiser seit dem 10. Jahrhundert als Nachfolger der Caesaren.",
     "source": "native-lead"
   },
   "Q131755": {
@@ -686,7 +681,7 @@
   },
   "Q34726": {
     "question": "Wie heißt die Gesamtheit der antiken Sagen um die olympischen Götter und Heroen wie Herakles?",
-    "lead_fact": "Gesamtheit der Götter- und Heldenmythen des antiken Griechenlands.",
+    "lead_fact": "Gesamtheit der antiken Sagen; olympische Götter und Heroen wie Herakles.",
     "source": "native-lead"
   },
   "Q25407": {
@@ -701,12 +696,12 @@
   },
   "Q146": {
     "question": "Welches kleine Raubtier, die einzige domestizierte Art der Familie Felidae, ist ein obligatorischer Fleischfresser mit einziehbaren Krallen?",
-    "lead_fact": "Felis catus; obligatorischer Fleischfresser; einziehbare Krallen.",
+    "lead_fact": "Einzige domestizierte Felidae-Art; obligatorischer Fleischfresser; einziehbare Krallen.",
     "source": "translated-from-en"
   },
   "Q130882": {
     "question": "Welche Allium-Art ist ein Frühlingsblüher mit Zwiebel, riecht knoblauchähnlich durch Methiin und Alliin und ist eng mit dem Knoblauch verwandt?",
-    "lead_fact": "Allium ursinum; knoblauchähnlicher Geruch durch Methiin und Alliin.",
+    "lead_fact": "Allium-Art; Frühlingsblüher; knoblauchähnlicher Geruch durch Methiin und Alliin.",
     "source": "native-lead"
   },
   "Q25334": {
@@ -726,7 +721,7 @@
   },
   "Q162691": {
     "question": "Welches Hochfest am 15. August feiert, dass die Mutter Jesu am Ende ihres irdischen Lebens mit Leib und Seele zu Gott erhoben wurde, und wird mindestens seit dem 5. Jahrhundert begangen?",
-    "lead_fact": "15. August; leibliche Aufnahme Mariens; mindestens seit dem 5. Jahrhundert.",
+    "lead_fact": "15. August; Mutter Jesu mit Leib und Seele erhoben; mindestens seit dem 5. Jahrhundert.",
     "source": "native-lead"
   },
   "Q1071758": {
@@ -746,7 +741,7 @@
   },
   "Q42562": {
     "question": "Welche Ingwergewächs-Art stammt aus Südasien; ihr intensiv gelbes Rhizom dient als Gewürz und Farbstoff?",
-    "lead_fact": "Curcuma longa; gelbes Rhizom als Gewürz und Farbstoff.",
+    "lead_fact": "Ingwergewächs aus Südasien; gelbes Rhizom als Gewürz und Farbstoff.",
     "source": "native-lead"
   },
   "Q130571534": {
@@ -771,7 +766,7 @@
   },
   "Q1070684": {
     "question": "Welche therapeutische Ernährungsform reduziert Kohlenhydrate so weit, dass der Körper Energie vor allem aus Fett und daraus gebildeten Ersatzstoffen statt aus Glukose gewinnt?",
-    "lead_fact": "Kohlenhydratlimitiert; Energie aus Fett und Ketonkörpern.",
+    "lead_fact": "Kohlenhydratlimitiert; Energie vor allem aus Fett statt aus Glukose.",
     "source": "native-lead"
   },
   "Q1402637": {
@@ -796,7 +791,7 @@
   },
   "Q37525": {
     "question": "Welches natürlich vorkommende Monosaccharid ist in der D-Form die häufigste Zuckerart und hat seinen Namen vom griechischen Wort für „süß“?",
-    "lead_fact": "D-Form natürlich; Traubenzucker/Dextrose; häufigstes Monosaccharid.",
+    "lead_fact": "D-Form natürlich; häufigstes Monosaccharid; Name vom griechischen Wort für „süß“.",
     "source": "native-lead"
   },
   "Q20966579": {
@@ -836,7 +831,7 @@
   },
   "Q33972": {
     "question": "Welches ursprünglich mechanische, heute meist elektronische Gerät setzt nach Münz- oder Scheineinwurf eine Runde in Gang, deren Ergebnis Zufall und Bedienung bestimmen, oft in der Hoffnung auf Gewinn?",
-    "lead_fact": "Mechanisch dann elektronisch; Zufall plus Spieleraktion; Gewinnhoffnung.",
+    "lead_fact": "Mechanisch dann elektronisch; Zufall plus Bedienung; Gewinnhoffnung.",
     "source": "native-lead"
   },
   "Q23925035": {
@@ -846,7 +841,7 @@
   },
   "Q339962": {
     "question": "Welche arcadelastige Flugsimulationsreihe von Namco begann 1995 auf der ersten PlayStation und verknüpft Missionen durch eine fortlaufende Geschichte?",
-    "lead_fact": "Namco; Start als Air Combat 1995; fortlaufende Missionsgeschichte.",
+    "lead_fact": "Namco; Start 1995 auf der ersten PlayStation; fortlaufende Missionsgeschichte.",
     "source": "native-lead"
   },
   "Q54855979": {
@@ -871,7 +866,7 @@
   },
   "Q335340": {
     "question": "Welcher US-amerikanisch-japanische Episodenfilm von 2003 versammelt neun Zeichentrick- und Computer-Kurzfilme aus dem Universum von Neo und Morpheus, meist unter japanischen Regisseuren gemeinsam mit den Wachowskis?",
-    "lead_fact": "Neun Kurzfilme 2003; Matrix-Welt; Wachowskis und japanische Regisseure.",
+    "lead_fact": "Neun Kurzfilme 2003; Universum von Neo und Morpheus; Wachowskis und japanische Regisseure.",
     "source": "native-lead"
   },
   "Q1107": {

@@ -1,6 +1,5 @@
 ﻿from __future__ import annotations
 
-import re
 from typing import Any
 
 from BaseClasses import Item, ItemClassification, Location
@@ -11,7 +10,7 @@ from .Items import PORTAL_ITEM_BY_TOPIC, PORTAL_ITEM_NAMES, TRAP_ITEM_NAMES, ite
 from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
 from .Options import WikipelagoOptions
 from .Regions import create_regions
-from .article_pool import SUPPORTED_LANGS, is_blocked_wiki_title, load_article_pool
+from .article_pool import SUPPORTED_LANGS, is_usable_title, load_article_pool
 from .grand_goal import pick_grand_goal_card
 from .letter_pairs import (
     bingo_location_count,
@@ -32,35 +31,6 @@ WIKIPEDIA_LANG_BY_OPTION: dict[int, str] = {
     8: "pl",
 }
 
-BANNED_TITLE_KEYWORDS: tuple[str, ...] = (
-    "rifle",
-    "pistol",
-    "shotgun",
-    "revolver",
-    "machine gun",
-    "submachine gun",
-    "discography",
-    "chemistry",
-    "chemical",
-    "compound",
-    "acid",
-    "molecule",
-    "molecular",
-    "atom",
-    "isotope",
-    "reaction",
-    "periodic table",
-    "organic chemistry",
-    "inorganic chemistry",
-)
-
-BANNED_TITLE_SUFFIXES: tuple[str, ...] = (
-    "(programming language)",
-    "(operating system)",
-    "(software)",
-    "(computer)",
-)
-
 SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
     0: set(),
     1: {"A", "E", "I", "O", "U"},
@@ -70,6 +40,63 @@ SEARCH_STARTING_LETTERS: dict[int, set[str]] = {
 
 SCROLL_SPEED_UPGRADES = 5
 REALM_REROLL_POOL_MAX = 300
+
+# Universal Tracker regeneration (see _load_ut_slot_data). Top-level slot_data fields named
+# like their option: each holds the option's value, or a capped / zeroed value with the same
+# effect on generation (1.1.0 seeds only have these).
+UT_SLOT_DATA_FIELDS: tuple[str, ...] = (
+    "check_count",
+    "required_fragments",
+    "start_rounds_unlocked",
+    "rounds_per_unlock",
+    "wikipedia_language",
+    "goal",
+    "searchsanity",
+    "scrollsanity",
+    "randomize_tables",
+    "randomize_pictures",
+    "randomize_incipit",
+    "randomize_infoboxes",
+    "randomize_toc",
+    "randomize_navboxes",
+    "randomize_hatnotes",
+    "randomize_references",
+    "deaths",
+    "death_link",
+    "link_bombs",
+    "link_bomb_density",
+    "trap_count",
+    "trap_type",
+    "trap_link",
+    "bingo_letterpairs_grid",
+    "bingo_cards_start",
+    "bingo_card_unlocks",
+    "bingo_stamp_unlocks",
+    "back_depth_start",
+    "back_depth_unlocks",
+    "target_rerolls_start",
+    "target_reroll_unlocks",
+    "branch_count",
+    "branch_length",
+    "additional_branch_keys",
+    "topic_portals",
+)
+
+# Options whose YAML value is missing from those fields (capped, zeroed when unused or not
+# sent at all). slot_data["options"] carries them so a regeneration matches the real seed.
+UT_SLOT_DATA_OPTIONS: tuple[str, ...] = (
+    "required_fragments",
+    "additional_fragments_in_pool",
+    "start_rounds_unlocked",
+    "search_starting_letters",
+    "bingo_letterpairs_grid",
+    "bingo_cards_start",
+    "bingo_card_unlocks",
+    "bingo_stamp_unlocks",
+    "branch_length",
+    "additional_branch_keys",
+    "topic_portals",
+)
 
 
 class WikipelagoWeb(WebWorld):
@@ -101,6 +128,9 @@ class WikipelagoWorld(World):
     item_class = WikipelagoItem
     location_class = WikipelagoLocation
 
+    # Universal Tracker: rebuild the slot from slot_data alone (no YAML needed).
+    ut_can_gen_without_yaml = True
+
     round_pairs: list[dict[str, str]]
     goal_article: str
     goal_question: str
@@ -109,6 +139,18 @@ class WikipelagoWorld(World):
     bingo_letterpairs_boards: list[list[list[str]]]
     crossroads: list[dict[str, int]]
     branches: list[dict[str, Any]]
+    trap_item_counts: dict[str, int]
+    ut_trap_item_counts: dict[str, int] | None = None
+
+    @staticmethod
+    def interpret_slot_data(slot_data: dict[str, Any]) -> dict[str, Any]:
+        # Returning the slot_data makes Universal Tracker regenerate with it as re_gen_passthrough.
+        return slot_data
+
+    def get_filler_item_name(self) -> str:
+        # Core asks for filler for item links and when plando / fill need extra items;
+        # the default would pick any item (Victory, Round Access, a trap...).
+        return "Footnote"
 
     def _bingo_enabled(self) -> bool:
         return bool(self.options.toggle_bingo_letterpairs.value)
@@ -153,39 +195,6 @@ class WikipelagoWorld(World):
         if not grid_size:
             return 0
         return bingo_location_count(grid_size) * self._bingo_board_count()
-
-    @staticmethod
-    def _is_reasonable_title(title: str) -> bool:
-        if len(title) < 3 or len(title) > 120:
-            return False
-        if "$" in title:
-            return False
-        if not re.search(r"[A-Za-z]", title):
-            return False
-        if re.search(r"^[^A-Za-z0-9]+$", title):
-            return False
-        return True
-
-    @staticmethod
-    def _looks_common_knowledge(title: str) -> bool:
-        if is_blocked_wiki_title(title):
-            return False
-        lowered = title.lower().strip()
-        if lowered.startswith(("list of ", "outline of ", "timeline of ", "index of ")):
-            return False
-        if any(keyword in lowered for keyword in BANNED_TITLE_KEYWORDS):
-            return False
-        if any(lowered.endswith(suffix) for suffix in BANNED_TITLE_SUFFIXES):
-            return False
-        if any(ch in title for ch in ('"', "$", "%", "@", "#")):
-            return False
-        if title.count(",") > 2:
-            return False
-        if re.search(r"\(disambiguation|magazine|journal\)$", lowered):
-            return False
-        if len(title.split()) > 12:
-            return False
-        return True
 
     def _wikipedia_language(self) -> str:
         return WIKIPEDIA_LANG_BY_OPTION.get(int(self.options.wikipedia_language.value), "en")
@@ -301,7 +310,49 @@ class WikipelagoWorld(World):
             unlocks.append("Reference Lens")
         return unlocks
 
+    def _ut_slot_data(self) -> dict[str, Any] | None:
+        """The real seed's slot_data while Universal Tracker regenerates this slot, else None."""
+        passthrough = getattr(self.multiworld, "re_gen_passthrough", None)
+        if not isinstance(passthrough, dict):
+            return None
+        slot_data = passthrough.get(self.game)
+        return slot_data if isinstance(slot_data, dict) else None
+
+    def _load_ut_slot_data(self, slot_data: dict[str, Any]) -> None:
+        """Universal Tracker: take the options and every roll from the real seed's slot_data,
+        so regions, items, locations and rules match it whatever YAML (if any) UT has."""
+        values = {name: slot_data[name] for name in UT_SLOT_DATA_FIELDS if name in slot_data}
+        if "bingo_letterpairs" in slot_data:
+            values["toggle_bingo_letterpairs"] = slot_data["bingo_letterpairs"]
+        values.update(slot_data.get("options") or {})
+        for name, value in values.items():
+            option = getattr(self.options, name, None)
+            if option is None:
+                continue
+            try:
+                setattr(self.options, name, option.from_any(value))
+            except Exception:
+                # A zeroed field from a 1.1.0 seed can be outside the YAML range
+                # (branch_length 0 without branches); the option is unused then.
+                continue
+        self.goal_article = str(slot_data.get("goal_article") or "")
+        self.goal_question = str(slot_data.get("goal_question") or "")
+        self.goal_qid = slot_data.get("goal_qid") or None
+        self.round_pairs = list(slot_data.get("round_pairs") or [])
+        self.crossroads = list(slot_data.get("crossroads") or [])
+        self.branches = list(slot_data.get("branches") or [])
+        self.reroll_pool = list(slot_data.get("reroll_pool") or [])
+        self.bingo_letterpairs_boards = list(slot_data.get("bingo_letterpairs_boards") or [])
+        trap_counts = slot_data.get("trap_item_counts")
+        if isinstance(trap_counts, dict):
+            self.ut_trap_item_counts = {str(name): int(count) for name, count in trap_counts.items()}
+
     def generate_early(self) -> None:
+        ut_slot_data = self._ut_slot_data()
+        if ut_slot_data is not None:
+            self._load_ut_slot_data(ut_slot_data)
+            return
+
         round_count = self.options.check_count.value
         selected_topics = self._selected_topics()
         if not selected_topics:
@@ -323,8 +374,7 @@ class WikipelagoWorld(World):
         filtered_entries = [
             entry
             for entry in article_entries
-            if self._is_reasonable_title(entry["title"])
-            and self._looks_common_knowledge(entry["title"])
+            if is_usable_title(entry["title"], lang)
             and self._entry_matches(entry, selected_topics, include_sensitive)
         ]
         # Preserve order, drop dupes.
@@ -434,7 +484,8 @@ class WikipelagoWorld(World):
             used_themes: set[str] = set()
             for branch_id, main_round in enumerate(chosen_rounds):
                 fork = self.round_pairs[main_round - 1]["target"]
-                tagged_pools: dict[str, list[str]] = {tag: [] for tag in selected_topics}
+                # Sorted: set order changes with Python's hash seed, so the same seed could pick other themes.
+                tagged_pools: dict[str, list[str]] = {tag: [] for tag in sorted(selected_topics)}
                 for title in leftover:
                     for tag in title_to_tags.get(title, ()):
                         if tag in tagged_pools:
@@ -595,7 +646,9 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Branch Key"))
         for portal_name in portal_items:
             pool.append(self.create_item(portal_name))
-        for trap_name in self._trap_item_names(trap_count):
+        trap_names = self._trap_item_names(trap_count)
+        self.trap_item_counts = {name: trap_names.count(name) for name in TRAP_ITEM_NAMES}
+        for trap_name in trap_names:
             pool.append(self.create_item(trap_name))
         while len(pool) < free_locations:
             pool.append(self.create_item("Footnote"))
@@ -614,6 +667,9 @@ class WikipelagoWorld(World):
     def _trap_item_names(self, trap_count: int) -> list[str]:
         if trap_count <= 0:
             return []
+        if self.ut_trap_item_counts is not None:
+            # Universal Tracker: the real seed's trap mix instead of a new roll.
+            return [name for name in TRAP_ITEM_NAMES for _ in range(self.ut_trap_item_counts.get(name, 0))]
         trap_type = int(self.options.trap_type.value)
         if trap_type == 1:
             return ["Foggy Links"] * trap_count
@@ -799,6 +855,9 @@ class WikipelagoWorld(World):
             "target_reroll_unlocks": target_reroll_unlocks,
             "location_ids": location_ids,
             "item_ids": {name: data.code for name, data in item_table.items()},
+            # For Universal Tracker regeneration (_load_ut_slot_data); the bridge ignores them.
+            "trap_item_counts": dict(getattr(self, "trap_item_counts", {}) or {}),
+            "options": self.options.as_dict(*UT_SLOT_DATA_OPTIONS),
         }
 
 
