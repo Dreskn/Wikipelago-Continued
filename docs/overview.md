@@ -11,7 +11,7 @@ There is no separate desktop client to install for players — use the [hosted w
 ## The web client
 
 The page is split in two: the **article** on the left, and your **HUD** on the right.
-A numbered map of every control is in the [web client UI](ui.md) guide.
+A numbered map of every control is in the [web client UI](ui.md) guide. On a narrow screen such as a phone, the client switches to a one-column layout (see [On a phone](#on-a-phone)).
 
 - **Article** — the current Wikipedia page. Only in-article wiki links count as moves. File, Template, Wikipedia-namespace, and similar non-article pages are blocked.
 - **Connection** — server, slot, password, **Connect**, and **Practice**.
@@ -23,6 +23,27 @@ A numbered map of every control is in the [web client UI](ui.md) guide.
 UI language (the dropdown) only changes menus, toasts and the language in Practice mode. The Wikipedia edition you play on in an AP game is set in your YAML (`wikipedia_language`) and does not follow the dropdown.
 
 **Practice** loads random articles from the same language pool with no Archipelago room. Use it to learn the client. It also gives you a 5×5 letter-pair bingo board and one open Realm (5 targets on one topic); when the board is full or the Realm is cleared, a **New board** / **New Realm** button deals another. Nothing is sent to Archipelago.
+
+### Journey
+
+**Journey** (on the Progression card) draws the pages you have visited as one path of points.
+
+- Hover a point to see the page title, what happened there (a finished round, Grand Goal, bingo stamp...) and the same short summary as the Target preview.
+- Click a point to open that page on Wikipedia in a new tab. It opens outside the game, so it does not count as a move.
+- On a touch screen, the first tap on a point shows its info and a second tap opens the page.
+- **Full screen** shows the map on the whole screen. The button is hidden when the browser can't do it (on iPhone, for example).
+- **Pop out** opens the Journey in its own browser window. It is not offered in the phone layout.
+
+### On a phone
+
+Below 900 px wide (most phones), the client shows one column instead of two:
+
+- A **bar** stays at the top of the screen while you scroll the article. It shows your current targets: the main road, the Grand Goal question once it is revealed, and up to two branch / Realm targets (**+N more** opens the menu for the rest). Under them are the Compass hint (once you have the Wiki Compass), a search button (needs the Ctrl+F Lens) and **SOS** (teleport to a random page, 60 s cooldown).
+- The **menu** button in the bar swaps the article for the menu: the top bar (status, language, theme and display settings), then the cards (Connection, Progression, Items...). Press it again (it shows ✕) to go back to the article where you left it. After you open the menu this way, your phone's Back button closes it instead of turning the article back a page.
+- Before a game starts the menu is open so you can connect or start Practice; once the game starts you see the article.
+- Touch screens have no hover: tap a target once to see its preview, and tap it again to hide it.
+
+From 900 px wide (a wider window, or some tablets turned sideways), the two columns come back.
 
 ## What does randomization do?
 
@@ -39,7 +60,7 @@ Optional **deaths** / **DeathLink** / **link bombs** and **Foggy Links** / **Mis
 Only some rounds are available at the start (`start_rounds_unlocked` in your YAML).
 Additional rounds unlock when you receive **Round Access** items (`rounds_per_unlock` controls how many each one opens).
 
-Hover the **Target** title for a short Wikipedia blurb (description plus lead paragraph).
+Hover the **Target** title (or tap it on a touch screen) for a short Wikipedia blurb (description plus lead paragraph).
 
 ## Crossroads and side branches
 

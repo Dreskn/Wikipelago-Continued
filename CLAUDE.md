@@ -15,7 +15,7 @@ Custom [Archipelago](https://archipelago.gg) world (AP **0.6.7+**) based on wiki
   - `archipelago.json` version metadata
   - Built to `world/APWorld/wikipelago.apworld` (gitignored).
 - `bridge/bridge.py` — single-file aiohttp server: serves `web/`, REST API under `/api/session/{sid}/...`, and acts as the Archipelago websocket client (one state per browser session). Calls the Wikipedia API for title canonicalisation, redirects and Compass page links (only the 9 supported wikis). Requests that come through a reverse proxy can't connect to private or loopback Archipelago addresses. Deps: `aiohttp`, `websockets`.
-- `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`. Fonts are self-hosted WOFF2 in `web/fonts/` (OFL, licence next to each family); no third-party CDNs.
+- `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`. Fonts are self-hosted WOFF2 in `web/fonts/` (OFL, licence next to each family); no third-party CDNs. Icon and font notices live in `THIRD_PARTY_NOTICES.md` (`LICENSE` is the MIT text only).
 - `docs/` — player docs; `docs/grand-goal/` is the Grand Goal question bank and its build scripts.
 - `yaml/Wikipelago.yaml` — player YAML template.
 - `world/` — build, test and pool-maintenance scripts. Article pools are rebuilt with the pipeline in `world/README.md` (pageviews → Wikidata annotation → enrichment → export → validation); `world/pageviews/` holds its data.
