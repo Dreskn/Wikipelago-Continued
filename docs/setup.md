@@ -4,7 +4,7 @@
 
 ### Host / organizer (generates the seed)
 
-- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) **0.6.7** or compatible
+- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) **0.6.7 or newer**
 - `wikipelago.apworld` from this repo’s [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)
 - Player YAML files (template also on Releases, or [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml))
 
@@ -97,7 +97,7 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 | Piece | Version |
 | --- | --- |
 | Wikipelago world (`apworld`) | **1.1.0** |
-| Recommended Archipelago | **0.6.7** |
+| Archipelago | **0.6.7 or newer** |
 | Web client | hosted link above, or local `http://127.0.0.1:5000` from this repo |
 
 The player YAML template pins these via top-level `requires` (`version` + `game.Wikipelago`) so generation fails if the host apworld is too old.

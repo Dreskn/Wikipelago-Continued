@@ -1,6 +1,6 @@
 # Wikipelago Continued
 
-Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
+Custom [Archipelago](https://archipelago.gg) world (AP **0.6.7+**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
 
 - Continued fork of [Skrumptily69's original Wikipelago](https://github.com/Skrumptily69/Wikipelago), used with permission. Keep the credit (README.md, LICENSE).
 - Live client: https://wikipelago.dreskn.fr/ — bug reports come from GitHub Issues and the Wikipelago thread on the Archipelago Discord (links in README).
@@ -29,7 +29,7 @@ bridge/setup_and_start_bridge.bat        # first run on Windows; bridge/start_br
 ./world/release_check.ps1                # build + smoke test
 ./world/smoke_test.ps1 [-BuildApworld]   # smoke test only (also runs the two Python unit tests)
 ./world/fuzz_test.ps1 -Runs 25           # random options: item-math model + the world's own code with AP stand-ins
-./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "<path>"   # real generation; needs an Archipelago 0.6.7 checkout or install (installs the built apworld temporarily, restores the old one)
+./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "<path>"   # real generation; needs an Archipelago 0.6.7+ checkout or install (installs the built apworld temporarily, restores the old one)
 python world/test_letter_pairs.py
 python world/test_blocked_namespaces.py
 python world/validate_article_pool.py --lang all --strict       # pools vs live Wikipedia
@@ -58,6 +58,7 @@ python world/build_letter_pair_weights.py --lang all            # rebuild bingo 
   - `README.md`, `world/README.md`, the Compatibility table in `docs/setup.md`
 
   The smoke test checks the YAML, `CLIENT_VERSION`, `APP_VERSION`, `archipelago.json` and CI `AP_REF` pins; the README and docs versions can drift unnoticed.
+- Archipelago version: `minimum_ap_version` in `archipelago.json` and `requires.version` in the YAML stay at the oldest supported Archipelago (0.6.7), per AP's guidance; raise them only when the world needs a newer core feature. Player docs say "0.6.7 or newer".
 
 ## Working agreements
 

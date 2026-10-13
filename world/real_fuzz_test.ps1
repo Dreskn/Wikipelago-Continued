@@ -174,8 +174,8 @@ function Find-Archipelago {
         if ($kind) { return @{ Root = [System.IO.Path]::GetFullPath($candidate); Kind = $kind; From = "auto-detected" } }
     }
     throw ("Could not find Archipelago. Looked in:`n  " + ($candidates -join "`n  ") +
-        "`nPass -ArchipelagoRoot <folder> or set ARCHIPELAGO_ROOT. Use an Archipelago 0.6.7 source checkout " +
-        "(git clone --branch 0.6.7 https://github.com/ArchipelagoMW/Archipelago, then python ModuleUpdate.py --yes) " +
+        "`nPass -ArchipelagoRoot <folder> or set ARCHIPELAGO_ROOT. Use an Archipelago 0.6.7+ source checkout " +
+        "(for example git clone --branch 0.6.7 https://github.com/ArchipelagoMW/Archipelago, then python ModuleUpdate.py --yes) " +
         "or an installed Archipelago.")
 }
 

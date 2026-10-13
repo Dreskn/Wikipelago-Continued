@@ -28,7 +28,7 @@ It does not run Archipelago's generator (item placement, accessibility, output).
 
 This runs Archipelago's real generator once per case and checks that accepted settings produce a seed and rejected ones fail with the expected error. It needs either:
 
-- an Archipelago **0.6.7** source checkout with its requirements installed (Python 3.11 to 3.13), for example:
+- an Archipelago **0.6.7+** source checkout with its requirements installed (Python 3.11 to 3.13), for example:
 
   ```powershell
   git clone --depth 1 --branch 0.6.7 https://github.com/ArchipelagoMW/Archipelago ../Archipelago

@@ -2,7 +2,7 @@ param(
     [string]$Root = (Split-Path -Parent $MyInvocation.MyCommand.Path)
 )
 
-# APContainer packaging scheme version for Archipelago 0.6.7 (worlds/Files.py container_version).
+# APContainer packaging scheme version for Archipelago 0.6.7+ (worlds/Files.py container_version).
 $ContainerVersion = 7
 $PackageName = "wikipelago"   # zip basename + inner folder (must match, lowercase)
 
