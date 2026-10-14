@@ -14,7 +14,7 @@ After installing the apworld, you can generate a fresh template from the Archipe
 | Option | Default | What it does |
 | --- | --- | --- |
 | `check_count` | `40` | How many Start → Target rounds (checks) are generated for your slot. |
-| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. |
+| `required_fragments` | `7` | Knowledge Fragments needed before the Grand Goal question is revealed. Landing on the answer page finishes the slot. Capped at `check_count`: a higher value needs (and puts in the pool) only `check_count` fragments. |
 | `additional_fragments_in_pool` | `2` | Extra Knowledge Fragments shuffled into the item pool beyond `required_fragments`. Goal still needs only the required count. |
 | `start_rounds_unlocked` | `10` | How many rounds are playable immediately at seed start. |
 | `rounds_per_unlock` | `5` | How many additional rounds each **Round Access** item unlocks. |
@@ -57,7 +57,7 @@ On the client: live branch targets list under the main road, a small crossroad c
 | --- | --- | --- |
 | `topic_portals` | `true` | Every branch becomes a **Realm** with its own topic (History, Music, Sports, ...). Each Realm opens with its own **Portal** item (`History Portal`, `Music Portal`, ...) instead of Branch Keys, so Realms open in whatever order their Portals arrive. |
 
-- A Realm needs its Portal **and** its crossroad round finished (either order).
+- In Grand Goal games a Realm needs its Portal **and** its crossroad round finished (either order). In Realm Master games the Portal alone opens it.
 - Every Realm gets a different enabled category with at least `branch_length` spare articles. Generation stops with a clear message if there are not enough, so lower `branch_count` / `branch_length` or enable more `include_*` categories.
 - Realm target rerolls stay on topic (off-topic only once the Realm's own slice runs dry).
 - `additional_branch_keys` is ignored while this is on.
@@ -72,7 +72,7 @@ On the client each Realm has its own color on the round track, in the target lis
 | --- | --- | --- |
 | `goal` | `grand_goal` | `grand_goal`: collect `required_fragments`, then land on the answer to the Grand Goal question. `realm_master`: clear the last round of every branch / Realm. |
 
-`realm_master` needs `branch_count` of at least 1. It generates no Knowledge Fragments and no Grand Goal; the **Realms** checklist is your goal tracker. It works with or without `topic_portals`, but it is built for it.
+`realm_master` needs `branch_count` of at least 1. It generates no Knowledge Fragments and no Grand Goal; the **Realms** checklist is your goal tracker. Realms open with their Portal (or, with plain branches, their Branch Keys) alone: no crossroad round to reach first. It works with or without `topic_portals`, but it is built for it.
 
 ### Letter-pair bingo
 
@@ -86,8 +86,6 @@ On the client: unlocked boards stamp in parallel from page titles; click a board
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `random_goal_article` | `true` | Kept for old YAMLs; ignored. The Grand Goal always comes from that wiki language's goal pool (answer page preferred from enabled categories). |
-| `goal_article_preset` | `dark_souls` | Deprecated and ignored. Kept so older YAMLs still generate. |
 
 ---
 
@@ -100,6 +98,8 @@ On the client: unlocked boards stamp in parallel from page titles; click a board
 | `scrollsanity` | `false` | If true, scrolling starts slow and improves with **Progressive Scroll Speed** items. |
 
 These add friction; leave them off for a first playtest or casual multiworld.
+
+Scrollsanity only slows the mouse wheel (laptop touchpads too, since browsers report them as a wheel) and the arrow, Page Up / Page Down and Space keys. It doesn't affect touch (finger) scrolling on phones and tablets.
 
 ---
 

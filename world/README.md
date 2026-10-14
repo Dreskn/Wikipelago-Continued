@@ -1,6 +1,6 @@
 APWorld source lives in `world/APWorldSource`. Commands below run from the repo root.
 
-World package version: **1.1.0** (`world_version` and `full_version` in `world/APWorldSource/wikipelago/archipelago.json`).
+World package version: **1.1.1** (`world_version` and `full_version` in `world/APWorldSource/wikipelago/archipelago.json`).
 
 The live runtime article pools are `world/APWorldSource/wikipelago/data/pool_{lang}.json` (multi-tag entries per Wikipedia language). Generation uses those tags (not keyword guessing).
 
@@ -50,7 +50,7 @@ Details and troubleshooting are in `world/SIMPLE_TESTING.md`.
 ./world/release_check.ps1               # build the apworld + smoke test
 ./world/smoke_test.ps1 -BuildApworld    # what CI's Smoke job runs
 ./world/fuzz_test.ps1 -Runs 25          # random options vs the world's rules; no Archipelago needed
-./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "PATH_TO_ARCHIPELAGO"   # real generation; needs an Archipelago 0.6.7 checkout or install
+./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "PATH_TO_ARCHIPELAGO"   # real generation; needs an Archipelago 0.6.7+ checkout or install
 ```
 
 CI (`.github/workflows/ci.yml`) runs on every push and pull request: Smoke (`./world/smoke_test.ps1 -BuildApworld`) and Generate, which builds the apworld and generates six fixed seeds against Archipelago **0.6.7** with `world/ci_generate.py` (EN defaults, FR, PL with branches, EN Topic Realms, FR Realm Master with Topic Realms, EN Realm Master with plain branches). Pool validation (`.github/workflows/pool-validate.yml`) runs weekly and on pool-file pushes to `main`; it reports dead titles and never removes them.

@@ -51,7 +51,7 @@
   },
   "Q18756": {
     "question": "Quelle compétition interclubs de l'UEFA a commencé en 1955 sous le nom de Coupe d'Europe, avant d'être rebaptisée et réformée en 1992 ?",
-    "lead_fact": "Créée en 1955 sous le nom de Coupe des clubs champions européens.",
+    "lead_fact": "Créée en 1955 sous le nom de Coupe d'Europe ; rebaptisée et réformée en 1992.",
     "source": "translated-from-en"
   },
   "Q355": {
@@ -76,7 +76,7 @@
   },
   "Q135622": {
     "question": "Quel service en ligne de la firme de Mountain View convertit automatiquement un texte d'une langue vers une autre ?",
-    "lead_fact": "Service de traduction automatique fourni par Google.",
+    "lead_fact": "Service en ligne de la firme de Mountain View ; conversion automatique d'un texte entre langues.",
     "source": "native-lead"
   },
   "Q90": {
@@ -196,7 +196,7 @@
   },
   "Q958": {
     "question": "Quel État fédéral d'Afrique de l'Est, sans accès à la mer, a notamment pour voisins l'Éthiopie, le Kenya, l'Ouganda, la RDC et la Centrafrique ?",
-    "lead_fact": "État fédéral enclavé d'Afrique de l'Est ; indépendant du Soudan. Pas Djouba.",
+    "lead_fact": "État fédéral enclavé d'Afrique de l'Est ; voisins Éthiopie, Kenya, Ouganda, RDC, Centrafrique. Pas Djouba.",
     "source": "native-lead"
   },
   "Q5829": {
@@ -296,7 +296,7 @@
   },
   "Q262": {
     "question": "Quel État souverain d'Afrique du Nord, faisant partie du Maghreb, a pour forme longue République démocratique populaire et partage plus de 6 300 kilomètres de frontières terrestres avec ses voisins ?",
-    "lead_fact": "État du Maghreb ; forme longue RADP ; arabe et tamazight. Pas Alger comme réponse.",
+    "lead_fact": "État du Maghreb ; forme longue République démocratique populaire ; plus de 6 300 km de frontières. Pas Alger.",
     "source": "native-lead"
   },
   "Q14944179": {
@@ -336,7 +336,7 @@
   },
   "Q5592": {
     "question": "Quel sculpteur, peintre et architecte florentin, né Buonarroti à Caprese en 1475, a marqué la Haute Renaissance ?",
-    "lead_fact": "Michelangelo Buonarroti ; Caprese 1475 ; Haute Renaissance.",
+    "lead_fact": "Né Buonarroti à Caprese en 1475 ; sculpteur, peintre, architecte ; Haute Renaissance.",
     "source": "native-lead"
   },
   "Q43203": {
@@ -446,7 +446,7 @@
   },
   "Q3334141": {
     "question": "Quel jeu télévisé musical français, adapté d'un format américain de Jeff Apploff, est présenté par Nagui sur France 2 depuis le 15 décembre 2007 ?",
-    "lead_fact": "Adaptation de Don't Forget the Lyrics! ; Nagui ; France 2 depuis 2007.",
+    "lead_fact": "Adaptation d'un format américain de Jeff Apploff ; Nagui ; France 2 depuis 2007.",
     "source": "native-lead"
   },
   "Q19798734": {
@@ -511,12 +511,12 @@
   },
   "Q1049511": {
     "question": "Quelle messagerie, fondée par deux anciens employés de Yahoo!, a été lancée en mai 2009 puis rachetée par Facebook ?",
-    "lead_fact": "Nom ≈ « what's up » ; lancée en mai 2009 ; rachat par Facebook.",
+    "lead_fact": "Fondée par deux ex-employés de Yahoo! ; lancée en mai 2009 ; rachat par Facebook.",
     "source": "translated-from-en"
   },
   "Q140": {
     "question": "Quel mammifère carnivore de la famille des Félidés, dont le mâle porte une importante crinière, est le seul félin à vivre en larges groupes familiaux ?",
-    "lead_fact": "Panthera leo ; mâle à crinière ; femelle et petit distincts.",
+    "lead_fact": "Mâle à crinière ; seul félin vivant en larges groupes familiaux ; femelle et petit distincts.",
     "source": "native-lead"
   },
   "Q486": {
@@ -546,7 +546,7 @@
   },
   "Q207361": {
     "question": "Quelle agence du département de la Défense des États-Unis, à l'origine du réseau informatique devenu Internet, est chargée de la recherche et développement de nouvelles technologies militaires ?",
-    "lead_fact": "Agence R&D du département de la Défense US ; à l'origine d'ARPANET.",
+    "lead_fact": "Agence R&D du département de la Défense US ; à l'origine du réseau devenu Internet.",
     "source": "native-lead"
   },
   "Q28667972": {
@@ -561,7 +561,7 @@
   },
   "Q586025": {
     "question": "Quel manga d'Hajime Isayama, prépublié de 2009 à 2021, se déroule derrière des murailles qui protègent des géants mangeurs d'hommes ?",
-    "lead_fact": "Isayama ; Bessatsu Shōnen 2009-2021 ; Titans et murailles.",
+    "lead_fact": "Isayama ; Bessatsu Shōnen 2009-2021 ; géants mangeurs d'hommes et murailles.",
     "source": "translated-from-en"
   },
   "Q36101": {
@@ -591,12 +591,12 @@
   },
   "Q544": {
     "question": "Comment appelle-t-on l'ensemble formé par notre étoile, huit planètes confirmées, des planètes naines et des milliards de petits corps gravitant autour d'elle ?",
-    "lead_fact": "Système planétaire du Soleil : 8 planètes, planètes naines et petits corps.",
+    "lead_fact": "Ensemble autour de notre étoile : 8 planètes, planètes naines et petits corps.",
     "source": "native-lead"
   },
   "Q146": {
     "question": "Quel petit carnivore, seule espèce domestiquée de la famille des Félidés, est un mangeur de viande obligatoire doté de griffes rétractiles ?",
-    "lead_fact": "Felis catus ; carnivore strict ; griffes rétractiles.",
+    "lead_fact": "Seul félidé domestiqué ; carnivore strict ; griffes rétractiles.",
     "source": "translated-from-en"
   },
   "Q2": {
@@ -621,7 +621,7 @@
   },
   "Q314492": {
     "question": "Quel Viking légendaire, surnommé « aux braies velues », aurait ravagé les îles Britanniques et l'Empire carolingien au IXe siècle ?",
-    "lead_fact": "Vieux norrois loðbrók ; raids du IXe siècle.",
+    "lead_fact": "Surnommé « aux braies velues » ; raids du IXe siècle.",
     "source": "translated-from-en"
   },
   "Q504998": {
@@ -656,7 +656,7 @@
   },
   "Q5268834": {
     "question": "Comment appelle-t-on les outils et systèmes qui permettent de créer, transmettre, stocker et partager des données, et qui jouent un rôle central dans les échanges sociaux contemporains ?",
-    "lead_fact": "Outils de création, transmission et stockage de l'information ; ICT en anglais.",
+    "lead_fact": "Outils de création, transmission, stockage et partage de données ; rôle central dans les échanges sociaux.",
     "source": "native-lead"
   },
   "Q178810": {
@@ -676,7 +676,7 @@
   },
   "Q151622": {
     "question": "Quel conflit du Proche-Orient, qualifié de « guerre de Cent ans » par Rachad Antonius, oppose deux nationalismes sur le territoire de l'ancien mandat britannique situé entre la Méditerranée et le Jourdain ?",
-    "lead_fact": "Sionisme vs nationalisme palestinien ; Palestine mandataire.",
+    "lead_fact": "« Guerre de Cent ans » selon Antonius ; deux nationalismes ; mandat britannique entre Méditerranée et Jourdain.",
     "source": "native-lead"
   },
   "Q82866": {
@@ -701,7 +701,7 @@
   },
   "Q15978631": {
     "question": "Quelle espèce de primates originaire d'Afrique, dernière représentante vivante de son genre, s'est répandue sur toute la Terre hormis l'Antarctique ?",
-    "lead_fact": "Seul Homo actuel ; originaire d'Afrique ; naturalisé hors Antarctique.",
+    "lead_fact": "Dernière espèce vivante de son genre ; originaire d'Afrique ; partout sauf en Antarctique.",
     "source": "native-lead"
   },
   "Q696071": {
@@ -811,7 +811,7 @@
   },
   "Q29526": {
     "question": "Quel fruit du plaqueminier du Japon, aussi appelé plaquemine de Chine, est surtout produit de l'Inde au Japon ?",
-    "lead_fact": "Fruit de Diospyros kaki ; plaquemine du Japon / de Chine.",
+    "lead_fact": "Fruit du plaqueminier du Japon ; plaquemine de Chine ; produit surtout de l'Inde au Japon.",
     "source": "native-lead"
   },
   "Q963088": {
@@ -821,7 +821,7 @@
   },
   "Q178342": {
     "question": "Comment appelle-t-on, dans la hiérarchie céleste, les membres du huitième chœur, juste au-dessus du dernier, dont le nom porte un préfixe grec signifiant « supérieur » ?",
-    "lead_fact": "Huitième chœur ; niveau au-dessus des anges ; judaïsme, christianisme, islam.",
+    "lead_fact": "Huitième chœur céleste, juste au-dessus du dernier ; préfixe grec « supérieur » ; judaïsme, christianisme, islam.",
     "source": "native-lead"
   },
   "Q529": {
@@ -871,12 +871,12 @@
   },
   "Q3535552": {
     "question": "Quelle pâtisserie poitevine est préparée avec du chèvre frais ?",
-    "lead_fact": "Spécialité poitevine ; fromage de chèvre frais.",
+    "lead_fact": "Spécialité poitevine ; à base de chèvre frais.",
     "source": "native-lead"
   },
   "Q2739210": {
     "question": "Quels mets sucrés, aussi appelés calenos, sont servis après le gros souper de Noël en Provence, en un nombre symbolique qui n'est devenu une tradition que récemment ?",
-    "lead_fact": "Gros souper provençal de Noël ; calenos ; le nombre 13 est plus récent.",
+    "lead_fact": "Gros souper provençal de Noël ; calenos ; nombre symbolique, tradition récente.",
     "source": "native-lead"
   },
   "Q594676": {
@@ -886,7 +886,7 @@
   },
   "Q284352": {
     "question": "Quelle araignée aranéomorphe de la famille des Sicariidae, originaire du centre et du sud des États-Unis, est appelée, comme d'autres de son genre, « araignée violoniste » ?",
-    "lead_fact": "Sicariidae ; recluse brune / araignée violoniste.",
+    "lead_fact": "Sicariidae ; centre et sud des États-Unis ; « araignée violoniste ».",
     "source": "native-lead"
   },
   "Q739711": {

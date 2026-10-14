@@ -316,7 +316,7 @@ QUESTIONS: list[dict[str, str]] = [
     },
     {
         "question": "Which messenger, founded by two former Yahoo! employees, launched in May 2009 and was later bought by Facebook?",
-        "fact": "Name ≈ 'what's up'; launched May 2009; Facebook acquisition.",
+        "fact": "Founded by two former Yahoo! employees; launched May 2009; Facebook acquisition.",
     },
     {
         "question": "Which U.S. city is made of five boroughs, each matching a county, and hosts the United Nations headquarters?",
@@ -344,7 +344,7 @@ QUESTIONS: list[dict[str, str]] = [
     },
     {
         "question": "Which kind of collaboratively edited website takes its name, via the first user-editable site, from a Hawaiian word for 'quick'?",
-        "fact": "Hawaiian 'quick'; WikiWikiWeb as the first example.",
+        "fact": "Collaboratively edited site; name from Hawaiian 'quick' via the first user-editable site.",
     },
     {
         "question": "Which actor wrote and starred in Rocky (1976) and is one of only two to have a box-office number-one film in six consecutive decades?",

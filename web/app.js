@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.0";
+const APP_VERSION = "1.1.1";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -149,7 +149,7 @@ function lucideIcon(inner) {
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
 }
 
-// Official Lucide glyphs (https://lucide.dev). Mapping and licenses: LICENSE.
+// Official Lucide glyphs (https://lucide.dev). Icon list and licences: THIRD_PARTY_NOTICES.md.
 const TOOL_ICON_SVGS = {
   back: lucideIcon('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/>'),
   reroll: lucideIcon('<rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/>'),
@@ -207,6 +207,9 @@ const state = {
   baseArticleClone: null,
   clicksUsed: 0,
   announcedGoalComplete: false,
+  /** Host announcement on screen, and whether it was closed (only until the text changes or the page reloads). */
+  announcementText: "",
+  announcementClosed: false,
   restoringArticle: false,
   /** {identity, title} visits made while the room was unreachable; see queueOfflineVisit. */
   offlineVisits: [],
@@ -227,8 +230,11 @@ const state = {
   journeyOpen: false,
   journeyPayload: null,
   journeyLayoutKey: "",
-  announcedJourneyCredits: false,
   victoryOpen: false,
+  /** Game the click count belongs to ("practice", "server::slot" or ""); a new one starts at 0. */
+  clicksIdentity: "",
+  /** A Back (keyboard or browser) is being spent; further Back presses wait for it. */
+  backBusy: false,
   rerollBusy: false,
   teleportBusy: false,
   teleportUnlockAt: 0,
@@ -367,7 +373,6 @@ const el = {
   bingoZoomIn: document.getElementById("bingoZoomIn"),
   bingoZoomOut: document.getElementById("bingoZoomOut"),
   bingoZoomReset: document.getElementById("bingoZoomReset"),
-  lensesItem: document.getElementById("lensesItem"),
   toastStack: document.getElementById("toastStack"),
   stuckToggleBtn: document.getElementById("stuckToggleBtn"),
   stuckPanel: document.getElementById("stuckPanel"),
@@ -1066,7 +1071,7 @@ async function teleportToRandomPage() {
     const result = await api(`/api/session/${state.sessionId}/teleport`, "POST", {});
     if (result.status) updateHUD(result.status);
     const title = String(result.title || "").trim();
-    if (!title) throw new Error(result.error || t("toast.teleportFailed", { error: "no page" }));
+    if (!title) throw new Error(result.error || "no page");
     await openArticle(title, {
       countAsClick: false,
       submitCheck: false,
@@ -1330,8 +1335,8 @@ function renderPhoneBar(status) {
     if (status.boss_completed) {
       mainText = t("hud.goalComplete");
       mainWiki = "";
-    } else if (!status.current_target && isRealmMaster(status)) {
-      mainText = t("hud.mainRoadDone");
+    } else if (mainRoadDoneText(status)) {
+      mainText = mainRoadDoneText(status);
       mainWiki = "";
     }
     rows.push({ label: t("path.main"), text: mainText, wiki: mainWiki, main: true });
@@ -1529,15 +1534,12 @@ function renderBranchTargets(status) {
     const title = document.createElement("span");
     title.className = "target-hover target-page";
     title.textContent = item.target || "…";
+    title.dataset.focusKey = `branch-target:${item.id ?? item.target}`;
     setHoverWikiTitle(title, item.target || "");
     row.appendChild(label);
     row.appendChild(title);
     el.branchTargets.appendChild(row);
   }
-}
-
-function renderBranchTracks(status) {
-  if (el.branchTracks) el.branchTracks.innerHTML = "";
 }
 
 /** Realm checklist: topic, Portal / lock state, progress. Shown whenever the seed has branches. */
@@ -1575,7 +1577,7 @@ function renderRealmsBlock(status) {
     const crossroad = Number(realm.crossroad_round) || 0;
     if (stateName === "cleared") note.textContent = t("realm.cleared");
     else if (stateName === "open") note.textContent = `${Number(realm.completed) || 0}/${Number(realm.length) || 0}`;
-    else if (stateName === "ready") note.textContent = t("realm.atRound", { n: crossroad });
+    else if (stateName === "ready" && crossroad > 0) note.textContent = t("realm.atRound", { n: crossroad });
     else if (realm.portal_item) note.textContent = t("realm.needs", { portal: portalName(realm.theme_tag) });
     else note.textContent = t("realm.needsKey");
 
@@ -1598,6 +1600,7 @@ function renderRealmsBlock(status) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn-quiet";
+    btn.dataset.focusKey = "practice-new-realm";
     btn.textContent = t("practice.newRealm");
     btn.addEventListener("click", () => void requestPracticeRefresh("new-realm"));
     item.appendChild(btn);
@@ -2125,6 +2128,7 @@ async function openJourneyOverlay({ credits = false } = {}) {
   if (!el.journeyOverlay || !state.sessionId) return;
   state.journeyOpen = true;
   el.journeyOverlay.classList.remove("hidden");
+  holdDialogFocus(el.journeyOverlay);
   if (el.journeyOverlayTitle) {
     el.journeyOverlayTitle.textContent = credits ? t("journey.credits") : t("journey.title");
   }
@@ -2147,6 +2151,7 @@ function closeJourneyOverlay() {
   }
   state.journeyOpen = false;
   el.journeyOverlay?.classList.add("hidden");
+  releaseDialogFocus(el.journeyOverlay);
 }
 
 function fillVictoryOverlay(status) {
@@ -2184,12 +2189,55 @@ function openVictoryOverlay(status) {
   state.victoryOpen = true;
   fillVictoryOverlay(status || state.status);
   el.victoryOverlay.classList.remove("hidden");
+  holdDialogFocus(el.victoryOverlay);
 }
 
 function closeVictoryOverlay() {
   state.victoryOpen = false;
   el.victoryOverlay?.classList.add("hidden");
+  releaseDialogFocus(el.victoryOverlay);
 }
+
+/** Pop-up windows: focus moves inside when they open, Tab stays inside, and it goes back on close. */
+const dialogOpeners = new Map();
+
+function dialogFocusables(overlay) {
+  return [...overlay.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+    .filter((node) => !node.disabled && !node.classList.contains("bingo-overlay-backdrop") && node.getClientRects().length > 0);
+}
+
+function holdDialogFocus(overlay) {
+  if (!overlay || dialogOpeners.has(overlay)) return;
+  dialogOpeners.set(overlay, document.activeElement);
+  const target = overlay.querySelector("[data-dialog-focus]") || dialogFocusables(overlay)[0];
+  target?.focus({ preventScroll: true });
+}
+
+function releaseDialogFocus(overlay) {
+  if (!overlay || !dialogOpeners.has(overlay)) return;
+  const opener = dialogOpeners.get(overlay);
+  dialogOpeners.delete(overlay);
+  if (opener?.isConnected && typeof opener.focus === "function") opener.focus({ preventScroll: true });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Tab" || !dialogOpeners.size) return;
+  const overlay = [...dialogOpeners.keys()].pop();
+  const items = dialogFocusables(overlay);
+  if (!items.length) return;
+  const first = items[0];
+  const last = items[items.length - 1];
+  if (!overlay.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
+  } else if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+});
 
 function bindVictoryOverlayUi() {
   el.victoryJourneyBtn?.addEventListener("click", () => {
@@ -2812,7 +2860,6 @@ function renderRoundsTrack(status) {
   if (el.roundText) {
     el.roundText.textContent = complete ? t("hud.complete") : `${current}/${total}`;
   }
-  renderBranchTracks(status);
 }
 
 function renderFragmentsTrack(status) {
@@ -3135,9 +3182,6 @@ function bingoBoardsFromStatus(status) {
   if (Array.isArray(status?.bingo_letterpairs_boards) && status.bingo_letterpairs_boards.length) {
     return status.bingo_letterpairs_boards;
   }
-  if (Array.isArray(status?.bingo_letterpairs_board) && status.bingo_letterpairs_board.length) {
-    return [status.bingo_letterpairs_board];
-  }
   return [];
 }
 
@@ -3237,6 +3281,7 @@ function renderBingoBoardGrid(board, stampedPairs, stampedCells, lines, options 
       const pair = String(board[row]?.[col] || "").toUpperCase();
       const cell = document.createElement("div");
       cell.className = "bingo-cell";
+      cell.dataset.focusKey = `${options.focusScope || "bingo"}:${boardKey}:${row}:${col}`;
       cell.textContent = pair || "·";
       cell.title = pair || "";
       const stamped = (pair && pairSet.has(pair)) || cellSet.has(`${row},${col}`);
@@ -3331,6 +3376,7 @@ function setBingoOverlayZoom(nextZoom, originX = null, originY = null) {
 }
 
 function closeBingoOverlay() {
+  releaseDialogFocus(el.bingoOverlay);
   state.bingoOverlay = null;
   state.bingoOverlayDrag = null;
   if (el.bingoOverlayWorld) el.bingoOverlayWorld.innerHTML = "";
@@ -3379,6 +3425,7 @@ function refreshBingoOverlayContent() {
       pickMode,
       onPick: useBingoStampOnCell,
       stopStampBubble: true,
+      focusScope: "bingo-overlay",
     }
   );
   sizeBingoGrid(grid, n, BINGO_OVERLAY_CELL_PX);
@@ -3404,6 +3451,7 @@ function openBingoOverlay(boardKey) {
     panY: prev && prev.boardKey === key ? prev.panY : 0,
   };
   refreshBingoOverlayContent();
+  if (el.bingoOverlay && !el.bingoOverlay.classList.contains("hidden")) holdDialogFocus(el.bingoOverlay);
 }
 
 function bindBingoOverlayUi() {
@@ -3677,9 +3725,11 @@ function renderBingoHud(status) {
     toggle.className = "btn-quiet bingo-board-toggle";
     toggle.textContent = collapsed ? t("bingo.show") : t("bingo.hide");
     toggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+    toggle.dataset.focusKey = `bingo-toggle:${boardKey}`;
     toggle.addEventListener("click", () => {
       setBingoBoardCollapsed(status, boardKey, !collapsed);
       renderBingoHud(state.status || status);
+      restoreFocusKey(`bingo-toggle:${boardKey}`);
     });
     title.appendChild(toggle);
     header.appendChild(title);
@@ -3714,6 +3764,7 @@ function renderBingoHud(status) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "btn-quiet practice-new";
+    btn.dataset.focusKey = "practice-new-board";
     btn.textContent = t("practice.newBoard");
     btn.addEventListener("click", () => void requestPracticeRefresh("new-board"));
     el.bingoBoards.appendChild(btn);
@@ -4020,6 +4071,8 @@ async function ensureSession() {
 function updateHUD(status) {
   const sidePanel = document.querySelector(".side-panel");
   const sideScroll = sidePanel ? sidePanel.scrollTop : 0;
+  // Polls rebuild parts of the sidebar every 1.5s; keyboard users must not lose their place.
+  const focusKey = document.activeElement?.dataset?.focusKey || "";
   try {
     applyHUDStatus(status);
   } finally {
@@ -4029,7 +4082,27 @@ function updateHUD(status) {
         sidePanel.scrollTop = sideScroll;
       });
     }
+    restoreFocusKey(focusKey);
   }
+}
+
+/** Refocus the control with this data-focus-key if a re-render dropped focus. */
+function restoreFocusKey(key) {
+  if (!key) return;
+  const active = document.activeElement;
+  if (active && active !== document.body && active.isConnected) return;
+  const next = document.querySelector(`[data-focus-key="${CSS.escape(key)}"]`);
+  if (next && next.tabIndex >= 0) next.focus({ preventScroll: true });
+}
+
+/** Main-road line once nothing is left on it, or "" while it still has a target. */
+function mainRoadDoneText(status) {
+  if (!status?.current_target && isRealmMaster(status)) return t("hud.mainRoadDone");
+  const rounds = Number(status?.check_count) || 0;
+  if (!isRealmMaster(status) && !status?.practice && rounds > 0 && Number(status?.rounds_completed) >= rounds) {
+    return t("hud.mainRoadCleared");
+  }
+  return "";
 }
 
 function applyHUDStatus(status) {
@@ -4045,6 +4118,12 @@ function applyHUDStatus(status) {
   const idle = !status.practice && !status.connected_to_ap && !status.current_target && !status.current_start;
   document.body.classList.toggle("is-idle", idle);
   const remoteClicks = Number(status.clicks_used);
+  const clicksIdentity = status.practice ? "practice" : connectionIdentity(status);
+  if (clicksIdentity !== state.clicksIdentity) {
+    // Another slot, or Practice <-> a room: never carry the previous game's count over.
+    state.clicksIdentity = clicksIdentity;
+    state.clicksUsed = 0;
+  }
   if (status.practice) {
     state.clicksUsed = Number.isFinite(remoteClicks) ? remoteClicks : state.clicksUsed;
   } else {
@@ -4066,7 +4145,7 @@ function applyHUDStatus(status) {
   updateConnectionPanel(status);
 
   if (wasConnected && !status.connected_to_ap && !status.practice) {
-    toastSticky(t("toast.disconnectedBrowse"), "warn");
+    if (!state.userDisconnected) toastSticky(t("toast.disconnectedBrowse"), "warn");
     state.bingoStampSyncKey = "";
     state.bingoRemoteStampCount = 0;
     state.bingoUi = null;
@@ -4088,8 +4167,8 @@ function applyHUDStatus(status) {
   if (status.boss_completed) {
     el.targetText.textContent = t("hud.goalComplete");
     setTargetSummaryTitle("");
-  } else if (!status.current_target && isRealmMaster(status)) {
-    el.targetText.textContent = t("hud.mainRoadDone");
+  } else if (mainRoadDoneText(status)) {
+    el.targetText.textContent = mainRoadDoneText(status);
     setTargetSummaryTitle("");
   } else {
     el.targetText.textContent = status.current_target || "...";
@@ -4119,7 +4198,6 @@ function applyHUDStatus(status) {
   renderBingoHud(status);
   saveLocalBingoStamps(status);
   void syncBingoStampsToBridge(status);
-  renderLensStatus(status);
   applyDisplayLocks();
   syncDebugOptionToggles(document.getElementById("debugMenuCard"));
 
@@ -4212,16 +4290,6 @@ function applyDisplayLocks() {
   for (const lock of DISPLAY_LOCKS) {
     el.articleBody.classList.toggle(lock.lockClass, !isDisplayUnlocked(lock.unlockedKey));
   }
-}
-
-function renderLensStatus(status) {
-  if (!el.lensesItem) return;
-  const parts = DISPLAY_LOCKS.map((lock) => {
-    const unlocked = status?.[lock.unlockedKey];
-    if (typeof unlocked !== "boolean") return null;
-    return `${t(lock.i18nKey)}: ${unlocked ? t("lens.on") : t("lens.off")}`;
-  }).filter(Boolean);
-  el.lensesItem.textContent = parts.length ? parts.join(" · ") : t("lens.native");
 }
 
 function isDebugMenuAllowed(info) {
@@ -4637,11 +4705,25 @@ async function pollStatus() {
     const peek = isJourneyStandaloneWindow() ? "?peek=1" : "";
     const data = await api(`/api/session/${state.sessionId}/status${peek}`);
     updateHUD(data.status);
+    renderAnnouncement(data.announcement);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
     el.connBadge.textContent = t("badge.offline");
     el.connBadge.className = "badge offline";
   }
+}
+
+/** Host message from the server (plain text). A new text reopens the banner even if the last one was closed. */
+function renderAnnouncement(text) {
+  const banner = document.getElementById("announceBanner");
+  if (!banner) return;
+  const message = typeof text === "string" ? text.trim() : "";
+  if (message !== state.announcementText) {
+    state.announcementText = message;
+    state.announcementClosed = false;
+    document.getElementById("announceText").textContent = message;
+  }
+  banner.classList.toggle("hidden", !message || state.announcementClosed);
 }
 
 function sanitizeHtml(root) {
@@ -5424,6 +5506,7 @@ function applyArticleWheel(deltaY) {
 // One scroll path: always drive #articleBody ourselves (except side panel / bingo overlay).
 // Native scrolling over nested overflow:auto hosts was latching the wheel at mid-page.
 window.addEventListener("wheel", (e) => {
+  if (e.ctrlKey) return; // browser zoom
   if (isEventInSidePanel(e.target)) return;
   if (e.target?.closest?.("#bingoOverlay, #journeyOverlay, #victoryOverlay")) return;
   // Phone menu view: the HUD cards scroll with the page as usual.
@@ -5588,20 +5671,19 @@ document.addEventListener("keydown", (e) => {
       openSearchOverlay();
     }
   }
-  if (e.altKey && e.key === "ArrowLeft") {
-    if (state.status) {
+  const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+  if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && !typing)) {
+    if (state.status && isPlayable()) {
       e.preventDefault();
+      // Holding the key repeats it: only the first press may spend a Back.
+      if (e.repeat || state.backBusy) return;
       if (!canGoBackNow()) backBlockedToast();
       else history.back();
     }
   }
-  if (e.key === "Backspace") {
-    const typing = ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName);
-    if (!typing && state.status) {
-      e.preventDefault();
-      if (!canGoBackNow()) backBlockedToast();
-      else history.back();
-    }
+  if (e.key === "Escape" && state.victoryOpen) {
+    e.preventDefault();
+    closeVictoryOverlay();
   }
   if (e.key === "Escape" && state.journeyOpen) {
     e.preventDefault();
@@ -5646,22 +5728,29 @@ window.addEventListener("popstate", async (e) => {
     setPhoneMenu(false, { fromHistory: true });
     return;
   }
-  if (state.status && !canGoBackNow()) {
+  // Not in a game (disconnected, idle): Back just browses.
+  const playing = Boolean(state.status) && isPlayable();
+  if (playing && (state.backBusy || !canGoBackNow())) {
     rePushCurrentHistory();
-    backBlockedToast();
+    if (!state.backBusy) backBlockedToast();
     return;
   }
-  if (state.status && canGoBackNow()) {
-    try {
-      await consumeBackCharge();
-    } catch (err) {
-      rePushCurrentHistory();
-      toast(t("toast.backFailed", { error: err.message || err }), "warn");
-      return;
+  state.backBusy = playing;
+  try {
+    if (playing) {
+      try {
+        await consumeBackCharge();
+      } catch (err) {
+        rePushCurrentHistory();
+        toast(t("toast.backFailed", { error: err.message || err }), "warn");
+        return;
+      }
     }
+    const title = e.state?.title;
+    if (title) await openArticle(title, { countAsClick: false });
+  } finally {
+    state.backBusy = false;
   }
-  const title = e.state?.title;
-  if (title) openArticle(title, { countAsClick: false });
 });
 
 if ("serviceWorker" in navigator) {
@@ -5691,6 +5780,15 @@ bindThemeToggle();
 bindDisplayPanel();
 bindPhoneLayout();
 bindStuckHelper();
+document.getElementById("releaseBannerClose")?.addEventListener("click", () => {
+  // Only for this visit: the banner is back on the next page load.
+  document.getElementById("releaseBanner")?.classList.add("hidden");
+});
+document.getElementById("announceBannerClose")?.addEventListener("click", () => {
+  // Hidden until the host changes the message or the page reloads.
+  state.announcementClosed = true;
+  document.getElementById("announceBanner")?.classList.add("hidden");
+});
 initSidePanelToggles();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");
 if (typeof ResizeObserver !== "undefined") {

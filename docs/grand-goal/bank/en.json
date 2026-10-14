@@ -3,7 +3,7 @@
   "wiki": "enwiki",
   "schema_version": 1,
   "rule": "top 100 overall ∪ top 10 per pool tag",
-  "count": 173,
+  "count": 172,
   "per_tag_top10": {
     "video_games": [
       {
@@ -643,10 +643,6 @@
       {
         "qid": "Q486",
         "title": "Chernobyl disaster"
-      },
-      {
-        "qid": null,
-        "title": "AMGTV"
       },
       {
         "qid": "Q277633",
@@ -2792,10 +2788,10 @@
       "answer_title": "WhatsApp",
       "answer_url": "https://en.wikipedia.org/wiki/WhatsApp",
       "question": "Which messenger, founded by two former Yahoo! employees, launched in May 2009 and was later bought by Facebook?",
-      "lead_fact": "Name ≈ 'what's up'; launched May 2009; Facebook acquisition.",
+      "lead_fact": "Founded by two former Yahoo! employees; launched May 2009; Facebook acquisition.",
       "lead": "WhatsApp Messenger, commonly known simply as WhatsApp, is an American social media, instant messaging (IM), and Voice over IP (VoIP) service accessible via desktop and mobile app. Owned by Meta Platforms, the service allows users to send text messages, voice messages, and video messages, make voice and video calls, and share images, documents, user locations, and other content. The service requires a cellular mobile telephone number to register. WhatsApp was launched in May 2009. In January 2018, WhatsApp released a standalone business app called WhatsApp Business which can communicate with the standard WhatsApp client. As of May 2025, the service had 3 billion monthly active users, making it the most popular messenger app. The name of the app is meant to sound like \"what's up\".\nThe service was created by WhatsApp Inc. of Mountain View, California, which was acquired by Facebook in…",
       "question_en": "Which messenger, founded by two former Yahoo! employees, launched in May 2009 and was later bought by Facebook?",
-      "lead_fact_en": "Name ≈ 'what's up'; launched May 2009; Facebook acquisition.",
+      "lead_fact_en": "Founded by two former Yahoo! employees; launched May 2009; Facebook acquisition.",
       "tags": [
         "technology"
       ],
@@ -2969,10 +2965,10 @@
       "answer_title": "Wiki",
       "answer_url": "https://en.wikipedia.org/wiki/Wiki",
       "question": "Which kind of collaboratively edited website takes its name, via the first user-editable site, from a Hawaiian word for 'quick'?",
-      "lead_fact": "Hawaiian 'quick'; WikiWikiWeb as the first example.",
+      "lead_fact": "Collaboratively edited site; name from Hawaiian 'quick' via the first user-editable site.",
       "lead": "A wiki (  WIK-ee) is a form of hypertext publication on the internet which is collaboratively edited and managed by its audience directly through a web browser. A typical wiki contains multiple pages that can either be edited by the public or any organization. The name derives from the first user-editable website called WikiWikiWeb – wiki being a Hawaiian word meaning 'quick' (pronounced [ˈviti]).\nWikis are powered by wiki software, also known as wiki engines. Being a form of content management system, these differ from other web-based systems such as blog software or static site generators in that the content is created without any defined owner or leader. Wikis have little inherent structure, allowing one to emerge according to the needs of the users. Wiki engines usually allow content to be written using a lightweight markup language and sometimes edited with the help of a rich-text…",
       "question_en": "Which kind of collaboratively edited website takes its name, via the first user-editable site, from a Hawaiian word for 'quick'?",
-      "lead_fact_en": "Hawaiian 'quick'; WikiWikiWeb as the first example.",
+      "lead_fact_en": "Collaboratively edited site; name from Hawaiian 'quick' via the first user-editable site.",
       "tags": [
         "technology"
       ],
@@ -3375,30 +3371,6 @@
       "notes": ""
     },
     {
-      "qid": null,
-      "answer_title": "AMGTV",
-      "answer_url": "https://en.wikipedia.org/wiki/AMGTV",
-      "question": "Which American digital multicast network uses the letters AMG and is aimed at family-oriented over-the-air viewers?",
-      "lead_fact": "No Wikipedia lead was returned; clue is a placeholder — check or reject.",
-      "lead": "",
-      "question_en": "Which American digital multicast network uses the letters AMG and is aimed at family-oriented over-the-air viewers?",
-      "lead_fact_en": "No Wikipedia lead was returned; clue is a placeholder — check or reject.",
-      "tags": [
-        "miscellaneous"
-      ],
-      "via": [
-        "miscellaneous"
-      ],
-      "overall_rank": null,
-      "category_ranks": {
-        "miscellaneous": 3
-      },
-      "views_summed_from_monthly_tops": 56824731,
-      "sensitive": false,
-      "question_source": "en-hand",
-      "notes": ""
-    },
-    {
       "qid": "Q2",
       "answer_title": "Earth",
       "answer_url": "https://en.wikipedia.org/wiki/Earth",
@@ -3776,10 +3748,10 @@
       "answer_title": "Apple Inc.",
       "answer_url": "https://en.wikipedia.org/wiki/Apple_Inc.",
       "question": "Which Cupertino company was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne to market a computer designed by Wozniak?",
-      "lead_fact": "Founded 1976; Apple I; Jobs, Wozniak, Wayne.",
+      "lead_fact": "Founded 1976 by Jobs, Wozniak, Wayne; first product a Wozniak-designed computer.",
       "lead": "Apple Inc. is an American multinational technology company headquartered in Cupertino, California, in Silicon Valley, and known for consumer electronics, software and online services. Founded in 1976 as the Apple Computer Company by Steve Jobs, Steve Wozniak and Ronald Wayne, the company was incorporated by Jobs and Wozniak as Apple Computer, Inc. the following year. Its current name was adopted in 2007 as the company expanded its focus from computers to consumer electronics. Apple is one of the Big Tech companies.\nThe company was founded to market Wozniak's Apple I computer. Its successor, the Apple II, became one of the first successful mass-produced personal microcomputers. Apple introduced the Lisa in 1983 and the Macintosh in 1984, popularizing graphical user interfaces navigated by a mouse. By 1985, internal conflicts led to Jobs leaving the company to form NeXT and Wozniak…",
       "question_en": "Which Cupertino company was founded in 1976 by Steve Jobs, Steve Wozniak, and Ronald Wayne to market a computer designed by Wozniak?",
-      "lead_fact_en": "Founded 1976; Apple I; Jobs, Wozniak, Wayne.",
+      "lead_fact_en": "Founded 1976 by Jobs, Wozniak, Wayne; first product a Wozniak-designed computer.",
       "tags": [
         "technology",
         "video_games"
@@ -3801,10 +3773,10 @@
       "answer_title": "Skathi (moon)",
       "answer_url": "https://en.wikipedia.org/wiki/Skathi_%28moon%29",
       "question": "Which irregular moon of Saturn, also called Saturn XXVII, was discovered in 2000 and named after a figure from Norse mythology?",
-      "lead_fact": "Saturn XXVII; discovered 23 Sep 2000; named for Skaði.",
+      "lead_fact": "Saturn XXVII; discovered 23 Sep 2000; named after a Norse mythology figure.",
       "lead": "Skathi, also named Saturn XXVII and originally spelled Skadi, is a natural satellite of the planet Saturn. Skathi is one of Saturn's irregular moons, in its Norse group of satellites. It was discovered on September 23, 2000, by a team of astronomers led by Brett Gladman. The team announced their discovery on December 7, 2000, along with seven other satellites of Saturn, namely; Tarvos, Ijiraq, Thrymr, Siarnaq, Mundilfari, Erriapus, and Suttungr. The moon was named after Skaði, a figure in Norse mythology, as part of an effort to diversify the largely Greek and Roman names of astronomical objects.\nSkathi takes just over 725 days to complete an orbit of Saturn and it is estimated to take 11.10±0.02 hours to rotate on its axis. It orbits at a greater distance from Saturn than many of the planet's other satellites, with a large orbital inclination and eccentricity, and it moves in a…",
       "question_en": "Which irregular moon of Saturn, also called Saturn XXVII, was discovered in 2000 and named after a figure from Norse mythology?",
-      "lead_fact_en": "Saturn XXVII; discovered 23 Sep 2000; named for Skaði.",
+      "lead_fact_en": "Saturn XXVII; discovered 23 Sep 2000; named after a Norse mythology figure.",
       "tags": [
         "science_space"
       ],
@@ -3876,10 +3848,10 @@
       "answer_title": "Cat",
       "answer_url": "https://en.wikipedia.org/wiki/Cat",
       "question": "Which small carnivore, the only domesticated species of the family Felidae, is an obligate meat-eater with retractable claws?",
-      "lead_fact": "Felis catus; obligate carnivore; retractable claws.",
+      "lead_fact": "Only domesticated Felidae species; obligate carnivore; retractable claws.",
       "lead": "The cat (Felis catus), also called domestic cat and house cat, is a small domesticated carnivorous mammal. It is a member of Felidae, the family of mammals in the order Carnivora also colloquially referred to as cats. It is an obligate carnivore, requiring a predominantly meat-based diet. Its retractable claws are adapted to killing small prey species such as mice and rats. It has a strong, flexible body, quick reflexes, and sharp teeth, and its night vision and sense of smell are well developed. It is a social species, but a solitary hunter and a crepuscular predator.\nCat communication includes meowing, purring, trilling, hissing, growling, grunting, body language, and scent marking. It can hear sounds too faint or too high in frequency for human ears, such as those made by small mammals. It secretes and perceives pheromones. Cat intelligence is evident in its ability to adapt, learn…",
       "question_en": "Which small carnivore, the only domesticated species of the family Felidae, is an obligate meat-eater with retractable claws?",
-      "lead_fact_en": "Felis catus; obligate carnivore; retractable claws.",
+      "lead_fact_en": "Only domesticated Felidae species; obligate carnivore; retractable claws.",
       "tags": [
         "animals"
       ],
@@ -3975,10 +3947,10 @@
       "answer_title": "Wordle",
       "answer_url": "https://en.wikipedia.org/wiki/Wordle",
       "question": "Which daily web game, created by a Welsh software engineer for himself and his partner, gives players six tries to guess a shared five-letter word?",
-      "lead_fact": "Josh Wardle; six guesses; one shared daily five-letter word.",
+      "lead_fact": "Welsh software engineer, made for his partner; six guesses; one shared daily five-letter word.",
       "lead": "Wordle is a web-based word game created and developed by Welsh software engineer Josh Wardle. In the game, players have six attempts to guess a five-letter word, receiving feedback through colored tiles that indicate correct letters and their placement. A single puzzle is released daily, with all players attempting to solve the same word. It was inspired by the game Mastermind.\nOriginally developed as a personal project for Wardle and his partner, Wordle was publicly released in October 2021. It gained widespread popularity in late 2021 after the introduction of a shareable emoji-based results format, which led to viral discussion on social media. The game's success spurred the creation of numerous clones, adaptations in other languages, and variations with unique twists. It has been well-received, being played 4.8 billion times during 2023.\nThe New York Times Company acquired Wordle in…",
       "question_en": "Which daily web game, created by a Welsh software engineer for himself and his partner, gives players six tries to guess a shared five-letter word?",
-      "lead_fact_en": "Josh Wardle; six guesses; one shared daily five-letter word.",
+      "lead_fact_en": "Welsh software engineer, made for his partner; six guesses; one shared daily five-letter word.",
       "tags": [
         "technology",
         "video_games"
@@ -4079,10 +4051,10 @@
       "answer_title": "Halloween",
       "answer_url": "https://en.wikipedia.org/wiki/Halloween",
       "question": "Which 31 October observance sits on the night before All Saints' Day and opens the Christian season of remembering the dead?",
-      "lead_fact": "31 October; All Hallows' Eve / All Saints' Eve.",
+      "lead_fact": "31 October; eve of All Saints' Day; opens the Christian season of remembering the dead.",
       "lead": "Halloween, also known as All Hallows' Eve, or All Saints' Eve,  is a celebration observed in many countries  on 31 October, the eve of the Western Christian feast of All Hallows' Day. It is at the beginning of the observance of Allhallowtide, the time in the Christian liturgical year dedicated to remembering the dead, including saints (hallows), martyrs, and all the faithful departed. In popular culture, Halloween has become a celebration of horror and is associated with the macabre and the supernatural.\nOne theory holds that many Halloween traditions were influenced by Celtic harvest festivals, particularly the Gaelic festival Samhain, which are believed to have pagan roots. Some theories go further and suggest that Samhain may have been Christianized as All Hallows' Day, along with its eve, by the Church. Other academics say Halloween began independently as a Christian holiday, being…",
       "question_en": "Which 31 October observance sits on the night before All Saints' Day and opens the Christian season of remembering the dead?",
-      "lead_fact_en": "31 October; All Hallows' Eve / All Saints' Eve.",
+      "lead_fact_en": "31 October; eve of All Saints' Day; opens the Christian season of remembering the dead.",
       "tags": [
         "miscellaneous",
         "mythology_folklore"
@@ -4129,10 +4101,10 @@
       "answer_title": "Roblox",
       "answer_url": "https://en.wikipedia.org/wiki/Roblox",
       "question": "Which game platform, created by David Baszucki and Erik Cassel, launched publicly in 2006 and lets users program their own games and play other users' creations?",
-      "lead_fact": "Baszucki and Cassel; public 2006; Robux.",
+      "lead_fact": "Baszucki and Cassel; public 2006; users program games and play others' creations.",
       "lead": "Roblox ( , ROH-bloks) is an online game platform and game creation system developed by Roblox Corporation that allows users to program and play games created by themselves or other users. It was developed by David Baszucki and Erik Cassel in 2004, and released to the public in 2006. As of February 2025, the platform has reported an average of 85.3 million daily active users. According to the company, its monthly player base includes half of all American children under the age of 16.\nThe platform hosts millions of user-created games, created using Luau, a modified dialect of the programming language Lua and the platform's game engine, Roblox Studio. While Roblox is free-to-play, it features in-game purchases done through its virtual currency known as Robux, and game developers on the platform are able to create items that cost Robux. The platform hosts a large virtual economy centered…",
       "question_en": "Which game platform, created by David Baszucki and Erik Cassel, launched publicly in 2006 and lets users program their own games and play other users' creations?",
-      "lead_fact_en": "Baszucki and Cassel; public 2006; Robux.",
+      "lead_fact_en": "Baszucki and Cassel; public 2006; users program games and play others' creations.",
       "tags": [
         "technology",
         "video_games"
@@ -4260,10 +4232,10 @@
       "answer_title": "MacOS",
       "answer_url": "https://en.wikipedia.org/wiki/MacOS",
       "question": "Which Apple desktop OS succeeded the company's classic operating system after Apple acquired NeXT and based the system on NeXTSTEP?",
-      "lead_fact": "Succeeded classic Mac OS; architecture from NeXT/NeXTSTEP.",
+      "lead_fact": "Succeeded Apple's classic OS; architecture from NeXT/NeXTSTEP.",
       "lead": "macOS (previously OS X and originally Mac OS X) is a proprietary Unix operating system, derived from OPENSTEP for Mach and FreeBSD, which has been marketed and developed by Apple since 2001. It is the current operating system for Apple's line of Mac computers. As of April 2026, within the market of desktop and laptop computers, it is the second most widely used desktop OS, after Microsoft Windows and ahead of all Linux distributions, including ChromeOS and SteamOS. As of 2026, the most recent release of macOS is macOS 26 Tahoe, the 22nd major version of macOS.\nMac OS X succeeded the classic Mac OS, the primary Macintosh operating system from 1984 to 2001. Its underlying architecture came from NeXT's NeXTSTEP, as a result of Apple's acquisition of NeXT, which also brought Steve Jobs back to Apple. The first desktop version, Mac OS X 10.0, was released on March 24, 2001. Apart from OS X…",
       "question_en": "Which Apple desktop OS succeeded the company's classic operating system after Apple acquired NeXT and based the system on NeXTSTEP?",
-      "lead_fact_en": "Succeeded classic Mac OS; architecture from NeXT/NeXTSTEP.",
+      "lead_fact_en": "Succeeded Apple's classic OS; architecture from NeXT/NeXTSTEP.",
       "tags": [
         "technology",
         "video_games"
@@ -4362,10 +4334,10 @@
       "answer_title": "Attack on Titan",
       "answer_url": "https://en.wikipedia.org/wiki/Attack_on_Titan",
       "question": "Which manga by Hajime Isayama, serialized from 2009 to 2021, is set behind walls that keep out man-eating giants?",
-      "lead_fact": "Isayama; Bessatsu Shōnen 2009–2021; Titans and walls.",
+      "lead_fact": "Isayama; Bessatsu Shōnen 2009–2021; walls against man-eating giants.",
       "lead": "Attack on Titan (Japanese: 進撃の巨人, Hepburn: Shingeki no Kyojin; lit. 'The Advancing Giant') is a Japanese manga series written and illustrated by Hajime Isayama. Set in a world where humanity is forced to live in cities surrounded by three enormous walls that protect them from gigantic man-eating humanoids referred to as Titans, the story follows Eren Yeager, an adolescent boy who vows to exterminate the Titans after they bring about the destruction of his hometown and the death of his mother. It was serialized in Kodansha's monthly magazine Bessatsu Shōnen Magazine from September 2009 to April 2021, with its chapters collected in 34 tankōbon volumes.\nAn anime television series was produced by Wit Studio (seasons 1–3) and MAPPA (season 4). A 25-episode first season was broadcast from April to September 2013, followed by a 12-episode second season broadcast from April to June 2017. A…",
       "question_en": "Which manga by Hajime Isayama, serialized from 2009 to 2021, is set behind walls that keep out man-eating giants?",
-      "lead_fact_en": "Isayama; Bessatsu Shōnen 2009–2021; Titans and walls.",
+      "lead_fact_en": "Isayama; Bessatsu Shōnen 2009–2021; walls against man-eating giants.",
       "tags": [
         "anime_manga",
         "art_literature",
@@ -4690,10 +4662,10 @@
       "answer_title": "Bermuda Triangle",
       "answer_url": "https://en.wikipedia.org/wiki/Bermuda_Triangle",
       "question": "Which loosely defined North Atlantic region, bounded roughly by Florida, Puerto Rico, and a British island territory, is the subject of a disappearance urban legend?",
-      "lead_fact": "Florida–Bermuda–Puerto Rico; urban legend, no unusual evidence.",
+      "lead_fact": "Florida, Puerto Rico and a British island territory; urban legend, no unusual evidence.",
       "lead": "The Bermuda Triangle, also known as the Devil's Triangle, is a loosely defined region in the North Atlantic Ocean, roughly bounded by Florida, Bermuda, and Puerto Rico. Since the mid-20th century, it has been the focus of an urban legend suggesting that many aircraft, ships, and people have disappeared there under mysterious circumstances. However, extensive investigations by reputable sources, including the U.S. federal government and scientific organizations, have found no evidence of unusual activity, attributing reported incidents to natural phenomena, human error, and misinterpretation.",
       "question_en": "Which loosely defined North Atlantic region, bounded roughly by Florida, Puerto Rico, and a British island territory, is the subject of a disappearance urban legend?",
-      "lead_fact_en": "Florida–Bermuda–Puerto Rico; urban legend, no unusual evidence.",
+      "lead_fact_en": "Florida, Puerto Rico and a British island territory; urban legend, no unusual evidence.",
       "tags": [
         "art_literature",
         "mythology_folklore"
@@ -4793,10 +4765,10 @@
       "answer_title": "Tuberculosis",
       "answer_url": "https://en.wikipedia.org/wiki/Tuberculosis",
       "question": "Which infectious disease, historically called consumption, is caused by a bacterium of the genus Mycobacterium and usually attacks the lungs?",
-      "lead_fact": "Mycobacterium tuberculosis; historically consumption; typically pulmonary.",
+      "lead_fact": "Bacterium of the genus Mycobacterium; historically consumption; typically pulmonary.",
       "lead": "Tuberculosis ( tew-BUR-kew-LOH-siss, also  TEW-bər-; TB), also known colloquially as the \"white death\", or historically as consumption, is a contagious disease usually caused by Mycobacterium tuberculosis (MTB) bacteria. Tuberculosis initially infects the lungs, but it can also spread to other parts of the body. Most infections show no symptoms, in which case tuberculosis is considered to be inactive or latent. A small proportion of latent infections progress to active disease that, if left untreated, can be fatal. Typical symptoms of active TB are chronic cough with blood-containing mucus, fever, night sweats, and weight loss. Infection of other organs can cause a wide range of symptoms.\nTuberculosis is spread from one person to the next through the air when people who have active TB in their lungs cough, spit, speak, or sneeze. People with latent TB do not spread the disease. A latent…",
       "question_en": "Which infectious disease, historically called consumption, is caused by a bacterium of the genus Mycobacterium and usually attacks the lungs?",
-      "lead_fact_en": "Mycobacterium tuberculosis; historically consumption; typically pulmonary.",
+      "lead_fact_en": "Bacterium of the genus Mycobacterium; historically consumption; typically pulmonary.",
       "tags": [
         "biology_medicine",
         "science_space"
@@ -5042,10 +5014,10 @@
       "answer_title": "Demon Slayer: Kimetsu no Yaiba – The Movie: Infinity Castle",
       "answer_url": "https://en.wikipedia.org/wiki/Demon_Slayer%3A_Kimetsu_no_Yaiba_%E2%80%93_The_Movie%3A_Infinity_Castle",
       "question": "Which 2025 Demon Slayer film, directed by Haruo Sotozaki, adapts the arc set in Muzan Kibutsuji's fortress as a sequel to the anime's fourth season?",
-      "lead_fact": "2025; Sotozaki / Ufotable; Infinity Castle arc.",
+      "lead_fact": "2025; Sotozaki / Ufotable; arc in Muzan Kibutsuji's fortress.",
       "lead": "Demon Slayer: Kimetsu no Yaiba – The Movie: Infinity Castle is a 2025 Japanese animated dark fantasy action film based on the Infinity Castle arc of the 2016–20 manga series Demon Slayer: Kimetsu no Yaiba by Koyoharu Gotouge. It is a direct sequel to the fourth season of the anime television series as well as the manga fourth, fifth, and sixth adaptations, following the film Mugen Train (2020) and the feature-length compilations To the Swordsmith Village (2023) and To the Hashira Training (2024). It is directed by Haruo Sotozaki, produced by Ufotable, and written by the studio's staff members. It follows the Demon Slayer Corps in their decisive climactic battle against Muzan Kibutsuji and the remaining Upper Ranks within the titular \"Infinity Castle\".\nUnlike the Swordsmith Village and Hashira Training adaptations, which are compilations of episodes from the anime series, Infinity Castle…",
       "question_en": "Which 2025 Demon Slayer film, directed by Haruo Sotozaki, adapts the arc set in Muzan Kibutsuji's fortress as a sequel to the anime's fourth season?",
-      "lead_fact_en": "2025; Sotozaki / Ufotable; Infinity Castle arc.",
+      "lead_fact_en": "2025; Sotozaki / Ufotable; arc in Muzan Kibutsuji's fortress.",
       "tags": [
         "anime_manga",
         "movies"
@@ -5168,10 +5140,10 @@
       "answer_title": "Beast of Gévaudan",
       "answer_url": "https://en.wikipedia.org/wiki/Beast_of_G%C3%A9vaudan",
       "question": "Which man-eating animal, or animals, terrorized south-central France between 1764 and 1767 in a former province roughly matching today's Lozère department?",
-      "lead_fact": "1764–1767; Gévaudan / Lozère.",
+      "lead_fact": "1764–1767; former province roughly matching today's Lozère.",
       "lead": "The Beast of Gévaudan (French: La Bête du Gévaudan, IPA: [la bɛt dy ʒevodɑ̃]; Occitan: La Bèstia de Gavaudan) is the historic name associated with a man-eating animal or animals that terrorized the former province of Gévaudan (consisting of the modern-day department of Lozère and part of Haute-Loire), in the Margeride Mountains of south-central France between 30 June 1764 and 19 June 1767.\nThe attacks, which covered an area spanning 90 by 80 kilometres (56 by 50 mi), were said to have been committed by one or more beasts of a tawny/russet colour with dark streaks/stripes and a dark stripe down its back, a tail \"longer than a wolf's\" ending in a tuft according to contemporary eyewitnesses. It was said to attack with formidable teeth and claws, and appeared to be the size of a calf or cow and seemed to fly or bound across fields towards its victims. These descriptions from the period…",
       "question_en": "Which man-eating animal, or animals, terrorized south-central France between 1764 and 1767 in a former province roughly matching today's Lozère department?",
-      "lead_fact_en": "1764–1767; Gévaudan / Lozère.",
+      "lead_fact_en": "1764–1767; former province roughly matching today's Lozère.",
       "tags": [
         "animals",
         "mythology_folklore"

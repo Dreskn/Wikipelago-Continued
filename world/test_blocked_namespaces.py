@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Blocked wiki-namespace helpers must match the web client and stay out of pools."""
+"""Blocked wiki-namespace helpers must match the web client and stay out of pools.
+Also checks the usable-title filter (whole-word keywords, list pages in the 9 wikis)."""
 
 from __future__ import annotations
 
@@ -32,6 +33,37 @@ CASES = (
     ("Minecraft", False),
     ("Star Wars: Episode IV – A New Hope", False),
     ("C++", False),
+)
+
+# is_usable_title: whole-word keyword filter and "List of ..." pages in all 9 wikis.
+USABLE_CASES = (
+    ("Grey's Anatomy", True),
+    ("Sex Pistols", True),
+    ("Atomic Blonde", True),
+    ("Atomium", True),
+    ("Lake Placid", True),
+    ("Acidente nuclear de Chernobil", True),
+    ("André Silva (futbolista nacido en 1995)", True),
+    ("Lijst Pim Fortuyn", True),
+    ("Lista Clinton", True),
+    ("Lista Polaków, którzy zginęli w Himalajach i Karakorum", False),
+    ("Periodic table", False),
+    ("David Bowie discography", False),
+    ("Acid", False),
+    ("List of James Bond films", False),
+    ("Liste des papes", False),
+    ("Liste d'éclipses solaires", False),
+    ("Liste der Päpste", False),
+    ("Liste von Erdbeben in Deutschland", False),
+    ("Anexo:Papas", False),
+    ("Lista dei papi", False),
+    ("Lista de Pokémon", False),
+    ("Elenco de Vale Tudo", False),
+    ("Lijst van Disneypersonages", False),
+    ("Lista över Disneyfilmer", False),
+    ("Lista odcinków serialu Przyjaciele", False),
+    ("Benutzer:Plenz/OSM for Wiki/languages", False),
+    ("Mall:Sveriges största tätorter", False),
 )
 
 
@@ -71,6 +103,18 @@ def main() -> int:
             failures.append(
                 f"is_blocked_wiki_title({title!r}) expected {expected}, got {got}"
             )
+
+    for title, expected in USABLE_CASES:
+        got = bool(mod.is_usable_title(title))
+        if got != expected:
+            failures.append(f"is_usable_title({title!r}) expected {expected}, got {got}")
+
+    # Per-wiki keyword exceptions: kept in their own wiki only.
+    for title, lang in (("Rosa Chemical", "it"), ("Acid (youtuber)", "nl"), ("Pistol", "pl")):
+        if not mod.is_usable_title(title, lang):
+            failures.append(f"is_usable_title({title!r}, {lang!r}) should keep the exception")
+        if mod.is_usable_title(title, "en"):
+            failures.append(f"is_usable_title({title!r}, 'en') should still drop it")
 
     for lang in mod.SUPPORTED_LANGS:
         path = DATA_DIR / f"pool_{lang}.json"

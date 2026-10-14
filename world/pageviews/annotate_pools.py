@@ -97,7 +97,7 @@ SENSITIVE_TYPE_QIDS = {
     "Q21480300",  # mass shooting
     "Q473853",    # school shooting
     "Q81672",     # attempted murder
-    # Illicit drugs. Medicines (opioids, ketamine, amphetamine) stay in.
+    # Illicit drugs. Medicines (opioids, ketamine, amphetamine, benzodiazepines) stay in.
     "Q10268802",  # illegal drug (cocaine, heroin)
     "Q1902558",   # soft drug (cannabis)
     "Q24892366",  # hard drug
@@ -136,7 +136,8 @@ SENSITIVE_QIDS: dict[str, set[str]] = {
         "Q17127659", "Q7283", "Q2223653",
         "Q132821", "Q149086", "Q484188", "Q750215",
         "Q47092", "Q365680", "Q7458798",  # sexual misconduct
-        "Q83871", "Q844924",
+        # Not Q83871 benzodiazepine: Diazepam, Alprazolam, Clonazepam are prescription medicines.
+        "Q844924",    # drug trafficking
         *ADULT_TOPIC_QIDS,
         *SENSITIVE_TYPE_QIDS,
     },

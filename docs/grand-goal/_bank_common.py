@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import time
@@ -15,6 +16,16 @@ PAGEVIEWS = ROOT / "world" / "pageviews"
 POOL_DIR = ROOT / "world" / "APWorldSource" / "wikipelago" / "data"
 ANN_DIR = PAGEVIEWS / "annotated"
 BANK_DIR = HERE / "bank"
+
+# The apworld's title rules (namespaces, list pages, banned words). Loaded by path:
+# the package __init__.py needs Archipelago.
+_pool_spec = importlib.util.spec_from_file_location(
+    "wikipelago_article_pool", POOL_DIR.parent / "article_pool.py"
+)
+if _pool_spec is None or _pool_spec.loader is None:
+    raise RuntimeError(f"Cannot load {POOL_DIR.parent / 'article_pool.py'}")
+article_pool = importlib.util.module_from_spec(_pool_spec)
+_pool_spec.loader.exec_module(article_pool)
 
 LANGS = ("en", "fr", "de", "es", "it", "pt", "nl", "sv", "pl")
 
@@ -91,15 +102,6 @@ NS_PREFIXES = (
     "specjalna:", "draft:", "brouillon:", "anexo:", "mediawiki:",
 )
 
-LIST_PREFIXES = (
-    "list of ", "outline of ", "timeline of ", "index of ",
-    "liste des ", "liste de ", "liste d'", "liste d’", "liste du ", "liste der ",
-    "liste von ", "liste des",
-    "lista de ", "lista das ", "lista di ", "lista delle ", "lista dei ",
-    "lijst van ", "lijst der ",
-    "lista över ",
-)
-
 DISAMBIG_RE = re.compile(
     r"\((disambiguation|homonymie|begriffsklärung|desambiguación|"
     r"disambigua|desambiguação|doorverwijspagina|olika betydelser|"
@@ -107,15 +109,8 @@ DISAMBIG_RE = re.compile(
     re.I,
 )
 
-BANNED_TITLE_KEYWORDS = (
-    "rifle", "pistol", "shotgun", "revolver", "machine gun", "submachine gun",
-    "discography", "chemistry", "chemical", "compound", "acid", "molecule",
-    "molecular", "atom", "isotope", "reaction", "periodic table",
-    "organic chemistry", "inorganic chemistry",
-)
 
-
-def looks_usable(title: str) -> bool:
+def looks_usable(title: str, lang: str = "") -> bool:
     lowered = title.lower().strip()
     if title in SKIP_EXACT or lowered in {s.lower() for s in SKIP_EXACT}:
         return False
@@ -123,11 +118,14 @@ def looks_usable(title: str) -> bool:
         return False
     if lowered.startswith(("special:", "spécial:", "spezial:", "especial:", "speciale:", "speciaal:", "specjalna:")):
         return False
+    # User, template, file ... pages in all 9 wikis (Benutzer:…, Mall:…): same list as generate.
+    if article_pool.is_blocked_wiki_title(title):
+        return False
     if any(lowered.startswith(prefix) for prefix in NS_PREFIXES):
         return False
-    if any(lowered.startswith(prefix) for prefix in LIST_PREFIXES):
+    if article_pool.is_list_page_title(title):
         return False
-    if any(keyword in lowered for keyword in BANNED_TITLE_KEYWORDS):
+    if article_pool.has_banned_title_word(title, lang):
         return False
     if any(ch in title for ch in ('"', "$", "%", "@", "#")):
         return False
@@ -223,7 +221,7 @@ def select_union(lang: str) -> dict:
             continue
         if qid in SKIP_QIDS:
             continue
-        if not looks_usable(title):
+        if not looks_usable(title, lang):
             continue
         usable.append(
             {

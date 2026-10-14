@@ -40,11 +40,17 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/static/style.css?v=20261011-12" />
+  <link rel="stylesheet" href="/static/style.css?v=20261014-02" />
 </head>
 <body class="is-idle">
   <div id="releaseBanner" class="migrate-banner" role="status">
-    <p data-i18n-html="banner.release10">This web client always uses the <a href="https://github.com/Dreskn/Wikipelago-Continued/releases">latest release</a>. Please report any issues on the <a href="https://discord.com/channels/731205301247803413/1462007968902938768">Archipelago Discord</a>. To continue playing on previous clients, <a href="https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms">host the bridge locally</a>.</p>
+    <button type="button" id="releaseBannerClose" class="migrate-banner-close" aria-label="Dismiss" data-i18n-aria="toast.dismiss">×</button>
+    <p data-i18n-html="banner.release10">This web client always uses the <a target="_blank" rel="noopener noreferrer" href="https://github.com/Dreskn/Wikipelago-Continued/releases">latest release</a>. Please report any issues on the <a target="_blank" rel="noopener noreferrer" href="https://discord.com/channels/731205301247803413/1462007968902938768">Archipelago Discord</a>. To continue playing on previous clients, <a target="_blank" rel="noopener noreferrer" href="https://github.com/Dreskn/Wikipelago-Continued/blob/main/docs/setup.md#option-2--local-client-private--vpn-rooms">host the bridge locally</a>.</p>
+  </div>
+  <!-- Host announcement (announcement.txt on the server), filled by pollStatus. -->
+  <div id="announceBanner" class="migrate-banner announce-banner hidden" role="status">
+    <button type="button" id="announceBannerClose" class="migrate-banner-close" aria-label="Dismiss" data-i18n-aria="toast.dismiss">×</button>
+    <p id="announceText"></p>
   </div>
   <!-- Phone layout only (< 900px): targets and quick tools stay on screen while the page scrolls. -->
   <div id="phoneBar" class="phone-bar" role="region" aria-label="Current targets" data-i18n-aria="phone.barAria">
@@ -266,7 +272,6 @@
           </div>
           <div class="card-body">
             <div id="lensIconsRow" class="item-icon-row" aria-label="Display lenses" data-i18n-aria="items.lensesAria"></div>
-            <span id="lensesItem" class="hidden"></span>
           </div>
         </div>
 
@@ -326,7 +331,7 @@
           <button type="button" id="bingoZoomReset" class="btn-quiet" aria-label="Reset zoom" data-i18n-aria="bingo.zoomReset">100%</button>
           <button type="button" id="bingoZoomIn" class="btn-quiet" aria-label="Zoom in" data-i18n-aria="bingo.zoomIn">+</button>
         </div>
-        <button type="button" id="bingoOverlayClose" class="btn-quiet" aria-label="Close" data-i18n-aria="bingo.closeOverlay">✕</button>
+        <button type="button" id="bingoOverlayClose" class="btn-quiet" aria-label="Close" data-i18n-aria="bingo.closeOverlay" data-dialog-focus>✕</button>
       </header>
       <div id="bingoOverlayStage" class="bingo-overlay-stage">
         <div id="bingoOverlayWorld" class="bingo-overlay-world"></div>
@@ -343,7 +348,7 @@
           <button type="button" id="journeyFullscreenBtn" class="btn-quiet" data-i18n="journey.fullscreen" data-i18n-aria="journey.fullscreen">Full screen</button>
           <button type="button" id="journeyPopupBtn" class="btn-quiet" data-i18n="journey.popup" data-i18n-aria="journey.popup">Pop out</button>
         </div>
-        <button type="button" id="journeyOverlayClose" class="btn-quiet" aria-label="Close" data-i18n-aria="journey.close">✕</button>
+        <button type="button" id="journeyOverlayClose" class="btn-quiet" aria-label="Close" data-i18n-aria="journey.close" data-dialog-focus>✕</button>
       </header>
       <div id="journeyOverlayBody" class="journey-overlay-body">
         <div id="journeyPath" class="journey-path" aria-label="Journey" data-i18n-aria="journey.pathAria"></div>
@@ -368,7 +373,7 @@
 
   <div id="toastStack" class="toast-stack" aria-live="polite" aria-label="Notifications" data-i18n-aria="toast.region"></div>
 
-  <script src="/static/i18n.js?v=20261011-12"></script>
-  <script src="/static/app.js?v=20261011-12"></script>
+  <script src="/static/i18n.js?v=20261014-02"></script>
+  <script src="/static/app.js?v=20261014-02"></script>
 </body>
 </html>

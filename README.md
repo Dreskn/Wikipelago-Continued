@@ -26,8 +26,8 @@ This repository is a continued fork of the [original Wikipelago](https://github.
 
 Live web client: https://wikipelago.dreskn.fr/
 
-Recommended Archipelago version: **0.6.7**  
-World version: **1.1.0**
+Archipelago version: **0.6.7 or newer**  
+World version: **1.1.1**
 
 Looking for more info about Archipelago in general? See the [website](https://archipelago.gg/) or [GitHub](https://github.com/ArchipelagoMW/Archipelago).
 
@@ -48,6 +48,6 @@ Articles are loaded live from [Wikipedia](https://www.wikipedia.org/). Their tex
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). HUD tool icons are [Lucide](https://lucide.dev) (ISC; some icons derived from Feather, MIT). Fonts are Fraunces, Instrument Sans, JetBrains Mono and Libertinus Serif, self-hosted under the SIL Open Font License — see `LICENSE`.
+This project is licensed under the [MIT License](LICENSE). The icons are [Lucide](https://lucide.dev) (ISC; some icons derived from Feather, MIT). Fonts are Fraunces, Instrument Sans, JetBrains Mono and Libertinus Serif, self-hosted under the SIL Open Font License. Their notices and the list of icons used are in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
 The original author confirmed they had abandoned the project and gave permission to continue public development (including releases and hosting) while keeping attribution for the original idea and earlier versions.

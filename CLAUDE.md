@@ -1,6 +1,6 @@
 # Wikipelago Continued
 
-Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
+Custom [Archipelago](https://archipelago.gg) world (AP **0.6.7+**) based on wiki racing. Each round has a Start and a Target Wikipedia article; reaching the target via in-article links sends checks, and items unlock tools and progress toward the Grand Goal.
 
 - Continued fork of [Skrumptily69's original Wikipelago](https://github.com/Skrumptily69/Wikipelago), used with permission. Keep the credit (README.md, LICENSE).
 - Live client: https://wikipelago.dreskn.fr/ — bug reports come from GitHub Issues and the Wikipelago thread on the Archipelago Discord (links in README).
@@ -15,7 +15,8 @@ Custom [Archipelago](https://archipelago.gg) world (target AP **0.6.7**) based o
   - `archipelago.json` version metadata
   - Built to `world/APWorld/wikipelago.apworld` (gitignored).
 - `bridge/bridge.py` — single-file aiohttp server: serves `web/`, REST API under `/api/session/{sid}/...`, and acts as the Archipelago websocket client (one state per browser session). Calls the Wikipedia API for title canonicalisation, redirects and Compass page links (only the 9 supported wikis). Requests that come through a reverse proxy can't connect to private or loopback Archipelago addresses. Deps: `aiohttp`, `websockets`.
-- `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`. Fonts are self-hosted WOFF2 in `web/fonts/` (OFL, licence next to each family); no third-party CDNs.
+  - Host announcements: plain text in `announcement.txt` at the repo root (gitignored) shows in a banner on every open page within a few seconds (re-read every 3s, max 500 characters, no restart); delete the file to remove it.
+- `web/` — plain JavaScript, no build step, no framework: `app.js` (HUD and game UI), `i18n.js` (all UI strings), `style.css`, `index.html`, PWA manifest and `service-worker.js`. Icons are Lucide SVGs inlined via `lucideIcon()` in `app.js`. Fonts are self-hosted WOFF2 in `web/fonts/` (OFL, licence next to each family); no third-party CDNs. Icon and font notices live in `THIRD_PARTY_NOTICES.md` (`LICENSE` is the MIT text only).
 - `docs/` — player docs; `docs/grand-goal/` is the Grand Goal question bank and its build scripts.
 - `yaml/Wikipelago.yaml` — player YAML template.
 - `world/` — build, test and pool-maintenance scripts. Article pools are rebuilt with the pipeline in `world/README.md` (pageviews → Wikidata annotation → enrichment → export → validation); `world/pageviews/` holds its data.
@@ -29,7 +30,7 @@ bridge/setup_and_start_bridge.bat        # first run on Windows; bridge/start_br
 ./world/release_check.ps1                # build + smoke test
 ./world/smoke_test.ps1 [-BuildApworld]   # smoke test only (also runs the two Python unit tests)
 ./world/fuzz_test.ps1 -Runs 25           # random options: item-math model + the world's own code with AP stand-ins
-./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "<path>"   # real generation; needs an Archipelago 0.6.7 checkout or install (installs the built apworld temporarily, restores the old one)
+./world/real_fuzz_test.ps1 -Runs 25 -ArchipelagoRoot "<path>"   # real generation; needs an Archipelago 0.6.7+ checkout or install (installs the built apworld temporarily, restores the old one)
 python world/test_letter_pairs.py
 python world/test_blocked_namespaces.py
 python world/validate_article_pool.py --lang all --strict       # pools vs live Wikipedia
@@ -58,6 +59,7 @@ python world/build_letter_pair_weights.py --lang all            # rebuild bingo 
   - `README.md`, `world/README.md`, the Compatibility table in `docs/setup.md`
 
   The smoke test checks the YAML, `CLIENT_VERSION`, `APP_VERSION`, `archipelago.json` and CI `AP_REF` pins; the README and docs versions can drift unnoticed.
+- Archipelago version: `minimum_ap_version` in `archipelago.json` and `requires.version` in the YAML stay at the oldest supported Archipelago (0.6.7), per AP's guidance; raise them only when the world needs a newer core feature. Player docs say "0.6.7 or newer".
 
 ## Working agreements
 

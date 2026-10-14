@@ -98,8 +98,6 @@ try {
     if (-not (Test-StrictUtf8File $yamlToCheck)) {
         throw "YAML template is not strict UTF-8: $yamlToCheck"
     }
-    Assert-NoPattern $yamlToCheck 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset alias found'
-    Assert-HasPattern $yamlToCheck 'Deprecated and ignored' 'YAML template must mark goal_article_preset as deprecated'
     Assert-HasPattern $yamlToCheck 'searchsanity:\s*(true|false)' 'YAML template is missing searchsanity'
     Assert-HasPattern $yamlToCheck 'scrollsanity:\s*(true|false)' 'YAML template is missing scrollsanity'
     Assert-HasPattern $yamlToCheck 'search_starting_letters:\s*(none|all_vowels|etaoi|raise)' 'YAML template is missing search_starting_letters'
@@ -123,11 +121,11 @@ try {
     Assert-HasPattern $ciPath 'AP_REF: "0\.6\.7"' 'CI Generate must pin Archipelago 0.6.7'
     Assert-HasPattern $ciPath 'world/ci_generate.py' 'CI must run world/ci_generate.py'
     Assert-HasPattern ([System.IO.Path]::Combine($Root, "ci_generate.py")) 'wikipelago.apworld' 'world/ci_generate.py must install the built apworld'
-    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.1\.0\s*$' 'YAML template is missing requires.game.Wikipelago 1.1.0'
-    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.1.0"' 'Bridge client version must be 1.1.0'
-    Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "web", "app.js")) 'APP_VERSION = "1.1.0"' 'Web APP_VERSION must be 1.1.0'
+    Assert-HasPattern $yamlToCheck '^\s*Wikipelago:\s*1\.1\.1\s*$' 'YAML template is missing requires.game.Wikipelago 1.1.1'
+    Assert-HasPattern $bridgePath 'CLIENT_VERSION = "1.1.1"' 'Bridge client version must be 1.1.1'
+    Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "web", "app.js")) 'APP_VERSION = "1.1.1"' 'Web APP_VERSION must be 1.1.1'
     Assert-HasPattern ([System.IO.Path]::Combine($repoRoot, "bridge", "start_bridge.bat")) 'py -3' 'Bridge start script must use the Windows py launcher'
-    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.1.0"' 'World full_version must be 1.1.0'
+    Assert-HasPattern ([System.IO.Path]::Combine($worldRoot, "archipelago.json")) '"full_version": "1.1.1"' 'World full_version must be 1.1.1'
     Assert-HasPattern $yamlToCheck 'required_fragments:\s*\d+' 'YAML template is missing required_fragments'
     Assert-HasPattern $yamlToCheck 'additional_fragments_in_pool:\s*\d+' 'YAML template is missing additional_fragments_in_pool'
     Assert-HasPattern $yamlToCheck 'trap_count:\s*\d+' 'YAML template is missing trap_count'
@@ -152,7 +150,6 @@ try {
     $poolEnPath = Join-Path $worldRoot "data\pool_en.json"
 
     Assert-NoPattern $initPath '`r`n' 'Literal backtick newline text regression found in __init__.py'
-    Assert-NoPattern $initPath 'goal_article_preset:\s*pokemon\s*$' 'Invalid YAML preset text leaked into __init__.py'
     Assert-NoPattern $optionsPath 'include_board_games' 'board_games category should be removed in 0.6'
     Assert-HasPattern $articlePoolPath 'def load_article_pool' 'article_pool.load_article_pool missing'
     Assert-HasPattern $articlePoolPath 'def is_blocked_wiki_title' 'article_pool.is_blocked_wiki_title missing'
@@ -162,7 +159,8 @@ try {
     Assert-HasPattern $articlePoolPath 'sjabloon' 'article_pool blocked namespaces must include Dutch Sjabloon'
     Assert-HasPattern $articlePoolPath 'szablon' 'article_pool blocked namespaces must include Polish Szablon'
     Assert-HasPattern $articlePoolPath 'portail' 'article_pool blocked namespaces must include French Portail'
-    Assert-HasPattern $initPath 'is_blocked_wiki_title' 'Generate must skip blocked wiki namespaces'
+    Assert-HasPattern $articlePoolPath 'if is_blocked_wiki_title\(title\)' 'The usable-title filter must skip blocked wiki namespaces'
+    Assert-HasPattern $initPath 'is_usable_title\(' 'Generate must filter titles with article_pool.is_usable_title'
     if (-not (Test-Path -LiteralPath $poolEnPath)) {
         throw "EN multi-tag pool data/pool_en.json missing [$poolEnPath]"
     }
@@ -584,7 +582,7 @@ try {
             if (-not (Test-Path $packagedManifest)) {
                 throw "Packaged apworld missing wikipelago/archipelago.json"
             }
-            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.1\.0"' 'Packaged world_version should be 1.1.0'
+            Assert-HasPattern $packagedManifest '"world_version":\s*"1\.1\.1"' 'Packaged world_version should be 1.1.1'
 
             Assert-NoPattern $packagedInit '`r`n' 'Literal backtick newline text regression found in packaged __init__.py'
             Write-Pass "Built .apworld package passed UTF-8 and syntax-regression checks"

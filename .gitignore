@@ -31,6 +31,8 @@ docs/grand-goal/questions-en-top100.md
 docs/grand-goal/questions-en-union.md
 yaml/Wikipelago_local_test.yaml
 CLAUDE.local.md
+# Host announcement shown on every open page (see CLAUDE.md)
+/announcement.txt
 
 # Draft HUD captures (published screenshot is docs/ui-annotated.png)
 docs/_annotate_ui.py

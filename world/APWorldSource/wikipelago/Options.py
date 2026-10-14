@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from Options import Choice, PerGameCommonOptions, Range, Toggle
+from Options import Choice, OptionGroup, PerGameCommonOptions, Range, Toggle
 
 
 class CheckCount(Range):
@@ -14,7 +14,8 @@ class CheckCount(Range):
 
 class RequiredFragments(Range):
     """Knowledge Fragments needed to reveal and clear the Grand Goal.
-    Landing on the answer page finishes the slot."""
+    Landing on the answer page finishes the slot.
+    Capped at Round Count: a higher value needs (and puts in the pool) only Round Count fragments."""
     display_name = "Required Fragments"
     range_start = 1
     range_end = 200
@@ -44,14 +45,6 @@ class RoundsPerUnlock(Range):
     range_start = 1
     range_end = 999
     default = 5
-
-
-class RandomGoalArticle(Toggle):
-    """Kept for existing YAMLs. The Grand Goal always comes from that wiki
-    language's goal pool; this toggle is ignored. Knowledge Fragments still
-    unlock the question; landing on the answer page still sends Victory."""
-    display_name = "Random Goal Article"
-    default = 1
 
 
 class Searchsanity(Toggle):
@@ -290,33 +283,6 @@ class IncludeSensitivePages(Toggle):
     default = 0
 
 
-class GoalArticlePreset(Choice):
-    """Deprecated and ignored. Kept so existing YAMLs still parse. The Grand
-    Goal always comes from the language goal pool, not this list."""
-    display_name = "Goal Article Preset (deprecated, ignored)"
-    option_minecraft = 0
-    option_the_legend_of_zelda = 1
-    option_dark_souls = 2
-    option_elden_ring = 3
-    option_super_mario_bros = 4
-    option_pokemon_red_and_blue = 5
-    option_chess = 6
-    option_catan = 7
-    option_the_dark_knight = 8
-    option_star_wars_film = 9
-    option_lord_of_the_rings_fellowship = 10
-    option_the_matrix = 11
-    option_avatar_the_last_airbender = 12
-    option_breaking_bad = 13
-    option_stranger_things = 14
-    option_game_of_thrones = 15
-    option_the_simpsons = 16
-    option_spongebob_squarepants = 17
-    option_super_smash_bros_ultimate = 18
-    option_halo_combat_evolved = 19
-    default = 2
-
-
 class Deaths(Toggle):
     """When enabled, revisiting a page already visited this round causes a death
     (jump to a random Wikipedia page). Local only unless Death Link is also on.
@@ -361,11 +327,10 @@ class TrapType(Choice):
     """Which trap items to generate and accept from Trap Link.
 
     ``all`` includes Foggy Links, Missing Links, and Wrong Wiki.
-    ``both`` is deprecated and has the same effect as ``all``.
     """
     display_name = "Trap Type"
     option_all = 0
-    alias_both = 0  # deprecated YAML name; same as all
+    alias_both = 0  # old YAML name for all; still accepted
     option_only_foggy_links = 1
     option_only_missing_links = 2
     option_only_wrong_wiki = 3
@@ -498,23 +463,31 @@ class Goal(Choice):
 
 @dataclass
 class WikipelagoOptions(PerGameCommonOptions):
-    check_count: CheckCount
+    # Goal
+    goal: Goal
     required_fragments: RequiredFragments
     additional_fragments_in_pool: AdditionalFragmentsInPool
+    # Rounds
+    check_count: CheckCount
     start_rounds_unlocked: StartRoundsUnlocked
     rounds_per_unlock: RoundsPerUnlock
-    random_goal_article: RandomGoalArticle
-    searchsanity: Searchsanity
-    scrollsanity: Scrollsanity
-    randomize_tables: RandomizeTables
-    randomize_pictures: RandomizePictures
-    randomize_incipit: RandomizeIncipit
-    randomize_infoboxes: RandomizeInfoboxes
-    randomize_toc: RandomizeToc
-    randomize_navboxes: RandomizeNavboxes
-    randomize_hatnotes: RandomizeHatnotes
-    randomize_references: RandomizeReferences
-    search_starting_letters: SearchStartingLetters
+    # Realms & side roads
+    branch_count: BranchCount
+    branch_length: BranchLength
+    topic_portals: TopicPortals
+    additional_branch_keys: AdditionalBranchKeys
+    # Tools
+    back_depth_start: BackDepthStart
+    back_depth_unlocks: BackDepthUnlocks
+    target_rerolls_start: TargetRerollsStart
+    target_reroll_unlocks: TargetRerollUnlocks
+    # Letter-pair bingo
+    toggle_bingo_letterpairs: ToggleBingoLetterpairs
+    bingo_letterpairs_grid: BingoLetterpairsGrid
+    bingo_cards_start: BingoCardsStart
+    bingo_card_unlocks: BingoCardUnlocks
+    bingo_stamp_unlocks: BingoStampUnlocks
+    # Wikipedia & categories
     wikipedia_language: WikipediaLanguage
     include_video_games: IncludeVideoGames
     include_movies: IncludeMovies
@@ -531,29 +504,56 @@ class WikipelagoOptions(PerGameCommonOptions):
     include_music: IncludeMusic
     include_politics: IncludePolitics
     include_famous_people: IncludeFamousPeople
-    include_miscellaneous: IncludeMiscellaneous
     include_animals: IncludeAnimals
     include_biology_medicine: IncludeBiologyMedicine
+    include_miscellaneous: IncludeMiscellaneous
     include_sensitive_pages: IncludeSensitivePages
-    goal_article_preset: GoalArticlePreset
+    # Search & scroll sanity
+    searchsanity: Searchsanity
+    search_starting_letters: SearchStartingLetters
+    scrollsanity: Scrollsanity
+    # Lenses
+    randomize_tables: RandomizeTables
+    randomize_pictures: RandomizePictures
+    randomize_incipit: RandomizeIncipit
+    randomize_infoboxes: RandomizeInfoboxes
+    randomize_toc: RandomizeToc
+    randomize_navboxes: RandomizeNavboxes
+    randomize_hatnotes: RandomizeHatnotes
+    randomize_references: RandomizeReferences
+    # Difficulty
     deaths: Deaths
     death_link: DeathLink
     link_bombs: LinkBombs
     link_bomb_density: LinkBombDensity
+    # Traps
     trap_count: TrapCount
     trap_type: TrapType
     trap_link: TrapLink
-    toggle_bingo_letterpairs: ToggleBingoLetterpairs
-    bingo_letterpairs_grid: BingoLetterpairsGrid
-    bingo_cards_start: BingoCardsStart
-    bingo_card_unlocks: BingoCardUnlocks
-    bingo_stamp_unlocks: BingoStampUnlocks
-    back_depth_start: BackDepthStart
-    back_depth_unlocks: BackDepthUnlocks
-    target_rerolls_start: TargetRerollsStart
-    target_reroll_unlocks: TargetRerollUnlocks
-    branch_count: BranchCount
-    branch_length: BranchLength
-    additional_branch_keys: AdditionalBranchKeys
-    topic_portals: TopicPortals
-    goal: Goal
+
+
+# Sections of the Launcher's template and the website's options page, after Archipelago's own settings.
+wikipelago_option_groups = [
+    OptionGroup("Goal", [Goal, RequiredFragments, AdditionalFragmentsInPool]),
+    OptionGroup("Rounds", [CheckCount, StartRoundsUnlocked, RoundsPerUnlock]),
+    OptionGroup("Realms & side roads", [BranchCount, BranchLength, TopicPortals, AdditionalBranchKeys]),
+    OptionGroup("Tools", [BackDepthStart, BackDepthUnlocks, TargetRerollsStart, TargetRerollUnlocks]),
+    OptionGroup("Letter-pair bingo", [
+        ToggleBingoLetterpairs, BingoLetterpairsGrid, BingoCardsStart, BingoCardUnlocks,
+        BingoStampUnlocks,
+    ]),
+    OptionGroup("Wikipedia & categories", [
+        WikipediaLanguage, IncludeVideoGames, IncludeMovies, IncludeTVShows, IncludeAnimeManga,
+        IncludeSports, IncludeScienceSpace, IncludeTechnology, IncludeHistory, IncludeGeography,
+        IncludeFoodCuisine, IncludeArtLiterature, IncludeMythologyFolklore, IncludeMusic,
+        IncludePolitics, IncludeFamousPeople, IncludeAnimals, IncludeBiologyMedicine,
+        IncludeMiscellaneous, IncludeSensitivePages,
+    ]),
+    OptionGroup("Search & scroll sanity", [Searchsanity, SearchStartingLetters, Scrollsanity]),
+    OptionGroup("Lenses", [
+        RandomizeTables, RandomizePictures, RandomizeIncipit, RandomizeInfoboxes, RandomizeToc,
+        RandomizeNavboxes, RandomizeHatnotes, RandomizeReferences,
+    ]),
+    OptionGroup("Difficulty", [Deaths, DeathLink, LinkBombs, LinkBombDensity]),
+    OptionGroup("Traps", [TrapCount, TrapType, TrapLink]),
+]

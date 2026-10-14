@@ -2,7 +2,7 @@
 
 ## How do I report a bug?
 
-On the Archipelago Discord, in the [Wikipelago discussion thread](https://discord.com/channels/731205301247803413/1462007968902938768).
+On [GitHub Issues](https://github.com/Dreskn/Wikipelago-Continued/issues), or on the Archipelago Discord in the [Wikipelago discussion thread](https://discord.com/channels/731205301247803413/1462007968902938768).
 
 ## What does `Wikipelago item math invalid` “required progression items exceed locations” mean?
 
@@ -56,6 +56,10 @@ French `é` is just E. Polish `Ź` is not Z. Same idea for the other extras in t
 
 You might get disconnected if the AP room goes to sleep, or if the server deploys a new update. Refresh your page and reconnect with the same server, slot, and password. Checks you already sent are still in Archipelago; you just need the connection again.
 
+## Can I play on a phone?
+
+Yes, in the browser. Below 900 px wide the client switches to a one-column layout: a bar at the top keeps your targets, the Compass hint, search and **SOS** in view, and the menu button swaps the article for the cards and settings. Tap a target to see its preview. See [Overview — On a phone](overview.md#on-a-phone).
+
 ## Why is the Wikipedia language different from the dropdown in the corner?
 
 The dropdown only translates buttons, labels, and toasts. Which Wikipedia you race on is `wikipedia_language` in your YAML (and Practice follows the UI language).
@@ -66,7 +70,7 @@ Non-article namespaces (File, Template, Wikipedia:, Portail, Plik, and the same 
 
 ## What happened to `goal_article_preset` / `random_goal_article`?
 
-They are ignored. The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs still generate; they just no longer pick a preset series.
+They were removed in 1.1.1 (they had been ignored since 1.0). The Grand Goal is always a closed question from that wiki language’s goal pool. Old YAMLs that still contain them generate fine; Archipelago only logs a warning that the option is unknown.
 
 ## I picked Realm Master. Where are my Knowledge Fragments and the Grand Goal?
 

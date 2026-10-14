@@ -846,7 +846,8 @@ def install_archipelago_stand_ins():
 
     @dataclasses.dataclass
     class PerGameCommonOptions:
-        pass
+        def as_dict(self, *option_names):
+            return {name: getattr(self, name).value for name in option_names}
 
     options.Option = Option
     options.Toggle = Toggle
@@ -854,6 +855,14 @@ def install_archipelago_stand_ins():
     options.Range = Range
     options.Choice = Choice
     options.PerGameCommonOptions = PerGameCommonOptions
+
+    class OptionGroup:
+        def __init__(self, name, options, start_collapsed=False):
+            self.name = name
+            self.options = options
+            self.start_collapsed = start_collapsed
+
+    options.OptionGroup = OptionGroup
 
     worlds = types.ModuleType("worlds")
     worlds.__path__ = []

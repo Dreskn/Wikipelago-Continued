@@ -23,10 +23,10 @@ import websockets
 from aiohttp import web
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-LOG = logging.getLogger("wikipelago-cloud")
+LOG = logging.getLogger("wikipelago-bridge")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.1.0"
+CLIENT_VERSION = "1.1.1"
 TELEPORT_COOLDOWN_SEC = 60
 # Wiki Compass: backlink pages (500 titles each) fetched per target, once per session.
 COMPASS_BACKLINK_PAGES = 2
@@ -53,6 +53,12 @@ PRIVATE_SERVER_ERROR = (
 )
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# Host message shown on every open page: plain text in announcement.txt at the repo root (gitignored).
+# Write or delete the file on the server; no restart needed.
+ANNOUNCEMENT_FILE = _REPO_ROOT / "announcement.txt"
+ANNOUNCEMENT_MAX_CHARS = 500
+ANNOUNCEMENT_RECHECK_SECONDS = 3.0
 
 
 def _env_first(*names: str) -> str:
@@ -167,7 +173,6 @@ PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
 }
 for _portal_index, _portal_name in enumerate(PORTAL_ITEM_BY_TOPIC.values(), start=50):
     DEFAULT_ITEMS[_portal_name] = 1_870_000 + _portal_index
-PORTAL_ITEM_NAMES = frozenset(PORTAL_ITEM_BY_TOPIC.values())
 
 TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links", "Wrong Wiki"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
@@ -446,6 +451,7 @@ PRACTICE_REALM_LENGTH = 5
 PRACTICE_REALM_REROLL_MAX = 300
 _PRACTICE_TOPIC_CACHE: dict[str, dict[str, list[str]]] = {}
 _LETTER_PAIRS_MODULE: Any = None
+_ARTICLE_POOL_MODULE: Any = None
 
 
 def load_practice_titles(lang: str = "en", *, include_sensitive: bool = False) -> list[str]:
@@ -472,6 +478,8 @@ def load_practice_titles(lang: str = "en", *, include_sensitive: bool = False) -
             continue
         if not include_sensitive and bool(entry.get("sensitive")):
             continue
+        if not article_pool_module().is_usable_title(title, code):
+            continue
         titles.append(title)
     # Preserve order, drop dupes.
     titles = list(dict.fromkeys(titles))
@@ -492,7 +500,7 @@ def load_practice_topics(lang: str = "en") -> dict[str, list[str]]:
     by_tag: dict[str, list[str]] = {}
     for entry in payload.get("entries") or []:
         title = str(entry.get("title") or "").strip()
-        if not title or bool(entry.get("sensitive")):
+        if not title or bool(entry.get("sensitive")) or not article_pool_module().is_usable_title(title, code):
             continue
         for tag in entry.get("tags") or []:
             if tag in PORTAL_ITEM_BY_TOPIC:
@@ -500,6 +508,20 @@ def load_practice_topics(lang: str = "en") -> dict[str, list[str]]:
     by_tag = {tag: list(dict.fromkeys(titles)) for tag, titles in by_tag.items()}
     _PRACTICE_TOPIC_CACHE[code] = by_tag
     return {tag: list(titles) for tag, titles in by_tag.items()}
+
+
+def article_pool_module() -> Any:
+    """The apworld's article_pool.py, so Practice skips the same titles real seeds skip (list pages, banned words)."""
+    global _ARTICLE_POOL_MODULE
+    if _ARTICLE_POOL_MODULE is None:
+        import importlib.util
+
+        path = PRACTICE_POOL_DIR.parent / "article_pool.py"
+        spec = importlib.util.spec_from_file_location("wikipelago_article_pool", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        _ARTICLE_POOL_MODULE = module
+    return _ARTICLE_POOL_MODULE
 
 
 def letter_pairs_module() -> Any:
@@ -549,11 +571,8 @@ class SessionState:
     trap_type: int = 0
     trap_link: bool = False
     bingo_letterpairs: bool = False
-    bingo_letterpairs_grid: int = 0
     bingo_letterpairs_boards: list[list[list[str]]] = field(default_factory=list)
     bingo_cards_start: int = 0
-    bingo_card_unlocks: int = 0
-    bingo_stamp_unlocks: int = 0
     bingo_letterpairs_location_ids: dict[str, dict[str, int]] = field(default_factory=dict)
     bingo_stamped_pairs: dict[str, set[str]] = field(default_factory=dict)
     bingo_stamps_used: int = 0
@@ -572,6 +591,14 @@ class SessionState:
     back_depth_start: int = 0
     backs_used: int = 0
     backs_round: str = ""
+    # Rerolled targets and this main round's Reroll/Back use, kept across reconnects and stored in AP
+    # DataStorage (wikipelago_progress_{team}_{slot}): {"main:3": {"target": ..., "n": 1},
+    # "branch:0:1": {"target": ..., "n": 2}, "uses": {"round": 3, "rerolls": 1, "backs": 2}}.
+    # n counts the rerolls of that round, so the most rerolled copy wins when devices race.
+    progress_entries: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Seed, team and slot the entries belong to.
+    progress_owner: str = ""
+    progress_storage_ready: bool = False
     location_round_ids: list[int] = field(default_factory=list)
     location_grand_goal: int | None = None
     location_branch_ids: list[list[int]] = field(default_factory=list)
@@ -583,9 +610,9 @@ class SessionState:
     clicks_storage_ready: bool = False
     last_page: str = ""
     last_teleport_at: float = 0.0
-    path_last_page: dict[str, str] = field(default_factory=dict)
-    active_path: str = "main"
     crossroads: list[dict[str, Any]] = field(default_factory=list)
+    # False for Realm Master seeds from 1.1.1 on: a Realm opens with its Portal (or keys) alone.
+    realms_need_crossroad: bool = True
     branches: list[dict[str, Any]] = field(default_factory=list)
     branch_round_index: dict[int, int] = field(default_factory=dict)
     travel_events: list[dict[str, Any]] = field(default_factory=list)
@@ -604,26 +631,6 @@ class SessionState:
     player_names: dict[int, str] = field(default_factory=dict)
     slot_games: dict[int, str] = field(default_factory=dict)
     item_id_to_name: dict[str, dict[int, str]] = field(default_factory=dict)
-
-    def active_branch_id(self) -> int | None:
-        if not str(self.active_path or "").startswith("branch:"):
-            return None
-        try:
-            return int(str(self.active_path).split(":", 1)[1])
-        except Exception:
-            return None
-
-    def current_branch(self) -> dict[str, Any] | None:
-        bid = self.active_branch_id()
-        if bid is None:
-            return None
-        for branch in self.branches:
-            try:
-                if int(branch.get("id", -1)) == bid:
-                    return branch
-            except Exception:
-                continue
-        return None
 
     def progress_key(self) -> str:
         return f"main:{self.round_index}"
@@ -700,7 +707,7 @@ class SessionState:
         """One row per branch / Realm for the HUD (locked, open, cleared)."""
         unlocked = set(self.unlocked_branch_ids())
         crossroad_by_branch: dict[int, int] = {}
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 crossroad_by_branch[int(cr.get("branch_id") or 0)] = int(cr.get("main_round") or 0)
             except Exception:
@@ -757,11 +764,6 @@ class SessionState:
             return 0
         return int(math.ceil(left))
 
-    def teleport_ready_at(self) -> float:
-        if self.last_teleport_at <= 0:
-            return 0.0
-        return self.last_teleport_at + TELEPORT_COOLDOWN_SEC
-
     def owned_search_letters(self) -> list[str]:
         letters = set(self.search_starting_letters)
         for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
@@ -801,17 +803,28 @@ class SessionState:
     def back_depth_max(self) -> int:
         return max(0, self.back_depth_start) + self.item_count("Progressive Back")
 
+    def stored_round_uses(self, kind: str) -> int:
+        """Rerolls or Backs ("rerolls" / "backs") already spent this main round, from the slot's stored progress."""
+        uses = self.progress_entries.get("uses")
+        if self.practice or not uses or uses.get("round") != self.round_index:
+            return 0
+        return int(uses.get(kind) or 0)
+
+    def progress_ready(self) -> bool:
+        """Rerolls and Backs wait until the slot's stored progress has been read (Practice keeps none)."""
+        return self.practice or self.progress_storage_ready
+
     def sync_back_counter(self) -> None:
         key = self.progress_key()
         if self.backs_round != key:
             self.backs_round = key
-            self.backs_used = 0
+            self.backs_used = self.stored_round_uses("backs")
 
     def sync_target_reroll_counter(self) -> None:
         key = self.progress_key()
         if self.target_rerolls_round != key:
             self.target_rerolls_round = key
-            self.target_rerolls_used = 0
+            self.target_rerolls_used = self.stored_round_uses("rerolls")
 
     def backs_remaining(self) -> int:
         self.sync_back_counter()
@@ -819,7 +832,7 @@ class SessionState:
 
     def can_go_back(self) -> bool:
         self.sync_back_counter()
-        if not self.is_playable():
+        if not self.is_playable() or not self.progress_ready():
             return False
         return self.backs_remaining() > 0
 
@@ -832,7 +845,7 @@ class SessionState:
 
     def can_reroll_target(self) -> bool:
         self.sync_target_reroll_counter()
-        if not self.is_playable() or self.boss_completed:
+        if not self.is_playable() or self.boss_completed or not self.progress_ready():
             return False
         if self.target_rerolls_remaining() <= 0:
             return False
@@ -858,6 +871,22 @@ class SessionState:
             })
         return slots
 
+    def target_in_use(self, title: str) -> bool:
+        """True when a main road or Realm round has this target."""
+        def _norm(value: Any) -> str:
+            return str(value or "").replace("_", " ").strip().casefold()
+
+        needle = _norm(title)
+        if not needle:
+            return False
+        if any(_norm(pair.get("target")) == needle for pair in self.round_pairs):
+            return True
+        return any(
+            isinstance(pair, dict) and _norm(pair.get("target")) == needle
+            for branch in self.branches
+            for pair in (branch.get("pairs") or [])
+        )
+
     def branch_key_count(self) -> int:
         return self.item_count("Branch Key")
 
@@ -871,7 +900,14 @@ class SessionState:
             return max(self.check_count, 1)
         return min(self.round_index + 1, max(self.check_count, 1))
 
+    def active_crossroads(self) -> list[dict[str, Any]]:
+        """Crossroads that gate a Realm in this seed (none when Realms open with their Portal / keys alone)."""
+        return self.crossroads if self.realms_need_crossroad else []
+
     def completed_crossroad_branch_ids(self) -> list[int]:
+        if not self.realms_need_crossroad:
+            # No crossroad to finish: every Realm is reachable, in id order (the keys' FIFO order).
+            return sorted(int(branch.get("id") or 0) for branch in self.branches)
         completed: list[tuple[int, int]] = []
         for cr in self.crossroads:
             try:
@@ -908,7 +944,7 @@ class SessionState:
 
     def revealed_crossroad(self) -> dict[str, Any] | None:
         current_round = self.reached_main_round()
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
                 branch_id = int(cr.get("branch_id") or 0)
@@ -934,7 +970,7 @@ class SessionState:
     def crossroad_rounds(self) -> list[int]:
         current = self.reached_main_round()
         rounds: list[int] = []
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
             except Exception:
@@ -947,7 +983,7 @@ class SessionState:
         reached = set(self.crossroad_rounds())
         unlocked = set(self.unlocked_branch_ids())
         rounds: list[int] = []
-        for cr in self.crossroads:
+        for cr in self.active_crossroads():
             try:
                 main_round = int(cr.get("main_round") or 0)
                 branch_id = int(cr.get("branch_id") or 0)
@@ -1144,7 +1180,6 @@ class SessionState:
             "goal": self.goal,
             "topic_portals": self.topic_portals,
             "realms": self.realms_payload(),
-            "realms_cleared": self.realms_cleared_count(),
             "practice_bingo_full": self.practice_board_full(),
             "practice_realm_cleared": bool(self.practice and self.branches and self.realm_cleared(0)),
             "ap_server": self.ap_server,
@@ -1158,15 +1193,11 @@ class SessionState:
             "rounds_completed": min(self.round_index, self.check_count),
             "check_count": self.check_count,
             "target_rerolls_max": self.target_rerolls_max(),
-            "target_rerolls_used": self.target_rerolls_used,
             "target_rerolls_remaining": self.target_rerolls_remaining(),
             "can_reroll_target": self.can_reroll_target(),
             "clicks_used": self.clicks_used,
-            "clicks_storage_ready": self.clicks_storage_ready,
             "fragments": self.fragments(),
             "required_fragments": self.required_fragments,
-            "start_rounds_unlocked": self.start_rounds_unlocked,
-            "rounds_per_unlock": self.rounds_per_unlock,
             "round_access_count": self.round_access_count(),
             "unlocked_rounds": self.unlocked_rounds(),
             "searchsanity": self.searchsanity,
@@ -1174,10 +1205,8 @@ class SessionState:
             "scroll_speed_upgrades": self.scroll_speed_upgrades,
             "scroll_speed_level": self.item_count("Progressive Scroll Speed"),
             "back_depth_max": self.back_depth_max(),
-            "backs_used": self.backs_used,
             "backs_remaining": self.backs_remaining(),
             "can_go_back": self.can_go_back(),
-            "back_button_unlocked": self.back_depth_max() > 0,
             "ctrl_f_unlocked": self.has_item("Ctrl+F Lens"),
             "search_letters": self.owned_search_letters(),
             "compass_unlocked": self.has_item("Wiki Compass"),
@@ -1198,13 +1227,9 @@ class SessionState:
             "trap_type": self.trap_type,
             "trap_link": self.trap_link,
             "bingo_letterpairs": self.bingo_letterpairs,
-            "bingo_letterpairs_grid": self.bingo_letterpairs_grid,
             "bingo_letterpairs_boards": self.bingo_letterpairs_boards,
-            "bingo_cards_start": self.bingo_cards_start,
             "bingo_unlocked_boards": self.unlocked_bingo_boards(),
-            "bingo_stamp_unlocks": self.bingo_stamp_unlocks,
             "bingo_stamps_max": self.bingo_stamps_max(),
-            "bingo_stamps_used": max(0, self.bingo_stamps_used),
             "bingo_stamps_remaining": self.bingo_stamps_remaining(),
             "bingo_stamped_pairs": stamped_pairs,
             "bingo_stamped_cells": self.bingo_stamped_cells(),
@@ -1227,12 +1252,9 @@ class SessionState:
             "boss_completed": self.boss_completed,
             "last_page": self.last_page,
             "teleport_cooldown_remaining": self.teleport_cooldown_remaining(),
-            "teleport_ready_at": self.teleport_ready_at(),
-            "can_teleport": self.is_playable() and self.teleport_cooldown_remaining() == 0,
             "last_error": self.last_error,
-            "active_path": "main",
             "paths": self.path_payload(),
-            "crossroads": list(self.crossroads),
+            "crossroads": list(self.active_crossroads()),
             "crossroad_rounds": self.crossroad_rounds(),
             "unlocked_crossroad_rounds": self.unlocked_crossroad_rounds(),
             "branches": [
@@ -1241,11 +1263,8 @@ class SessionState:
             ],
             "unlocked_branch_ids": self.unlocked_branch_ids(),
             "live_branch_targets": self.live_branch_targets(),
-            "branch_key_count": self.branch_key_count(),
             "branch_keys_available": self.branch_keys_available(),
             "revealed_crossroad": self.revealed_crossroad(),
-            "travel_event_count": len(self.travel_events),
-            "travel_storage_ready": self.travel_storage_ready,
         }
 
 
@@ -1270,6 +1289,8 @@ class APConnection:
         self._compass_tasks: set[asyncio.Task] = set()
         self._scout_waiters: dict[int, asyncio.Future] = {}
         self._datapackage_requested = False
+        # From RoomInfo: tells a reconnect to the same game from a new seed on the same address.
+        self._room_seed = ""
 
     def _clear_practice_state(self) -> None:
         self.state.practice = False
@@ -1310,8 +1331,6 @@ class APConnection:
         self.state.target_rerolls_used = 0
         self.state.target_rerolls_round = ""
         self.state.last_page = start
-        self.state.path_last_page["main"] = start
-        self.state.active_path = "main"
         self.state.crossroads = []
         self.state.goal = "grand_goal"
         self.state.topic_portals = False
@@ -1320,7 +1339,6 @@ class APConnection:
             self.state.branches = []
             self.state.branch_round_index = {}
             self.state.clicks_used = 0
-            self.state.path_last_page = {"main": start}
             self.state.travel_events = []
             self.state.visit_counts = {}
             self.state.travel_storage_ready = False
@@ -1334,7 +1352,6 @@ class APConnection:
         lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
         board = letter_pairs_module().build_letter_pair_bingo_board(random.Random(), PRACTICE_BINGO_GRID, lang)
         self.state.bingo_letterpairs = True
-        self.state.bingo_letterpairs_grid = PRACTICE_BINGO_GRID
         self.state.bingo_letterpairs_boards = [board]
         self.state.bingo_cards_start = 1
         self.state.bingo_stamped_pairs.clear()
@@ -1429,11 +1446,8 @@ class APConnection:
         self.state.trap_count = 0
         self.state.trap_link = False
         self.state.bingo_letterpairs = False
-        self.state.bingo_letterpairs_grid = 0
         self.state.bingo_letterpairs_boards = []
         self.state.bingo_cards_start = 0
-        self.state.bingo_card_unlocks = 0
-        self.state.bingo_stamp_unlocks = 0
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
         self.state.bingo_stamps_used = 0
@@ -1487,29 +1501,25 @@ class APConnection:
         self.state.reset_compass()
         self.state.pending_events.clear()
         self.state.bingo_letterpairs = False
-        self.state.bingo_letterpairs_grid = 0
         self.state.bingo_letterpairs_boards = []
         self.state.bingo_cards_start = 0
-        self.state.bingo_card_unlocks = 0
-        self.state.bingo_stamp_unlocks = 0
         self.state.bingo_letterpairs_location_ids = {}
         self.state.bingo_stamped_pairs.clear()
         self.state.bingo_stamps_used = 0
         self.state.bingo_storage_ready = False
         self.state.clicks_storage_ready = False
         self.state.travel_storage_ready = False
+        self.state.progress_storage_ready = False
         self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
         self.state.target_rerolls_used = 0
         self.state.target_rerolls_round = ""
         self.state.back_depth_start = 0
         self.state.backs_used = 0
         self.state.backs_round = ""
-        self.state.active_path = "main"
         self.state.crossroads = []
         self.state.branches = []
         self.state.branch_round_index = {}
         self.state.location_branch_ids = []
-        self.state.path_last_page = {}
         self.state.slot = 0
         self.state.team = 0
         self.state.player_names.clear()
@@ -1526,7 +1536,6 @@ class APConnection:
             self.state.goal_article_title = ""
             self.state.goal_question = ""
             self.state.reroll_pool = []
-            self.state.path_last_page = {}
         self.items_seen = 0
         self.link_cache.clear()
         self.backlink_cache.clear()
@@ -1534,6 +1543,7 @@ class APConnection:
         self._travel_stored_len = 0
         self._clicks_persisted = -1
         self._datapackage_requested = False
+        self._room_seed = ""
         for fut in self._scout_waiters.values():
             if not fut.done():
                 fut.cancel()
@@ -1565,10 +1575,8 @@ class APConnection:
             self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
             self.state.clicks_used = 0
             self.state.last_page = ""
-            self.state.path_last_page = {}
             self.state.travel_events = []
             self.state.visit_counts = {}
-            self.state.active_path = "main"
             self.state.crossroads = []
             self.state.branches = []
             self.state.branch_round_index = {}
@@ -1686,7 +1694,9 @@ class APConnection:
 
         for packet in packets:
             cmd = packet.get("cmd")
-            if cmd == "Connected":
+            if cmd == "RoomInfo":
+                self._room_seed = str(packet.get("seed_name") or "")
+            elif cmd == "Connected":
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
@@ -1696,6 +1706,7 @@ class APConnection:
                 await self._request_bingo_stamps_from_storage()
                 await self._request_clicks_from_storage()
                 await self._request_travel_from_storage()
+                await self._request_progress_from_storage()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
                 raise RuntimeError(self.state.last_error)
@@ -1780,7 +1791,8 @@ class APConnection:
         self.state.crossroads = []
         self.state.branches = []
         self.state.branch_round_index = {}
-        self.state.active_path = "main"
+        # 1.1.0 seeds have no flag and always gated Realms behind their crossroad.
+        self.state.realms_need_crossroad = bool(slot_data.get("realms_need_crossroad", True))
         crossroads_raw = slot_data.get("crossroads")
         if isinstance(crossroads_raw, list):
             parsed_cross: list[dict[str, Any]] = []
@@ -1890,20 +1902,19 @@ class APConnection:
         self.state.trap_link = bool(slot_data.get("trap_link", False))
 
         self.state.bingo_letterpairs = bool(slot_data.get("bingo_letterpairs", False))
-        self.state.bingo_letterpairs_grid = int(slot_data.get("bingo_letterpairs_grid", 0) or 0)
         self.state.bingo_cards_start = int(slot_data.get("bingo_cards_start", 0) or 0)
-        self.state.bingo_card_unlocks = int(slot_data.get("bingo_card_unlocks", 0) or 0)
-        self.state.bingo_stamp_unlocks = int(slot_data.get("bingo_stamp_unlocks", 0) or 0)
         self.state.bingo_stamps_used = 0
         self.state.back_depth_start = int(slot_data.get("back_depth_start", 0) or 0)
         if "target_rerolls_start" in slot_data:
             self.state.target_rerolls_start = max(0, int(slot_data.get("target_rerolls_start") or 0))
         else:
             self.state.target_rerolls_start = TARGET_REROLLS_PER_ROUND
+        # Counters come back from the stored progress when they next sync; Rerolls and Backs wait for its Get reply.
         self.state.backs_used = 0
         self.state.backs_round = ""
         self.state.target_rerolls_used = 0
         self.state.target_rerolls_round = ""
+        self.state.progress_storage_ready = False
 
         boards: list[list[list[str]]] = []
         boards_raw = slot_data.get("bingo_letterpairs_boards")
@@ -1932,8 +1943,6 @@ class APConnection:
                     if self.state.bingo_cards_start <= 0:
                         self.state.bingo_cards_start = 1
         self.state.bingo_letterpairs_boards = boards if self.state.bingo_letterpairs else []
-        if self.state.bingo_letterpairs and self.state.bingo_letterpairs_grid <= 0 and boards:
-            self.state.bingo_letterpairs_grid = len(boards[0])
 
         location_ids = slot_data.get("location_ids", {})
         self.state.location_round_ids = [int(v) for v in location_ids.get("rounds", [])]
@@ -2002,6 +2011,16 @@ class APConnection:
             **self.state.item_id_to_name.get("Wikipelago", {}),
             **local_names,
         }
+
+        # Same seed and slot as before a dropped connection: put the rerolled targets back on the rounds just
+        # reloaded from slot_data. The stored copy is merged in when its Get reply arrives.
+        owner = f"{self._room_seed}:{self.state.team}:{self.state.slot}"
+        if owner != self.state.progress_owner:
+            self.state.progress_owner = owner
+            self.state.progress_entries = {}
+        for key, entry in list(self.state.progress_entries.items()):
+            if entry.get("target"):
+                self._apply_stored_target(key, entry["target"])
 
         checked_locations = packet.get("checked_locations", [])
         if isinstance(checked_locations, list):
@@ -2486,13 +2505,19 @@ class APConnection:
     def _travel_visits_key(self) -> str:
         return f"wikipelago_travel_visits_{self.state.team}_{self.state.slot}"
 
+    def _progress_storage_key(self) -> str:
+        return f"wikipelago_progress_{self.state.team}_{self.state.slot}"
+
     def _resolve_retrieved(self, packet: dict[str, Any]) -> None:
         keys = packet.get("keys")
         if not isinstance(keys, dict):
             return
         bingo_key = self._bingo_storage_key()
         clicks_key = self._clicks_storage_key()
+        progress_key = self._progress_storage_key()
         travel_keys = (self._travel_storage_key(), self._travel_events_key(), self._travel_visits_key())
+        if progress_key in keys:
+            asyncio.create_task(self._apply_progress_storage_payload(keys.get(progress_key), self.state.progress_owner))
         if bingo_key in keys:
             asyncio.create_task(self._apply_bingo_storage_payload(keys.get(bingo_key), source="Retrieved"))
         if clicks_key in keys:
@@ -2507,6 +2532,8 @@ class APConnection:
             asyncio.create_task(self._apply_bingo_storage_payload(raw, source="SetReply"))
         elif key == self._clicks_storage_key():
             asyncio.create_task(self._apply_clicks_storage_payload(raw, source="SetReply"))
+        elif key == self._progress_storage_key():
+            asyncio.create_task(self._apply_progress_storage_payload(raw, self.state.progress_owner))
 
     async def _request_bingo_stamps_from_storage(self) -> None:
         """Subscribe + Get stamped pairs from Archipelago DataStorage."""
@@ -2599,7 +2626,6 @@ class APConnection:
         if not title:
             return
         self.state.last_page = title
-        self.state.path_last_page[self.state.active_path or "main"] = title
 
     def _travel_event_key(self, event: dict[str, Any]) -> tuple[Any, ...]:
         return (
@@ -2803,6 +2829,187 @@ class APConnection:
             self._travel_stored_len += 1
         except Exception as exc:
             LOG.info("Travel DataStorage step failed: %s", exc)
+
+    def _progress_round_pairs(self, key: str) -> tuple[list[dict[str, Any]], int, dict[str, Any] | None] | None:
+        """(pairs, index, Realm or None) of the round a stored progress key names: "main:3" or "branch:0:1"."""
+        parts = key.split(":")
+        try:
+            numbers = [int(part) for part in parts[1:]]
+        except ValueError:
+            return None
+        branch: dict[str, Any] | None = None
+        if parts[0] == "main" and len(numbers) == 1 and key == f"main:{numbers[0]}":
+            pairs: Any = self.state.round_pairs
+        elif parts[0] == "branch" and len(numbers) == 2 and key == f"branch:{numbers[0]}:{numbers[1]}":
+            branch = self.state.branch_by_id(numbers[0])
+            pairs = (branch or {}).get("pairs")
+        else:
+            return None
+        idx = numbers[-1]
+        if not isinstance(pairs, list) or not 0 <= idx < len(pairs):
+            return None
+        return pairs, idx, branch
+
+    def _parse_progress_payload(self, raw: Any) -> dict[str, dict[str, Any]]:
+        """The usable entries of a stored progress value; anything that doesn't fit this seed is dropped."""
+        entries: dict[str, dict[str, Any]] = {}
+        if not isinstance(raw, dict):
+            return entries
+        for key, value in raw.items():
+            key = str(key)
+            if not isinstance(value, dict):
+                continue
+            if key == "uses":
+                try:
+                    uses = {
+                        "round": int(value.get("round")),
+                        "rerolls": max(0, int(value.get("rerolls") or 0)),
+                        "backs": max(0, int(value.get("backs") or 0)),
+                    }
+                except (TypeError, ValueError):
+                    continue
+                if 0 <= uses["round"] <= self.state.check_count:
+                    entries[key] = uses
+                continue
+            target = value.get("target")
+            if not isinstance(target, str) or self._progress_round_pairs(key) is None:
+                continue
+            target = target.strip()
+            try:
+                times = max(1, int(value.get("n") or 1))
+            except (TypeError, ValueError):
+                times = 1
+            if target and len(target) <= MAX_TITLE_CHARS:
+                entries[key] = {"target": target, "n": times}
+        return entries
+
+    @staticmethod
+    def _merge_progress_entry(key: str, mine: dict[str, Any] | None, theirs: dict[str, Any] | None) -> dict[str, Any]:
+        """Join two copies of one entry the same way on every device, whatever order writes arrive in:
+        the most rerolled target wins (ties by title), and use counts keep the newest round's highest."""
+        if not mine or not theirs:
+            return dict(mine or theirs or {})
+        if key != "uses":
+            return dict(max(mine, theirs, key=lambda entry: (entry["n"], entry["target"])))
+        if mine["round"] != theirs["round"]:
+            return dict(max(mine, theirs, key=lambda uses: uses["round"]))
+        return {
+            "round": mine["round"],
+            "rerolls": max(mine["rerolls"], theirs["rerolls"]),
+            "backs": max(mine["backs"], theirs["backs"]),
+        }
+
+    def _apply_stored_target(self, key: str, title: str) -> bool:
+        """Put a rerolled target from the stored progress on its round and update the reroll pools the way the
+        reroll did: the new title leaves the pool, the one it replaces goes back (a Realm's into its own pool too)."""
+        found = self._progress_round_pairs(key)
+        if found is None:
+            return False
+        pairs, idx, branch = found
+        state = self.state
+        norm = self._norm_title
+        old_target = str(pairs[idx].get("target") or "")
+        if norm(old_target) == norm(title):
+            return False
+        pairs[idx]["target"] = title
+        state.reroll_pool = [item for item in state.reroll_pool if norm(item) != norm(title)]
+        if old_target and norm(old_target) != norm(state.goal_article()):
+            realm_pool = (branch or {}).get("reroll_pool")
+            if isinstance(realm_pool, list) and all(norm(item) != norm(old_target) for item in realm_pool):
+                realm_pool.append(old_target)
+            if not state.target_in_use(old_target) and all(norm(item) != norm(old_target) for item in state.reroll_pool):
+                state.reroll_pool.append(old_target)
+        return True
+
+    def _remember_rerolled_target(self, key: str, title: str) -> None:
+        if self.state.practice:
+            return
+        entry = self.state.progress_entries.get(key) or {}
+        self.state.progress_entries[key] = {"target": title, "n": int(entry.get("n") or 0) + 1}
+
+    def _record_round_uses(self) -> list[str]:
+        """Copy this main round's Reroll and Back use into the stored progress; ["uses"] when that changed it."""
+        state = self.state
+        if state.practice:
+            return []
+        state.sync_target_reroll_counter()
+        state.sync_back_counter()
+        uses = {"round": state.round_index, "rerolls": state.target_rerolls_used, "backs": state.backs_used}
+        current = state.progress_entries.get("uses")
+        if current == uses or (current and current["round"] > uses["round"]):
+            return []
+        state.progress_entries["uses"] = uses
+        return ["uses"]
+
+    async def _request_progress_from_storage(self) -> None:
+        if self.ws is None or not self.state.connected_to_ap or self.state.practice:
+            return
+        self.state.progress_storage_ready = False
+        key = self._progress_storage_key()
+        payload = [
+            {"cmd": "SetNotify", "keys": [key]},
+            {"cmd": "Get", "keys": [key]},
+        ]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Progress DataStorage Get/SetNotify request failed: %s", exc)
+
+    async def _apply_progress_storage_payload(self, raw: Any, owner: str) -> None:
+        """Merge the stored progress (Get reply, or any device's write) into this bridge's copy, put rerolled
+        targets in place, and write back what storage lacks (progress made while it was unreachable, or a race)."""
+        state = self.state
+        if state.practice or owner != state.progress_owner:
+            return
+        stored = self._parse_progress_payload(raw)
+        behind: list[str] = []
+        moved = False
+        for key in sorted(set(stored) | set(state.progress_entries)):
+            mine = state.progress_entries.get(key)
+            merged = self._merge_progress_entry(key, mine, stored.get(key))
+            if merged != mine:
+                state.progress_entries[key] = merged
+                if merged.get("target") and merged.get("target") != (mine or {}).get("target"):
+                    moved = self._apply_stored_target(key, merged["target"]) or moved
+            if merged != stored.get(key):
+                behind.append(key)
+        state.progress_storage_ready = True
+        state.sync_target_reroll_counter()
+        state.sync_back_counter()
+        state.target_rerolls_used = max(state.target_rerolls_used, state.stored_round_uses("rerolls"))
+        state.backs_used = max(state.backs_used, state.stored_round_uses("backs"))
+        if behind:
+            await self._persist_progress(behind)
+        if moved:
+            # Another device rerolled: the new targets have no Compass history yet.
+            self._schedule_compass(state.last_page)
+
+    async def _persist_progress(self, keys: list[str]) -> None:
+        """Write these entries of the stored progress. "update" replaces only the keys sent, so devices writing
+        different rounds can't overwrite each other's."""
+        state = self.state
+        if state.practice or self.ws is None or not state.connected_to_ap:
+            return
+        # Writing before the Get reply was merged would replace what other devices stored.
+        if not state.progress_storage_ready:
+            return
+        value = {key: state.progress_entries[key] for key in keys if key in state.progress_entries}
+        if not value:
+            return
+        key = self._progress_storage_key()
+        payload = [{
+            "cmd": "Set",
+            "key": key,
+            "default": {},
+            "want_reply": True,
+            "operations": [{"operation": "update", "value": value}],
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Progress DataStorage Set failed for %s: %s", key, exc)
 
     async def _append_travel_event(
         self,
@@ -3149,9 +3356,11 @@ class APConnection:
         if target_norm in page_aliases:
             return True
 
+        # Cached (callers have usually just canonicalised both titles), so a click with several live targets
+        # doesn't ask Wikipedia about the same two pages again for each one.
         try:
-            resolved_page = await asyncio.to_thread(self._fetch_resolved_title, page_title)
-            resolved_target = await asyncio.to_thread(self._fetch_resolved_title, target_title)
+            resolved_page = await self._canonicalize_title(page_title)
+            resolved_target = await self._canonicalize_title(target_title)
             return normalize_title(resolved_page) == normalize_title(resolved_target)
         except Exception:
             return False
@@ -3402,6 +3611,8 @@ class APConnection:
 
         if not self.state.is_playable():
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+        if not self.state.progress_ready():
+            return {"ok": False, "error": "progress not loaded yet", "status": self.state.to_status()}
         if self.state.boss_completed:
             return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
         slots = self.state.rerollable_target_slots()
@@ -3420,19 +3631,6 @@ class APConnection:
 
         def _norm(title: str) -> str:
             return str(title or "").replace("_", " ").strip().casefold()
-
-        def _title_still_used(title: str) -> bool:
-            needle = _norm(title)
-            if not needle:
-                return False
-            for pair in self.state.round_pairs:
-                if _norm(pair.get("target", "")) == needle:
-                    return True
-            for branch in self.state.branches:
-                for pair in (branch.get("pairs") or []):
-                    if isinstance(pair, dict) and _norm(pair.get("target", "")) == needle:
-                        return True
-            return False
 
         start = self.state.current_start()
         blocked = {_norm(start), _norm(self.state.goal_article())}
@@ -3489,13 +3687,19 @@ class APConnection:
 
         changes: list[dict[str, Any]] = []
         recycled: list[str] = []
+        stored_keys: list[str] = []
         for slot, picked, new_target in picks:
             old_target = str(slot.get("old_target") or "")
             if slot.get("kind") == "branch":
-                if not self._set_branch_pair_target(int(slot.get("branch_id") or 0), new_target):
+                bid = int(slot.get("branch_id") or 0)
+                if not self._set_branch_pair_target(bid, new_target):
                     return {"ok": False, "error": "no active branch round", "status": self.state.to_status()}
-            elif not self._set_active_pair_target(new_target):
-                return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+                stored_keys.append(f"branch:{bid}:{int(self.state.branch_round_index.get(bid, 0) or 0)}")
+            else:
+                if not self._set_active_pair_target(new_target):
+                    return {"ok": False, "error": "no active round", "status": self.state.to_status()}
+                stored_keys.append(f"main:{self.state.round_index}")
+            self._remember_rerolled_target(stored_keys[-1], new_target)
             change = {
                 "kind": str(slot.get("kind") or "main"),
                 "old_target": old_target,
@@ -3514,13 +3718,15 @@ class APConnection:
                         realm_pool.append(old_target)
 
         for old_target in recycled:
-            if _title_still_used(old_target):
+            if self.state.target_in_use(old_target):
                 continue
             if all(_norm(title) != _norm(old_target) for title in pool):
                 pool.append(old_target)
 
         self.state.reroll_pool = pool
         self.state.target_rerolls_used += 1
+        if not self.state.practice:
+            await self._persist_progress(stored_keys + self._record_round_uses())
         # New targets have no Compass history yet: recalibrate on the page the player is on.
         self._schedule_compass(self.state.last_page)
 
@@ -3544,6 +3750,8 @@ class APConnection:
 
         if not self.state.is_playable():
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
+        if not self.state.progress_ready():
+            return {"ok": False, "error": "progress not loaded yet", "status": self.state.to_status()}
         if not self.state.can_go_back():
             return {
                 "ok": False,
@@ -3552,6 +3760,7 @@ class APConnection:
             }
 
         self.state.backs_used += 1
+        await self._persist_progress(self._record_round_uses())
         await self._append_travel_event("back", self.state.last_page)
         return {
             "ok": True,
@@ -3943,11 +4152,13 @@ class APConnection:
             if action == "reset_rerolls":
                 self.state.target_rerolls_used = 0
                 self.state.target_rerolls_round = self.state.progress_key()
+                await self._persist_progress(self._record_round_uses())
                 return {"ok": True, "action": action, "status": self.state.to_status()}
 
             if action == "reset_backs":
                 self.state.backs_used = 0
                 self.state.backs_round = self.state.progress_key()
+                await self._persist_progress(self._record_round_uses())
                 return {"ok": True, "action": action, "status": self.state.to_status()}
 
             if action == "set_options":
@@ -4082,6 +4293,21 @@ class App:
     def __init__(self, web_root: Path):
         self.web_root = web_root
         self.sessions = SessionManager()
+        self._announcement = ""
+        self._announcement_checked = 0.0
+
+    def announcement(self) -> str:
+        """Text of announcement.txt, re-read at most every few seconds (every page polls status every 1.5s)."""
+        now = time.monotonic()
+        if now - self._announcement_checked >= ANNOUNCEMENT_RECHECK_SECONDS:
+            self._announcement_checked = now
+            try:
+                with ANNOUNCEMENT_FILE.open("rb") as handle:
+                    raw = handle.read(ANNOUNCEMENT_MAX_CHARS * 4)
+                self._announcement = raw.decode("utf-8-sig", "replace").strip()[:ANNOUNCEMENT_MAX_CHARS]
+            except OSError:
+                self._announcement = ""
+        return self._announcement
 
     async def index(self, request: web.Request) -> web.StreamResponse:
         # Embed deploy identity in HTML so the badge does not depend on a separate /health fetch.
@@ -4198,7 +4424,7 @@ class App:
         # The Journey pop-out window polls with ?peek=1 so it never takes the main window's deaths and traps.
         if request.query.get("peek") != "1":
             status["pending_events"] = session.conn.take_pending_events()
-        return web.json_response({"ok": True, "status": status})
+        return web.json_response({"ok": True, "status": status, "announcement": self.announcement()})
 
     async def session_death(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
@@ -4307,7 +4533,6 @@ class App:
             "events": payload.get("events") or [],
             "visit_counts": payload.get("visit_counts") or {},
             "paths": session.state.path_payload(),
-            "active_path": session.state.active_path or "main",
             "travel_storage_ready": session.state.travel_storage_ready,
         })
 
@@ -4427,7 +4652,7 @@ async def main_async(args: argparse.Namespace) -> None:
     site = web.TCPSite(runner, args.host, args.port)
     await site.start()
 
-    LOG.info(f"Wikipelago cloud app running on http://{args.host}:{args.port}")
+    LOG.info(f"Wikipelago bridge running on http://{args.host}:{args.port}")
     if debug_menu_enabled():
         LOG.info("Debug menu enabled (WIKIPELAGO_DEBUG_MENU)")
     while True:
@@ -4435,7 +4660,7 @@ async def main_async(args: argparse.Namespace) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Wikipelago cloud app")
+    parser = argparse.ArgumentParser(description="Wikipelago bridge")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "5000")))
     parser.add_argument(
@@ -4455,21 +4680,3 @@ def launch() -> None:
 
 if __name__ == "__main__":
     launch()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

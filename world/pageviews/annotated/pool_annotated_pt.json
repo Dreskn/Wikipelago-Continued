@@ -2830,7 +2830,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Alquimia",
@@ -13829,7 +13829,7 @@
       "tags": [
         "biology_medicine"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Cloroquina",
@@ -64634,7 +64634,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Tetróxido de nitrogênio",

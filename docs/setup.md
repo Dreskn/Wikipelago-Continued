@@ -4,7 +4,7 @@
 
 ### Host / organizer (generates the seed)
 
-- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) **0.6.7** or compatible
+- [Archipelago](https://github.com/ArchipelagoMW/Archipelago/releases) **0.6.7 or newer**
 - `wikipelago.apworld` from this repo’s [Releases](https://github.com/Dreskn/Wikipelago-Continued/releases)
 - Player YAML files (template also on Releases, or [`yaml/Wikipelago.yaml`](../yaml/Wikipelago.yaml))
 
@@ -84,8 +84,9 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 ### Tips
 
 - Only in-article wiki link clicks count toward checks.
-- Hover the Target title for a short description of that page.
-- **Journey** (on the Progression card, once you are in a game) shows the path of pages you have visited.
+- Hover the Target title (or tap it on a touch screen) for a short description of that page.
+- **Journey** (on the Progression card, once you are in a game) shows the path of pages you have visited. Hover a point for its summary, and click it to open that page on Wikipedia ([more](overview.md#journey)).
+- On a phone, the menu button in the bar at the top of the screen switches between the article and the cards ([phone layout](overview.md#on-a-phone)).
 - Side cards have a small hide control on the header if you want more room for the article.
 - If the badge says **Offline**, you are no longer attached to the room — reconnect with the same slot; the client will try to resume. Prefer finishing a round before closing the tab when possible.
 - File / Template / Wikipedia-namespace pages are blocked on purpose; pick another link.
@@ -96,8 +97,8 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 
 | Piece | Version |
 | --- | --- |
-| Wikipelago world (`apworld`) | **1.1.0** |
-| Recommended Archipelago | **0.6.7** |
+| Wikipelago world (`apworld`) | **1.1.1** |
+| Archipelago | **0.6.7 or newer** |
 | Web client | hosted link above, or local `http://127.0.0.1:5000` from this repo |
 
 The player YAML template pins these via top-level `requires` (`version` + `game.Wikipelago`) so generation fails if the host apworld is too old.

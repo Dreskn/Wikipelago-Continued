@@ -33,7 +33,7 @@ BANK_EXTRA: dict[str, dict[str, str]] = {
     },
     "Tuberculosis": {
         "question": "Which infectious disease, historically called consumption, is caused by a bacterium of the genus Mycobacterium and usually attacks the lungs?",
-        "fact": "Mycobacterium tuberculosis; historically consumption; typically pulmonary.",
+        "fact": "Bacterium of the genus Mycobacterium; historically consumption; typically pulmonary.",
     },
 }
 

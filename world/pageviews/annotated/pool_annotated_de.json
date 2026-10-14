@@ -531,7 +531,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "AMX-10 RC",
@@ -10842,7 +10842,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "Bugonia",
@@ -15424,7 +15424,7 @@
       "tags": [
         "miscellaneous"
       ],
-      "sensitive": true
+      "sensitive": false
     },
     {
       "title": "CumEx-Files",
