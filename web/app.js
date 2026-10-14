@@ -207,6 +207,9 @@ const state = {
   baseArticleClone: null,
   clicksUsed: 0,
   announcedGoalComplete: false,
+  /** Host announcement on screen, and whether it was closed (only until the text changes or the page reloads). */
+  announcementText: "",
+  announcementClosed: false,
   restoringArticle: false,
   /** {identity, title} visits made while the room was unreachable; see queueOfflineVisit. */
   offlineVisits: [],
@@ -4702,11 +4705,25 @@ async function pollStatus() {
     const peek = isJourneyStandaloneWindow() ? "?peek=1" : "";
     const data = await api(`/api/session/${state.sessionId}/status${peek}`);
     updateHUD(data.status);
+    renderAnnouncement(data.announcement);
     if (!state.searchOpen) closeSearchOverlay();
   } catch {
     el.connBadge.textContent = t("badge.offline");
     el.connBadge.className = "badge offline";
   }
+}
+
+/** Host message from the server (plain text). A new text reopens the banner even if the last one was closed. */
+function renderAnnouncement(text) {
+  const banner = document.getElementById("announceBanner");
+  if (!banner) return;
+  const message = typeof text === "string" ? text.trim() : "";
+  if (message !== state.announcementText) {
+    state.announcementText = message;
+    state.announcementClosed = false;
+    document.getElementById("announceText").textContent = message;
+  }
+  banner.classList.toggle("hidden", !message || state.announcementClosed);
 }
 
 function sanitizeHtml(root) {
@@ -5766,6 +5783,11 @@ bindStuckHelper();
 document.getElementById("releaseBannerClose")?.addEventListener("click", () => {
   // Only for this visit: the banner is back on the next page load.
   document.getElementById("releaseBanner")?.classList.add("hidden");
+});
+document.getElementById("announceBannerClose")?.addEventListener("click", () => {
+  // Hidden until the host changes the message or the page reloads.
+  state.announcementClosed = true;
+  document.getElementById("announceBanner")?.classList.add("hidden");
 });
 initSidePanelToggles();
 if (isJourneyStandaloneWindow()) document.body.classList.add("journey-window");

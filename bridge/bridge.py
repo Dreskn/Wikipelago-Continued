@@ -54,6 +54,12 @@ PRIVATE_SERVER_ERROR = (
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Host message shown on every open page: plain text in announcement.txt at the repo root (gitignored).
+# Write or delete the file on the server; no restart needed.
+ANNOUNCEMENT_FILE = _REPO_ROOT / "announcement.txt"
+ANNOUNCEMENT_MAX_CHARS = 500
+ANNOUNCEMENT_RECHECK_SECONDS = 3.0
+
 
 def _env_first(*names: str) -> str:
     for name in names:
@@ -4287,6 +4293,21 @@ class App:
     def __init__(self, web_root: Path):
         self.web_root = web_root
         self.sessions = SessionManager()
+        self._announcement = ""
+        self._announcement_checked = 0.0
+
+    def announcement(self) -> str:
+        """Text of announcement.txt, re-read at most every few seconds (every page polls status every 1.5s)."""
+        now = time.monotonic()
+        if now - self._announcement_checked >= ANNOUNCEMENT_RECHECK_SECONDS:
+            self._announcement_checked = now
+            try:
+                with ANNOUNCEMENT_FILE.open("rb") as handle:
+                    raw = handle.read(ANNOUNCEMENT_MAX_CHARS * 4)
+                self._announcement = raw.decode("utf-8-sig", "replace").strip()[:ANNOUNCEMENT_MAX_CHARS]
+            except OSError:
+                self._announcement = ""
+        return self._announcement
 
     async def index(self, request: web.Request) -> web.StreamResponse:
         # Embed deploy identity in HTML so the badge does not depend on a separate /health fetch.
@@ -4403,7 +4424,7 @@ class App:
         # The Journey pop-out window polls with ?peek=1 so it never takes the main window's deaths and traps.
         if request.query.get("peek") != "1":
             status["pending_events"] = session.conn.take_pending_events()
-        return web.json_response({"ok": True, "status": status})
+        return web.json_response({"ok": True, "status": status, "announcement": self.announcement()})
 
     async def session_death(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]

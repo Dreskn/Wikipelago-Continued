@@ -283,6 +283,13 @@ body {
     color: #fff4d6;
   }
 }
+/* Host announcement: redder than the release banner, right under it. */
+.announce-banner {
+  background: repeating-linear-gradient(-45deg, #4a1a0a 0 12px, #401608 12px 24px);
+  color: #ffd6c2;
+  border-bottom-color: #8c3517;
+}
+.announce-banner p { white-space: pre-line; }
 
 .layout {
   max-width: 1920px;
@@ -2516,6 +2523,7 @@ body:not(.is-idle) .idle-intro { display: none; }
   font-size: 0.82rem;
 }
 body.journey-window #releaseBanner,
+body.journey-window #announceBanner,
 body.journey-window #phoneBar,
 body.journey-window .layout,
 body.journey-window #supportDock,
@@ -2788,6 +2796,10 @@ body.journey-window #journeyPopupBtn {
   border-bottom-color: var(--line);
 }
 :root[data-theme="light"] .migrate-banner a { color: var(--brass-hi); }
+:root[data-theme="light"] .announce-banner {
+  background: color-mix(in srgb, #d4512a 18%, var(--ink-1));
+  border-bottom-color: color-mix(in srgb, #d4512a 45%, var(--line));
+}
 :root[data-theme="light"] .badge { background: var(--ink-1); }
 :root[data-theme="light"] .badge.online { color: #3d7a2c; border-color: rgba(61, 122, 44, 0.4); }
 :root[data-theme="light"] .badge.offline { color: #a8412c; border-color: rgba(168, 65, 44, 0.4); }
