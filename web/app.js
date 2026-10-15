@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.1";
+const APP_VERSION = "1.1.1a";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -4795,24 +4795,47 @@ function isSectionBreak(node) {
   return false;
 }
 
+/** Article blocks in reading order. Parsoid HTML wraps each section in <section>; the legacy parser's output is flat. */
+function articleBlocks(root) {
+  const output = root.querySelector(".mw-parser-output") || root;
+  const blocks = [];
+  const walk = (parent) => {
+    for (const child of parent.children) {
+      if (child.tagName === "SECTION") walk(child);
+      else blocks.push(child);
+    }
+  };
+  walk(output);
+  return blocks;
+}
+
+const LEAD_SKIP_SELECTOR = ".hatnote, .dablink, .rellink, .infobox, .infobox_v2, table.infobox, table.infobox_v2, .mw-empty-elt, .shortdescription";
+
 function markLeadSection(root) {
   root.querySelectorAll(".wiki-lead").forEach((node) => node.classList.remove("wiki-lead"));
-  const output = root.querySelector(".mw-parser-output") || root;
-  for (const child of [...output.children]) {
-    if (isSectionBreak(child)) break;
-    if (child.matches(".hatnote, .dablink, .rellink, .infobox, .infobox_v2, table.infobox, table.infobox_v2, .mw-empty-elt, .shortdescription")) {
-      continue;
+  const blocks = articleBlocks(root);
+  const firstBreak = blocks.findIndex(isSectionBreak);
+  if (firstBreak >= 0) {
+    for (const child of blocks.slice(0, firstBreak)) {
+      if (!child.matches(LEAD_SKIP_SELECTOR)) child.classList.add("wiki-lead");
     }
-    child.classList.add("wiki-lead");
+    return;
+  }
+  // No heading at all (stubs, many disambiguation pages): hide only the opening paragraph,
+  // and only when more text follows, so the Lead lens never blanks the whole page.
+  const hasText = (node) => Boolean(node.textContent.trim());
+  const opening = blocks.findIndex((node) => node.matches("p") && !node.matches(LEAD_SKIP_SELECTOR) && hasText(node));
+  if (opening < 0) return;
+  if (blocks.slice(opening + 1).some((node) => node.matches("p, ul, ol, dl") && hasText(node))) {
+    blocks[opening].classList.add("wiki-lead");
   }
 }
 
 function markNamedSections(root, names, className) {
   root.querySelectorAll(`.${className}`).forEach((node) => node.classList.remove(className));
-  const output = root.querySelector(".mw-parser-output") || root;
   const wanted = new Set(names.map((name) => name.toLowerCase()));
   let marking = false;
-  for (const child of [...output.children]) {
+  for (const child of articleBlocks(root)) {
     if (isSectionBreak(child)) {
       const label = headingLabel(child);
       marking = [...wanted].some((name) => label === name || label.startsWith(`${name} `));
@@ -5051,6 +5074,9 @@ async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
     format: "json",
     origin: "*",
     redirects: "true",
+    // Pin the format the lenses were built for: on 2026-10-15 Wikipedia briefly made Parsoid
+    // (sections wrapped in <section>) the API default and the Lead lens blanked whole articles.
+    parser: "legacy",
   });
   const url = `${wikipediaOrigin(lang)}/w/api.php?${params}`;
   const res = await fetch(url);

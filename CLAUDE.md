@@ -59,6 +59,11 @@ python world/build_letter_pair_weights.py --lang all            # rebuild bingo 
   - `README.md`, `world/README.md`, the Compatibility table in `docs/setup.md`
 
   The smoke test checks the YAML, `CLIENT_VERSION`, `APP_VERSION`, `archipelago.json` and CI `AP_REF` pins; the README and docs versions can drift unnoticed.
+- Client-only releases (bridge or web fixes, apworld unchanged) add a letter to the version: `1.1.1a`, then `1.1.1b`.
+  - Change only `CLIENT_VERSION`, `APP_VERSION`, their two pins in `world/smoke_test.ps1`, and the Compatibility table in `docs/setup.md` (web client `1.1.1a`, apworld `1.1.1`).
+  - Never put the letter in `archipelago.json`, the YAML's `requires`, or the smoke test's `archipelago.json` and packaged-apworld pins: Archipelago reads those as numbers.
+  - The GitHub Release (tag `1.1.1a`) attaches the same `wikipelago.apworld` and `Wikipelago.yaml` again, so "latest release" always has the downloads, and says no new apworld is needed.
+  - The next apworld change goes to `1.1.2` (or `1.2.0`) everywhere and drops the letter.
 - Archipelago version: `minimum_ap_version` in `archipelago.json` and `requires.version` in the YAML stay at the oldest supported Archipelago (0.6.7), per AP's guidance; raise them only when the world needs a newer core feature. Player docs say "0.6.7 or newer".
 
 ## Working agreements
