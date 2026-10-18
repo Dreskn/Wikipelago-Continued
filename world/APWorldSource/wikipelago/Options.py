@@ -345,7 +345,8 @@ class TrapLink(Toggle):
 
 class ToggleBingoLetterpairs(Toggle):
     """When enabled, add letter-pair bingo board(s) with row/column/diagonal/full-card checks.
-    Stamp pairs from page titles. Bingo on with start 0 and unlocks 0 is rejected (no boards)."""
+    Stamp pairs from page titles (in Homeward, from the words you Remember). Bingo on with start 0
+    and unlocks 0 is rejected (no boards)."""
     display_name = "Letter Pair Bingo"
     default = 1
 
@@ -456,7 +457,8 @@ class Goal(Choice):
     realm_master: clear the last round of every branch / Realm. Needs Branch Count of at least 1;
     Knowledge Fragments and the Grand Goal are not generated.
     homeward: play in the dark and find your way Home (see the Homeward options). No rounds,
-    Realms, Knowledge Fragments or Grand Goal; the checks are Memories of Home."""
+    Realms, Knowledge Fragments or Grand Goal; the checks are Memories, and bingo stamps the first
+    two letters of each word you Remember instead of page titles."""
     display_name = "Goal"
     option_grand_goal = 0
     option_realm_master = 1

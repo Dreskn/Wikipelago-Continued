@@ -597,6 +597,13 @@ _WIKI_ARTICLE_COUNT_CACHE: dict[str, int] = {}
 _MEMORY_MENTION_CACHE: dict[tuple[str, str], int] = {}
 
 
+def memory_clicked_word(before: str, after: str) -> str:
+    """The word under a Remember click: the letters and digits touching the click on both sides."""
+    left = re.search(r"[^\W_]*$", before or "")
+    right = re.match(r"[^\W_]*", after or "")
+    return ((left.group(0) if left else "") + (right.group(0) if right else ""))[:MEMORY_TERM_MAX_CHARS]
+
+
 def memory_overlaps(key: str, used: set[str]) -> bool:
     """True when this Memory (folded) repeats one already picked: the same words, or one inside the other
     ("Academy Award" / "Academy Awards", "Paris" / "Paris Saint-Germain")."""
@@ -2612,6 +2619,8 @@ class APConnection:
             return await self._apply_practice_bingo_visit(page_title)
         if not self.state.connected_to_ap or self.ws is None:
             return []
+        if self.state.is_homeward():
+            return []  # Homeward stamps the words you Remember instead (claim_memory).
 
         before = self._bingo_stamps_snapshot()
         wiki_lang = (self.state.wikipedia_language or "en").strip().lower() or "en"
@@ -4415,6 +4424,21 @@ class APConnection:
                 start = text.find(needle, start + 1)
         return best
 
+    async def _apply_bingo_word(self, word: str) -> tuple[str, list[dict[str, Any]]]:
+        """Homeward bingo: a remembered word stamps its first two letters, as a page title does elsewhere.
+        Returns the pair when it stamped something new, and the bingo lines it completed."""
+        state = self.state
+        if not word or not state.bingo_letterpairs or not state.bingo_letterpairs_boards or self.ws is None:
+            return "", []
+        wiki_lang = (state.wikipedia_language or "en").strip().lower() or "en"
+        pair = letter_pair_from_title(word, wiki_lang)
+        if not pair or not self._stamp_pair_on_unlocked_boards(pair):
+            return "", []
+        events = await self._flush_bingo_line_checks()
+        await self._persist_bingo_stamps()
+        await self._append_travel_event("bingo_cell", state.last_page, extra={"pair": pair, "word": word})
+        return pair, events
+
     async def claim_memory(self, before: str, after: str) -> dict[str, Any]:
         state = self.state
         state.last_seen = time.time()
@@ -4422,22 +4446,29 @@ class APConnection:
             return {"ok": False, "error": "not in a Homeward game", "status": state.to_status()}
         if not state.memories_ready:
             return {"ok": False, "error": "memories are still loading", "status": state.to_status()}
-        match = self._match_memory(before[-MEMORY_CONTEXT_MAX_CHARS:], after[:MEMORY_CONTEXT_MAX_CHARS])
-        if match is None:
-            return {"ok": True, "found": None, "status": state.to_status()}
-        index, term, already = match
-        if already or index >= len(state.location_memory_ids):
-            return {"ok": True, "found": None, "already": {"index": index + 1, "term": term}, "status": state.to_status()}
-        loc_id = state.location_memory_ids[index]
-        scouted = await self.scout_locations([loc_id])
-        await self.send_location_checks([loc_id])
-        await self._append_travel_event("memory", state.last_page, extra={"path": "main", "memory": term})
-        result: dict[str, Any] = {"ok": True, "found": {"index": index + 1, "term": term}}
-        network_item = scouted.get(loc_id)
-        if network_item:
-            sent_text = self._format_send_text(network_item)
-            if sent_text:
-                result["sent_text"] = sent_text
+        before = before[-MEMORY_CONTEXT_MAX_CHARS:]
+        after = after[:MEMORY_CONTEXT_MAX_CHARS]
+        result: dict[str, Any] = {"ok": True, "found": None}
+        stamped, bingo_completed = await self._apply_bingo_word(memory_clicked_word(before, after))
+        if stamped:
+            result["stamped"] = stamped
+        result["bingo_completed"] = bingo_completed
+        match = self._match_memory(before, after)
+        if match is not None:
+            index, term, already = match
+            if already or index >= len(state.location_memory_ids):
+                result["already"] = {"index": index + 1, "term": term}
+            else:
+                loc_id = state.location_memory_ids[index]
+                scouted = await self.scout_locations([loc_id])
+                await self.send_location_checks([loc_id])
+                await self._append_travel_event("memory", state.last_page, extra={"path": "main", "memory": term})
+                result["found"] = {"index": index + 1, "term": term}
+                network_item = scouted.get(loc_id)
+                if network_item:
+                    sent_text = self._format_send_text(network_item)
+                    if sent_text:
+                        result["sent_text"] = sent_text
         result["status"] = state.to_status()
         return result
 

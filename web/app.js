@@ -4332,8 +4332,11 @@ function applyDisplayLocks() {
  * screens). Links to Home stay dark until every Lantern; Memories are claimed with Remember; a Flare
  * lights the whole page for a few seconds.
  */
-const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, band: null, pageText: null, pageLocks: "" };
+const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, eye: null, pageText: null, pageLocks: "" };
 const LAMP_LINES_PER_LANTERN = 2;
+// The eye of light: height in the middle (times the lines of light), and half-width (share of the article).
+const LAMP_EYE_MIDDLE = 1.2;
+const LAMP_EYE_WIDTH = 0.8;
 const MEMORY_CONTEXT_CHARS = 120;
 
 function homewardInfo(status = state.status) {
@@ -4388,40 +4391,39 @@ function drawLamp() {
   document.body.classList.toggle("lamp-on", on);
   shade.classList.toggle("hidden", !on);
   if (!on) {
-    lamp.band = null;
+    lamp.eye = null;
     return;
   }
   const info = homewardInfo();
   const view = lampViewport();
   const lineHeight = lampLineHeight();
   const lanterns = Number(info.lanterns) || 0;
-  const center = lampCenterY(view);
   const coreHalf = (lampLines(info, lanterns) * lineHeight) / 2;
-  // Readable core, then a dim ring as tall as the next Lantern's light, then full dark.
-  // With one Lantern left, the next light is the whole page: everything outside the core is dim.
+  // An eye-shaped light across the article: a little taller than the lines in the middle, a little
+  // shorter at the sides. Then a dim ring as tall as the next Lantern's light, then full dark.
+  // With one Lantern left, the next light is the whole page: everything outside the light is dim.
   const lastStep = lanterns + 1 >= (Number(info.lantern_count) || 0);
-  const dimHalf = lastStep ? Infinity : (lampLines(info, lanterns + 1) * lineHeight) / 2;
-  const ramp = Math.min(lineHeight * 0.6, 14);
-  lamp.band = { top: Math.max(view.top, center - coreHalf), bottom: Math.min(view.bottom, center + coreHalf) };
-  const y = center - view.top;
+  const dimScale = lastStep ? Infinity : lampLines(info, lanterns + 1) / lampLines(info, lanterns);
+  lamp.eye = {
+    cx: view.left + view.width / 2,
+    cy: lampCenterY(view),
+    rx: view.width * LAMP_EYE_WIDTH,
+    ry: coreHalf * LAMP_EYE_MIDDLE,
+  };
+  const ramp = (100 * Math.min(lineHeight * 0.6, 14)) / lamp.eye.ry;
+  const pct = (value) => `${value.toFixed(2)}%`;
+  const stops = ["transparent 0%", "transparent 100%", `var(--lamp-dim) ${pct(100 + ramp)}`];
+  if (!lastStep) {
+    stops.push(`var(--lamp-dim) ${pct(100 * dimScale)}`, `var(--lamp-dark) ${pct(100 * dimScale + ramp)}`);
+  }
   const px = (value) => `${Math.round(value)}px`;
-  const stops = lastStep
-    ? [
-      `var(--lamp-dim) 0px`, `var(--lamp-dim) ${px(y - coreHalf - ramp)}`, `transparent ${px(y - coreHalf)}`,
-      `transparent ${px(y + coreHalf)}`, `var(--lamp-dim) ${px(y + coreHalf + ramp)}`, `var(--lamp-dim) 100%`,
-    ]
-    : [
-      `var(--lamp-dark) 0px`, `var(--lamp-dark) ${px(y - dimHalf - ramp)}`, `var(--lamp-dim) ${px(y - dimHalf)}`,
-      `var(--lamp-dim) ${px(y - coreHalf - ramp)}`, `transparent ${px(y - coreHalf)}`,
-      `transparent ${px(y + coreHalf)}`, `var(--lamp-dim) ${px(y + coreHalf + ramp)}`,
-      `var(--lamp-dim) ${px(y + dimHalf)}`, `var(--lamp-dark) ${px(y + dimHalf + ramp)}`, `var(--lamp-dark) 100%`,
-    ];
+  const at = `${px(lamp.eye.cx - view.left)} ${px(lamp.eye.cy - view.top)}`;
   Object.assign(shade.style, {
     left: px(view.left),
     width: px(view.width),
     top: px(view.top),
     height: px(view.bottom - view.top),
-    background: `linear-gradient(to bottom, ${stops.join(", ")})`,
+    background: `radial-gradient(ellipse ${px(lamp.eye.rx)} ${px(lamp.eye.ry)} at ${at}, ${stops.join(", ")})`,
   });
 }
 
@@ -4429,18 +4431,30 @@ function scheduleLamp() {
   if (!lamp.raf) lamp.raf = requestAnimationFrame(drawLamp);
 }
 
-/** Is this height on screen in the light? Everything is, when the page isn't dark. */
-function isLitY(y) {
-  if (!lampActive()) return true;
-  if (!lamp.band) drawLamp();
-  return Boolean(lamp.band) && y >= lamp.band.top && y <= lamp.band.bottom;
+function inLampEye(x, y) {
+  const eye = lamp.eye;
+  if (!eye) return false;
+  const dx = (x - eye.cx) / eye.rx;
+  const dy = (y - eye.cy) / eye.ry;
+  return dx * dx + dy * dy <= 1;
 }
 
+/** Is this point on screen in the light? Everything is, when the page isn't dark. */
+function isLitPoint(x, y) {
+  if (!lampActive()) return true;
+  if (!lamp.eye) drawLamp();
+  return inLampEye(x, y);
+}
+
+/** Does any part of this element touch the light? */
 function isLitElement(node) {
   if (!lampActive() || !node?.getBoundingClientRect) return true;
-  if (!lamp.band) drawLamp();
+  if (!lamp.eye) drawLamp();
+  if (!lamp.eye) return false;
   const rect = node.getBoundingClientRect();
-  return Boolean(lamp.band) && rect.bottom >= lamp.band.top && rect.top <= lamp.band.bottom;
+  const x = Math.min(Math.max(lamp.eye.cx, rect.left), rect.right);
+  const y = Math.min(Math.max(lamp.eye.cy, rect.top), rect.bottom);
+  return inLampEye(x, y);
 }
 
 /** Links to Home read and act like plain text until the last Lantern (no color, hover, focus or click). */
@@ -4565,7 +4579,7 @@ function textContextAt(x, y) {
 
 async function claimMemoryAt(x, y) {
   setRememberMode(false);
-  if (!isLitY(y)) {
+  if (!isLitPoint(x, y)) {
     toast(t("homeward.inDark"), "warn");
     return;
   }
@@ -4576,15 +4590,18 @@ async function claimMemoryAt(x, y) {
   }
   try {
     const result = await api(`/api/session/${state.sessionId}/memory`, "POST", context);
+    const parts = [];
     if (result.found) {
-      const parts = [t("homeward.memoryFound", { term: result.found.term })];
+      parts.push(t("homeward.memoryFound", { term: result.found.term }));
       if (result.sent_text) parts.push(result.sent_text);
-      toast(parts.join(" · "), "ok", 8000);
     } else if (result.already) {
-      toast(t("homeward.memoryAlready", { term: result.already.term }), "ok");
-    } else {
-      toast(t("homeward.notMemory"), "warn");
+      parts.push(t("homeward.memoryAlready", { term: result.already.term }));
     }
+    // Homeward bingo: the clicked word stamps its first two letters.
+    if (result.stamped) parts.push(t("bingo.stampOk", { pair: result.stamped }));
+    parts.push(...formatBingoCompletionParts(result.bingo_completed));
+    if (parts.length) toast(parts.join(" · "), "ok", result.found || result.bingo_completed?.length ? 8000 : 5000);
+    else toast(t("homeward.notMemory"), "warn");
     if (result.status) updateHUD(result.status);
   } catch (err) {
     toast(String(err?.message || err), "warn");
