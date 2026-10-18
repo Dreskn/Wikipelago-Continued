@@ -3169,6 +3169,31 @@ body.journey-window #journeyPopupBtn {
   pointer-events: none;
 }
 .lamp-shade.hidden { display: none; }
+/* A Memory still to find is somewhere on this page: the lamp flickers warm, Remember glows. */
+.lamp-shade::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(255, 176, 72);
+  opacity: 0;
+  pointer-events: none;
+}
+body.memory-near .lamp-shade::after { animation: lamp-flicker 3.4s linear infinite; }
+@keyframes lamp-flicker {
+  0%, 6%, 13%, 55%, 61%, 100% { opacity: 0; }
+  8% { opacity: 0.09; }
+  10% { opacity: 0.02; }
+  11% { opacity: 0.07; }
+  58% { opacity: 0.06; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.memory-near .lamp-shade::after { animation: none; opacity: 0.05; }
+}
+body.memory-near #rememberBtn:not(:disabled),
+body.memory-near #phoneRememberBtn:not(:disabled) {
+  border-color: var(--brass);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--brass) 55%, transparent);
+}
 body.mode-homeward:not(.homeward-light-full) .article-body a.wk-home-link {
   color: inherit !important;
   text-decoration: none !important;

@@ -4332,7 +4332,7 @@ function applyDisplayLocks() {
  * screens). Links to Home stay dark until every Lantern; Memories are claimed with Remember; a Flare
  * lights the whole page for a few seconds.
  */
-const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, band: null };
+const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, band: null, pageText: null, pageLocks: "" };
 const LAMP_LINES_PER_LANTERN = 2;
 const MEMORY_CONTEXT_CHARS = 120;
 
@@ -4472,6 +4472,62 @@ function canRemember(status = state.status) {
   return Boolean(info && homewardPlaying(status) && info.memories_ready && !status.boss_completed);
 }
 
+/** Matches the bridge's memory_fold: case, accents and quote or dash variants don't matter. */
+function memoryFold(text) {
+  return String(text || "")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/[‐-―]/g, "-")
+    .replace(/\s/g, " ")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase();
+}
+
+/** The article's visible text, folded; read again on a new page or when a lens opens. */
+function memoryPageText() {
+  const locks = el.articleBody.className;
+  if (lamp.pageText == null || lamp.pageLocks !== locks) {
+    lamp.pageLocks = locks;
+    lamp.pageText = memoryFold(el.articleBody.innerText || "");
+  }
+  return lamp.pageText;
+}
+
+/** Same rule as a Remember click: whole words, or a run-on word for Memories of 5 letters or more. */
+function textHasMemory(text, term) {
+  const needle = memoryFold(term);
+  if (!needle) return false;
+  const wordChar = (ch) => Boolean(ch) && /[\p{L}\p{N}]/u.test(ch);
+  for (let start = text.indexOf(needle); start !== -1; start = text.indexOf(needle, start + 1)) {
+    const end = start + needle.length;
+    if (!wordChar(text[start - 1]) && (needle.length >= 5 || !wordChar(text[end]))) return true;
+  }
+  return false;
+}
+
+/** The lamp flickers and Remember glows while a known Memory is somewhere on this page (no count, no place). */
+function refreshMemoryHint(status = state.status) {
+  const info = homewardInfo(status);
+  let near = false;
+  if (info && canRemember(status) && state.currentTitle) {
+    const terms = (Array.isArray(info.memories) ? info.memories : [])
+      .filter((row) => row.term && row.unlocked && !row.found)
+      .map((row) => row.term);
+    if (terms.length) {
+      const text = memoryPageText();
+      near = terms.some((term) => textHasMemory(text, term));
+    }
+  }
+  document.body.classList.toggle("memory-near", near);
+  const title = near ? `${t("homeward.rememberTitle")} · ${t("homeward.memoryNear")}` : t("homeward.rememberTitle");
+  for (const button of [el.rememberBtn, el.phoneRememberBtn]) {
+    if (!button) continue;
+    button.title = title;
+    if (near) button.setAttribute("aria-description", t("homeward.memoryNear"));
+    else button.removeAttribute("aria-description");
+  }
+}
+
 function setRememberMode(on) {
   const next = Boolean(on) && canRemember();
   state.rememberMode = next;
@@ -4568,6 +4624,7 @@ function renderHomeward(status) {
   if (el.mainRoadLabel) el.mainRoadLabel.textContent = on ? t("homeward.home") : t("path.main");
   if (!on) {
     if (state.rememberMode) setRememberMode(false);
+    document.body.classList.remove("memory-near");
     scheduleLamp();
     return;
   }
@@ -4634,6 +4691,7 @@ function renderHomeward(status) {
     state.homewardLightFull = Boolean(info.light_full);
     markHomeLinks(el.articleBody);
   }
+  refreshMemoryHint(status);
   scheduleLamp();
 }
 
@@ -5698,6 +5756,8 @@ async function openArticle(title, options = {}) {
       });
     }
     armBombsOnPage(el.articleBody, state.status);
+    lamp.pageText = null;
+    if (homewardInfo()) refreshMemoryHint();
     scheduleLamp();
     if (countAsClick || !state.roundVisitSet.size) {
       state.roundVisitSet.add(normalizeTitle(displayTitle));

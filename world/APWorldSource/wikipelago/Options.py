@@ -487,8 +487,9 @@ class StartingLight(Range):
 
 class MemoryCount(Range):
     """Homeward: Memories to find, one check each. Spot one in the text of any page, in your light,
-    and claim it with Remember. Most are well-known names from your categories; the last batch are
-    memories of Home, names from the Home article, shown once you have every Lantern but one."""
+    and claim it with Remember; your lamp flickers when one is on the page. Most are names from your
+    categories that many articles mention; the last batch are memories of Home, names from the Home
+    article, shown once you have every Lantern but one."""
     display_name = "Memories"
     range_start = 5
     range_end = 60

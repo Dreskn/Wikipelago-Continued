@@ -45,8 +45,9 @@ Wikipelago:
   # =============================================================================
   # The page is dark except for a band of light that follows your mouse (the middle of the
   # screen on a phone). Home is shown from the start, but links to it stay dark until you
-  # have every Lantern. No rounds or Realms: the checks are Memories, well-known names from your
-  # categories. Spot one in the text of any page, in your light, and claim it with Remember.
+  # have every Lantern. No rounds or Realms: the checks are Memories, names from your categories that
+  # many articles mention. Spot one in the text of any page, in your light, and claim it with Remember;
+  # your lamp flickers when one is on the page.
   # With every Lantern but one, the last batch (memories of Home, names from the Home article)
   # appears, and Head home replaces SOS: it takes you to a page that links to Home (once a minute).
   # Round, branch and reroll options are ignored.

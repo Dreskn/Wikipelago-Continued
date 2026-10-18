@@ -198,6 +198,20 @@ MEMORY_PARAGRAPH_RE = re.compile(r"<p\b[^>]*>(.*?)</p>", re.S | re.I)
 MEMORY_ANCHOR_RE = re.compile(r'<a\b[^>]*\bhref="/wiki/([^"#?]+)"[^>]*>(.*?)</a>', re.S | re.I)
 MEMORY_TAG_RE = re.compile(r"<[^>]+>")
 MEMORY_QUALIFIER_RE = re.compile(r"\s*\([^)]*\)\s*$")
+# General Memories: names from the seed's categories that many articles link to, so players come across
+# them while wandering. Pages sampled per category, and how many of the most read go on to the link count.
+MEMORY_SAMPLE_PER_TAG = 40
+MEMORY_LINKS_PER_TAG = 10
+# Share of the wiki's articles linking to a name: below the floor it is only a fallback, above the cap it
+# is everywhere ("United States").
+MEMORY_LINKED_FLOOR = 0.0005
+MEMORY_LINKED_CAP = 0.04
+# Each pick is checked with one search (one at a time, as Wikimedia asks): its words must be in the text of
+# this share of articles, not just behind links ("doi" for Digital Object Identifier). The checks stop
+# after this many searches or seconds, or on any error, and the rest is kept unchecked.
+MEMORY_MENTION_FLOOR = 0.0005
+MEMORY_MENTION_CHECKS = 30
+MEMORY_MENTION_SECONDS = 20
 PROGRESSIVE_STACK_ITEMS = frozenset({
     "Knowledge Fragment",
     "Round Access",
@@ -576,6 +590,11 @@ def memory_fold(text: str) -> str:
         base = "".join(c for c in decomposed if not unicodedata.combining(c)) or ch
         out.append(base.casefold())
     return "".join(out)
+
+
+# Articles in each wiki; (wiki, folded words) -> articles whose text has them. Shared by every session.
+_WIKI_ARTICLE_COUNT_CACHE: dict[str, int] = {}
+_MEMORY_MENTION_CACHE: dict[tuple[str, str], int] = {}
 
 
 def memory_overlaps(key: str, used: set[str]) -> bool:
@@ -4181,10 +4200,96 @@ class APConnection:
                     rows.append({"term": term, "title": title})
         return rows[:count]
 
+    def _memory_incoming_links_sync(self, titles: list[str]) -> dict[str, int]:
+        """Articles linking to each title, from Wikipedia's search index (50 titles per request; redirects
+        followed). Titles it can't tell about are left out."""
+        links: dict[str, int] = {}
+        for start in range(0, len(titles), 50):
+            batch = titles[start:start + 50]
+            try:
+                payload = self._wiki_api_json({
+                    "action": "query",
+                    "prop": "cirrusdoc",
+                    "cdincludes": "incoming_links",
+                    "titles": "|".join(batch),
+                    "redirects": "1",
+                    "formatversion": "2",
+                    "format": "json",
+                })
+            except Exception as exc:
+                LOG.info("Memories: incoming links request failed: %s", exc)
+                continue
+            query = payload.get("query") or {}
+            forward: dict[str, str] = {}
+            for entry in list(query.get("normalized") or []) + list(query.get("redirects") or []):
+                forward[str(entry.get("from") or "")] = str(entry.get("to") or "")
+            by_title: dict[str, int] = {}
+            for page in query.get("pages") or []:
+                docs = page.get("cirrusdoc") or []
+                source = (docs[0].get("source") or {}) if docs and isinstance(docs[0], dict) else {}
+                value = source.get("incoming_links")
+                if isinstance(value, int):
+                    by_title[str(page.get("title") or "")] = value
+            for title in batch:
+                resolved = forward.get(title, title)
+                resolved = forward.get(resolved, resolved)
+                if resolved in by_title:
+                    links[title] = by_title[resolved]
+        return links
+
+    def _memory_mention_count(self, term: str) -> int:
+        """Articles whose text has these exact words (Wikipedia search hits), cached for every session."""
+        lang = wiki_language(self.state.wikipedia_language) or "en"
+        key = (lang, memory_fold(term))
+        cached = _MEMORY_MENTION_CACHE.get(key)
+        if cached is not None:
+            return cached
+        phrase = term.replace('"', " ").strip()
+        payload = self._wiki_api_json({
+            "action": "query",
+            "list": "search",
+            "srsearch": f'"{phrase}"',
+            "srwhat": "text",
+            "srnamespace": "0",
+            "srinfo": "totalhits",
+            "srprop": "",
+            "srlimit": "1",
+            "format": "json",
+            "formatversion": "2",
+        })
+        hits = int(((payload.get("query") or {}).get("searchinfo") or {}).get("totalhits") or 0)
+        if len(_MEMORY_MENTION_CACHE) > 20000:
+            _MEMORY_MENTION_CACHE.clear()
+        _MEMORY_MENTION_CACHE[key] = hits
+        return hits
+
+    def _wiki_article_count_sync(self) -> int:
+        lang = wiki_language(self.state.wikipedia_language) or "en"
+        cached = _WIKI_ARTICLE_COUNT_CACHE.get(lang)
+        if cached:
+            return cached
+        try:
+            payload = self._wiki_api_json({
+                "action": "query",
+                "meta": "siteinfo",
+                "siprop": "statistics",
+                "format": "json",
+                "formatversion": "2",
+            })
+            articles = int(((payload.get("query") or {}).get("statistics") or {}).get("articles") or 0)
+        except Exception as exc:
+            LOG.info("Memories: article count for %s failed: %s", lang, exc)
+            articles = 0
+        if articles > 0:
+            _WIKI_ARTICLE_COUNT_CACHE[lang] = articles
+        return articles
+
     def _pick_general_memories_sync(self, count: int, rng: random.Random, avoid: set[str]) -> list[dict[str, str]]:
-        """Well-known names from the seed's categories, so they turn up in many articles wherever you read:
-        a few pages sampled per category, the most read of each kept, categories taken in turn for variety.
-        Most read first, since the first batch is known from the start."""
+        """Names from the seed's categories that many articles link to, so they turn up wherever you read
+        (page views alone favour whoever is in the news this month): pages sampled per category, the most
+        read of each ranked by links, then the most linked kept with a few per category for variety, each
+        checked to be in the text of many articles. Most linked first, since the first batch is known from
+        the start and later Recollections reveal rarer ones."""
         if count <= 0:
             return []
         lang = wiki_language(self.state.wikipedia_language) or "en"
@@ -4199,27 +4304,68 @@ class APConnection:
             by_tag = {tag: [t for t in titles if self._norm_title(t) in seed_titles] for tag, titles in by_tag.items()}
         tags = sorted(tag for tag, titles in by_tag.items() if titles)
         rng.shuffle(tags)
-        per_tag = 12
-        sampled = {tag: rng.sample(by_tag[tag], min(per_tag, len(by_tag[tag]))) for tag in tags}
-        views = self._memory_pageviews_sync([title for titles in sampled.values() for title in titles])
-        ranked = {tag: sorted(titles, key=lambda title: (-views.get(title, 0), title)) for tag, titles in sampled.items()}
-        rows: list[dict[str, str]] = []
-        used = set(avoid)
-        for rank in range(per_tag):
-            for tag in tags:
-                if len(rows) >= count:
+        sampled = {
+            tag: rng.sample(by_tag[tag], min(MEMORY_SAMPLE_PER_TAG, len(by_tag[tag]))) for tag in tags
+        }
+        views = self._memory_pageviews_sync(sorted({title for titles in sampled.values() for title in titles}))
+        candidates: list[tuple[str, str, str]] = []  # (tag, title, words)
+        seen: set[str] = set(avoid)
+        for tag in tags:
+            kept = 0
+            for title in sorted(sampled[tag], key=lambda title: (-views.get(title, 0), title)):
+                if kept >= MEMORY_LINKS_PER_TAG:
                     break
-                if rank >= len(ranked[tag]):
-                    continue
-                title = ranked[tag][rank]
                 term = self._memory_term("", title)
                 key = memory_fold(term)
-                if not term or memory_overlaps(key, used):
+                if not term or memory_overlaps(key, seen):
                     continue
+                seen.add(key)
+                candidates.append((tag, title, term))
+                kept += 1
+        linked = self._memory_incoming_links_sync([title for _tag, title, _term in candidates])
+        articles = self._wiki_article_count_sync()
+        floor = articles * MEMORY_LINKED_FLOOR if articles else 0
+        cap = articles * MEMORY_LINKED_CAP if articles else float("inf")
+        mention_floor = articles * MEMORY_MENTION_FLOOR if articles else 0
+        # Unknown counts (a failed request) sort last, most read first.
+        ranked = sorted(candidates, key=lambda row: -linked.get(row[1], -1))
+        common = [row for row in ranked if floor <= linked.get(row[1], -1) <= cap]
+        rest = [row for row in ranked if linked.get(row[1], -1) < floor]
+        per_tag_cap = max(1, -(-count // max(1, len(tags)))) + 1
+        rows: list[tuple[str, str, str]] = []
+        used = set(avoid)
+        per_tag: dict[str, int] = {}
+        checks = 0
+        checking = True
+        deadline = time.monotonic() + MEMORY_MENTION_SECONDS
+        # Common names first, a few per category; then lift the category limit; rarer ones only to fill up.
+        for pool_rows, limited in ((common, True), (common, False), (rest, False)):
+            for tag, title, term in pool_rows:
+                if len(rows) >= count:
+                    break
+                key = memory_fold(term)
+                if memory_overlaps(key, used) or (limited and per_tag.get(tag, 0) >= per_tag_cap):
+                    continue
+                if checking and pool_rows is not rest:
+                    if checks >= MEMORY_MENTION_CHECKS or time.monotonic() > deadline:
+                        checking = False
+                    else:
+                        try:
+                            checks += 1
+                            mentions = self._memory_mention_count(term)
+                        except Exception as exc:
+                            # Rate limited or offline: keep the rest unchecked.
+                            LOG.info("Memories: search for %r failed, no more checks: %s", term, exc)
+                            checking = False
+                        else:
+                            if mentions < mention_floor:
+                                used.add(key)  # linked from templates, rarely in the text: never retry it
+                                continue
                 used.add(key)
-                rows.append({"term": term, "title": title, "views": views.get(title, 0)})
-        rows.sort(key=lambda row: (-int(row["views"]), row["term"]))
-        return [{"term": row["term"], "title": row["title"]} for row in rows]
+                per_tag[tag] = per_tag.get(tag, 0) + 1
+                rows.append((tag, title, term))
+        rows.sort(key=lambda row: -linked.get(row[1], -1))
+        return [{"term": term, "title": title} for _tag, title, term in rows]
 
     def _pick_home_memories_sync(
         self, home: str, count: int, rng: random.Random, used: set[str]
