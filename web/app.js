@@ -210,6 +210,9 @@ const state = {
   /** Host announcement on screen, and whether it was closed (only until the text changes or the page reloads). */
   announcementText: "",
   announcementClosed: false,
+  /** Homeward: Remember is armed (the next click in the article claims a Memory). */
+  rememberMode: false,
+  homewardLightFull: false,
   restoringArticle: false,
   /** {identity, title} visits made while the room was unreachable; see queueOfflineVisit. */
   offlineVisits: [],
@@ -380,6 +383,20 @@ const el = {
   debugConsentPanel: document.getElementById("debugConsentPanel"),
   showDebugMenuBtn: document.getElementById("showDebugMenuBtn"),
   uiLangSelect: document.getElementById("uiLangSelect"),
+  mainRoadLabel: document.querySelector(".main-target-row .main-road-label"),
+  homewardBar: document.getElementById("homewardBar"),
+  rememberBtn: document.getElementById("rememberBtn"),
+  flareBtn: document.getElementById("flareBtn"),
+  rememberHint: document.getElementById("rememberHint"),
+  lampShade: document.getElementById("lampShade"),
+  homewardBlock: document.getElementById("homewardBlock"),
+  homewardLight: document.getElementById("homewardLight"),
+  lanternDots: document.getElementById("lanternDots"),
+  memoriesMeta: document.getElementById("memoriesMeta"),
+  memoriesList: document.getElementById("memoriesList"),
+  memoriesLocked: document.getElementById("memoriesLocked"),
+  phoneRememberBtn: document.getElementById("phoneRememberBtn"),
+  phoneFlareBtn: document.getElementById("phoneFlareBtn"),
 };
 
 function loadSavedConnection() {
@@ -1149,11 +1166,13 @@ function resetRoundVisits(seedTitle = "") {
 }
 
 function syncRoundVisitTracking(status) {
-  const roundNum = Number(status?.round) || 0;
+  const info = homewardInfo(status);
+  // Homeward has no rounds: each Memory found starts a fresh loop count, from the page you are on.
+  const roundNum = info ? 1000 + (Number(info.memories_found) || 0) : Number(status?.round) || 0;
   if (roundNum !== state.roundVisitRound) {
     state.roundVisitRound = roundNum;
     // Seed with this round's start only. currentTitle may still be the previous target.
-    resetRoundVisits(status?.current_start || "");
+    resetRoundVisits(info ? (state.currentTitle || status?.current_start || "") : (status?.current_start || ""));
   }
 }
 
@@ -1339,7 +1358,8 @@ function renderPhoneBar(status) {
       mainText = mainRoadDoneText(status);
       mainWiki = "";
     }
-    rows.push({ label: t("path.main"), text: mainText, wiki: mainWiki, main: true });
+    const mainLabel = homewardInfo(status) ? t("homeward.home") : t("path.main");
+    rows.push({ label: mainLabel, text: mainText, wiki: mainWiki, main: true });
     const question = String(status.goal_question || "").trim();
     if (!status.practice && !isRealmMaster(status) && status.boss_ready && !status.boss_completed && question) {
       rows.push({ label: t("hud.grandGoal").replace(/\s*:\s*$/, ""), text: question, wiki: "", main: true });
@@ -1776,7 +1796,8 @@ function journeyPageNodes(events) {
       }
     }
     if (kind === "bingo_stamp" || kind === "bingo_cell") node.stamp = true;
-    if (kind === "grand_goal" || kind === "realm_master") node.grandGoal = true;
+    if (kind === "grand_goal" || kind === "realm_master" || kind === "home") node.grandGoal = true;
+    if (kind === "memory") node.stamp = true;
     if (node !== last) nodes.push(node);
   }
   return nodes.map((node) => {
@@ -2155,6 +2176,15 @@ function closeJourneyOverlay() {
 }
 
 function fillVictoryOverlay(status) {
+  if (homewardInfo(status)) {
+    if (el.victoryQuestion) el.victoryQuestion.classList.add("hidden");
+    if (el.victoryAnswer) el.victoryAnswer.classList.add("hidden");
+    if (el.victoryMessage) el.victoryMessage.textContent = t("victory.homeMessage", { title: status?.goal_article || "" });
+    if (el.victoryOverlayTitle) el.victoryOverlayTitle.textContent = t("victory.homeTitle");
+    if (el.victoryJourneyBtn) el.victoryJourneyBtn.textContent = t("victory.seeJourney");
+    if (el.victoryCloseBtn) el.victoryCloseBtn.textContent = t("victory.continue");
+    return;
+  }
   if (isRealmMaster(status)) {
     const realms = Array.isArray(status?.realms) ? status.realms : [];
     if (el.victoryQuestion) {
@@ -3873,7 +3903,8 @@ function applySearchHighlights(query) {
   }
 
   const firstHit = el.articleBody.querySelector(".wiki-search-hit");
-  if (firstHit) firstHit.scrollIntoView({ block: "center" });
+  // In the dark, search only marks the words; finding them is up to your light.
+  if (firstHit && !lampActive()) firstHit.scrollIntoView({ block: "center" });
   return count;
 }
 
@@ -4181,6 +4212,7 @@ function applyHUDStatus(status) {
   renderBranchTargets(status);
   renderCrossroadBadge(status);
   renderRealmsBlock(status);
+  renderHomeward(status);
   if (el.journeyBtn) {
     el.journeyBtn.classList.toggle("hidden", !(status.connected_to_ap || status.practice));
   }
@@ -4290,6 +4322,287 @@ function applyDisplayLocks() {
   for (const lock of DISPLAY_LOCKS) {
     el.articleBody.classList.toggle(lock.lockClass, !isDisplayUnlocked(lock.unlockedKey));
   }
+}
+
+/*
+ * Homeward: the article is dark except a band of light (it follows the mouse, or stays mid-screen on touch
+ * screens). Links to Home stay dark until every Lantern; Memories are claimed with Remember; a Flare
+ * lights the whole page for a few seconds.
+ */
+const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, band: null };
+const MEMORY_CONTEXT_CHARS = 120;
+
+function homewardInfo(status = state.status) {
+  const info = status?.goal === "homeward" ? status.homeward : null;
+  return info && typeof info === "object" ? info : null;
+}
+
+function homewardPlaying(status = state.status) {
+  return Boolean(homewardInfo(status) && status.connected_to_ap && !status.practice);
+}
+
+/** True while the article is dark: not every Lantern yet, no Flare burning, seed not won. */
+function lampActive() {
+  const info = homewardInfo();
+  if (!info || !homewardPlaying() || info.light_full || state.status?.boss_completed) return false;
+  return Date.now() >= lamp.flareUntil;
+}
+
+/** Lines of light: the starting light, and the same again for each Lantern. */
+function lampLines(info) {
+  const start = Math.max(1, Number(info?.starting_light) || 3);
+  return start * (Math.max(0, Number(info?.lanterns) || 0) + 1);
+}
+
+function lampLineHeight() {
+  const sample = el.articleBody.querySelector(".mw-parser-output > p") || el.articleBody;
+  const style = getComputedStyle(sample);
+  const height = parseFloat(style.lineHeight);
+  return Number.isFinite(height) && height > 0 ? height : (parseFloat(style.fontSize) || 16) * 1.6;
+}
+
+/** Where the article is on screen (phones scroll the page, below the bar; computers scroll #articleBody). */
+function lampViewport() {
+  const rect = el.articleBody.getBoundingClientRect();
+  let top = Math.max(rect.top, 0);
+  if (isPhoneLayout() && el.phoneBar) top = Math.max(top, el.phoneBar.getBoundingClientRect().bottom);
+  const bottom = Math.max(top, Math.min(rect.bottom, window.innerHeight));
+  return { left: rect.left, width: rect.width, top, bottom };
+}
+
+function lampCenterY(view) {
+  // No pointer to follow on touch screens: the light stays mid-screen and the text scrolls through it.
+  if (TOUCH_QUERY.matches || isPhoneLayout() || lamp.y == null) return (view.top + view.bottom) / 2;
+  return Math.min(Math.max(lamp.y, view.top), view.bottom);
+}
+
+function drawLamp() {
+  lamp.raf = 0;
+  const shade = el.lampShade;
+  if (!shade) return;
+  const on = lampActive();
+  document.body.classList.toggle("lamp-on", on);
+  shade.classList.toggle("hidden", !on);
+  if (!on) {
+    lamp.band = null;
+    return;
+  }
+  const view = lampViewport();
+  const half = (lampLines(homewardInfo()) * lampLineHeight()) / 2;
+  const center = lampCenterY(view);
+  const bandTop = Math.max(view.top, center - half);
+  const bandBottom = Math.min(view.bottom, center + half);
+  lamp.band = { top: bandTop, bottom: bandBottom };
+  const [above, below] = shade.children;
+  Object.assign(above.style, {
+    left: `${view.left}px`, width: `${view.width}px`, top: `${view.top}px`, height: `${Math.max(0, bandTop - view.top)}px`,
+  });
+  Object.assign(below.style, {
+    left: `${view.left}px`, width: `${view.width}px`, top: `${bandBottom}px`, height: `${Math.max(0, view.bottom - bandBottom)}px`,
+  });
+}
+
+function scheduleLamp() {
+  if (!lamp.raf) lamp.raf = requestAnimationFrame(drawLamp);
+}
+
+/** Is this height on screen in the light? Everything is, when the page isn't dark. */
+function isLitY(y) {
+  if (!lampActive()) return true;
+  if (!lamp.band) drawLamp();
+  return Boolean(lamp.band) && y >= lamp.band.top && y <= lamp.band.bottom;
+}
+
+function isLitElement(node) {
+  if (!lampActive() || !node?.getBoundingClientRect) return true;
+  if (!lamp.band) drawLamp();
+  const rect = node.getBoundingClientRect();
+  return Boolean(lamp.band) && rect.bottom >= lamp.band.top && rect.top <= lamp.band.bottom;
+}
+
+/** Links to Home read and act like plain text until the last Lantern (no color, hover, focus or click). */
+function markHomeLinks(root) {
+  if (!root) return;
+  root.querySelectorAll("a.wk-home-link").forEach((a) => {
+    a.classList.remove("wk-home-link");
+    a.removeAttribute("tabindex");
+  });
+  const info = homewardInfo();
+  const home = normalizeTitle(info?.home || "");
+  if (!home) return;
+  root.querySelectorAll("a[data-title]").forEach((a) => {
+    if (normalizeTitle(a.dataset.title) !== home) return;
+    a.classList.add("wk-home-link");
+    if (!info.light_full) a.tabIndex = -1;
+  });
+}
+
+/** Home opened another way (a redirect, the address bar…) while it is still dark. */
+function homeIsDark(title) {
+  const info = homewardInfo();
+  if (!info || info.light_full || !homewardPlaying()) return false;
+  return normalizeTitle(title) === normalizeTitle(info.home || "");
+}
+
+function canRemember(status = state.status) {
+  const info = homewardInfo(status);
+  return Boolean(info && homewardPlaying(status) && info.memories_ready && !status.boss_completed);
+}
+
+function setRememberMode(on) {
+  const next = Boolean(on) && canRemember();
+  state.rememberMode = next;
+  document.body.classList.toggle("remember-mode", next);
+  for (const button of [el.rememberBtn, el.phoneRememberBtn]) button?.setAttribute("aria-pressed", String(next));
+  el.rememberHint?.classList.toggle("hidden", !next);
+}
+
+/** The text on both sides of a click, within its paragraph (or list item, table cell…). */
+function textContextAt(x, y) {
+  let node = null;
+  let offset = 0;
+  if (document.caretPositionFromPoint) {
+    const position = document.caretPositionFromPoint(x, y);
+    node = position?.offsetNode || null;
+    offset = position?.offset || 0;
+  } else if (document.caretRangeFromPoint) {
+    const range = document.caretRangeFromPoint(x, y);
+    node = range?.startContainer || null;
+    offset = range?.startOffset || 0;
+  }
+  if (!node || node.nodeType !== Node.TEXT_NODE || !el.articleBody.contains(node)) return null;
+  const block = node.parentElement.closest("p, li, dd, dt, td, th, figcaption, blockquote, caption, h2, h3, h4")
+    || node.parentElement;
+  const range = document.createRange();
+  range.selectNodeContents(block);
+  range.setEnd(node, offset);
+  const before = range.toString();
+  const full = block.textContent || "";
+  return {
+    before: before.slice(-MEMORY_CONTEXT_CHARS),
+    after: full.slice(before.length, before.length + MEMORY_CONTEXT_CHARS),
+  };
+}
+
+async function claimMemoryAt(x, y) {
+  setRememberMode(false);
+  if (!isLitY(y)) {
+    toast(t("homeward.inDark"), "warn");
+    return;
+  }
+  const context = textContextAt(x, y);
+  if (!context) {
+    toast(t("homeward.notMemory"), "warn");
+    return;
+  }
+  try {
+    const result = await api(`/api/session/${state.sessionId}/memory`, "POST", context);
+    if (result.found) {
+      const parts = [t("homeward.memoryFound", { term: result.found.term })];
+      if (result.sent_text) parts.push(result.sent_text);
+      toast(parts.join(" · "), "ok", 8000);
+    } else if (result.already) {
+      toast(t("homeward.memoryAlready", { term: result.already.term }), "ok");
+    } else {
+      toast(t("homeward.notMemory"), "warn");
+    }
+    if (result.status) updateHUD(result.status);
+  } catch (err) {
+    toast(String(err?.message || err), "warn");
+  }
+}
+
+async function useFlare() {
+  const info = homewardInfo();
+  if (!info || !homewardPlaying()) return;
+  if ((Number(info.flares) || 0) <= 0) {
+    toast(t("homeward.noFlares"), "warn");
+    return;
+  }
+  try {
+    const result = await api(`/api/session/${state.sessionId}/flare`, "POST", {});
+    const seconds = Number(result.seconds) || Number(info.flare_seconds) || 10;
+    lamp.flareUntil = Date.now() + seconds * 1000;
+    clearTimeout(lamp.flareTimer);
+    lamp.flareTimer = setTimeout(scheduleLamp, seconds * 1000 + 50);
+    scheduleLamp();
+    if (result.status) updateHUD(result.status);
+  } catch (err) {
+    toast(String(err?.message || err), "warn");
+  }
+}
+
+function renderHomeward(status) {
+  const info = homewardInfo(status);
+  const on = Boolean(info);
+  const playing = homewardPlaying(status);
+  document.body.classList.toggle("mode-homeward", on);
+  document.body.classList.toggle("homeward-light-full", Boolean(info?.light_full));
+  el.homewardBlock?.classList.toggle("hidden", !on);
+  el.homewardBar?.classList.toggle("hidden", !playing);
+  el.phoneRememberBtn?.classList.toggle("hidden", !playing);
+  el.phoneFlareBtn?.classList.toggle("hidden", !playing);
+  if (el.mainRoadLabel) el.mainRoadLabel.textContent = on ? t("homeward.home") : t("path.main");
+  if (!on) {
+    if (state.rememberMode) setRememberMode(false);
+    scheduleLamp();
+    return;
+  }
+  const lanterns = Number(info.lanterns) || 0;
+  const total = Number(info.lantern_count) || 0;
+  el.homewardLight.textContent = t("homeward.light", { n: lanterns, total });
+  const dotsKey = `${lanterns}/${total}`;
+  if (el.lanternDots.dataset.key !== dotsKey) {
+    el.lanternDots.dataset.key = dotsKey;
+    el.lanternDots.replaceChildren(...Array.from({ length: total }, (_, index) => {
+      const dot = document.createElement("span");
+      dot.className = index < lanterns ? "lantern-dot lit" : "lantern-dot";
+      return dot;
+    }));
+  }
+  const rows = Array.isArray(info.memories) ? info.memories : [];
+  el.memoriesMeta.textContent = t("homeward.memoriesMeta", {
+    found: Number(info.memories_found) || 0,
+    total: Number(info.memory_count) || rows.length,
+  });
+  const known = rows.filter((row) => row.term);
+  const listKey = JSON.stringify([Boolean(info.memories_ready), known.map((row) => [row.term, Boolean(row.found)])]);
+  if (el.memoriesList.dataset.key !== listKey) {
+    el.memoriesList.dataset.key = listKey;
+    if (!info.memories_ready) {
+      const row = document.createElement("li");
+      row.className = "memory-row muted-meta";
+      row.textContent = t("homeward.recalling");
+      el.memoriesList.replaceChildren(row);
+    } else {
+      el.memoriesList.replaceChildren(...known.map((item) => {
+        const row = document.createElement("li");
+        row.className = item.found ? "memory-row found" : "memory-row";
+        row.textContent = item.term;
+        return row;
+      }));
+    }
+  }
+  const locked = rows.filter((row) => !row.unlocked && !row.found).length;
+  el.memoriesLocked.classList.toggle("hidden", !locked || !info.memories_ready);
+  el.memoriesLocked.textContent = locked ? t("homeward.memoriesLocked", { n: locked }) : "";
+  const claimable = canRemember(status);
+  for (const button of [el.rememberBtn, el.phoneRememberBtn]) if (button) button.disabled = !claimable;
+  if (!claimable && state.rememberMode) setRememberMode(false);
+  const flares = Number(info.flares) || 0;
+  const flareLabel = t("homeward.flare", { n: flares });
+  const flareTitle = t("homeward.flareTitle", { s: Number(info.flare_seconds) || 10 });
+  for (const button of [el.flareBtn, el.phoneFlareBtn]) {
+    if (!button) continue;
+    button.textContent = flareLabel;
+    button.title = flareTitle;
+    button.disabled = flares <= 0 || Boolean(info.light_full) || Boolean(status.boss_completed);
+  }
+  if (state.homewardLightFull !== Boolean(info.light_full)) {
+    state.homewardLightFull = Boolean(info.light_full);
+    markHomeLinks(el.articleBody);
+  }
+  scheduleLamp();
 }
 
 function isDebugMenuAllowed(info) {
@@ -4996,6 +5309,7 @@ function processArticleLinks(root, options = {}) {
   });
 
   if (playable) applyMissingToLinks(playable);
+  markHomeLinks(root);
 }
 
 function wikiHtmlCacheKey(title, lang = articleLanguage()) {
@@ -5319,6 +5633,11 @@ async function openArticle(title, options = {}) {
       }
     }
     displayTitle = resolvedDisplay;
+    if (homeIsDark(displayTitle)) {
+      endLoading();
+      toast(t("homeward.homeDark"), "warn");
+      return;
+    }
     if (displayLang === seedLang) {
       checkTitle = resolvedDisplay;
     }
@@ -5347,6 +5666,7 @@ async function openArticle(title, options = {}) {
       });
     }
     armBombsOnPage(el.articleBody, state.status);
+    scheduleLamp();
     if (countAsClick || !state.roundVisitSet.size) {
       state.roundVisitSet.add(normalizeTitle(displayTitle));
     } else if (!submitCheck) {
@@ -5495,6 +5815,8 @@ el.articleBody.addEventListener("click", async (e) => {
   if (!dest) return;
   e.preventDefault();
   if (state.handlingDeath) return;
+  // Homeward: a link in the dark can't be clicked (touch screens can tap outside the light).
+  if (!isLitElement(a)) return;
   const destNorm = normalizeTitle(dest);
 
   // Bomb hit (only on forward wiki clicks).
@@ -5517,6 +5839,37 @@ el.articleBody.addEventListener("click", async (e) => {
 
   openArticle(dest, { countAsClick: true, sourceLang: a.dataset.wikiLang || "" });
 });
+
+// Homeward: Remember turns the next click in the article into a Memory claim (links don't open).
+el.articleBody.addEventListener("click", (e) => {
+  if (!state.rememberMode) return;
+  e.preventDefault();
+  e.stopPropagation();
+  void claimMemoryAt(e.clientX, e.clientY);
+}, true);
+
+for (const button of [el.rememberBtn, el.phoneRememberBtn]) {
+  button?.addEventListener("click", () => setRememberMode(!state.rememberMode));
+}
+for (const button of [el.flareBtn, el.phoneFlareBtn]) {
+  button?.addEventListener("click", () => void useFlare());
+}
+
+// The light follows the mouse over the article, and keyboard focus to a link.
+document.addEventListener("pointermove", (e) => {
+  if (e.pointerType === "touch" || !lampActive() || !el.articleStage?.contains(e.target)) return;
+  lamp.y = e.clientY;
+  scheduleLamp();
+}, { passive: true });
+el.articleBody.addEventListener("focusin", (e) => {
+  if (!lampActive() || !e.target?.getBoundingClientRect) return;
+  const rect = e.target.getBoundingClientRect();
+  lamp.y = (rect.top + rect.bottom) / 2;
+  scheduleLamp();
+});
+el.articleBody.addEventListener("scroll", scheduleLamp, { passive: true });
+window.addEventListener("scroll", scheduleLamp, { passive: true });
+window.addEventListener("resize", scheduleLamp, { passive: true });
 
 function isEventInSidePanel(target) {
   return Boolean(target?.closest?.(".side-panel"));
@@ -5660,7 +6013,7 @@ el.pageSearchInput.addEventListener("input", () => {
   }
   const hits = applySearchHighlights(el.pageSearchInput.value.trim());
   renderSearchStatus();
-  if (el.pageSearchInput.value.trim()) {
+  if (el.pageSearchInput.value.trim() && !lampActive()) {
     el.searchStatus.textContent = t("search.matchCount", { n: hits });
   }
 });
@@ -5698,6 +6051,15 @@ document.addEventListener("keydown", (e) => {
     }
   }
   const typing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName);
+  if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && e.key.toLowerCase() === "r" && homewardPlaying()) {
+    e.preventDefault();
+    setRememberMode(!state.rememberMode);
+    return;
+  }
+  if (e.key === "Escape" && state.rememberMode) {
+    e.preventDefault();
+    setRememberMode(false);
+  }
   if ((e.altKey && e.key === "ArrowLeft") || (e.key === "Backspace" && !typing)) {
     if (state.status && isPlayable()) {
       e.preventDefault();

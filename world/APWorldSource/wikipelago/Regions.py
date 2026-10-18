@@ -1,6 +1,6 @@
 ﻿from BaseClasses import Region
 
-from .Locations import MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
+from .Locations import MAX_BRANCH_LENGTH, branch_location_name, location_table, memory_location_name
 from .letter_pairs import bingo_location_names
 
 
@@ -10,7 +10,7 @@ def create_regions(world: "WikipelagoWorld") -> None:
 
     menu.connect(game)
 
-    round_count = world.options.check_count.value
+    round_count = world._round_count()
     for index in range(1, round_count + 1):
         name = f"Round {index} Complete"
         data = location_table[name]
@@ -19,8 +19,15 @@ def create_regions(world: "WikipelagoWorld") -> None:
     if world._goal_is_grand_goal():
         game.add_locations({"Grand Goal": location_table["Grand Goal"].code}, world.location_class)
     else:
-        # Realm Master: generation-only event location, holds the Victory event.
+        # Realm Master and Homeward: generation-only event location, holds the Victory event.
         game.add_locations({"Goal Complete": None}, world.location_class)
+
+    memory_locs: dict[str, int] = {}
+    for index in range(1, world._memory_count() + 1):
+        name = memory_location_name(index)
+        memory_locs[name] = location_table[name].code
+    if memory_locs:
+        game.add_locations(memory_locs, world.location_class)
 
     if world.options.toggle_bingo_letterpairs.value:
         grid_size = world.options.bingo_letterpairs_grid.value
@@ -31,7 +38,7 @@ def create_regions(world: "WikipelagoWorld") -> None:
                 bingo_locs[name] = location_table[name].code
         game.add_locations(bingo_locs, world.location_class)
 
-    branch_count = max(0, min(int(world.options.branch_count.value), MAX_BRANCHES))
+    branch_count = world._branch_count()
     branch_length = max(1, min(int(world.options.branch_length.value), MAX_BRANCH_LENGTH))
     extra_regions: list[Region] = []
     if branch_count > 0:

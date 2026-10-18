@@ -76,6 +76,14 @@ CASES = (
             "goal": "realm_master",
         },
     },
+    {
+        "id": "en-homeward",
+        "seed": 48,
+        "values": {
+            "name": "CI-HOMEWARD",
+            "goal": "homeward",
+        },
+    },
 )
 
 

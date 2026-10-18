@@ -7,7 +7,14 @@ from worlds.AutoWorld import WebWorld, World
 from worlds.generic.Rules import set_rule
 
 from .Items import PORTAL_ITEM_BY_TOPIC, PORTAL_ITEM_NAMES, TRAP_ITEM_NAMES, item_table
-from .Locations import MAX_BINGO_BOARDS, MAX_BRANCHES, MAX_BRANCH_LENGTH, branch_location_name, location_table
+from .Locations import (
+    MAX_BINGO_BOARDS,
+    MAX_BRANCHES,
+    MAX_BRANCH_LENGTH,
+    branch_location_name,
+    location_table,
+    memory_location_name,
+)
 from .Options import WikipelagoOptions, wikipelago_option_groups
 from .Regions import create_regions
 from .article_pool import SUPPORTED_LANGS, is_usable_title, load_article_pool
@@ -80,6 +87,11 @@ UT_SLOT_DATA_FIELDS: tuple[str, ...] = (
     "branch_length",
     "additional_branch_keys",
     "topic_portals",
+    "lantern_count",
+    "starting_light",
+    "memory_count",
+    "memories_per_recollection",
+    "flare_count",
 )
 
 # Options whose YAML value is missing from those fields (capped, zeroed when unused or not
@@ -136,6 +148,8 @@ class WikipelagoWorld(World):
     goal_article: str
     goal_question: str
     goal_qid: str | None
+    # Homeward: the page the player starts from (Home itself is goal_article).
+    homeward_start: str = ""
     reroll_pool: list[str]
     bingo_letterpairs_boards: list[list[list[str]]]
     crossroads: list[dict[str, int]]
@@ -252,6 +266,8 @@ class WikipelagoWorld(World):
         return set(SEARCH_STARTING_LETTERS.get(self.options.search_starting_letters.value, set()))
 
     def _branch_count(self) -> int:
+        if self._goal_is_homeward():
+            return 0
         return max(0, min(int(self.options.branch_count.value), MAX_BRANCHES))
 
     def _branch_length(self) -> int:
@@ -263,8 +279,40 @@ class WikipelagoWorld(World):
     def _goal_is_grand_goal(self) -> bool:
         return int(self.options.goal.value) == 0
 
+    def _goal_is_realm_master(self) -> bool:
+        return int(self.options.goal.value) == 1
+
+    def _goal_is_homeward(self) -> bool:
+        return int(self.options.goal.value) == 2
+
     def _goal_name(self) -> str:
+        if self._goal_is_homeward():
+            return "homeward"
         return "grand_goal" if self._goal_is_grand_goal() else "realm_master"
+
+    def _round_count(self) -> int:
+        """Main-road rounds; Homeward has none (its checks are Memories)."""
+        return 0 if self._goal_is_homeward() else int(self.options.check_count.value)
+
+    def _memory_count(self) -> int:
+        return int(self.options.memory_count.value) if self._goal_is_homeward() else 0
+
+    def _memories_per_recollection(self) -> int:
+        return max(1, int(self.options.memories_per_recollection.value))
+
+    def _recollection_count(self) -> int:
+        """Recollections needed to reveal every Memory after the first batch."""
+        memories = self._memory_count()
+        if memories <= 0:
+            return 0
+        per = self._memories_per_recollection()
+        return max(0, (memories + per - 1) // per - 1)
+
+    def _lantern_count(self) -> int:
+        return int(self.options.lantern_count.value) if self._goal_is_homeward() else 0
+
+    def _flare_count(self) -> int:
+        return int(self.options.flare_count.value) if self._goal_is_homeward() else 0
 
     def _additional_branch_keys(self) -> int:
         if self._branch_count() <= 0 or self._topic_portals():
@@ -348,6 +396,7 @@ class WikipelagoWorld(World):
         self.goal_article = str(slot_data.get("goal_article") or "")
         self.goal_question = str(slot_data.get("goal_question") or "")
         self.goal_qid = slot_data.get("goal_qid") or None
+        self.homeward_start = str(slot_data.get("homeward_start") or "")
         self.round_pairs = list(slot_data.get("round_pairs") or [])
         self.crossroads = list(slot_data.get("crossroads") or [])
         self.branches = list(slot_data.get("branches") or [])
@@ -363,7 +412,7 @@ class WikipelagoWorld(World):
             self._load_ut_slot_data(ut_slot_data)
             return
 
-        round_count = self.options.check_count.value
+        round_count = self._round_count()
         selected_topics = self._selected_topics()
         if not selected_topics:
             raise Exception(
@@ -400,7 +449,7 @@ class WikipelagoWorld(World):
 
         branch_count = self._branch_count()
         branch_length = self._branch_length()
-        if not self._goal_is_grand_goal() and branch_count <= 0:
+        if self._goal_is_realm_master() and branch_count <= 0:
             raise Exception(
                 "Wikipelago goal realm_master needs at least one branch / Realm: "
                 "set branch_count to 1 or more, or use goal: grand_goal."
@@ -458,6 +507,9 @@ class WikipelagoWorld(World):
                 self.goal_article = self.random.choice(filtered_pool)
             if self.goal_article not in filtered_pool:
                 filtered_pool.append(self.goal_article)
+        elif self._goal_is_homeward():
+            # Home: shown from the start, reachable once every Lantern lights the way.
+            self.goal_article = self.random.choice(filtered_pool)
 
         remaining = [title for title in filtered_pool if title != self.goal_article]
         # Opening start + one target per round + branch_length extra titles per branch.
@@ -473,6 +525,7 @@ class WikipelagoWorld(World):
 
         picks = self.random.sample(remaining, round_count + 1)
         first_start = picks[0]
+        self.homeward_start = first_start if self._goal_is_homeward() else ""
         targets = picks[1:]
         starts = [first_start, *targets[:-1]]
         self.round_pairs = [
@@ -577,10 +630,11 @@ class WikipelagoWorld(World):
         return self.item_class(name, ItemClassification.progression, None, self.player)
 
     def create_items(self) -> None:
-        round_count = self.options.check_count.value
+        round_count = self._round_count()
         bingo_count = self._bingo_check_count()
         branch_loc_count = self._branch_location_count()
-        free_locations = round_count + bingo_count + branch_loc_count
+        memory_count = self._memory_count()
+        free_locations = round_count + bingo_count + branch_loc_count + memory_count
         required_fragments = self._required_fragments()
         if self._goal_is_grand_goal():
             additional_fragments = max(0, int(self.options.additional_fragments_in_pool.value))
@@ -597,10 +651,14 @@ class WikipelagoWorld(World):
         display_unlocks = self._display_unlock_items()
         trap_count = int(self.options.trap_count.value)
         back_unlocks = max(0, int(self.options.back_depth_unlocks.value))
-        reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
+        # Homeward has no targets to reroll.
+        reroll_unlocks = 0 if self._goal_is_homeward() else max(0, int(self.options.target_reroll_unlocks.value))
         bingo_card_unlocks = self._bingo_card_unlocks()
         bingo_stamp_unlocks = self._bingo_stamp_unlocks()
         branch_keys = self._branch_key_count()
+        lanterns = self._lantern_count()
+        recollections = self._recollection_count()
+        flares = self._flare_count()
 
         mandatory_items = (
             fragment_pool_count
@@ -616,15 +674,20 @@ class WikipelagoWorld(World):
             + scroll_upgrades_needed
             + len(display_unlocks)
             + trap_count
+            + lanterns
+            + recollections
+            + flares
         )
         if mandatory_items > free_locations:
             raise Exception(
                 "Wikipelago item math invalid: required progression items exceed free locations. "
                 f"mandatory={mandatory_items}, free_locations={free_locations} "
-                f"(rounds={round_count}, bingo={bingo_count}, branch_rounds={branch_loc_count}). "
+                f"(rounds={round_count}, bingo={bingo_count}, branch_rounds={branch_loc_count}, "
+                f"memories={memory_count}). "
                 "Lower required_fragments, additional_fragments_in_pool, trap_count, unlock counts, "
                 "reduce sanity/display unlock load, lower round access pressure "
-                "(increase start_rounds_unlocked / rounds_per_unlock), or reduce branch_count / additional_branch_keys."
+                "(increase start_rounds_unlocked / rounds_per_unlock), reduce branch_count / additional_branch_keys, "
+                "or for Homeward raise memory_count or lower lantern_count / flare_count."
             )
 
         pool: list[WikipelagoItem] = []
@@ -655,6 +718,12 @@ class WikipelagoWorld(World):
             pool.append(self.create_item("Branch Key"))
         for portal_name in portal_items:
             pool.append(self.create_item(portal_name))
+        for _ in range(lanterns):
+            pool.append(self.create_item("Progressive Lantern"))
+        for _ in range(recollections):
+            pool.append(self.create_item("Recollection"))
+        for _ in range(flares):
+            pool.append(self.create_item("Flare"))
         trap_names = self._trap_item_names(trap_count)
         self.trap_item_counts = {name: trap_names.count(name) for name in TRAP_ITEM_NAMES}
         for trap_name in trap_names:
@@ -693,7 +762,7 @@ class WikipelagoWorld(World):
         return names
 
     def set_rules(self) -> None:
-        round_count = self.options.check_count.value
+        round_count = self._round_count()
         branch_count = self._branch_count()
 
         if self._goal_is_grand_goal():
@@ -703,6 +772,13 @@ class WikipelagoWorld(World):
                 lambda state, frag_need=self._required_fragments(): state.has(
                     "Knowledge Fragment", self.player, frag_need
                 ),
+            )
+        elif self._goal_is_homeward():
+            # Home: links to it stay dark until the last Lantern.
+            goal_location = self.multiworld.get_location("Goal Complete", self.player)
+            set_rule(
+                goal_location,
+                lambda state, need=self._lantern_count(): state.has("Progressive Lantern", self.player, need),
             )
         else:
             goal_location = self.multiworld.get_location("Goal Complete", self.player)
@@ -720,6 +796,17 @@ class WikipelagoWorld(World):
             set_rule(
                 location,
                 lambda state, need=needed_round_access: state.has("Round Access", self.player, need),
+            )
+
+        per_recollection = self._memories_per_recollection()
+        for memory_index in range(1, self._memory_count() + 1):
+            # The first batch is known from the start; each Recollection reveals the next one.
+            need = (memory_index - 1) // per_recollection
+            if need <= 0:
+                continue
+            set_rule(
+                self.multiworld.get_location(memory_location_name(memory_index), self.player),
+                lambda state, need=need: state.has("Recollection", self.player, need),
             )
 
         if self._bingo_enabled():
@@ -778,7 +865,7 @@ class WikipelagoWorld(World):
         self.multiworld.completion_condition[self.player] = lambda state: state.has("Victory", self.player)
 
     def fill_slot_data(self) -> dict[str, Any]:
-        round_count = self.options.check_count.value
+        round_count = self._round_count()
         required_fragments = self._required_fragments()
         start_unlocked = min(self.options.start_rounds_unlocked.value, round_count)
         per_unlock = max(1, self.options.rounds_per_unlock.value)
@@ -794,8 +881,9 @@ class WikipelagoWorld(World):
         bingo_stamp_unlocks = self._bingo_stamp_unlocks()
         back_depth_start = max(0, int(self.options.back_depth_start.value))
         back_depth_unlocks = max(0, int(self.options.back_depth_unlocks.value))
-        target_rerolls_start = max(0, int(self.options.target_rerolls_start.value))
-        target_reroll_unlocks = max(0, int(self.options.target_reroll_unlocks.value))
+        homeward = self._goal_is_homeward()
+        target_rerolls_start = 0 if homeward else max(0, int(self.options.target_rerolls_start.value))
+        target_reroll_unlocks = 0 if homeward else max(0, int(self.options.target_reroll_unlocks.value))
         location_ids: dict[str, Any] = {
             "rounds": round_location_ids,
         }
@@ -805,6 +893,11 @@ class WikipelagoWorld(World):
             location_ids["bingo_letterpairs"] = bingo_slot_location_ids_by_board(
                 self.location_name_to_id, bingo_grid, len(bingo_boards)
             )
+        if homeward:
+            location_ids["memories"] = [
+                self.location_name_to_id[memory_location_name(index)]
+                for index in range(1, self._memory_count() + 1)
+            ]
         branch_count = self._branch_count()
         branch_length = self._branch_length()
         if branch_count > 0:
@@ -828,6 +921,12 @@ class WikipelagoWorld(World):
             "goal_article": self.goal_article,
             "goal_question": self.goal_question,
             "goal_qid": self.goal_qid,
+            "homeward_start": self.homeward_start,
+            "lantern_count": self._lantern_count(),
+            "starting_light": int(self.options.starting_light.value),
+            "memory_count": self._memory_count(),
+            "memories_per_recollection": self._memories_per_recollection(),
+            "flare_count": self._flare_count(),
             "round_pairs": self.round_pairs,
             "crossroads": list(getattr(self, "crossroads", []) or []),
             "branches": list(getattr(self, "branches", []) or []),

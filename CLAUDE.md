@@ -39,7 +39,7 @@ python world/build_letter_pair_weights.py --lang all            # rebuild bingo 
 
 ## CI (`.github/workflows/`)
 
-- `ci.yml` (every push and PR): `smoke_test.ps1 -BuildApworld`, then six seeds generated against Archipelago 0.6.7 via `world/ci_generate.py` (EN, FR, PL, Topic Realms, Realm Master, Realm Master with keys).
+- `ci.yml` (every push and PR): `smoke_test.ps1 -BuildApworld`, then seven seeds generated against Archipelago 0.6.7 via `world/ci_generate.py` (EN, FR, PL, Topic Realms, Realm Master, Realm Master with keys, Homeward).
 - `pool-validate.yml` (weekly, and on pool changes to `main`): reports dead titles, never removes them.
 
 ## Conventions

@@ -40,7 +40,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/static/style.css?v=20261015-01" />
+  <link rel="stylesheet" href="/static/style.css?v=20261018-01" />
 </head>
 <body class="is-idle">
   <div id="releaseBanner" class="migrate-banner" role="status">
@@ -62,6 +62,8 @@
       <span id="phoneCompass" class="phone-compass hidden"></span>
       <button id="phoneSearchBtn" type="button" class="phone-icon-btn" aria-label="Search this page" data-i18n-aria="search.placeholder" title="Search this page" data-i18n-title="search.placeholder"></button>
       <button id="phoneSosBtn" type="button" class="teleport-btn phone-sos-btn" disabled><span id="phoneSosLabel">SOS</span></button>
+      <button id="phoneRememberBtn" type="button" class="btn-quiet phone-homeward-btn hidden" aria-pressed="false" data-i18n="homeward.remember">Remember</button>
+      <button id="phoneFlareBtn" type="button" class="btn-quiet phone-homeward-btn hidden">Flare</button>
     </div>
   </div>
   <div class="layout">
@@ -110,6 +112,12 @@
     <main class="main-grid">
       <section class="article-panel">
         <div id="articleTitle" class="article-title">Wikipedia</div>
+        <!-- Homeward only: claim a Memory, light the page with a Flare. -->
+        <div id="homewardBar" class="homeward-bar hidden">
+          <button type="button" id="rememberBtn" class="btn-quiet" aria-pressed="false" data-i18n="homeward.remember" data-i18n-title="homeward.rememberTitle" title="Claim a Memory: click its word in your light (R)">Remember</button>
+          <button type="button" id="flareBtn" class="btn-quiet">Flare</button>
+          <span id="rememberHint" class="muted-meta remember-hint hidden" data-i18n="homeward.rememberHint">Click a Memory's word in your light. Esc cancels.</span>
+        </div>
         <div id="searchOverlay" class="search-overlay hidden">
           <div class="search-row">
             <input id="pageSearchInput" type="text" placeholder="Search this page" data-i18n-placeholder="search.placeholder" />
@@ -127,6 +135,11 @@
             <p data-i18n="idle.body">Connect to your Archipelago room, or start Practice to play right away with no setup.</p>
           </div>
           <article id="articleBody" class="article-body"></article>
+          <!-- Homeward: the dark around the band of light (placed by app.js; clicks pass through). -->
+          <div id="lampShade" class="lamp-shade hidden" aria-hidden="true">
+            <div class="lamp-dark lamp-top"></div>
+            <div class="lamp-dark lamp-bottom"></div>
+          </div>
           <div id="articleLoading" class="article-loading hidden" aria-live="polite" aria-busy="false">
             <div class="article-loading-panel">
               <div class="article-loading-spinner" aria-hidden="true"></div>
@@ -195,6 +208,20 @@
                 </p>
                 <div id="branchTargets" class="branch-targets hidden"></div>
               </div>
+            </div>
+
+            <!-- Homeward only: Lanterns and Memories of Home. -->
+            <div id="homewardBlock" class="homeward-block hidden">
+              <div class="run-label-row">
+                <strong id="homewardLight">Light</strong>
+                <span id="lanternDots" class="lantern-dots" aria-hidden="true"></span>
+              </div>
+              <div class="run-label-row">
+                <strong data-i18n="homeward.memories">Memories of Home</strong>
+                <span id="memoriesMeta" class="muted-meta"></span>
+              </div>
+              <ul id="memoriesList" class="memories-list"></ul>
+              <p id="memoriesLocked" class="muted-meta memories-locked hidden"></p>
             </div>
 
             <div id="realmsBlock" class="realms-block hidden">
@@ -373,7 +400,7 @@
 
   <div id="toastStack" class="toast-stack" aria-live="polite" aria-label="Notifications" data-i18n-aria="toast.region"></div>
 
-  <script src="/static/i18n.js?v=20261015-01"></script>
-  <script src="/static/app.js?v=20261015-01"></script>
+  <script src="/static/i18n.js?v=20261018-01"></script>
+  <script src="/static/app.js?v=20261018-01"></script>
 </body>
 </html>

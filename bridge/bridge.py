@@ -2,12 +2,14 @@
 import argparse
 import asyncio
 import functools
+import html
 import ipaddress
 import json
 import logging
 import math
 import os
 import random
+import re
 import socket
 import subprocess
 import time
@@ -173,6 +175,10 @@ PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
 }
 for _portal_index, _portal_name in enumerate(PORTAL_ITEM_BY_TOPIC.values(), start=50):
     DEFAULT_ITEMS[_portal_name] = 1_870_000 + _portal_index
+# Homeward (1.2): must match world Items.py (+68..+70).
+DEFAULT_ITEMS["Progressive Lantern"] = 1_870_068
+DEFAULT_ITEMS["Recollection"] = 1_870_069
+DEFAULT_ITEMS["Flare"] = 1_870_070
 
 TRAP_ITEM_NAMES = frozenset({"Foggy Links", "Missing Links", "Wrong Wiki"})
 LINK_BOMB_DENSITY_COUNTS = {0: 1, 1: 5, 2: 20}
@@ -181,6 +187,17 @@ TARGET_REROLLS_PER_ROUND = 3
 MAX_TRAVEL_EVENTS = 5000
 # The stored journey may run this far past MAX_TRAVEL_EVENTS before it is rewritten trimmed.
 TRAVEL_TRIM_SLACK = 500
+# Goals this client can play. A seed with any other goal is refused with a clear message.
+KNOWN_GOALS = ("grand_goal", "realm_master", "homeward")
+# Homeward: how long a Flare lights the whole page.
+FLARE_SECONDS = 10
+MEMORY_TERM_MAX_CHARS = 40
+# Text the client sends on each side of a Remember click.
+MEMORY_CONTEXT_MAX_CHARS = 120
+MEMORY_PARAGRAPH_RE = re.compile(r"<p\b[^>]*>(.*?)</p>", re.S | re.I)
+MEMORY_ANCHOR_RE = re.compile(r'<a\b[^>]*\bhref="/wiki/([^"#?]+)"[^>]*>(.*?)</a>', re.S | re.I)
+MEMORY_TAG_RE = re.compile(r"<[^>]+>")
+MEMORY_QUALIFIER_RE = re.compile(r"\s*\([^)]*\)\s*$")
 PROGRESSIVE_STACK_ITEMS = frozenset({
     "Knowledge Fragment",
     "Round Access",
@@ -190,6 +207,9 @@ PROGRESSIVE_STACK_ITEMS = frozenset({
     "Progressive Reroll",
     "Progressive Bingo Card",
     "Progressive Bingo Stamp",
+    "Progressive Lantern",
+    "Recollection",
+    "Flare",
     *TRAP_ITEM_NAMES,
 })
 
@@ -538,6 +558,26 @@ def letter_pairs_module() -> Any:
     return _LETTER_PAIRS_MODULE
 
 
+class UnsupportedSeedError(RuntimeError):
+    """The room's seed needs a newer client (for example a goal this version doesn't know)."""
+
+
+def memory_fold(text: str) -> str:
+    """Case-, accent- and punctuation-variant-insensitive form used to match Memories in page text."""
+    out: list[str] = []
+    for ch in str(text or ""):
+        if ch in "\u2019\u2018`\u00b4":
+            ch = "'"
+        elif ch in "\u2010\u2011\u2012\u2013\u2014\u2015":
+            ch = "-"
+        elif ch.isspace():
+            ch = " "
+        decomposed = unicodedata.normalize("NFKD", ch)
+        base = "".join(c for c in decomposed if not unicodedata.combining(c)) or ch
+        out.append(base.casefold())
+    return "".join(out)
+
+
 @dataclass
 class SessionState:
     connected_to_ap: bool = False
@@ -613,6 +653,18 @@ class SessionState:
     crossroads: list[dict[str, Any]] = field(default_factory=list)
     # False for Realm Master seeds from 1.1.1 on: a Realm opens with its Portal (or keys) alone.
     realms_need_crossroad: bool = True
+    # Homeward (goal "homeward"): Home is goal_article_title and the player starts on homeward_start.
+    homeward_start: str = ""
+    lantern_count: int = 0
+    starting_light: int = 3
+    memory_count: int = 0
+    memories_per_recollection: int = 5
+    flare_count: int = 0
+    location_memory_ids: list[int] = field(default_factory=list)
+    # Memories of Home: [{"term", "title"}], picked once from the Home article and kept in DataStorage
+    # (wikipelago_memories_{team}_{slot}) so every device and every session sees the same list.
+    memories: list[dict[str, str]] = field(default_factory=list)
+    memories_ready: bool = False
     branches: list[dict[str, Any]] = field(default_factory=list)
     branch_round_index: dict[int, int] = field(default_factory=dict)
     travel_events: list[dict[str, Any]] = field(default_factory=list)
@@ -642,13 +694,63 @@ class SessionState:
 
     def current_start(self) -> str:
         if not self.round_pairs:
-            return ""
+            return self.homeward_start if self.is_homeward() else ""
         if self.round_index >= len(self.round_pairs):
             return self.round_pairs[-1]["target"]
         return self.round_pairs[self.round_index]["start"]
 
     def is_realm_master(self) -> bool:
         return self.goal == "realm_master"
+
+    def is_homeward(self) -> bool:
+        return self.goal == "homeward"
+
+    def lanterns(self) -> int:
+        return self.item_count("Progressive Lantern")
+
+    def light_full(self) -> bool:
+        return self.is_homeward() and self.lanterns() >= self.lantern_count
+
+    def memories_unlocked(self) -> int:
+        per = max(1, self.memories_per_recollection)
+        return min(self.memory_count, per * (1 + self.item_count("Recollection")))
+
+    def memory_found(self, index: int) -> bool:
+        return 0 <= index < len(self.location_memory_ids) and self.location_memory_ids[index] in self.checked_locations
+
+    def flares_used(self) -> int:
+        return int((self.progress_entries.get("homeward") or {}).get("flares") or 0)
+
+    def flares_remaining(self) -> int:
+        return max(0, self.item_count("Flare") - self.flares_used())
+
+    def homeward_payload(self) -> dict[str, Any] | None:
+        """HUD data for a Homeward game (None in other games)."""
+        if not self.is_homeward():
+            return None
+        unlocked = self.memories_unlocked()
+        rows: list[dict[str, Any]] = []
+        for index in range(self.memory_count):
+            found = self.memory_found(index)
+            known = index < unlocked or found
+            term = ""
+            if known and index < len(self.memories):
+                term = str(self.memories[index].get("term") or "")
+            rows.append({"index": index + 1, "term": term, "unlocked": index < unlocked, "found": found})
+        return {
+            "home": self.goal_article(),
+            "lanterns": min(self.lanterns(), self.lantern_count),
+            "lantern_count": self.lantern_count,
+            "starting_light": self.starting_light,
+            "light_full": self.light_full(),
+            "memories_ready": self.memories_ready,
+            "memory_count": self.memory_count,
+            "memories_unlocked": unlocked,
+            "memories_found": sum(1 for row in rows if row["found"]),
+            "memories": rows,
+            "flares": self.flares_remaining(),
+            "flare_seconds": FLARE_SECONDS,
+        }
 
     def reset_compass(self) -> None:
         self.warmer_colder = None
@@ -774,6 +876,9 @@ class SessionState:
     def boss_ready(self) -> bool:
         if self.practice or self.is_realm_master():
             return False
+        if self.is_homeward():
+            # Home: links to it stay dark until the last Lantern.
+            return self.lanterns() >= self.lantern_count
         return self.fragments() >= self.required_fragments
 
     def unlocked_rounds(self) -> int:
@@ -1265,6 +1370,7 @@ class SessionState:
             "live_branch_targets": self.live_branch_targets(),
             "branch_keys_available": self.branch_keys_available(),
             "revealed_crossroad": self.revealed_crossroad(),
+            "homeward": self.homeward_payload(),
         }
 
 
@@ -1274,6 +1380,7 @@ class APConnection:
         self.ws: Any = None
         self.reader_task: asyncio.Task | None = None
         self.send_lock = asyncio.Lock()
+        self._memories_task: asyncio.Task | None = None
         self.server = ""
         self.slot_name = ""
         self.password = ""
@@ -1498,6 +1605,8 @@ class APConnection:
         self.state.received_items.clear()
         self.state.boss_completed = False
         self.state.goal_status_sent = False
+        self.state.memories = []
+        self.state.memories_ready = False
         self.state.reset_compass()
         self.state.pending_events.clear()
         self.state.bingo_letterpairs = False
@@ -1621,6 +1730,10 @@ class APConnection:
                 self.state.connected_to_ap = False
                 self.ws = None
                 msg = str(exc)
+                if isinstance(exc, UnsupportedSeedError):
+                    self.state.last_error = msg
+                    LOG.info("AP seed not supported by this client; not retrying: %s", msg)
+                    return
                 if "ConnectionRefused" in msg:
                     self.state.last_error = self._friendly_connection_error(msg)
                     LOG.info("AP connection refused; not retrying: %s", self.state.last_error)
@@ -1697,6 +1810,12 @@ class APConnection:
             if cmd == "RoomInfo":
                 self._room_seed = str(packet.get("seed_name") or "")
             elif cmd == "Connected":
+                goal = str((packet.get("slot_data") or {}).get("goal") or "grand_goal").strip().lower()
+                if goal not in KNOWN_GOALS:
+                    raise UnsupportedSeedError(
+                        f"This seed uses a goal this Wikipelago client doesn't know ({goal[:40]}). "
+                        "Update Wikipelago to the latest version."
+                    )
                 self.state.connected_to_ap = True
                 self.state.last_error = ""
                 self._apply_connected(packet)
@@ -1707,6 +1826,7 @@ class APConnection:
                 await self._request_clicks_from_storage()
                 await self._request_travel_from_storage()
                 await self._request_progress_from_storage()
+                await self._request_memories_from_storage()
             elif cmd == "ConnectionRefused":
                 self.state.last_error = f"ConnectionRefused: {packet.get('errors', [])}"
                 raise RuntimeError(self.state.last_error)
@@ -1873,7 +1993,16 @@ class APConnection:
             ]
 
         goal_raw = str(slot_data.get("goal") or "grand_goal").strip().lower()
-        self.state.goal = goal_raw if goal_raw in ("grand_goal", "realm_master") else "grand_goal"
+        self.state.goal = goal_raw if goal_raw in KNOWN_GOALS else "grand_goal"
+        self.state.homeward_start = ""
+        if self.state.is_homeward():
+            start_raw = str(slot_data.get("homeward_start") or "").strip()
+            self.state.homeward_start = self._canonicalize_known_title(start_raw)
+            self.state.lantern_count = max(0, int(slot_data.get("lantern_count") or 0))
+            self.state.starting_light = max(1, int(slot_data.get("starting_light") or 3))
+            self.state.memory_count = max(0, int(slot_data.get("memory_count") or 0))
+            self.state.memories_per_recollection = max(1, int(slot_data.get("memories_per_recollection") or 5))
+            self.state.flare_count = max(0, int(slot_data.get("flare_count") or 0))
         self.state.topic_portals = bool(slot_data.get("topic_portals", False))
         self.state.check_count = int(slot_data.get("check_count", len(self.state.round_pairs)))
         self.state.required_fragments = int(slot_data.get("required_fragments", self.state.required_fragments))
@@ -1962,6 +2091,15 @@ class APConnection:
                         continue
                 branch_loc_ids.append(parsed_ids)
         self.state.location_branch_ids = branch_loc_ids
+        memory_ids_raw = location_ids.get("memories") if isinstance(location_ids, dict) else None
+        memory_ids: list[int] = []
+        if isinstance(memory_ids_raw, list):
+            for value in memory_ids_raw:
+                try:
+                    memory_ids.append(int(value))
+                except Exception:
+                    continue
+        self.state.location_memory_ids = memory_ids
         bingo_ids_raw = location_ids.get("bingo_letterpairs") if isinstance(location_ids, dict) else None
         bingo_ids: dict[str, dict[str, int]] = {}
         if isinstance(bingo_ids_raw, dict):
@@ -2018,6 +2156,8 @@ class APConnection:
         if owner != self.state.progress_owner:
             self.state.progress_owner = owner
             self.state.progress_entries = {}
+            self.state.memories = []
+        self.state.memories_ready = False
         for key, entry in list(self.state.progress_entries.items()):
             if entry.get("target"):
                 self._apply_stored_target(key, entry["target"])
@@ -2524,6 +2664,9 @@ class APConnection:
             asyncio.create_task(self._apply_clicks_storage_payload(keys.get(clicks_key), source="Retrieved"))
         if any(key in keys for key in travel_keys):
             asyncio.create_task(self._apply_travel_retrieved(*(keys.get(key) for key in travel_keys)))
+        memories_key = self._memories_storage_key()
+        if memories_key in keys:
+            asyncio.create_task(self._apply_memories_storage_payload(keys.get(memories_key), source="Retrieved"))
 
     def _resolve_set_reply(self, packet: dict[str, Any]) -> None:
         key = packet.get("key")
@@ -2534,6 +2677,8 @@ class APConnection:
             asyncio.create_task(self._apply_clicks_storage_payload(raw, source="SetReply"))
         elif key == self._progress_storage_key():
             asyncio.create_task(self._apply_progress_storage_payload(raw, self.state.progress_owner))
+        elif key == self._memories_storage_key():
+            asyncio.create_task(self._apply_memories_storage_payload(raw, source="SetReply"))
 
     async def _request_bingo_stamps_from_storage(self) -> None:
         """Subscribe + Get stamped pairs from Archipelago DataStorage."""
@@ -2859,6 +3004,15 @@ class APConnection:
             key = str(key)
             if not isinstance(value, dict):
                 continue
+            if key == "homeward":
+                try:
+                    entries[key] = {
+                        "flares": max(0, int(value.get("flares") or 0)),
+                        "home": bool(value.get("home")),
+                    }
+                except (TypeError, ValueError):
+                    pass
+                continue
             if key == "uses":
                 try:
                     uses = {
@@ -2889,6 +3043,11 @@ class APConnection:
         the most rerolled target wins (ties by title), and use counts keep the newest round's highest."""
         if not mine or not theirs:
             return dict(mine or theirs or {})
+        if key == "homeward":
+            return {
+                "flares": max(int(mine.get("flares") or 0), int(theirs.get("flares") or 0)),
+                "home": bool(mine.get("home")) or bool(theirs.get("home")),
+            }
         if key != "uses":
             return dict(max(mine, theirs, key=lambda entry: (entry["n"], entry["target"])))
         if mine["round"] != theirs["round"]:
@@ -2975,6 +3134,10 @@ class APConnection:
             if merged != stored.get(key):
                 behind.append(key)
         state.progress_storage_ready = True
+        if state.is_homeward() and (state.progress_entries.get("homeward") or {}).get("home"):
+            # Home was reached in an earlier session (Homeward has no goal location to read back).
+            state.boss_completed = True
+            state.goal_status_sent = True
         state.sync_target_reroll_counter()
         state.sync_back_counter()
         state.target_rerolls_used = max(state.target_rerolls_used, state.stored_round_uses("rerolls"))
@@ -3202,6 +3365,9 @@ class APConnection:
     async def _canonicalize_active_targets(self) -> None:
         """Resolve active round titles without blocking the event loop."""
         if not self.state.round_pairs:
+            # Homeward: no rounds, only Home.
+            if self.state.goal_article_title:
+                self.state.goal_article_title = await self._canonicalize_title(self.state.goal_article_title)
             return
 
         active_index = min(self.state.round_index, max(len(self.state.round_pairs) - 1, 0))
@@ -3743,6 +3909,320 @@ class APConnection:
             "status": self.state.to_status(),
         }
 
+    def _memories_storage_key(self) -> str:
+        return f"wikipelago_memories_{self.state.team}_{self.state.slot}"
+
+    async def _request_memories_from_storage(self) -> None:
+        if not self.state.is_homeward() or self.ws is None or not self.state.connected_to_ap:
+            return
+        key = self._memories_storage_key()
+        payload = [
+            {"cmd": "SetNotify", "keys": [key]},
+            {"cmd": "Get", "keys": [key]},
+        ]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Memories DataStorage Get/SetNotify request failed: %s", exc)
+
+    def _parse_memories_payload(self, raw: Any) -> list[dict[str, str]]:
+        """A stored Memories list, or [] when it doesn't fit this seed."""
+        if not isinstance(raw, list):
+            return []
+        rows: list[dict[str, str]] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            term = " ".join(str(item.get("term") or "").split())[:MEMORY_TERM_MAX_CHARS]
+            title = str(item.get("title") or "").strip()[:MAX_TITLE_CHARS]
+            if term:
+                rows.append({"term": term, "title": title})
+        return rows if len(rows) >= self.state.memory_count else []
+
+    async def _apply_memories_storage_payload(self, raw: Any, *, source: str) -> None:
+        state = self.state
+        if not state.is_homeward():
+            return
+        stored = self._parse_memories_payload(raw)
+        if stored:
+            state.memories = stored
+            state.memories_ready = True
+            return
+        # A SetReply that doesn't parse keeps what this bridge already picked (no pick/Set loop).
+        if source == "SetReply" or state.memories_ready:
+            return
+        if self._memories_task and not self._memories_task.done():
+            return
+        self._memories_task = asyncio.create_task(self._pick_and_store_memories())
+
+    async def _pick_and_store_memories(self) -> None:
+        """First connection to this Homeward slot: pick the Memories, then store them for every device."""
+        state = self.state
+        owner = state.progress_owner
+        rows: list[dict[str, str]] = []
+        for attempt in range(3):
+            try:
+                rows = await asyncio.to_thread(
+                    self._pick_memories_sync, state.goal_article(), state.memory_count, f"{owner}:memories"
+                )
+            except Exception as exc:
+                LOG.info("Picking Memories failed (attempt %s): %s", attempt + 1, exc)
+                rows = []
+            if rows:
+                break
+            await asyncio.sleep(5)
+        if not rows or owner != state.progress_owner or not state.is_homeward():
+            return
+        state.memories = rows
+        state.memories_ready = True
+        if self.ws is None or not state.connected_to_ap:
+            return
+        # "default" keeps a list another device stored first; its SetReply then replaces this one.
+        payload = [{
+            "cmd": "Set",
+            "key": self._memories_storage_key(),
+            "default": rows,
+            "want_reply": True,
+            "operations": [{"operation": "default", "value": None}],
+        }]
+        try:
+            async with self.send_lock:
+                await self.ws.send(json.dumps(payload))
+        except Exception as exc:
+            LOG.info("Memories DataStorage Set failed: %s", exc)
+
+    @staticmethod
+    def _memory_term_ok(term: str) -> bool:
+        if not 3 <= len(term) <= MEMORY_TERM_MAX_CHARS:
+            return False
+        if not any(ch.isalpha() for ch in term) or term[0].isdigit():
+            return False  # years, dates, numbers
+        return True
+
+    def _memory_term(self, anchor_html: str, title: str) -> str:
+        """The words for a linked page: its title without the qualifier ("Mercury (planet)" -> "Mercury",
+        "Shibuya, Tokyo" -> "Shibuya"), or its link text in the Home article when that is a shorter form of it
+        ("Hachiko" for "Statue of Hachiko"). Longer link text is usually inflected ("Fernsehens"), and the base
+        form still matches it in the text."""
+        from_title = MEMORY_QUALIFIER_RE.sub("", title).split(",")[0].strip()
+        anchor = " ".join(html.unescape(MEMORY_TAG_RE.sub("", anchor_html or "")).split()).rstrip(".,;:")
+        if anchor and self._memory_term_ok(anchor) and memory_fold(anchor) in memory_fold(from_title):
+            return anchor
+        return from_title if self._memory_term_ok(from_title) else ""
+
+    def _link_titles_sync(self, title: str) -> list[str]:
+        titles: list[str] = []
+        plcontinue: str | None = None
+        for _ in range(2):
+            params = {
+                "action": "query",
+                "prop": "links",
+                "titles": title,
+                "redirects": "1",
+                "plnamespace": "0",
+                "pllimit": "max",
+                "format": "json",
+                "formatversion": "2",
+            }
+            if plcontinue:
+                params["plcontinue"] = plcontinue
+            payload = self._wiki_api_json(params)
+            for page in (payload.get("query") or {}).get("pages") or []:
+                for link in page.get("links") or []:
+                    link_title = str(link.get("title") or "").strip()
+                    if link_title:
+                        titles.append(link_title)
+            plcontinue = (payload.get("continue") or {}).get("plcontinue")
+            if not plcontinue:
+                break
+        return titles
+
+    def _memory_candidates_sync(self, home: str, wanted: int) -> dict[str, str]:
+        """Linked article title -> its words, from the Home article's paragraphs first (the words players
+        will meet in other articles), then the rest of the page, then its plain link list."""
+        lang = wiki_language(self.state.wikipedia_language) or "en"
+        pool = article_pool_module()
+        home_key = memory_fold(home)
+        found: dict[str, str] = {}
+        seen_terms: set[str] = set()
+
+        def add(raw_title: str, anchor_html: str = "") -> None:
+            title = " ".join(urllib.parse.unquote(raw_title).replace("_", " ").split())
+            if not title or title in found or len(title) > MAX_TITLE_CHARS:
+                return
+            if memory_fold(title) == home_key or not pool.is_usable_title(title, lang):
+                return
+            anchor_text = html.unescape(MEMORY_TAG_RE.sub("", anchor_html or "")).strip()
+            if anchor_text[:1].islower():
+                return  # a common noun ("region", "rock"): turns up everywhere, not a memory of Home
+            term = self._memory_term(anchor_html, title)
+            key = memory_fold(term)
+            if not term or key in seen_terms or key == home_key:
+                return
+            seen_terms.add(key)
+            found[title] = term
+
+        try:
+            payload = self._wiki_api_json({
+                "action": "parse",
+                "page": home,
+                "prop": "text",
+                "redirects": "1",
+                "formatversion": "2",
+                "format": "json",
+                "parser": "legacy",
+            })
+            text = str((payload.get("parse") or {}).get("text") or "")
+        except Exception as exc:
+            LOG.info("Memories: Home article fetch failed: %s", exc)
+            text = ""
+        for paragraph in MEMORY_PARAGRAPH_RE.findall(text):
+            for href, anchor in MEMORY_ANCHOR_RE.findall(paragraph):
+                add(href, anchor)
+        if len(found) < wanted:
+            for href, anchor in MEMORY_ANCHOR_RE.findall(text):
+                add(href, anchor)
+        if len(found) < wanted:
+            try:
+                for link_title in self._link_titles_sync(home):
+                    add(link_title)
+            except Exception as exc:
+                LOG.info("Memories: Home link list failed: %s", exc)
+        return found
+
+    def _memory_pageviews_sync(self, titles: list[str]) -> dict[str, int]:
+        """Views in the last 30 days, by the titles given (redirects followed)."""
+        views: dict[str, int] = {}
+        for start in range(0, len(titles), 50):
+            batch = titles[start:start + 50]
+            try:
+                payload = self._wiki_api_json({
+                    "action": "query",
+                    "prop": "pageviews",
+                    "titles": "|".join(batch),
+                    "pvipdays": "30",
+                    "redirects": "1",
+                    "formatversion": "2",
+                    "format": "json",
+                })
+            except Exception as exc:
+                LOG.info("Memories: pageviews request failed: %s", exc)
+                continue
+            query = payload.get("query") or {}
+            forward: dict[str, str] = {}
+            for entry in list(query.get("normalized") or []) + list(query.get("redirects") or []):
+                forward[str(entry.get("from") or "")] = str(entry.get("to") or "")
+            by_title: dict[str, int] = {}
+            for page in query.get("pages") or []:
+                daily = page.get("pageviews") or {}
+                by_title[str(page.get("title") or "")] = sum(v for v in daily.values() if isinstance(v, int))
+            for title in batch:
+                resolved = forward.get(title, title)
+                resolved = forward.get(resolved, resolved)
+                views[title] = by_title.get(resolved, 0)
+        return views
+
+    def _pick_memories_sync(self, home: str, count: int, seed_text: str) -> list[dict[str, str]]:
+        """The Memories of Home: pages linked near the start of the Home article (its lead and opening sections,
+        the links most tied to Home), keeping the most read of them so their names turn up in many other
+        articles (a Tokyo district gets Tokyo, Japan, Shinjuku rather than rare local terms).
+        Easiest (most read) first, since the first batch is known from the start."""
+        if not home or count <= 0:
+            return []
+        wanted = max(count * 3, 40)
+        candidates = self._memory_candidates_sync(home, wanted)
+        early = list(candidates)[:wanted]
+        views = self._memory_pageviews_sync(early)
+        ranked = sorted(early, key=lambda title: (-views.get(title, 0), title))
+        rng = random.Random(seed_text)
+        top = ranked[:max(count * 2, 20)]
+        picked = rng.sample(top, min(count, len(top)))
+        picked.sort(key=lambda title: (-views.get(title, 0), title))
+        rows = [{"term": candidates[title], "title": title} for title in picked]
+        if len(rows) < count:
+            # Failsafe for a Home article with few links: well-known pages from the seed's own pool.
+            used = {memory_fold(row["term"]) for row in rows} | {memory_fold(home)}
+            spare = list(self.state.reroll_pool)
+            rng.shuffle(spare)
+            for title in spare:
+                if len(rows) >= count:
+                    break
+                term = self._memory_term("", title)
+                if term and memory_fold(term) not in used:
+                    used.add(memory_fold(term))
+                    rows.append({"term": term, "title": title})
+        return rows[:count]
+
+    def _match_memory(self, before: str, after: str) -> tuple[int, str, bool] | None:
+        """The known Memory whose words cover the clicked spot: (index, term, already found).
+        A Memory may run on into a longer word when it has 5 letters or more ("Japan" in "Japanese")."""
+        state = self.state
+        left = memory_fold(before)
+        text = left + memory_fold(after)
+        pos = len(left)
+        best: tuple[int, str, bool] | None = None
+        for index in range(min(state.memories_unlocked(), len(state.memories))):
+            term = str(state.memories[index].get("term") or "")
+            needle = memory_fold(term)
+            if not needle:
+                continue
+            start = text.find(needle)
+            while start != -1:
+                end = start + len(needle)
+                starts_word = start == 0 or not text[start - 1].isalnum()
+                ends_word = end >= len(text) or not text[end].isalnum() or len(needle) >= 5
+                if start <= pos <= end and starts_word and ends_word:
+                    found = state.memory_found(index)
+                    candidate = (index, term, found)
+                    # Prefer a Memory still to find, then the longest words.
+                    if best is None or (best[2] and not found) or (best[2] == found and len(term) > len(best[1])):
+                        best = candidate
+                    break
+                start = text.find(needle, start + 1)
+        return best
+
+    async def claim_memory(self, before: str, after: str) -> dict[str, Any]:
+        state = self.state
+        state.last_seen = time.time()
+        if not state.connected_to_ap or not state.is_homeward():
+            return {"ok": False, "error": "not in a Homeward game", "status": state.to_status()}
+        if not state.memories_ready:
+            return {"ok": False, "error": "memories are still loading", "status": state.to_status()}
+        match = self._match_memory(before[-MEMORY_CONTEXT_MAX_CHARS:], after[:MEMORY_CONTEXT_MAX_CHARS])
+        if match is None:
+            return {"ok": True, "found": None, "status": state.to_status()}
+        index, term, already = match
+        if already or index >= len(state.location_memory_ids):
+            return {"ok": True, "found": None, "already": {"index": index + 1, "term": term}, "status": state.to_status()}
+        loc_id = state.location_memory_ids[index]
+        scouted = await self.scout_locations([loc_id])
+        await self.send_location_checks([loc_id])
+        await self._append_travel_event("memory", state.last_page, extra={"path": "main", "memory": term})
+        result: dict[str, Any] = {"ok": True, "found": {"index": index + 1, "term": term}}
+        network_item = scouted.get(loc_id)
+        if network_item:
+            sent_text = self._format_send_text(network_item)
+            if sent_text:
+                result["sent_text"] = sent_text
+        result["status"] = state.to_status()
+        return result
+
+    async def use_flare(self) -> dict[str, Any]:
+        state = self.state
+        state.last_seen = time.time()
+        if not state.connected_to_ap or not state.is_homeward():
+            return {"ok": False, "error": "not in a Homeward game", "status": state.to_status()}
+        if not state.progress_ready():
+            return {"ok": False, "error": "progress not loaded yet", "status": state.to_status()}
+        if state.flares_remaining() <= 0:
+            return {"ok": False, "error": "no flares left", "status": state.to_status()}
+        entry = dict(state.progress_entries.get("homeward") or {"home": False})
+        entry["flares"] = state.flares_used() + 1
+        state.progress_entries["homeward"] = entry
+        await self._persist_progress(["homeward"])
+        return {"ok": True, "seconds": FLARE_SECONDS, "status": state.to_status()}
+
     async def use_back(self) -> dict[str, Any]:
         """Consume one Progressive Back charge for the current round (client owns history)."""
         self.state.last_seen = time.time()
@@ -3891,8 +4371,13 @@ class APConnection:
 
         self.state.boss_completed = True
         await self.send_goal_status()
+        if self.state.is_homeward():
+            entry = dict(self.state.progress_entries.get("homeward") or {"flares": 0})
+            entry["home"] = True
+            self.state.progress_entries["homeward"] = entry
+            await self._persist_progress(["homeward"])
         await self._append_travel_event(
-            "grand_goal",
+            "home" if self.state.is_homeward() else "grand_goal",
             self.state.last_page or goal_title,
             extra={"path": "main"},
         )
@@ -4513,6 +4998,23 @@ class App:
         status_code = 200 if result.get("ok") else 400
         return web.json_response(result, status=status_code)
 
+    async def session_memory(self, request: web.Request) -> web.StreamResponse:
+        session = self.sessions.get(request.match_info["sid"])
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        data = await read_json_body(request)
+        before = str(data.get("before") or "")[-MEMORY_CONTEXT_MAX_CHARS:]
+        after = str(data.get("after") or "")[:MEMORY_CONTEXT_MAX_CHARS]
+        result = await session.conn.claim_memory(before, after)
+        return web.json_response(result, status=200 if result.get("ok") else 400)
+
+    async def session_flare(self, request: web.Request) -> web.StreamResponse:
+        session = self.sessions.get(request.match_info["sid"])
+        if not session:
+            return web.json_response({"ok": False, "error": "invalid session"}, status=404)
+        result = await session.conn.use_flare()
+        return web.json_response(result, status=200 if result.get("ok") else 400)
+
     async def session_teleport(self, request: web.Request) -> web.StreamResponse:
         sid = request.match_info["sid"]
         session = self.sessions.get(sid)
@@ -4619,6 +5121,8 @@ class App:
         app.router.add_post("/api/session/{sid}/bingo-stamp", self.session_use_bingo_stamp)
         app.router.add_post("/api/session/{sid}/reroll-target", self.session_reroll_target)
         app.router.add_post("/api/session/{sid}/use-back", self.session_use_back)
+        app.router.add_post("/api/session/{sid}/memory", self.session_memory)
+        app.router.add_post("/api/session/{sid}/flare", self.session_flare)
         app.router.add_post("/api/session/{sid}/teleport", self.session_teleport)
         app.router.add_get("/api/session/{sid}/journey", self.session_journey)
         if debug_menu_enabled():

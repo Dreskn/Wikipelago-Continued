@@ -48,7 +48,7 @@ jobs:
         shell: pwsh
         run: ./world/build_apworld.ps1
 
-      - name: Generate the six ci_generate.py seeds (EN, FR, PL, Topic Realms, Realm Master)
+      - name: Generate the seven ci_generate.py seeds (EN, FR, PL, Topic Realms, Realm Master, Homeward)
         env:
           SKIP_REQUIREMENTS_UPDATE: "1"
         run: |

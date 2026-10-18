@@ -30,7 +30,8 @@ Wikipelago:
   # (answer page preferred from enabled categories).
   # goal: grand_goal (fragments, then the Grand Goal question) |
   #   realm_master (clear every branch / Realm; needs branch_count >= 1; no fragments or Grand Goal;
-  #   a Realm opens with its Portal or keys alone, no crossroad round needed).
+  #   a Realm opens with its Portal or keys alone, no crossroad round needed) |
+  #   homeward (play in the dark and find your way Home; see the Homeward section below).
   goal: grand_goal
   progression_balancing: 50
   check_count: 40
@@ -38,6 +39,25 @@ Wikipelago:
   additional_fragments_in_pool: 2
   start_rounds_unlocked: 10
   rounds_per_unlock: 5
+
+  # =============================================================================
+  # Homeward (only with goal: homeward)
+  # =============================================================================
+  # The page is dark except for a band of light that follows your mouse (the middle of the
+  # screen on a phone). Home is shown from the start, but links to it stay dark until you
+  # have every Lantern. No rounds or Realms: the checks are Memories of Home, names and words
+  # from the Home article. Spot one in the text of any page, in your light, and claim it
+  # with Remember. Round, branch and reroll options are ignored.
+  # lantern_count: Lanterns in the pool (1–8). Each makes the light taller; the last lights the whole page.
+  # starting_light: lines of text lit before any Lantern (1–12); each Lantern adds the same again.
+  # memory_count: Memories to find, one check each (5–60).
+  # memories_per_recollection: Memories known from the start, and how many more each Recollection reveals (1–20).
+  # flare_count: Flares in the pool (0–20). A Flare lights the whole page for a few seconds, once.
+  lantern_count: 4
+  starting_light: 3
+  memory_count: 20
+  memories_per_recollection: 5
+  flare_count: 3
 
   # =============================================================================
   # Progressive tools — Back & target rerolls

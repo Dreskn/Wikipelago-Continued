@@ -67,4 +67,9 @@ PORTAL_ITEM_BY_TOPIC: dict[str, str] = {
 for index, portal_name in enumerate(PORTAL_ITEM_BY_TOPIC.values(), start=50):
     item_table[portal_name] = WikipelagoItemData(ITEM_OFFSET + index, ItemClassification.progression)
 
+# Homeward (1.2): after the Portals (+50..+67).
+item_table["Progressive Lantern"] = WikipelagoItemData(ITEM_OFFSET + 68, ItemClassification.progression)
+item_table["Recollection"] = WikipelagoItemData(ITEM_OFFSET + 69, ItemClassification.progression)
+item_table["Flare"] = WikipelagoItemData(ITEM_OFFSET + 70, ItemClassification.useful)
+
 PORTAL_ITEM_NAMES: tuple[str, ...] = tuple(PORTAL_ITEM_BY_TOPIC.values())

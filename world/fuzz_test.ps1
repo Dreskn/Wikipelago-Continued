@@ -371,9 +371,15 @@ function Get-ModelPrediction($S) {
     $violations = New-Object System.Collections.Generic.List[object]
     $notes = New-Object System.Collections.Generic.List[string]
     $categories = @(Get-CategoryKeys $S | Where-Object { $S[$_] })
+    $goal = [string]$S.goal
+    $isGrandGoal = $goal -eq "grand_goal"
+    $isRealmMaster = $goal -eq "realm_master"
+    $isHomeward = $goal -eq "homeward"
+    # Homeward has no rounds or branches: its checks are Memories.
     $checkCount = [int]$S.check_count
-    $isGrandGoal = ([string]$S.goal) -ne "realm_master"
+    if ($isHomeward) { $checkCount = 0 }
     $branchCount = [Math]::Max(0, [Math]::Min([int]$S.branch_count, $MaxBranches))
+    if ($isHomeward) { $branchCount = 0 }
     $branchLength = [Math]::Max(1, [Math]::Min([int]$S.branch_length, $MaxBranchLength))
     $topicPortals = [bool]$S.topic_portals -and $branchCount -gt 0
     $bingo = [bool]$S.toggle_bingo_letterpairs
@@ -382,7 +388,7 @@ function Get-ModelPrediction($S) {
 
     # generate_early, in order.
     if ($categories.Count -eq 0) { $violations.Add((Get-ReasonInfo "no_category")) }
-    if (-not $isGrandGoal -and $branchCount -le 0) { $violations.Add((Get-ReasonInfo "realm_master_no_branch")) }
+    if ($isRealmMaster -and $branchCount -le 0) { $violations.Add((Get-ReasonInfo "realm_master_no_branch")) }
     if ($branchCount -gt 0 -and $checkCount -lt 2) { $violations.Add((Get-ReasonInfo "branch_needs_two_rounds")) }
     if ($branchCount -gt [Math]::Max(0, $checkCount - 1)) { $violations.Add((Get-ReasonInfo "branch_exceeds_crossroads")) }
     # (article pool size: data-dependent, not modelled)
@@ -397,7 +403,18 @@ function Get-ModelPrediction($S) {
     $bingoLocations = (2 * $grid + 3) * $boards
     if (-not $bingo) { $bingoLocations = 0 }
     $branchLocations = $branchCount * $branchLength
-    $free = $checkCount + $bingoLocations + $branchLocations
+    $memories = 0
+    $lanterns = 0
+    $recollections = 0
+    $flares = 0
+    if ($isHomeward) {
+        $memories = [int]$S.memory_count
+        $perRecollection = [Math]::Max(1, [int]$S.memories_per_recollection)
+        $recollections = [Math]::Max(0, [int][Math]::Floor(($memories + $perRecollection - 1) / $perRecollection) - 1)
+        $lanterns = [int]$S.lantern_count
+        $flares = [int]$S.flare_count
+    }
+    $free = $checkCount + $bingoLocations + $branchLocations + $memories
 
     $fragments = 0
     if ($isGrandGoal) {
@@ -420,6 +437,7 @@ function Get-ModelPrediction($S) {
     $display = @($DisplayToggleKeys | Where-Object { $S[$_] }).Count
     $back = [Math]::Max(0, [int]$S.back_depth_unlocks)
     $reroll = [Math]::Max(0, [int]$S.target_reroll_unlocks)
+    if ($isHomeward) { $reroll = 0 }
     $cardUnlocks = 0
     $stamps = 0
     if ($bingo) {
@@ -432,7 +450,7 @@ function Get-ModelPrediction($S) {
     if ($topicPortals) { $portals = $branchCount }
     $traps = [int]$S.trap_count
 
-    $mandatory = $fragments + 2 + $back + $reroll + $cardUnlocks + $stamps + $roundAccess + $branchKeys + $portals + $searchLetters + $scroll + $display + $traps
+    $mandatory = $fragments + 2 + $back + $reroll + $cardUnlocks + $stamps + $roundAccess + $branchKeys + $portals + $searchLetters + $scroll + $display + $traps + $lanterns + $recollections + $flares
     if ($mandatory -gt $free) { $violations.Add((Get-ReasonInfo "item_math")) }
 
     $counts = [ordered]@{
@@ -449,6 +467,9 @@ function Get-ModelPrediction($S) {
         "Round Access" = $roundAccess
         "Branch Key" = $branchKeys
         "Portal" = $portals
+        "Progressive Lantern" = $lanterns
+        "Recollection" = $recollections
+        "Flare" = $flares
         "Footnote" = [Math]::Max(0, $free - $mandatory)
     }
     $trapType = [string]$S.trap_type
@@ -1228,6 +1249,14 @@ Add-ExpectCase "expect-minimal" (Copy-Settings $defaults @{
     check_count = 10; required_fragments = 1; additional_fragments_in_pool = 0; toggle_bingo_letterpairs = $false
     branch_count = 0; back_depth_unlocks = 0; target_reroll_unlocks = 0; trap_count = 0
 }) "accept" $null
+Add-ExpectCase "expect-homeward" (Copy-Settings $defaults @{
+    goal = "homeward"; memory_count = 20; memories_per_recollection = 5; lantern_count = 4; flare_count = 3
+    branch_count = 3; toggle_bingo_letterpairs = $false
+}) "accept" $null
+Add-ExpectCase "reject-homeward-item-math" (Copy-Settings $defaults @{
+    goal = "homeward"; memory_count = 5; memories_per_recollection = 1; lantern_count = 8; flare_count = 20
+    toggle_bingo_letterpairs = $false
+}) "item_math" $null
 Add-ExpectCase "reject-no-category" (Copy-Settings $defaults (Get-OnlyCategories $spec @())) "no_category" $null
 Add-ExpectCase "reject-realm-master-no-branch" (Copy-Settings $defaults @{ goal = "realm_master"; branch_count = 0 }) "realm_master_no_branch" $null
 Add-ExpectCase "reject-bingo-no-boards" (Copy-Settings $defaults @{

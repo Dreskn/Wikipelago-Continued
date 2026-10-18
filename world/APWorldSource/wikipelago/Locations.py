@@ -17,6 +17,9 @@ BINGO_BOARD_STRIDE = 2 * MAX_BINGO_GRID + 3  # 43
 BRANCH_LOCATION_OFFSET = 1_890_000
 MAX_BRANCHES = 8
 MAX_BRANCH_LENGTH = 20
+# Homeward: one location per Memory of Home.
+MEMORY_LOCATION_OFFSET = 1_895_000
+MAX_MEMORIES = 60
 
 
 def _bingo_line_index(kind: str, index: int = 0) -> int:
@@ -47,6 +50,11 @@ def branch_location_code(branch_index: int, round_index: int) -> int:
     return BRANCH_LOCATION_OFFSET + (branch_index - 1) * MAX_BRANCH_LENGTH + round_index
 
 
+def memory_location_name(index: int) -> str:
+    """1-based Memory number."""
+    return f"Memory {index}"
+
+
 location_table: dict[str, WikipelagoLocationData] = {
     **{
         f"Round {index} Complete": WikipelagoLocationData(LOCATION_OFFSET + index)
@@ -59,6 +67,10 @@ location_table: dict[str, WikipelagoLocationData] = {
         )
         for branch in range(1, MAX_BRANCHES + 1)
         for round_index in range(1, MAX_BRANCH_LENGTH + 1)
+    },
+    **{
+        memory_location_name(index): WikipelagoLocationData(MEMORY_LOCATION_OFFSET + index)
+        for index in range(1, MAX_MEMORIES + 1)
     },
 }
 

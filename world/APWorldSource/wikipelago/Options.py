@@ -454,11 +454,58 @@ class Goal(Choice):
     """How the seed is won.
     grand_goal: collect Required Fragments, then find the answer to the Grand Goal question.
     realm_master: clear the last round of every branch / Realm. Needs Branch Count of at least 1;
-    Knowledge Fragments and the Grand Goal are not generated."""
+    Knowledge Fragments and the Grand Goal are not generated.
+    homeward: play in the dark and find your way Home (see the Homeward options). No rounds,
+    Realms, Knowledge Fragments or Grand Goal; the checks are Memories of Home."""
     display_name = "Goal"
     option_grand_goal = 0
     option_realm_master = 1
+    option_homeward = 2
     default = 0
+
+
+class LanternCount(Range):
+    """Homeward: Lanterns in the item pool. Each one makes your light taller and the last one
+    lights the whole page. Links to Home stay dark until you have every Lantern."""
+    display_name = "Lanterns"
+    range_start = 1
+    range_end = 8
+    default = 4
+
+
+class StartingLight(Range):
+    """Homeward: lines of text your light shows before any Lantern. Each Lantern adds the same
+    amount again, and the last Lantern lights the whole page."""
+    display_name = "Starting Light"
+    range_start = 1
+    range_end = 12
+    default = 3
+
+
+class MemoryCount(Range):
+    """Homeward: Memories of Home to find, one check each. Memories are names and words from the
+    Home article: spot one in the text of any page, in your light, and claim it with Remember."""
+    display_name = "Memories"
+    range_start = 5
+    range_end = 60
+    default = 20
+
+
+class MemoriesPerRecollection(Range):
+    """Homeward: Memories you know from the start, and how many more each Recollection item reveals."""
+    display_name = "Memories per Recollection"
+    range_start = 1
+    range_end = 20
+    default = 5
+
+
+class FlareCount(Range):
+    """Homeward: Flares in the item pool. A Flare lights the whole page for a few seconds; each one
+    can be used once."""
+    display_name = "Flares"
+    range_start = 0
+    range_end = 20
+    default = 3
 
 
 @dataclass
@@ -467,6 +514,12 @@ class WikipelagoOptions(PerGameCommonOptions):
     goal: Goal
     required_fragments: RequiredFragments
     additional_fragments_in_pool: AdditionalFragmentsInPool
+    # Homeward
+    lantern_count: LanternCount
+    starting_light: StartingLight
+    memory_count: MemoryCount
+    memories_per_recollection: MemoriesPerRecollection
+    flare_count: FlareCount
     # Rounds
     check_count: CheckCount
     start_rounds_unlocked: StartRoundsUnlocked
@@ -535,6 +588,7 @@ class WikipelagoOptions(PerGameCommonOptions):
 # Sections of the Launcher's template and the website's options page, after Archipelago's own settings.
 wikipelago_option_groups = [
     OptionGroup("Goal", [Goal, RequiredFragments, AdditionalFragmentsInPool]),
+    OptionGroup("Homeward", [LanternCount, StartingLight, MemoryCount, MemoriesPerRecollection, FlareCount]),
     OptionGroup("Rounds", [CheckCount, StartRoundsUnlocked, RoundsPerUnlock]),
     OptionGroup("Realms & side roads", [BranchCount, BranchLength, TopicPortals, AdditionalBranchKeys]),
     OptionGroup("Tools", [BackDepthStart, BackDepthUnlocks, TargetRerollsStart, TargetRerollUnlocks]),
