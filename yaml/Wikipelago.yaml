@@ -45,11 +45,14 @@ Wikipelago:
   # =============================================================================
   # The page is dark except for a band of light that follows your mouse (the middle of the
   # screen on a phone). Home is shown from the start, but links to it stay dark until you
-  # have every Lantern. No rounds or Realms: the checks are Memories of Home, names and words
-  # from the Home article. Spot one in the text of any page, in your light, and claim it
-  # with Remember. Round, branch and reroll options are ignored.
-  # lantern_count: Lanterns in the pool (1–8). Each makes the light taller; the last lights the whole page.
-  # starting_light: lines of text lit before any Lantern (1–12); each Lantern adds the same again.
+  # have every Lantern. No rounds or Realms: the checks are Memories, well-known names from your
+  # categories. Spot one in the text of any page, in your light, and claim it with Remember.
+  # With every Lantern but one, the last batch (memories of Home, names from the Home article)
+  # appears, and Head home replaces SOS: it takes you to a page that links to Home (once a minute).
+  # Round, branch and reroll options are ignored.
+  # lantern_count: Lanterns in the pool (1–8). Each adds 2 lines of light; the last lights the whole page.
+  # starting_light: lines of text lit before any Lantern (1–12), so 3 gives 3, 5, 7, 9... Around the
+  #   light, the lines the next Lantern would add are dimly readable; the rest of the page is dark.
   # memory_count: Memories to find, one check each (5–60).
   # memories_per_recollection: Memories known from the start, and how many more each Recollection reveals (1–20).
   # flare_count: Flares in the pool (0–20). A Flare lights the whole page for a few seconds, once.

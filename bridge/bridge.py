@@ -578,6 +578,15 @@ def memory_fold(text: str) -> str:
     return "".join(out)
 
 
+def memory_overlaps(key: str, used: set[str]) -> bool:
+    """True when this Memory (folded) repeats one already picked: the same words, or one inside the other
+    ("Academy Award" / "Academy Awards", "Paris" / "Paris Saint-Germain")."""
+    for other in used:
+        if key == other or (len(key) >= 4 and key in other) or (len(other) >= 4 and other in key):
+            return True
+    return False
+
+
 @dataclass
 class SessionState:
     connected_to_ap: bool = False
@@ -660,6 +669,8 @@ class SessionState:
     memory_count: int = 0
     memories_per_recollection: int = 5
     flare_count: int = 0
+    # 0-based index where the memories of Home (the last batch) start; memory_count when there are none.
+    home_memory_index: int = 0
     location_memory_ids: list[int] = field(default_factory=list)
     # Memories of Home: [{"term", "title"}], picked once from the Home article and kept in DataStorage
     # (wikipelago_memories_{team}_{slot}) so every device and every session sees the same list.
@@ -711,9 +722,19 @@ class SessionState:
     def light_full(self) -> bool:
         return self.is_homeward() and self.lanterns() >= self.lantern_count
 
-    def memories_unlocked(self) -> int:
+    def home_light_ready(self) -> bool:
+        """Every Lantern but one: the memories of Home show and Head home opens."""
+        return self.lanterns() >= max(0, self.lantern_count - 1)
+
+    def memory_unlocked(self, index: int) -> bool:
+        """Revealed by Recollections (first batch from the start); the memories of Home also need the light."""
         per = max(1, self.memories_per_recollection)
-        return min(self.memory_count, per * (1 + self.item_count("Recollection")))
+        if not 0 <= index < min(self.memory_count, per * (1 + self.item_count("Recollection"))):
+            return False
+        return index < self.home_memory_index or self.home_light_ready()
+
+    def memories_unlocked(self) -> int:
+        return sum(1 for index in range(self.memory_count) if self.memory_unlocked(index))
 
     def memory_found(self, index: int) -> bool:
         return 0 <= index < len(self.location_memory_ids) and self.location_memory_ids[index] in self.checked_locations
@@ -728,15 +749,20 @@ class SessionState:
         """HUD data for a Homeward game (None in other games)."""
         if not self.is_homeward():
             return None
-        unlocked = self.memories_unlocked()
         rows: list[dict[str, Any]] = []
         for index in range(self.memory_count):
             found = self.memory_found(index)
-            known = index < unlocked or found
+            unlocked = self.memory_unlocked(index)
             term = ""
-            if known and index < len(self.memories):
+            if (unlocked or found) and index < len(self.memories):
                 term = str(self.memories[index].get("term") or "")
-            rows.append({"index": index + 1, "term": term, "unlocked": index < unlocked, "found": found})
+            rows.append({
+                "index": index + 1,
+                "term": term,
+                "unlocked": unlocked,
+                "found": found,
+                "home": index >= self.home_memory_index,
+            })
         return {
             "home": self.goal_article(),
             "lanterns": min(self.lanterns(), self.lantern_count),
@@ -745,8 +771,9 @@ class SessionState:
             "light_full": self.light_full(),
             "memories_ready": self.memories_ready,
             "memory_count": self.memory_count,
-            "memories_unlocked": unlocked,
+            "memories_unlocked": sum(1 for row in rows if row["unlocked"]),
             "memories_found": sum(1 for row in rows if row["found"]),
+            "home_light_ready": self.home_light_ready(),
             "memories": rows,
             "flares": self.flares_remaining(),
             "flare_seconds": FLARE_SECONDS,
@@ -1381,6 +1408,8 @@ class APConnection:
         self.reader_task: asyncio.Task | None = None
         self.send_lock = asyncio.Lock()
         self._memories_task: asyncio.Task | None = None
+        # Homeward: (Home, articles linking to it) for Head home.
+        self._home_backlinks: tuple[str, list[str]] | None = None
         self.server = ""
         self.slot_name = ""
         self.password = ""
@@ -2003,6 +2032,9 @@ class APConnection:
             self.state.memory_count = max(0, int(slot_data.get("memory_count") or 0))
             self.state.memories_per_recollection = max(1, int(slot_data.get("memories_per_recollection") or 5))
             self.state.flare_count = max(0, int(slot_data.get("flare_count") or 0))
+            home_from = int(slot_data.get("home_memories_from") or 0)
+            # 1-based in slot_data, 0 when the seed has a single batch (no memories of Home).
+            self.state.home_memory_index = home_from - 1 if home_from > 0 else self.state.memory_count
         self.state.topic_portals = bool(slot_data.get("topic_portals", False))
         self.state.check_count = int(slot_data.get("check_count", len(self.state.round_pairs)))
         self.state.required_fragments = int(slot_data.get("required_fragments", self.state.required_fragments))
@@ -4058,7 +4090,7 @@ class APConnection:
                 return  # a common noun ("region", "rock"): turns up everywhere, not a memory of Home
             term = self._memory_term(anchor_html, title)
             key = memory_fold(term)
-            if not term or key in seen_terms or key == home_key:
+            if not term or key == home_key or memory_overlaps(key, seen_terms):
                 return
             seen_terms.add(key)
             found[title] = term
@@ -4124,35 +4156,88 @@ class APConnection:
         return views
 
     def _pick_memories_sync(self, home: str, count: int, seed_text: str) -> list[dict[str, str]]:
-        """The Memories of Home: pages linked near the start of the Home article (its lead and opening sections,
-        the links most tied to Home), keeping the most read of them so their names turn up in many other
-        articles (a Tokyo district gets Tokyo, Japan, Shinjuku rather than rare local terms).
-        Easiest (most read) first, since the first batch is known from the start."""
-        if not home or count <= 0:
+        """Every Memory of the seed, in order: well-known names from its categories first, then the memories
+        of Home (the last batch)."""
+        if count <= 0:
             return []
-        wanted = max(count * 3, 40)
-        candidates = self._memory_candidates_sync(home, wanted)
-        early = list(candidates)[:wanted]
-        views = self._memory_pageviews_sync(early)
-        ranked = sorted(early, key=lambda title: (-views.get(title, 0), title))
         rng = random.Random(seed_text)
-        top = ranked[:max(count * 2, 20)]
-        picked = rng.sample(top, min(count, len(top)))
-        picked.sort(key=lambda title: (-views.get(title, 0), title))
-        rows = [{"term": candidates[title], "title": title} for title in picked]
+        home_count = max(0, count - min(self.state.home_memory_index, count))
+        avoid = {memory_fold(home), memory_fold(self.state.homeward_start)}
+        general = self._pick_general_memories_sync(count - home_count, rng, avoid)
+        used = avoid | {memory_fold(row["term"]) for row in general}
+        rows = general + self._pick_home_memories_sync(home, home_count, rng, used)
         if len(rows) < count:
-            # Failsafe for a Home article with few links: well-known pages from the seed's own pool.
-            used = {memory_fold(row["term"]) for row in rows} | {memory_fold(home)}
+            # Failsafe for tiny pools or a Home article with few links: other pages from the seed's own pool.
+            used |= {memory_fold(row["term"]) for row in rows}
             spare = list(self.state.reroll_pool)
             rng.shuffle(spare)
             for title in spare:
                 if len(rows) >= count:
                     break
                 term = self._memory_term("", title)
-                if term and memory_fold(term) not in used:
-                    used.add(memory_fold(term))
+                key = memory_fold(term)
+                if term and not memory_overlaps(key, used):
+                    used.add(key)
                     rows.append({"term": term, "title": title})
         return rows[:count]
+
+    def _pick_general_memories_sync(self, count: int, rng: random.Random, avoid: set[str]) -> list[dict[str, str]]:
+        """Well-known names from the seed's categories, so they turn up in many articles wherever you read:
+        a few pages sampled per category, the most read of each kept, categories taken in turn for variety.
+        Most read first, since the first batch is known from the start."""
+        if count <= 0:
+            return []
+        lang = wiki_language(self.state.wikipedia_language) or "en"
+        try:
+            by_tag = load_practice_topics(lang)
+        except Exception as exc:
+            LOG.info("Memories: pool for %s unavailable: %s", lang, exc)
+            return []
+        seed_titles = {self._norm_title(title) for title in self.state.reroll_pool}
+        if seed_titles:
+            # Only this seed's categories: its reroll pool comes from the enabled ones.
+            by_tag = {tag: [t for t in titles if self._norm_title(t) in seed_titles] for tag, titles in by_tag.items()}
+        tags = sorted(tag for tag, titles in by_tag.items() if titles)
+        rng.shuffle(tags)
+        per_tag = 12
+        sampled = {tag: rng.sample(by_tag[tag], min(per_tag, len(by_tag[tag]))) for tag in tags}
+        views = self._memory_pageviews_sync([title for titles in sampled.values() for title in titles])
+        ranked = {tag: sorted(titles, key=lambda title: (-views.get(title, 0), title)) for tag, titles in sampled.items()}
+        rows: list[dict[str, str]] = []
+        used = set(avoid)
+        for rank in range(per_tag):
+            for tag in tags:
+                if len(rows) >= count:
+                    break
+                if rank >= len(ranked[tag]):
+                    continue
+                title = ranked[tag][rank]
+                term = self._memory_term("", title)
+                key = memory_fold(term)
+                if not term or memory_overlaps(key, used):
+                    continue
+                used.add(key)
+                rows.append({"term": term, "title": title, "views": views.get(title, 0)})
+        rows.sort(key=lambda row: (-int(row["views"]), row["term"]))
+        return [{"term": row["term"], "title": row["title"]} for row in rows]
+
+    def _pick_home_memories_sync(
+        self, home: str, count: int, rng: random.Random, used: set[str]
+    ) -> list[dict[str, str]]:
+        """The memories of Home: pages linked near the start of the Home article (its lead and opening sections,
+        the links most tied to Home), keeping the most read of them so their names turn up in other articles
+        (a Tokyo district gets Tokyo, Japan, Shinjuku rather than rare local terms)."""
+        if not home or count <= 0:
+            return []
+        wanted = max(count * 3, 40)
+        candidates = self._memory_candidates_sync(home, wanted)
+        early = [title for title in list(candidates)[:wanted] if not memory_overlaps(memory_fold(candidates[title]), used)]
+        views = self._memory_pageviews_sync(early)
+        ranked = sorted(early, key=lambda title: (-views.get(title, 0), title))
+        top = ranked[:max(count * 2, 20)]
+        picked = rng.sample(top, min(count, len(top)))
+        picked.sort(key=lambda title: (-views.get(title, 0), title))
+        return [{"term": candidates[title], "title": title} for title in picked]
 
     def _match_memory(self, before: str, after: str) -> tuple[int, str, bool] | None:
         """The known Memory whose words cover the clicked spot: (index, term, already found).
@@ -4162,7 +4247,9 @@ class APConnection:
         text = left + memory_fold(after)
         pos = len(left)
         best: tuple[int, str, bool] | None = None
-        for index in range(min(state.memories_unlocked(), len(state.memories))):
+        for index in range(min(state.memory_count, len(state.memories))):
+            if not state.memory_unlocked(index):
+                continue
             term = str(state.memories[index].get("term") or "")
             needle = memory_fold(term)
             if not needle:
@@ -4207,6 +4294,88 @@ class APConnection:
                 result["sent_text"] = sent_text
         result["status"] = state.to_status()
         return result
+
+    def _home_backlinks_sync(self, home: str) -> list[str]:
+        """Articles that link to Home (no redirects), cached per Home."""
+        cached = getattr(self, "_home_backlinks", None)
+        if cached and cached[0] == home:
+            return list(cached[1])
+        lang = wiki_language(self.state.wikipedia_language) or "en"
+        pool = article_pool_module()
+        payload = self._wiki_api_json({
+            "action": "query",
+            "list": "backlinks",
+            "bltitle": home,
+            "blnamespace": "0",
+            "blfilterredir": "nonredirects",
+            "bllimit": "max",
+            "format": "json",
+            "formatversion": "2",
+        })
+        titles = [
+            str(item.get("title") or "").strip()
+            for item in (payload.get("query") or {}).get("backlinks") or []
+        ]
+        titles = [title for title in titles if title and pool.is_usable_title(title, lang)]
+        self._home_backlinks = (home, titles)
+        return list(titles)
+
+    def _links_home_in_text(self, title: str, home: str) -> bool:
+        """Does this article link to Home in its own paragraphs (not only in a navbox a lens may hide)?"""
+        try:
+            payload = self._wiki_api_json({
+                "action": "parse",
+                "page": title,
+                "prop": "text",
+                "formatversion": "2",
+                "format": "json",
+                "parser": "legacy",
+            })
+        except Exception:
+            return False
+        text = str((payload.get("parse") or {}).get("text") or "")
+        home_key = normalize_title(home)
+        for paragraph in MEMORY_PARAGRAPH_RE.findall(text):
+            for href, _anchor in MEMORY_ANCHOR_RE.findall(paragraph):
+                if normalize_title(urllib.parse.unquote(href).replace("_", " ")) == home_key:
+                    return True
+        return False
+
+    def _home_neighbor_sync(self, home: str, current: str) -> str:
+        """A random article that links to Home, preferring one whose own text holds the link."""
+        skip = {self._norm_title(home), self._norm_title(current)}
+        candidates = [title for title in self._home_backlinks_sync(home) if self._norm_title(title) not in skip]
+        random.shuffle(candidates)
+        for title in candidates[:4]:
+            if self._links_home_in_text(title, home):
+                return title
+        return candidates[0] if candidates else ""
+
+    async def head_home(self) -> dict[str, Any]:
+        """Homeward's SOS: jump to a page that links to Home, with every Lantern but one (same cooldown as SOS)."""
+        state = self.state
+        if not state.home_light_ready():
+            return {"ok": False, "error": "Head home opens with every Lantern but one", "status": state.to_status()}
+        home = state.goal_article()
+        try:
+            title = await asyncio.to_thread(self._home_neighbor_sync, home, state.last_page)
+        except Exception as exc:
+            LOG.info("Head home failed: %s", exc)
+            title = ""
+        if not title:
+            return {"ok": False, "error": "no page linking to Home was found", "status": state.to_status()}
+        resolved = await self._canonicalize_title(title)
+        old_page = state.last_page
+        self._remember_page(resolved)
+        state.last_teleport_at = time.time()
+        await self._append_travel_event("head_home", resolved)
+        return {
+            "ok": True,
+            "teleported": True,
+            "title": resolved,
+            "old_page": old_page,
+            "status": state.to_status(),
+        }
 
     async def use_flare(self) -> dict[str, Any]:
         state = self.state
@@ -4309,6 +4478,9 @@ class APConnection:
                 "cooldown_remaining": remaining,
                 "status": self.state.to_status(),
             }
+
+        if self.state.is_homeward():
+            return await self.head_home()
 
         blocked = self._current_block_titles()
         pool = [title for title in self._seed_pool_titles() if self._norm_title(title) not in blocked]

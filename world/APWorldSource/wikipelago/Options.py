@@ -465,8 +465,10 @@ class Goal(Choice):
 
 
 class LanternCount(Range):
-    """Homeward: Lanterns in the item pool. Each one makes your light taller and the last one
-    lights the whole page. Links to Home stay dark until you have every Lantern."""
+    """Homeward: Lanterns in the item pool. Each one adds 2 lines to your light and the last one
+    lights the whole page. Links to Home stay dark until you have every Lantern. With every
+    Lantern but one, the memories of Home appear and Head home (in place of SOS) takes you to a
+    page that links to Home."""
     display_name = "Lanterns"
     range_start = 1
     range_end = 8
@@ -474,8 +476,9 @@ class LanternCount(Range):
 
 
 class StartingLight(Range):
-    """Homeward: lines of text your light shows before any Lantern. Each Lantern adds the same
-    amount again, and the last Lantern lights the whole page."""
+    """Homeward: lines of text your light shows before any Lantern. Each Lantern adds 2 lines
+    (3, 5, 7, 9...), and the last Lantern lights the whole page. Around the light, the lines the
+    next Lantern would add are dimly readable; the rest of the page is dark."""
     display_name = "Starting Light"
     range_start = 1
     range_end = 12
@@ -483,8 +486,9 @@ class StartingLight(Range):
 
 
 class MemoryCount(Range):
-    """Homeward: Memories of Home to find, one check each. Memories are names and words from the
-    Home article: spot one in the text of any page, in your light, and claim it with Remember."""
+    """Homeward: Memories to find, one check each. Spot one in the text of any page, in your light,
+    and claim it with Remember. Most are well-known names from your categories; the last batch are
+    memories of Home, names from the Home article, shown once you have every Lantern but one."""
     display_name = "Memories"
     range_start = 5
     range_end = 60

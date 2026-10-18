@@ -1045,18 +1045,21 @@ function syncTeleportButton() {
   if (!el.teleportBtn || !el.teleportBtnLabel) return;
   const playable = Boolean(state.status?.connected_to_ap || state.status?.practice);
   const left = teleportSecondsLeft();
-  const ready = playable && left <= 0 && !state.teleportBusy;
+  // Homeward: the button is Head home, open with every Lantern but one.
+  const homeward = homewardInfo();
+  const ready = playable && left <= 0 && !state.teleportBusy && (!homeward || Boolean(homeward.home_light_ready));
+  const name = homeward ? t("homeward.headHome") : t("hud.teleport");
+  let title = t("hud.teleportTitle");
+  if (homeward) title = homeward.home_light_ready ? t("homeward.headHomeTitle") : t("homeward.headHomeLocked");
   el.teleportBtn.disabled = !ready;
-  el.teleportBtnLabel.textContent = left > 0
-    ? t("hud.teleportCooldown", { n: left })
-    : t("hud.teleport");
-  el.teleportBtn.setAttribute("title", t("hud.teleportTitle"));
-  el.teleportBtn.setAttribute("aria-label", t("hud.teleport"));
+  el.teleportBtnLabel.textContent = left > 0 ? t("hud.teleportCooldown", { n: left }) : name;
+  el.teleportBtn.setAttribute("title", title);
+  el.teleportBtn.setAttribute("aria-label", name);
   if (el.phoneSosBtn && el.phoneSosLabel) {
     el.phoneSosBtn.disabled = !ready;
     el.phoneSosLabel.textContent = el.teleportBtnLabel.textContent;
-    el.phoneSosBtn.setAttribute("title", t("hud.teleportTitle"));
-    el.phoneSosBtn.setAttribute("aria-label", t("hud.teleport"));
+    el.phoneSosBtn.setAttribute("title", title);
+    el.phoneSosBtn.setAttribute("aria-label", name);
   }
   if (left > 0 && !teleportUiTimer) {
     teleportUiTimer = window.setInterval(syncTeleportButton, 250);
@@ -1097,7 +1100,7 @@ async function teleportToRandomPage() {
       replaceHistory: true,
       requireConnection: true,
     });
-    toast(t("toast.teleported", { title }), "ok", 5000);
+    toast(t(homewardInfo() ? "homeward.headedHome" : "toast.teleported", { title }), "ok", 5000);
   } catch (err) {
     toast(t("toast.teleportFailed", { error: err?.message || "failed" }), "warn", 5000);
   } finally {
@@ -4330,6 +4333,7 @@ function applyDisplayLocks() {
  * lights the whole page for a few seconds.
  */
 const lamp = { y: null, raf: 0, flareUntil: 0, flareTimer: 0, band: null };
+const LAMP_LINES_PER_LANTERN = 2;
 const MEMORY_CONTEXT_CHARS = 120;
 
 function homewardInfo(status = state.status) {
@@ -4348,10 +4352,10 @@ function lampActive() {
   return Date.now() >= lamp.flareUntil;
 }
 
-/** Lines of light: the starting light, and the same again for each Lantern. */
-function lampLines(info) {
+/** Lines of light with this many Lanterns: the starting light, plus 2 lines per Lantern. */
+function lampLines(info, lanterns = Number(info?.lanterns) || 0) {
   const start = Math.max(1, Number(info?.starting_light) || 3);
-  return start * (Math.max(0, Number(info?.lanterns) || 0) + 1);
+  return start + LAMP_LINES_PER_LANTERN * Math.max(0, lanterns);
 }
 
 function lampLineHeight() {
@@ -4387,18 +4391,37 @@ function drawLamp() {
     lamp.band = null;
     return;
   }
+  const info = homewardInfo();
   const view = lampViewport();
-  const half = (lampLines(homewardInfo()) * lampLineHeight()) / 2;
+  const lineHeight = lampLineHeight();
+  const lanterns = Number(info.lanterns) || 0;
   const center = lampCenterY(view);
-  const bandTop = Math.max(view.top, center - half);
-  const bandBottom = Math.min(view.bottom, center + half);
-  lamp.band = { top: bandTop, bottom: bandBottom };
-  const [above, below] = shade.children;
-  Object.assign(above.style, {
-    left: `${view.left}px`, width: `${view.width}px`, top: `${view.top}px`, height: `${Math.max(0, bandTop - view.top)}px`,
-  });
-  Object.assign(below.style, {
-    left: `${view.left}px`, width: `${view.width}px`, top: `${bandBottom}px`, height: `${Math.max(0, view.bottom - bandBottom)}px`,
+  const coreHalf = (lampLines(info, lanterns) * lineHeight) / 2;
+  // Readable core, then a dim ring as tall as the next Lantern's light, then full dark.
+  // With one Lantern left, the next light is the whole page: everything outside the core is dim.
+  const lastStep = lanterns + 1 >= (Number(info.lantern_count) || 0);
+  const dimHalf = lastStep ? Infinity : (lampLines(info, lanterns + 1) * lineHeight) / 2;
+  const ramp = Math.min(lineHeight * 0.6, 14);
+  lamp.band = { top: Math.max(view.top, center - coreHalf), bottom: Math.min(view.bottom, center + coreHalf) };
+  const y = center - view.top;
+  const px = (value) => `${Math.round(value)}px`;
+  const stops = lastStep
+    ? [
+      `var(--lamp-dim) 0px`, `var(--lamp-dim) ${px(y - coreHalf - ramp)}`, `transparent ${px(y - coreHalf)}`,
+      `transparent ${px(y + coreHalf)}`, `var(--lamp-dim) ${px(y + coreHalf + ramp)}`, `var(--lamp-dim) 100%`,
+    ]
+    : [
+      `var(--lamp-dark) 0px`, `var(--lamp-dark) ${px(y - dimHalf - ramp)}`, `var(--lamp-dim) ${px(y - dimHalf)}`,
+      `var(--lamp-dim) ${px(y - coreHalf - ramp)}`, `transparent ${px(y - coreHalf)}`,
+      `transparent ${px(y + coreHalf)}`, `var(--lamp-dim) ${px(y + coreHalf + ramp)}`,
+      `var(--lamp-dim) ${px(y + dimHalf)}`, `var(--lamp-dark) ${px(y + dimHalf + ramp)}`, `var(--lamp-dark) 100%`,
+    ];
+  Object.assign(shade.style, {
+    left: px(view.left),
+    width: px(view.width),
+    top: px(view.top),
+    height: px(view.bottom - view.top),
+    background: `linear-gradient(to bottom, ${stops.join(", ")})`,
   });
 }
 
@@ -4566,7 +4589,10 @@ function renderHomeward(status) {
     total: Number(info.memory_count) || rows.length,
   });
   const known = rows.filter((row) => row.term);
-  const listKey = JSON.stringify([Boolean(info.memories_ready), known.map((row) => [row.term, Boolean(row.found)])]);
+  const listKey = JSON.stringify([
+    Boolean(info.memories_ready),
+    known.map((row) => [row.term, Boolean(row.found), Boolean(row.home)]),
+  ]);
   if (el.memoriesList.dataset.key !== listKey) {
     el.memoriesList.dataset.key = listKey;
     if (!info.memories_ready) {
@@ -4577,15 +4603,21 @@ function renderHomeward(status) {
     } else {
       el.memoriesList.replaceChildren(...known.map((item) => {
         const row = document.createElement("li");
-        row.className = item.found ? "memory-row found" : "memory-row";
+        row.className = ["memory-row", item.found ? "found" : "", item.home ? "home" : ""].filter(Boolean).join(" ");
         row.textContent = item.term;
         return row;
       }));
     }
   }
-  const locked = rows.filter((row) => !row.unlocked && !row.found).length;
-  el.memoriesLocked.classList.toggle("hidden", !locked || !info.memories_ready);
-  el.memoriesLocked.textContent = locked ? t("homeward.memoriesLocked", { n: locked }) : "";
+  // Memories of Home wait for the light first; once it's there, Recollections reveal them like the others.
+  const hidden = rows.filter((row) => !row.unlocked && !row.found);
+  const homeDark = info.home_light_ready ? 0 : hidden.filter((row) => row.home).length;
+  const locked = hidden.length - homeDark;
+  const lockedLines = [];
+  if (locked) lockedLines.push(t("homeward.memoriesLocked", { n: locked }));
+  if (homeDark) lockedLines.push(t("homeward.homeMemoriesLocked", { n: homeDark }));
+  el.memoriesLocked.classList.toggle("hidden", !lockedLines.length || !info.memories_ready);
+  el.memoriesLocked.textContent = lockedLines.join(" · ");
   const claimable = canRemember(status);
   for (const button of [el.rememberBtn, el.phoneRememberBtn]) if (button) button.disabled = !claimable;
   if (!claimable && state.rememberMode) setRememberMode(false);

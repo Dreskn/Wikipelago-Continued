@@ -3158,24 +3158,17 @@ body.journey-window #journeyPopupBtn {
 }
 
 /* Homeward: the dark around the band of light, Home's links, Remember mode and the sidebar block. */
-:root { --lamp-dark: rgba(5, 6, 12, 0.985); }
-.lamp-shade.hidden { display: none; }
-.lamp-dark {
+/* Full dark (unreadable) and the dim ring around the light (readable with effort). */
+:root {
+  --lamp-dark: rgb(5, 6, 12);
+  --lamp-dim: rgba(5, 6, 12, 0.985);
+}
+.lamp-shade {
   position: fixed;
   z-index: 4;
   pointer-events: none;
-  background: var(--lamp-dark);
 }
-.lamp-top::after,
-.lamp-bottom::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 12px;
-}
-.lamp-top::after { bottom: -12px; background: linear-gradient(var(--lamp-dark), transparent); }
-.lamp-bottom::before { top: -12px; background: linear-gradient(transparent, var(--lamp-dark)); }
+.lamp-shade.hidden { display: none; }
 body.mode-homeward:not(.homeward-light-full) .article-body a.wk-home-link {
   color: inherit !important;
   text-decoration: none !important;
@@ -3238,6 +3231,7 @@ body.mode-homeward .targets-reroll { display: none !important; }
 }
 .memory-row.found { color: var(--muted); border-style: dashed; }
 .memory-row.found::before { content: "\2713  "; color: var(--brass-hi); }
+.memory-row.home { border-color: var(--brass); font-style: italic; }
 .memories-locked { margin: 6px 0 0; font-size: 0.8rem; }
 /* Phones have Remember and Flare in the top bar; keep only the hint above the article. */
 @media (max-width: 899px) {

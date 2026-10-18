@@ -300,6 +300,13 @@ class WikipelagoWorld(World):
     def _memories_per_recollection(self) -> int:
         return max(1, int(self.options.memories_per_recollection.value))
 
+    def _home_memories_from(self) -> int:
+        """First Memory (1-based) of the last batch, the memories of Home; 0 when there is only one batch."""
+        memories = self._memory_count()
+        per = self._memories_per_recollection()
+        batches = (memories + per - 1) // per
+        return per * (batches - 1) + 1 if batches >= 2 else 0
+
     def _recollection_count(self) -> int:
         """Recollections needed to reveal every Memory after the first batch."""
         memories = self._memory_count()
@@ -799,14 +806,21 @@ class WikipelagoWorld(World):
             )
 
         per_recollection = self._memories_per_recollection()
+        home_from = self._home_memories_from()
+        home_lanterns = max(0, self._lantern_count() - 1)
         for memory_index in range(1, self._memory_count() + 1):
             # The first batch is known from the start; each Recollection reveals the next one.
+            # The last batch (memories of Home) also waits for every Lantern but one.
             need = (memory_index - 1) // per_recollection
-            if need <= 0:
+            lanterns = home_lanterns if home_from and memory_index >= home_from else 0
+            if need <= 0 and lanterns <= 0:
                 continue
             set_rule(
                 self.multiworld.get_location(memory_location_name(memory_index), self.player),
-                lambda state, need=need: state.has("Recollection", self.player, need),
+                lambda state, need=need, lanterns=lanterns: (
+                    state.has("Recollection", self.player, need)
+                    and state.has("Progressive Lantern", self.player, lanterns)
+                ),
             )
 
         if self._bingo_enabled():
@@ -926,6 +940,7 @@ class WikipelagoWorld(World):
             "starting_light": int(self.options.starting_light.value),
             "memory_count": self._memory_count(),
             "memories_per_recollection": self._memories_per_recollection(),
+            "home_memories_from": self._home_memories_from(),
             "flare_count": self._flare_count(),
             "round_pairs": self.round_pairs,
             "crossroads": list(getattr(self, "crossroads", []) or []),
