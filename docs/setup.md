@@ -44,7 +44,7 @@ Players do **not** need to install the apworld unless they also generate or host
    - server address + port (example: `archipelago.gg:PORT`)
    - slot name
    - password (if any)
-   - web client: https://wikipelago.dreskn.fr/ (or [Option 2](#option-2--local-client-private--vpn-rooms) if the room is not on the public internet)
+   - web client: https://wikipelago.dreskn.fr/ for archipelago.gg rooms, or [Option 2](#option-2--local-client-private--vpn-rooms) for rooms hosted with the Launcher
 
 For general Archipelago generation help, see the [official setup tutorial](https://archipelago.gg/tutorial/Archipelago/setup/en).
 
@@ -52,7 +52,7 @@ For general Archipelago generation help, see the [official setup tutorial](https
 
 ### Option 1 — Hosted web client
 
-Use this when the Archipelago room is reachable from the public internet (`archipelago.gg:PORT`, or a host with a public IP and open port).
+Use this for rooms on archipelago.gg (`archipelago.gg:PORT`), or any public server that accepts secure (`wss://`) connections. Rooms hosted with the Launcher's **Host** button don't: use [Option 2](#option-2--local-client-private--vpn-rooms) for those.
 
 1. Open https://wikipelago.dreskn.fr/
 2. Optional: pick a **UI language** in the top-right dropdown (menus and toasts only — your YAML still chooses which Wikipedia you race on). The [UI map](ui.md) labels each control.
@@ -65,7 +65,7 @@ Use this when the Archipelago room is reachable from the public internet (`archi
 
 ### Option 2 — Local client (private / VPN rooms)
 
-The hosted site talks to Archipelago **from a public server**. If the room only exists on a LAN, Tailscale, or another private network, that server cannot reach it, and it refuses private addresses (`localhost`, `192.168.x.x`, `10.x.x.x`, Tailscale `100.x.x.x`, ...) on purpose. Run the same web client on a computer that *can* see the room (usually a PC already on that VPN).
+The hosted site talks to Archipelago **from a public server**. If the room only exists on a LAN, Tailscale, or another private network, that server cannot reach it, and it refuses private addresses (`localhost`, `192.168.x.x`, `10.x.x.x`, Tailscale `100.x.x.x`, ...) on purpose. It also only makes secure (`wss://`) connections, which rooms hosted with the Launcher don't accept. Run the same web client on a computer that *can* see the room (usually a PC already on that VPN, or the one hosting it).
 
 1. Install [Python](https://www.python.org/downloads/) **3.10 or newer** from python.org. Tick **Add python.exe to PATH** and the **py** launcher. Microsoft Store Python often fails the starter script.
 2. Get this repository at the **same version as the apworld**, or its latest client-only patch (for example `1.1.1a` for the 1.1.1 apworld): the Source code zip on that [Release](https://github.com/Dreskn/Wikipelago-Continued/releases), or `git clone` and check out the matching tag.
