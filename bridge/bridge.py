@@ -803,6 +803,8 @@ class SessionState:
             "memories": rows,
             "flares": self.flares_remaining(),
             "flare_seconds": FLARE_SECONDS,
+            # So the client can tell which words would stamp a bingo cell (Scrabble letters of this wiki).
+            "bingo_alphabet": _bingo_alphabet(self.wikipedia_language) if self.bingo_letterpairs else "",
         }
 
     def reset_compass(self) -> None:

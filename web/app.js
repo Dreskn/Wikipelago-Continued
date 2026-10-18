@@ -389,6 +389,7 @@ const el = {
   flareBtn: document.getElementById("flareBtn"),
   rememberHint: document.getElementById("rememberHint"),
   lampShade: document.getElementById("lampShade"),
+  lampAura: document.getElementById("lampAura"),
   homewardBlock: document.getElementById("homewardBlock"),
   homewardLight: document.getElementById("homewardLight"),
   lanternDots: document.getElementById("lanternDots"),
@@ -4392,6 +4393,7 @@ function drawLamp() {
   shade.classList.toggle("hidden", !on);
   if (!on) {
     lamp.eye = null;
+    drawAura();
     return;
   }
   const info = homewardInfo();
@@ -4425,6 +4427,7 @@ function drawLamp() {
     height: px(view.bottom - view.top),
     background: `radial-gradient(ellipse ${px(lamp.eye.rx)} ${px(lamp.eye.ry)} at ${at}, ${stops.join(", ")})`,
   });
+  drawAura(view);
 }
 
 function scheduleLamp() {
@@ -4455,6 +4458,223 @@ function isLitElement(node) {
   const x = Math.min(Math.max(lamp.eye.cx, rect.left), rect.right);
   const y = Math.min(Math.max(lamp.eye.cy, rect.top), rect.bottom);
   return inLampEye(x, y);
+}
+
+/*
+ * The aura: a faint breathing glow on words worth Remembering, the known Memories and the words that would
+ * stamp a bingo cell. Its own layer under the darkness, drawn only around the light; the article is untouched.
+ */
+const aura = { key: "", root: null, words: [], dirty: true, observer: null, timer: 0, pool: [] };
+const AURA_MAX_WORDS = 6000;
+const AURA_MAX_SHOWN = 160;
+const BINGO_LIGATURES = { "œ": "OE", "Œ": "OE", "æ": "AE", "Æ": "AE" };
+const AURA_WORD_RE = /[\p{L}\p{N}]+/gu;
+
+/** First two bingo letters of a word, read like a title by the bridge (the wiki's Scrabble letters). */
+function bingoPairOfWord(word, alphabet) {
+  const letters = [];
+  for (const ch of word) {
+    const upper = ch.toUpperCase();
+    if (alphabet.has(upper)) {
+      letters.push(upper);
+    } else if (ch === "ß" || ch === "ẞ") {
+      letters.push("S", "S");
+    } else {
+      const folded = BINGO_LIGATURES[ch] || ch.normalize("NFKD").replace(/\p{M}/gu, "").toUpperCase();
+      for (const letter of folded) if (letter >= "A" && letter <= "Z" && alphabet.has(letter)) letters.push(letter);
+    }
+    if (letters.length >= 2) return letters[0] + letters[1];
+  }
+  return "";
+}
+
+/** Pairs still to stamp on the unlocked bingo boards. */
+function wantedBingoPairs(status) {
+  const wanted = new Set();
+  if (!status?.bingo_letterpairs) return wanted;
+  const boards = bingoBoardsFromStatus(status);
+  const unlockedRaw = Number(status.bingo_unlocked_boards);
+  const unlocked = Number.isFinite(unlockedRaw) ? Math.max(0, Math.min(boards.length, unlockedRaw)) : boards.length;
+  const stampedMap = normalizeBingoStampedPairs(status.bingo_stamped_pairs);
+  const cellsMap = normalizeBingoStampedCells(status.bingo_stamped_cells);
+  for (let index = 0; index < unlocked; index += 1) {
+    const key = String(index + 1);
+    const pairs = new Set(stampedMap[key] || []);
+    const cells = new Set((cellsMap[key] || []).map(([row, col]) => `${row},${col}`));
+    (boards[index] || []).forEach((row, r) => (row || []).forEach((cell, c) => {
+      const pair = String(cell || "").toUpperCase();
+      if (pair && !pairs.has(pair) && !cells.has(`${r},${c}`)) wanted.add(pair);
+    }));
+  }
+  return wanted;
+}
+
+/** What glows: the Memories still to find (folded) and the bingo pairs still to stamp. */
+function auraTargets(status = state.status) {
+  const info = homewardInfo(status);
+  if (!info || !canRemember(status)) return null;
+  const terms = [...new Set((Array.isArray(info.memories) ? info.memories : [])
+    .filter((row) => row.term && row.unlocked && !row.found)
+    .map((row) => memoryFold(row.term))
+    .filter(Boolean))];
+  const alphabet = String(info.bingo_alphabet || "");
+  const pairs = alphabet ? wantedBingoPairs(status) : new Set();
+  if (!terms.length && !pairs.size) return null;
+  return { terms, pairs, alphabet: new Set(alphabet) };
+}
+
+/** memoryFold, keeping where each folded character came from in the original text. */
+function foldWithMap(text) {
+  let folded = "";
+  const map = [];
+  for (let i = 0; i < text.length;) {
+    const ch = String.fromCodePoint(text.codePointAt(i));
+    let part;
+    if (ch.charCodeAt(0) < 128) part = ch === "`" ? "'" : /\s/.test(ch) ? " " : ch.toLowerCase();
+    else part = memoryFold(ch);
+    for (let k = 0; k < part.length; k += 1) map.push(i);
+    folded += part;
+    i += ch.length;
+  }
+  map.push(text.length);
+  return { folded, map };
+}
+
+function auraRoot() {
+  return el.articleBody.querySelector(".mw-parser-output") || el.articleBody.firstElementChild || null;
+}
+
+/** Where every glowing word sits, relative to the article (so scrolling needs no new measuring). */
+function measureAura(targets) {
+  aura.words = [];
+  aura.dirty = false;
+  const root = auraRoot();
+  if (aura.root !== root) {
+    aura.observer?.disconnect();
+    aura.root = root;
+    if (root && "ResizeObserver" in window) {
+      // Images loading, a lens opening or a new width move the words: measure again once it settles.
+      aura.observer ||= new ResizeObserver(() => {
+        clearTimeout(aura.timer);
+        aura.timer = setTimeout(() => { aura.dirty = true; scheduleLamp(); }, 150);
+      });
+      aura.observer.observe(root);
+    }
+  }
+  if (!root || !targets) return;
+  const base = root.getBoundingClientRect();
+  const range = document.createRange();
+  const wordChar = (ch) => Boolean(ch) && /[\p{L}\p{N}]/u.test(ch);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: (node) => (node.parentElement?.closest("style, script")
+      ? NodeFilter.FILTER_REJECT
+      : NodeFilter.FILTER_ACCEPT),
+  });
+  for (let node = walker.nextNode(); node && aura.words.length < AURA_MAX_WORDS; node = walker.nextNode()) {
+    const text = node.data;
+    if (!text.trim()) continue;
+    const spans = [];
+    if (targets.terms.length) {
+      // Same rule as a Remember click: whole words, or a run-on word for Memories of 5 letters or more.
+      const { folded, map } = foldWithMap(text);
+      for (const term of targets.terms) {
+        for (let start = folded.indexOf(term); start !== -1; start = folded.indexOf(term, start + 1)) {
+          const end = start + term.length;
+          if (!wordChar(folded[start - 1]) && (term.length >= 5 || !wordChar(folded[end]))) {
+            spans.push([map[start], map[end], true]);
+          }
+        }
+      }
+    }
+    if (targets.pairs.size) {
+      for (const match of text.matchAll(AURA_WORD_RE)) {
+        const from = match.index;
+        const to = from + match[0].length;
+        if (!targets.pairs.has(bingoPairOfWord(match[0], targets.alphabet))) continue;
+        if (spans.some(([a, b, memory]) => memory && from < b && to > a)) continue;
+        spans.push([from, to, false]);
+      }
+    }
+    for (const [from, to, memory] of spans) {
+      range.setStart(node, from);
+      range.setEnd(node, to);
+      for (const rect of range.getClientRects()) {
+        if (rect.width < 1 || rect.height < 1) continue; // hidden by a lens
+        aura.words.push({ x: rect.left - base.left, y: rect.top - base.top, w: rect.width, h: rect.height, memory });
+      }
+    }
+  }
+  aura.words.sort((a, b) => a.y - b.y);
+}
+
+function drawAura(view = null) {
+  const layer = el.lampAura;
+  if (!layer) return;
+  const targets = state.status?.boss_completed ? null : auraTargets();
+  if (!targets) {
+    layer.classList.add("hidden");
+    aura.key = "";
+    return;
+  }
+  const key = JSON.stringify([state.currentTitle, targets.terms, [...targets.pairs].sort()]);
+  if (key !== aura.key) {
+    aura.key = key;
+    aura.dirty = true;
+  }
+  if (aura.dirty || aura.root !== auraRoot()) measureAura(targets);
+  if (!aura.root || !aura.words.length) {
+    layer.classList.add("hidden");
+    return;
+  }
+  const area = view || lampViewport();
+  const base = aura.root.getBoundingClientRect();
+  // Only around the light (the rest is under the darkness anyway); the whole view when there is no dark.
+  let top = area.top;
+  let bottom = area.bottom;
+  if (lamp.eye) {
+    const reach = lamp.eye.ry * 1.4;
+    top = Math.max(top, lamp.eye.cy - reach);
+    bottom = Math.min(bottom, lamp.eye.cy + reach);
+  }
+  let lo = 0;
+  let hi = aura.words.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (base.top + aura.words[mid].y < top - 80) lo = mid + 1;
+    else hi = mid;
+  }
+  const px = (value) => `${Math.round(value)}px`;
+  let shown = 0;
+  for (let i = lo; i < aura.words.length && shown < AURA_MAX_SHOWN; i += 1) {
+    const word = aura.words[i];
+    const y = base.top + word.y;
+    if (y > bottom) break;
+    if (y + word.h < top) continue;
+    const pad = word.h * 0.4;
+    let span = aura.pool[shown];
+    if (!span) {
+      span = document.createElement("span");
+      layer.appendChild(span);
+      aura.pool[shown] = span;
+    }
+    span.className = word.memory ? "memory" : "";
+    Object.assign(span.style, {
+      display: "",
+      left: px(base.left + word.x - area.left - pad),
+      top: px(y - area.top - pad / 2),
+      width: px(word.w + pad * 2),
+      height: px(word.h + pad),
+    });
+    shown += 1;
+  }
+  for (let i = shown; i < aura.pool.length; i += 1) aura.pool[i].style.display = "none";
+  layer.classList.toggle("hidden", !shown);
+  Object.assign(layer.style, {
+    left: px(area.left),
+    top: px(area.top),
+    width: px(area.width),
+    height: px(area.bottom - area.top),
+  });
 }
 
 /** Links to Home read and act like plain text until the last Lantern (no color, hover, focus or click). */
@@ -5774,6 +5994,7 @@ async function openArticle(title, options = {}) {
     }
     armBombsOnPage(el.articleBody, state.status);
     lamp.pageText = null;
+    aura.dirty = true;
     if (homewardInfo()) refreshMemoryHint();
     scheduleLamp();
     if (countAsClick || !state.roundVisitSet.size) {

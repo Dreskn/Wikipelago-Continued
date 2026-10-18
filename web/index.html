@@ -40,7 +40,7 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
   <link rel="preload" href="/static/fonts/InstrumentSans-VF.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="/static/fonts/Fraunces-VF.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="stylesheet" href="/static/style.css?v=20261018-05" />
+  <link rel="stylesheet" href="/static/style.css?v=20261018-06" />
 </head>
 <body class="is-idle">
   <div id="releaseBanner" class="migrate-banner" role="status">
@@ -135,7 +135,8 @@
             <p data-i18n="idle.body">Connect to your Archipelago room, or start Practice to play right away with no setup.</p>
           </div>
           <article id="articleBody" class="article-body"></article>
-          <!-- Homeward: the dark around the band of light (placed by app.js; clicks pass through). -->
+          <!-- Homeward: the glow on useful words, then the dark around the light (placed by app.js; clicks pass through). -->
+          <div id="lampAura" class="lamp-aura hidden" aria-hidden="true"></div>
           <div id="lampShade" class="lamp-shade hidden" aria-hidden="true"></div>
           <div id="articleLoading" class="article-loading hidden" aria-live="polite" aria-busy="false">
             <div class="article-loading-panel">
@@ -397,7 +398,7 @@
 
   <div id="toastStack" class="toast-stack" aria-live="polite" aria-label="Notifications" data-i18n-aria="toast.region"></div>
 
-  <script src="/static/i18n.js?v=20261018-05"></script>
-  <script src="/static/app.js?v=20261018-05"></script>
+  <script src="/static/i18n.js?v=20261018-06"></script>
+  <script src="/static/app.js?v=20261018-06"></script>
 </body>
 </html>

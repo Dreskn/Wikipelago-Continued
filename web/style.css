@@ -3169,26 +3169,31 @@ body.journey-window #journeyPopupBtn {
   pointer-events: none;
 }
 .lamp-shade.hidden { display: none; }
-/* A Memory still to find is somewhere on this page: the lamp flickers warm, Remember glows. */
-.lamp-shade::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgb(255, 176, 72);
-  opacity: 0;
+/* A faint breathing glow on words worth Remembering (Memories, bingo pairs), under the darkness. */
+.lamp-aura {
+  position: fixed;
+  z-index: 3;
   pointer-events: none;
+  overflow: hidden;
+  animation: lamp-aura-breathe 4.4s ease-in-out infinite;
 }
-body.memory-near .lamp-shade::after { animation: lamp-flicker 3.4s linear infinite; }
-@keyframes lamp-flicker {
-  0%, 6%, 13%, 55%, 61%, 100% { opacity: 0; }
-  8% { opacity: 0.09; }
-  10% { opacity: 0.02; }
-  11% { opacity: 0.07; }
-  58% { opacity: 0.06; }
+.lamp-aura.hidden { display: none; }
+.lamp-aura > span {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255, 186, 96, 0.24), rgba(255, 186, 96, 0));
+}
+.lamp-aura > span.memory {
+  background: radial-gradient(closest-side, rgba(255, 186, 96, 0.36), rgba(255, 186, 96, 0));
+}
+@keyframes lamp-aura-breathe {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.9; }
 }
 @media (prefers-reduced-motion: reduce) {
-  body.memory-near .lamp-shade::after { animation: none; opacity: 0.05; }
+  .lamp-aura { animation: none; opacity: 0.6; }
 }
+/* A Memory still to find is somewhere on this page: Remember glows. */
 body.memory-near #rememberBtn:not(:disabled),
 body.memory-near #phoneRememberBtn:not(:disabled) {
   border-color: var(--brass);
