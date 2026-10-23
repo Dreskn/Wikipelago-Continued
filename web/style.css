@@ -628,6 +628,25 @@ button:active:not(:disabled) { transform: translateY(1px); }
   border-bottom: 1px solid var(--page-line);
 }
 .article-body h3 { font-size: 1.12em; margin: 1.2em 0 0.4em; }
+/* Wikipedia's contents box (classic skin): a framed, numbered list without bullets. */
+.article-body #toc {
+  display: inline-block;
+  margin: 0.6em 0 1em;
+  padding: 0.5em 1.1em 0.6em;
+  border: 1px solid var(--page-line);
+  border-radius: 6px;
+}
+.article-body #toc h2 {
+  font-size: 1em;
+  margin: 0 0 0.35em;
+  padding: 0;
+  border: 0;
+}
+.article-body #toc ul { list-style: none; margin: 0; padding-left: 0; }
+.article-body #toc ul ul { padding-left: 1.3em; }
+.article-body #toc li { margin: 0.1em 0; }
+.article-body #toc .tocnumber { color: var(--page-muted); margin-right: 0.35em; }
+.article-body #toc .toctogglespan { display: none; }
 .article-stage.is-loading .article-body {
   filter: blur(2px) saturate(0.8);
   opacity: 0.5;

@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.INFO, format="%(message)s")
 LOG = logging.getLogger("wikipelago-bridge")
 
 # Client/release label for the hosted UI (independent of apworld tag until a release cut).
-CLIENT_VERSION = "1.1.1a"
+CLIENT_VERSION = "1.1.1b"
 TELEPORT_COOLDOWN_SEC = 60
 # Wiki Compass: backlink pages (500 titles each) fetched per target, once per session.
 COMPASS_BACKLINK_PAGES = 2
@@ -658,9 +658,9 @@ class SessionState:
     def compass_targets(self) -> list[dict[str, Any]]:
         """Live targets the Wiki Compass can point at: the main road plus every open branch / Realm."""
         targets: list[dict[str, Any]] = []
-        if self.boss_completed:
-            return targets
         main = self.current_target()
+        if self.boss_completed and self.round_index >= len(self.round_pairs):
+            main = ""  # goal done: only rounds whose checks are still open (no-release rooms)
         if main:
             targets.append({"kind": "main", "title": main})
         for live in self.live_branch_targets():
@@ -845,7 +845,8 @@ class SessionState:
 
     def can_reroll_target(self) -> bool:
         self.sync_target_reroll_counter()
-        if not self.is_playable() or self.boss_completed or not self.progress_ready():
+        # Still allowed after the goal: rooms that don't release on goal keep open rounds to play.
+        if not self.is_playable() or not self.progress_ready():
             return False
         if self.target_rerolls_remaining() <= 0:
             return False
@@ -3613,13 +3614,12 @@ class APConnection:
             return {"ok": False, "error": "not connected", "status": self.state.to_status()}
         if not self.state.progress_ready():
             return {"ok": False, "error": "progress not loaded yet", "status": self.state.to_status()}
-        if self.state.boss_completed:
-            return {"ok": False, "error": "seed already complete", "status": self.state.to_status()}
+        # After the goal, rounds whose checks are still open (no-release rooms) can still be rerolled.
         slots = self.state.rerollable_target_slots()
         if not slots:
             return {
                 "ok": False,
-                "error": "cannot reroll the Grand Goal",
+                "error": "seed already complete" if self.state.boss_completed else "cannot reroll the Grand Goal",
                 "status": self.state.to_status(),
             }
         if self.state.target_rerolls_remaining() <= 0:

@@ -1,4 +1,4 @@
-const APP_VERSION = "1.1.1a";
+const APP_VERSION = "1.1.1b";
 console.log("Wikipelago web version", APP_VERSION);
 
 const I18n = window.WikipelagoI18n;
@@ -1098,7 +1098,7 @@ function updateRerollTargetControls(status) {
   const playable = Boolean(status?.connected_to_ap || status?.practice);
   const canReroll = Boolean(status?.can_reroll_target) && !state.rerollBusy;
   el.rerollTargetBtn.disabled = !canReroll;
-  if (status?.boss_completed || !playable) {
+  if ((status?.boss_completed && !status?.can_reroll_target) || !playable) {
     el.rerollTargetMeta.textContent = "";
     return;
   }
@@ -1330,23 +1330,14 @@ function renderPhoneBar(status) {
   if (!playable) {
     rows.push({ brand: true });
   } else {
-    let mainText = status.current_target || "…";
-    let mainWiki = status.current_target || "";
-    if (status.boss_completed) {
-      mainText = t("hud.goalComplete");
-      mainWiki = "";
-    } else if (mainRoadDoneText(status)) {
-      mainText = mainRoadDoneText(status);
-      mainWiki = "";
-    }
-    rows.push({ label: t("path.main"), text: mainText, wiki: mainWiki, main: true });
+    const mainLine = mainTargetLine(status, "…");
+    rows.push({ label: t("path.main"), text: mainLine.text, wiki: mainLine.wiki, main: true });
     const question = String(status.goal_question || "").trim();
     if (!status.practice && !isRealmMaster(status) && status.boss_ready && !status.boss_completed && question) {
       rows.push({ label: t("hud.grandGoal").replace(/\s*:\s*$/, ""), text: question, wiki: "", main: true });
     }
-    const live = !status.boss_completed && Array.isArray(status.live_branch_targets)
-      ? status.live_branch_targets
-      : [];
+    // Realm rounds stay listed after the goal while their checks are open.
+    const live = Array.isArray(status.live_branch_targets) ? status.live_branch_targets : [];
     for (const item of live.slice(0, PHONE_BAR_BRANCH_ROWS)) {
       rows.push({ label: realmName(item, status), text: item.target || "…", wiki: item.target || "", topic: item.theme_tag || "" });
     }
@@ -1520,7 +1511,7 @@ function unlockedBranchPaths(status) {
 function renderBranchTargets(status) {
   if (!el.branchTargets) return;
   const live = Array.isArray(status?.live_branch_targets) ? status.live_branch_targets : [];
-  const show = !status?.boss_completed && live.length > 0;
+  const show = live.length > 0;
   el.branchTargets.classList.toggle("hidden", !show);
   el.branchTargets.innerHTML = "";
   if (!show) return;
@@ -2812,7 +2803,7 @@ function renderRoundsTrack(status) {
   const current = Math.max(1, Number(status.round) || 1);
   const completed = Math.max(0, Number(status.rounds_completed) || 0);
   const unlocked = Math.max(0, Number(status.unlocked_rounds) || 0);
-  const complete = Boolean(status.boss_completed);
+  const complete = Boolean(status.boss_completed) && !mainRoundsLeft(status);
   const crossroads = new Set(
     (Array.isArray(status.crossroad_rounds) ? status.crossroad_rounds : []).map((n) => Number(n))
   );
@@ -4095,6 +4086,24 @@ function restoreFocusKey(key) {
   if (next && next.tabIndex >= 0) next.focus({ preventScroll: true });
 }
 
+/**
+ * Main rounds still to play. After the goal they stay playable: rooms that don't release on goal
+ * keep those checks open (and the items in them for other players).
+ */
+function mainRoundsLeft(status) {
+  const rounds = Number(status?.check_count) || 0;
+  return Boolean(status?.current_target) && !status?.practice && rounds > 0
+    && Number(status?.rounds_completed) < rounds;
+}
+
+/** The main-road line: its target, "Main road cleared", or "GOAL COMPLETE" once nothing is left after the goal. */
+function mainTargetLine(status, placeholder) {
+  if (status?.boss_completed && !mainRoundsLeft(status)) return { text: t("hud.goalComplete"), wiki: "" };
+  const done = mainRoadDoneText(status);
+  if (done) return { text: done, wiki: "" };
+  return { text: status?.current_target || placeholder, wiki: status?.current_target || "" };
+}
+
 /** Main-road line once nothing is left on it, or "" while it still has a target. */
 function mainRoadDoneText(status) {
   if (!status?.current_target && isRealmMaster(status)) return t("hud.mainRoadDone");
@@ -4164,16 +4173,9 @@ function applyHUDStatus(status) {
     // /connect returns before AP handshake finishes; resume once we are actually online.
     void resumeAfterReconnect();
   }
-  if (status.boss_completed) {
-    el.targetText.textContent = t("hud.goalComplete");
-    setTargetSummaryTitle("");
-  } else if (mainRoadDoneText(status)) {
-    el.targetText.textContent = mainRoadDoneText(status);
-    setTargetSummaryTitle("");
-  } else {
-    el.targetText.textContent = status.current_target || "...";
-    setTargetSummaryTitle(status.current_target || "");
-  }
+  const mainLine = mainTargetLine(status, "...");
+  el.targetText.textContent = mainLine.text;
+  setTargetSummaryTitle(mainLine.wiki);
   updateRerollTargetControls(status);
   updateTeleportControls(status);
   renderRoundsTrack(status);
@@ -4967,8 +4969,12 @@ function processArticleLinks(root, options = {}) {
     const href = a.getAttribute("href") || "";
     const parsed = wikipediaArticleFromHref(href);
     if (parsed) {
+      const hashAt = href.indexOf("#");
       const playableLink = bindWikiArticleAnchor(a, parsed.title, parsed.lang);
       if (!playableLink) return;
+      // A section of the page it links to: used when that page is the one being read.
+      if (hashAt >= 0) a.dataset.fragment = href.slice(hashAt + 1);
+      else delete a.dataset.fragment;
       if (foggy) {
         a.textContent = t("trap.foggyLink");
         a.title = "";
@@ -5077,6 +5083,11 @@ async function fetchWikiHtmlUncached(title, lang = articleLanguage()) {
     // Pin the format the lenses were built for: on 2026-10-15 Wikipedia briefly made Parsoid
     // (sections wrapped in <section>) the API default and the Lead lens blanked whole articles.
     parser: "legacy",
+    // Same page on every device: phones otherwise get Wikipedia's mobile version, without the
+    // navigation boxes (about 40% fewer links). The classic skin keeps the contents box in the
+    // article, so the Contents lens has something to hide on computers too.
+    useformat: "desktop",
+    useskin: "vector",
   });
   const url = `${wikipediaOrigin(lang)}/w/api.php?${params}`;
   const res = await fetch(url);
@@ -5491,9 +5502,17 @@ el.articleBody.addEventListener("click", async (e) => {
     toastBlockedWikiPage();
     return;
   }
+  // Footnotes, sections and the contents box point inside this page: scroll there. The browser's own
+  // jump would change the address, which reads as Back and used up a Back charge.
+  const fragment = inPageFragment(a);
+  if (fragment !== null) {
+    e.preventDefault();
+    scrollArticleToFragment(fragment);
+    return;
+  }
   const dest = a.dataset.title || "";
-  if (!dest) return;
   e.preventDefault();
+  if (!dest) return;
   if (state.handlingDeath) return;
   const destNorm = normalizeTitle(dest);
 
@@ -5517,6 +5536,38 @@ el.articleBody.addEventListener("click", async (e) => {
 
   openArticle(dest, { countAsClick: true, sourceLang: a.dataset.wikiLang || "" });
 });
+
+/** Where a link inside the page being read points ("" for the page itself), or null for another page. */
+function inPageFragment(a) {
+  const dest = a.dataset.title || "";
+  if (dest) {
+    const lang = String(a.dataset.wikiLang || "").trim().toLowerCase();
+    if (lang && lang !== articleLanguage()) return null;
+    if (!state.currentTitle || normalizeTitle(dest) !== normalizeTitle(state.currentTitle)) return null;
+    return a.dataset.fragment || "";
+  }
+  const href = a.getAttribute("href") || "";
+  return href.startsWith("#") ? href.slice(1) : null;
+}
+
+function scrollArticleToFragment(fragment) {
+  let id = String(fragment || "");
+  try {
+    id = decodeURIComponent(id);
+  } catch {
+    // Not percent-encoded: use it as it is.
+  }
+  if (!id) return;
+  const target = document.getElementById(id);
+  if (!target || !el.articleBody.contains(target)) return;
+  target.scrollIntoView({ block: "start" });
+  // Phones: the sticky bar covers the top of the screen, so stop just below it.
+  if (isPhoneLayout() && el.phoneBar) {
+    const covered = el.phoneBar.getBoundingClientRect().bottom - target.getBoundingClientRect().top;
+    const scroller = articleScroller();
+    if (covered > 0 && scroller) scroller.scrollTop -= covered + 8;
+  }
+}
 
 function isEventInSidePanel(target) {
   return Boolean(target?.closest?.(".side-panel"));
@@ -5752,6 +5803,15 @@ window.addEventListener("popstate", async (e) => {
   }
   if (isPhoneMenuOpen()) {
     setPhoneMenu(false, { fromHistory: true });
+    return;
+  }
+  // A history step without another page (an in-page jump, the entry before the first page, a
+  // duplicate of the page shown): nothing to go back to, so no Back is spent.
+  const backTitle = e.state?.title || "";
+  if (!backTitle || normalizeTitle(backTitle) === normalizeTitle(state.currentTitle)) {
+    if (state.currentTitle) {
+      history.replaceState({ title: state.currentTitle }, "", `#${encodeURIComponent(state.currentTitle)}`);
+    }
     return;
   }
   // Not in a game (disconnected, idle): Back just browses.

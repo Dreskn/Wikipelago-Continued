@@ -68,7 +68,7 @@ Use this when the Archipelago room is reachable from the public internet (`archi
 The hosted site talks to Archipelago **from a public server**. If the room only exists on a LAN, Tailscale, or another private network, that server cannot reach it, and it refuses private addresses (`localhost`, `192.168.x.x`, `10.x.x.x`, Tailscale `100.x.x.x`, ...) on purpose. Run the same web client on a computer that *can* see the room (usually a PC already on that VPN).
 
 1. Install [Python](https://www.python.org/downloads/) **3.10 or newer** from python.org. Tick **Add python.exe to PATH** and the **py** launcher. Microsoft Store Python often fails the starter script.
-2. Get this repository at the **same version as the apworld**, or its latest client-only patch (for example `1.1.1a` for the 1.1.1 apworld): the Source code zip on that [Release](https://github.com/Dreskn/Wikipelago-Continued/releases), or `git clone` and check out the matching tag.
+2. Get this repository at the **same version as the apworld**, or its latest client-only patch (for example `1.1.1b` for the 1.1.1 apworld): the Source code zip on that [Release](https://github.com/Dreskn/Wikipelago-Continued/releases), or `git clone` and check out the matching tag.
 3. Open the `bridge` folder. First time: double-click `setup_and_start_bridge.bat`. Later: `start_bridge.bat`. Leave that window open.
 4. If it says it cannot find Python, in that same `bridge` folder run:
    ```
@@ -99,7 +99,7 @@ That computer must stay on while you play. Other players on the same LAN/VPN can
 | --- | --- |
 | Wikipelago world (`apworld`) | **1.1.1** |
 | Archipelago | **0.6.7 or newer** |
-| Web client | **1.1.1a**: hosted link above, or local `http://127.0.0.1:5000` from this repo |
+| Web client | **1.1.1b**: hosted link above, or local `http://127.0.0.1:5000` from this repo |
 
 The player YAML template pins these via top-level `requires` (`version` + `game.Wikipelago`) so generation fails if the host apworld is too old.
 Hosts and generators should still use a matching apworld for the seed they create.
